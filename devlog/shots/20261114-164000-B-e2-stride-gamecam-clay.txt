@@ -1,0 +1,1 @@
+Stride from the game camera (6 m back, 3.5 m up): export38 (left two, frames 20, 27) and export37 (right two); the shaft is mostly hidden behind the body from this view; no difference reads.

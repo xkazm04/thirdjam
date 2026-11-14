@@ -1,0 +1,1 @@
+Stride, clay figure, close side view from the stick side (camera at hip height, 3.8 m), take frames 17, 21, 25, 28 (where export38 changed). Top: export38 (imported); bottom: export37 (a temporary copy, deleted after). In export38 the shaft runs in front of the front knee; in export37 it runs into the front thigh.

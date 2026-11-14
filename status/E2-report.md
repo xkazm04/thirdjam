@@ -492,3 +492,33 @@ Headless editor pid 14124 (port 8004, started 15:52). The tree is as it was merg
 | Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 11.32 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | as the part-3 E2 row above, and: HoldTick drives the hold layer's in, loop and out, and TestChkCut, as BP_SkaterVisual_TB1 (lane E2, fourth hand-back) (11865740 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Stride.uasset | anim | 0.19 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export38/p2_cel (gate passed) loopcut file, take Stride by name, re-keyed in place on SKEL_SkaterTB1v2, 60 keys: the stick heel carried farther forward on frames 13 to 34 (the shaft out of the front thigh, by the lab's skin measure); loop join 0.46 cm unchanged; not yet seen on a GPU (lane E2, fourth hand-back) (200781 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Stride.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export38/p3_clay (gate passed) loopcut file, take Stride by name, re-keyed in place on SKEL_SkaterTB1_P3, 60 keys: the stick heel farther forward on frames 13 to 34; loop join 0.42 cm unchanged; not yet seen on a GPU (lane E2, fourth hand-back) (210094 bytes) |
+
+---
+
+# Fifth hand-back (GPU, 16:30 to 16:43): `Stride` and the hold's in and out settled on the GPU
+
+GPU editor pid 34268, port 8004, tree `b-fig`. It left through `ExitEditor` at 16:43 and its process is confirmed gone. `C:\Users\kazda\jam\GPU-FREE.txt` = "free from E2 at 16:43". No dirty package at exit. The tree is not changed: I added no asset, and the temporary export37 copies are deleted.
+
+## Verdict per item
+| Item | Verdict | Why |
+|---|---|---|
+| export38 `Stride` | **merge (keep)** | **Seen:** from the stick side at hip height on frames 17, 21, 25 and 28, export38's shaft runs **in front of the front knee**, clay and night. export37's shaft runs **into the front thigh** on the same frames. My axis measure from the fourth hand-back was misleading. From the game camera the shaft is mostly behind the body in both versions, so no difference reads there. Not reverted |
+| Hold in / out (`CrossCheck_Hold_In` / `_Out` in the hold layer) | **merge** | The 6-frame brace reads at 6 and 9 m/s, side-on and from the game camera. The stick comes up along the front of the body to across the chest and goes back down to the ice. **No frame shows a hand through the body**, clay and night |
+| Seeded clay match on the GPU to 100 s | **pass** | 0 Blueprint errors. All 6 get-ups end on the release (`end_f` = `down_f`). Sim lines identical to the earlier GPU match (23 = 23) |
+
+- **How it was compared:**
+  - export37's `Stride` was imported by name as a temporary take (`AS_…_X34_Stride`, both styles) and looped on a figure beside export38's.
+  - Afterwards both temporary assets were deleted: `delete_asset` true, and no `X34` file is left under `Skaters/`.
+
+## Stills (`C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261114-164000-B-e2-*.png`, each with a caption; I looked at each with the Read tool)
+- `stride-side-clay`, `stride-side-night`: export38 (top) against export37 (bottom), frames 17 / 21 / 25 / 28
+- `stride-cycle-clay`: the whole cycle side-on, both versions
+- `stride-gamecam-clay`: both versions from the game camera
+- `hold-inout-6ms-clay`, `hold-inout-9ms-clay`, `hold-inout-gamecam-clay`, `hold-inout-6ms-night`
+
+## Not verified
+- Stride_Sprint and Glide; the lab says they are unchanged.
+- The hold's in and out at the moment a hit lands.
+
+## Ledger
+No new rows: no asset changed in this GPU session, and the fourth hand-back's rows stand.

@@ -1,0 +1,1 @@
+Hold in and out at 9 m/s from the game camera: the stick swings out to the left into the brace and back, readable in 6 frames.
