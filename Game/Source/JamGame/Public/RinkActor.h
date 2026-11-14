@@ -17,6 +17,11 @@
 // Lane A136 (track F3, evolution 4): the whole boards answer a hit. A clay cap (SM_Arena_BoardCap, 24 triangles) stands on the board top at every stanchion
 // place round the ring, all in one instanced component; a hard skater `board` event anywhere rocks the nearest cap (a tilt away from the rink and a hop) and
 // its neighbours less and later. `jam.rink.caps 0` takes the caps away. The scored end's lamp light hangs over the net instead of beside the lamp.
+// Lane A145 (track F3, evolution 5): the hit is seen and the box is used. A hard board hit throws a short flash of light at the hit (`jam.rink.react.hit`,
+// candelas at Strength 1; 0 = the quiet hit of evolution 4); the caps are domes in the team colours (blue on x < 0, orange on x > 0; the 24-triangle lump
+// is the far level, taken on a rink whose caps would pass the triangle budget as domes); a goal runs round the scored end's caps as a wave with two lights
+// that fill the lamp's troughs (`jam.rink.react.wave`, 0 = none); on a `foul` the fouler's team's penalty box opens its door, its clock's hand runs one
+// turn with the penalty's frames, and the door opens again at the end. Presentation only, counted on the bus's sim frames.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -119,6 +124,32 @@ public:
 	static constexpr float CapRockDeg = 26.f;
 	static constexpr float CapHopCm = 22.f;
 	static constexpr int32 CapRipples = 4;
+	// Lane A145 (evolution 5). The cap's far level and the budget that picks it: Build instances the dome (SM_Arena_BoardCap, 40 triangles) while caps x its
+	// triangles stay within CapTriangleBudget, else the lump (an instanced component draws ONE level for all its instances, so the level is chosen per rink).
+	static constexpr const TCHAR* BoardCapFarMeshPath = TEXT("/Game/Arena/SM_Arena_BoardCapFar.SM_Arena_BoardCapFar");
+	static constexpr int32 CapTriangleBudget = 3000;
+	// The hit flash: a shadowless point light at the hit's place (HitLightInM into the rink along the board's normal, HitLightHeightM up), `jam.rink.react.hit`
+	// candelas x Strength on the hit's frame, falling to nothing in HitFlashFrames (a square fall: most of it is gone in six frames). One light per ripple.
+	static constexpr int32 HitFlashFrames = 12;
+	static constexpr double HitLightInM = 0.6;
+	static constexpr double HitLightHeightM = 1.7;
+	static constexpr float HitLightRadiusCm = 450.f;      // 9 m washed a fifth of the picture; 4.5 m keeps the flash a pool at the hit
+	// The goal wave: in every pulse of the lamp (LampPulseFrames) a front leaves the goal light and runs WaveReachM along the end boards both ways; a cap
+	// hops WaveCapShare of a full rock as it passes, and a red light rides each front, WaveLightInM inside the end boards and WaveLightHeightM up, growing
+	// from nothing to `jam.rink.react.wave` x the end light's candelas while the lamp's own pulse falls. All of it inside the lamp's LampFlashFrames.
+	static constexpr double WaveReachM = 10.0;
+	static constexpr double WaveLightInM = 2.0;
+	static constexpr double WaveLightHeightM = 3.0;
+	static constexpr float WaveCapShare = 0.6f;
+	// The box in use: the door (SM_Arena_BoxDoor on the box's socket `Door`) swings DoorOpenDeg open in DoorOpenFrames, stands DoorHoldFrames, closes in
+	// DoorCloseFrames; the clock's long hand (SM_Arena_BoxHand on the socket `Hand`) turns 360 degrees in the penalty's frames.
+	static constexpr const TCHAR* BoxDoorMeshPath = TEXT("/Game/Arena/SM_Arena_BoxDoor.SM_Arena_BoxDoor");
+	static constexpr const TCHAR* BoxHandMeshPath = TEXT("/Game/Arena/SM_Arena_BoxHand.SM_Arena_BoxHand");
+	static constexpr int32 DoorOpenFrames = 10;
+	static constexpr int32 DoorHoldFrames = 50;
+	static constexpr int32 DoorCloseFrames = 14;
+	static constexpr int32 DoorCycleFrames = DoorOpenFrames + DoorHoldFrames + DoorCloseFrames;
+	static constexpr float DoorOpenDeg = 72.f;      // arena.py P["door_open_deg"]: how the door stood when it was part of the box mesh
 
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Ice;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Markings;
@@ -170,6 +201,17 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UPointLightComponent> ArenaLampLights[3];
 	// Lane A136: the board caps, every one an instance of SM_Arena_BoardCap (one draw for the ring). Stencil 1, no collision, no shadow. Shown with the pieces.
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UInstancedStaticMeshComponent> ArenaCaps;
+	// Lane A145: the caps in the team colours are two components: ArenaCaps holds the caps of the x < 0 half (team 0, B's MI_Toon_Blue), ArenaCapsPos the
+	// x >= 0 half (team 1, MI_Toon_Orange). A cap's index (GetCapPlaceM, GetCapTransform) runs round the whole ring as before.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UInstancedStaticMeshComponent> ArenaCapsPos;
+	// Lane A145: the hit flash's lights (one per live ripple) and the goal wave's two (0 runs towards -y, 1 towards +y). Shadowless, hidden at rest.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UPointLightComponent> ArenaHitLights[4];
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UPointLightComponent> ArenaWaveLights[2];
+	// Lane A145: the penalty boxes' doors and clock hands (Neg = team 0's box at x = -3, Pos = team 1's), children of their box so they rock with it.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxDoorNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxDoorPos;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxHandNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxHandPos;
 	// Behind the +x goal line (team 0 scores here) and behind the -x line (team 1 scores here).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerNeg;
@@ -277,7 +319,7 @@ public:
 	int32 GetRattleCount() const { return RattleReactions; }
 	// True while any reaction is live (a lamp lit, a net, a piece or a board cap moving).
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
-	bool IsReacting() const { return GoalFrame >= 0 || RattleFrame >= 0 || bCapsLive; }
+	bool IsReacting() const { return GoalFrame >= 0 || RattleFrame >= 0 || bCapsLive || bBoxLive; }
 	// ---- Lane A136 (evolution 4): the board caps ----
 	// `jam.rink.caps` (default 1): 0 = no caps on the boards (the arena of evolution 3).
 	static bool AreCapsEnabled();
@@ -305,6 +347,43 @@ public:
 	// Triangles the caps add to the scene (instances x the mesh's triangles).
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	int32 GetCapTriangles() const;
+	// ---- Lane A145 (evolution 5): the hit flash, the goal wave, the box in use ----
+	// Cap Index's transform right now, relative to the rink (whichever of the two components holds it).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	FTransform GetCapTransform(int32 Index) const;
+	// True when the caps are the dome (the near level), false when the rink took the 24-triangle lump.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool AreCapsRound() const { return bCapsRound; }
+	// The flash's curve: 0 outside [0, HitFlashFrames), else the clamped Strength x a square fall (1 on the hit's frame at Strength 1).
+	static float HitFlashAt(int64 FramesSince, float Strength);
+	// `jam.rink.react.hit`: candelas at Strength 1 (0 = no flash), and what this rink's tier makes of it (l2_night takes NightLightShare).
+	static float HitLightPeak();
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float HitLightPeakHere() const;
+	// Light Index's candelas right now (ArenaHitLights / ArenaWaveLights), 0 while it is hidden.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetHitLightIntensity(int32 Index) const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetWaveLightIntensity(int32 Index) const;
+	// `jam.rink.react.wave`: the wave lights' share of the scored end's light at the end of a pulse (0 = no wave: no cap hops on a goal).
+	static float WaveShare();
+	// The door's curve: how far open (0..1) FramesSince after it was asked to open; 1 from DoorOpenFrames - 1, 0 again after DoorCycleFrames.
+	static float DoorAt(int64 FramesSince);
+	// Team's box right now: the door's swing and the clock hand's turn in degrees (0 = closed / the hand at the top), and the fouls the boxes answered.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetBoxDoorDeg(int32 Team) const { return BoxDoorDegNow[Team == 0 ? 0 : 1]; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetBoxHandDeg(int32 Team) const { return BoxHandDegNow[Team == 0 ? 0 : 1]; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetBoxReactionCount() const { return BoxReactions; }
+	// The penalty's length the boxes count with (game.rules.penalty_frames at the last Build).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetBoxPenaltyFrames() const { return PenaltyFramesCfg; }
+	// True when the doors and hands are meshes of their own on the boxes (the box mesh carries the sockets Door and Hand).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool IsBoxUsable() const;
+	// The BoxSeat hook's note: a figure of Team was drawn in its box on this bus frame (the live proof logs the frame it leaves).
+	void NoteBoxed(int32 Team) const;
 	// Serves AJamSkater::BoxSeat (JamCore): a boxed skater's figure is drawn at its team's GetPenaltyBoxSeat by the rink of its own world. BeginPlay calls it.
 	static void ServeBoxSeat();
 
@@ -351,6 +430,21 @@ private:
 	// Lane A136: the board caps' state. CapAtM / CapYawDeg: the stanchion places Build walked (rink metres, the yaw that turns a cap's +y away from the rink);
 	// CapRest: each instance's transform at rest; CapNow: the caps off rest right now -> (tilt degrees, hop cm).
 	struct FCapRipple { int64 Frame = -1; int32 Index = -1; float Strength = 0.f; };
+	// Lane A145: which component holds cap k (0 ArenaCaps, 1 ArenaCapsPos) and at which instance; the boxes' use (0 team 0's, 1 team 1's).
+	struct FBoxUse { int64 FoulFrame = -1; int32 Frames = 0; bool bEndLogged = false; };
+	void ApplyBox(int64 SimFrame);
+	TArray<uint8> CapSide;
+	TArray<int32> CapInst;
+	bool bCapsRound = false;
+	FBoxUse BoxUse[2];
+	float BoxDoorDegNow[2] = { 0.f, 0.f };
+	float BoxHandDegNow[2] = { 0.f, 0.f };
+	mutable int64 BoxSeenAt[2] = { -1, -1 };
+	int64 LastBoxFrame = 0;
+	int32 PenaltyFramesCfg = 300;
+	int32 TeamSplit = 0;         // skaters of team 0 (the bus names a skater by its index, team 0's first)
+	int32 BoxReactions = 0;
+	bool bBoxLive = false;
 	void ApplyCaps(int64 SimFrame);
 	void ResetCaps();
 	TArray<FVector2D> CapAtM;

@@ -5,6 +5,7 @@
 #include "Misc/Paths.h"
 #include "UObject/Package.h"
 #include "Internationalization/Regex.h"
+#include "HAL/PlatformMisc.h"
 
 #include "JamSchemaData.inl"
 
@@ -1071,6 +1072,7 @@ namespace
 			ReadNumber(Bu, TEXT("accel_mult"), C.Skater.BurstAccelMult);
 			ReadBool(Bu, TEXT("own_stop"), C.Skater.bBurstOwnStop);   // lane A121 (track F2): the first step is earned by a stop or a cut of the skater's own
 			ReadInteger(Bu, TEXT("rest_frames"), C.Skater.BurstRestFrames);   // lane A128 (track F2): and by standing still (the standing start)
+			ReadNumber(Bu, TEXT("rest_kept_mps"), C.Skater.BurstRestKeptMps);   // lane A147 (track F2): a bump, a slide or a turn on the spot does not spend it
 		}
 		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
 		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))
@@ -1199,6 +1201,13 @@ namespace
 			ReadNumber(Ct, TEXT("board_bonus"), C.Contact.BoardBonus);   // lane A101 (track F1): the boards are a body; 1 = the neutral value
 			ReadInteger(Ct, TEXT("release_grace_frames"), C.Contact.ReleaseGraceFrames);   // lane A113 (R-0049 point 1): 0 = the neutral value
 			ReadNumber(Ct, TEXT("check_reach_m"), C.Contact.CheckReachM);   // lane A125 (track F1): the check finds its man; 0 = the neutral value
+		}
+		// Lane A132 (track F1), measurement only (as JAM_PLAYTESTER_VERBS in JamPlaytester.cpp): with JAM_TEST_SHIELD_SHOVE=0 in the environment every cartridge
+		// loads with the shove rule at its neutral value (contact.bShieldShove false: the refusal of main before lane A125; the rule has no key), so the three
+		// cells can be played with and without it by the same binaries. Never set in a game or in the gate.
+		{
+			static const bool bNoShieldShove = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_TEST_SHIELD_SHOVE")) == TEXT("0");
+			if (bNoShieldShove) C.Contact.bShieldShove = false;
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));

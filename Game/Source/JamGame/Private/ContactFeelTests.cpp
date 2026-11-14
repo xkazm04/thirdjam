@@ -1,6 +1,9 @@
 // Lane A101 (track F1, docs/experiments/CONTACT-2.md): every outcome reads. The parts of the presentation that need no world.
 //   Jam.Camera.StumbleKick   a stumble kicks the camera by its ratio: 3 cm at bump_ratio to 6 cm at down_ratio, never more than a knockdown's smallest kick
 //   Jam.Hud.ContactLine      the two contact lines of the HUD and which one wins
+// Lane A132 (track F1, evolution 4, docs/experiments/CONTACT-5.md): the hit has a size.
+//   Jam.Camera.DownKick      a knockdown kicks by the frames its victim lies: 6 cm at 60 frames to 12 cm at 150, never less than the hardest stumble; the human's
+//                            own bounce kicks out and swings back past rest once; jam.hitkick 0 (a scale of 0) switches both off
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
 #include "CameraFollow.h"
@@ -42,6 +45,61 @@ bool FJamCameraStumbleKick::RunTest(const FString& Parameters)
 	}
 	// A degenerate band (a mode that set bump_ratio = down_ratio) divides by nothing.
 	TestTrue(TEXT("bump_ratio = down_ratio: a finite scale"), FMath::IsFinite(UJamFollowCamera::StumbleKickScale(1.f, 1.f, 1.f)));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraDownKick, "Jam.Camera.DownKick", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamCameraDownKick::RunTest(const FString& Parameters)
+{
+	const FJamContactConfig K;   // down for 60 to 150 frames; bump 0.4, down 1
+	// The offset along the push (the push is +x, the camera looks along +x) on frame FrameIndex of the kick, in cm; HitKick is jam.hitkick.
+	auto Cm = [](int32 FrameIndex, float Strength, float Scale, bool bBounce, float HitKick = 1.f)
+	{
+		FVector Off;
+		float Roll = 0.f;
+		UJamFollowCamera::KickOffset(FrameIndex, Strength, FVector2D(1.0, 0.0), 0.f, Scale * HitKick, Off, Roll, bBounce);
+		return static_cast<float>(Off.X);
+	};
+	auto Down = [&](int32 Frames) { return Cm(0, 1.f, UJamFollowCamera::DownKickScale(Frames, K.DownFramesMin, K.DownFramesMax), false); };
+	const float Hard = Cm(0, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickScale(0.999f, static_cast<float>(K.BumpRatio), static_cast<float>(K.DownRatio)), false);
+	AddInfo(FString::Printf(TEXT("JAMKICKTABLE knockdown %.2f cm at %d frames down, %.2f at 90, %.2f at 105, %.2f at 120, %.2f at %d; the hardest stumble %.2f cm"), Down(K.DownFramesMin), K.DownFramesMin, Down(90), Down(105),
+		Down(120), Down(K.DownFramesMax), K.DownFramesMax, Hard));
+	TestTrue(*FString::Printf(TEXT("the shortest knockdown (60 frames) kicks 6 cm (%.2f)"), Down(K.DownFramesMin)), FMath::IsNearlyEqual(Down(K.DownFramesMin), 6.f, 0.01f));
+	TestTrue(*FString::Printf(TEXT("the middle (105 frames) kicks 9 cm (%.2f)"), Down(105)), FMath::IsNearlyEqual(Down(105), 9.f, 0.01f));
+	TestTrue(*FString::Printf(TEXT("the longest knockdown (150 frames) kicks 12 cm (%.2f)"), Down(K.DownFramesMax)), FMath::IsNearlyEqual(Down(K.DownFramesMax), 12.f, 0.01f));
+	TestTrue(TEXT("outside the band the kick is clamped (a mode's 250 frames kick 12 cm, 30 frames 6 cm)"), FMath::IsNearlyEqual(Down(250), 12.f, 0.01f) && FMath::IsNearlyEqual(Down(30), 6.f, 0.01f));
+	TestTrue(TEXT("the hardest stumble never kicks more than the shortest knockdown"), Hard <= Down(K.DownFramesMin) + 1e-3f);
+	float Last = 0.f;
+	for (int32 F = 0; F <= 300; ++F)
+	{
+		const float C = Down(F);
+		if (C + 1e-4f < Last) { AddError(FString::Printf(TEXT("the knockdown's kick shrinks at %d frames down"), F)); break; }
+		Last = C;
+	}
+	TestTrue(TEXT("down_frames_min = down_frames_max: a finite scale"), FMath::IsFinite(UJamFollowCamera::DownKickScale(90, 90, 90)));
+	TestTrue(TEXT("jam.hitkick 0: no kick for a knockdown"), Cm(0, 1.f, UJamFollowCamera::DownKickScale(150, K.DownFramesMin, K.DownFramesMax), false, 0.f) == 0.f);
+	// The bounce: out as far as the hardest stumble, back past rest once, then still.
+	FString Shape, Plain;
+	int32 SignChanges = 0;
+	float Deepest = 0.f, Prev = 0.f;
+	for (int32 I = 0; I < UJamFollowCamera::KickFrames; ++I)
+	{
+		const float B = Cm(I, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickMax, true);
+		const float P = Cm(I, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickMax, false);
+		Shape += FString::Printf(TEXT("%s%.2f"), I ? TEXT(" ") : TEXT(""), B);
+		Plain += FString::Printf(TEXT("%s%.2f"), I ? TEXT(" ") : TEXT(""), P);
+		if (I > 0 && ((B < 0.f) != (Prev < 0.f))) ++SignChanges;
+		if (P < 0.f) AddError(FString::Printf(TEXT("a hit's kick goes behind rest on frame %d"), I));
+		Deepest = FMath::Min(Deepest, B);
+		Prev = B;
+	}
+	AddInfo(FString::Printf(TEXT("JAMKICKTABLE bounce, cm along the push by frame: %s | a stumble of the same size: %s"), *Shape, *Plain));
+	TestTrue(TEXT("the bounce starts 6 cm out, as the hardest stumble"), FMath::IsNearlyEqual(Cm(0, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickMax, true), 6.f, 0.01f));
+	TestEqual(TEXT("the bounce crosses rest once"), SignChanges, 1);
+	TestTrue(*FString::Printf(TEXT("the swing back is seen (%.2f cm behind rest) and smaller than the kick"), -Deepest), Deepest <= -1.f && Deepest >= -3.f);
+	TestTrue(TEXT("the bounce is still by its last frame (under half a centimetre)"), FMath::Abs(Cm(UJamFollowCamera::KickFrames - 1, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickMax, true)) < 0.5f);
+	TestTrue(TEXT("nothing after the last frame"), Cm(UJamFollowCamera::KickFrames, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickMax, true) == 0.f);
+	TestTrue(TEXT("jam.hitkick 0: no kick for a bounce"), Cm(0, UJamFollowCamera::StumbleKickStrength, UJamFollowCamera::StumbleKickMax, true, 0.f) == 0.f);
 	return true;
 }
 

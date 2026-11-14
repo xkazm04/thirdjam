@@ -3051,11 +3051,17 @@
     "90x45 p3_clay": {
       "caps": 73,
       "instances": 73,
+      "instances_by_half": [
+        36,
+        37
+      ],
       "shown": true,
       "visible": true,
       "mesh": "SM_Arena_BoardCap",
-      "material": "MI_Toon_KickPlate",
-      "triangles": 1752,
+      "round": true,
+      "material_pos": "MI_Toon_Orange",
+      "material": "MI_Toon_Blue",
+      "triangles": 2920,
       "widest_gap_m": 3.599,
       "z_cm": [
         120.0,
@@ -3176,10 +3182,16 @@
     "120x60 p3_clay": {
       "caps": 98,
       "instances": 98,
+      "instances_by_half": [
+        49,
+        49
+      ],
       "shown": true,
       "visible": true,
-      "mesh": "SM_Arena_BoardCap",
-      "material": "MI_Toon_KickPlate",
+      "mesh": "SM_Arena_BoardCapFar",
+      "round": false,
+      "material_pos": "MI_Toon_Orange",
+      "material": "MI_Toon_Blue",
       "triangles": 2352,
       "widest_gap_m": 3.604,
       "z_cm": [
@@ -3301,10 +3313,16 @@
     "140x70 p3_clay": {
       "caps": 114,
       "instances": 114,
+      "instances_by_half": [
+        57,
+        57
+      ],
       "shown": true,
       "visible": true,
-      "mesh": "SM_Arena_BoardCap",
-      "material": "MI_Toon_KickPlate",
+      "mesh": "SM_Arena_BoardCapFar",
+      "round": false,
+      "material_pos": "MI_Toon_Orange",
+      "material": "MI_Toon_Blue",
       "triangles": 2736,
       "widest_gap_m": 3.63,
       "z_cm": [
@@ -3426,10 +3444,16 @@
     "120x60 l2_night": {
       "caps": 98,
       "instances": 98,
+      "instances_by_half": [
+        49,
+        49
+      ],
       "shown": true,
       "visible": true,
-      "mesh": "SM_Arena_BoardCap",
-      "material": "MI_Toon_KickPlate",
+      "mesh": "SM_Arena_BoardCapFar",
+      "round": false,
+      "material_pos": "MI_Toon_Orange",
+      "material": "MI_Toon_Blue",
       "triangles": 2352,
       "widest_gap_m": 3.604,
       "z_cm": [
@@ -3574,6 +3598,311 @@
           750.0,
           3000.0,
           3000.0
+        ]
+      },
+      "ok": true
+    }
+  },
+  "e5": {
+    "90x45 p3_clay": {
+      "box_usable": true,
+      "penalty_frames": 300,
+      "hit_peak_cd": 300.0,
+      "places": {
+        "arena_box_door_neg": {
+          "mesh": "SM_Arena_BoxDoor",
+          "at_cm": [
+            -175.0,
+            6.0,
+            0.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_door_pos": {
+          "mesh": "SM_Arena_BoxDoor",
+          "at_cm": [
+            -175.0,
+            6.0,
+            0.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_hand_neg": {
+          "mesh": "SM_Arena_BoxHand",
+          "at_cm": [
+            -0.0,
+            141.0,
+            235.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_hand_pos": {
+          "mesh": "SM_Arena_BoxHand",
+          "at_cm": [
+            -0.0,
+            141.0,
+            235.0
+          ],
+          "visible": true,
+          "ok": true
+        }
+      },
+      "hit": {
+        "lit_cd": [
+          240.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "after_12": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "wave": {
+        "lights_cd_f9": [
+          360.0,
+          360.0
+        ],
+        "caps_in_the_air_f9": 3,
+        "end_light_cd": 6000.0,
+        "reacting_after_108": false
+      },
+      "box": {
+        "answers": 1,
+        "door_deg_f11": 72.0,
+        "door_hand_deg_half_way": [
+          0.0,
+          180.0
+        ],
+        "door_deg_end_plus_11": 72.0,
+        "other_box": [
+          0.0,
+          0.0
+        ],
+        "at_rest_after": [
+          0.0,
+          0.0,
+          false
+        ]
+      },
+      "ok": true
+    },
+    "120x60 p3_clay": {
+      "box_usable": true,
+      "penalty_frames": 300,
+      "hit_peak_cd": 300.0,
+      "places": {
+        "arena_box_door_neg": {
+          "mesh": "SM_Arena_BoxDoor",
+          "at_cm": [
+            -175.0,
+            6.0,
+            0.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_door_pos": {
+          "mesh": "SM_Arena_BoxDoor",
+          "at_cm": [
+            -175.0,
+            6.0,
+            0.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_hand_neg": {
+          "mesh": "SM_Arena_BoxHand",
+          "at_cm": [
+            -0.0,
+            141.0,
+            235.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_hand_pos": {
+          "mesh": "SM_Arena_BoxHand",
+          "at_cm": [
+            -0.0,
+            141.0,
+            235.0
+          ],
+          "visible": true,
+          "ok": true
+        }
+      },
+      "hit": {
+        "lit_cd": [
+          240.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "after_12": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "wave": {
+        "lights_cd_f9": [
+          360.0,
+          360.0
+        ],
+        "caps_in_the_air_f9": 3,
+        "end_light_cd": 6000.0,
+        "reacting_after_108": false
+      },
+      "box": {
+        "answers": 1,
+        "door_deg_f11": 72.0,
+        "door_hand_deg_half_way": [
+          0.0,
+          180.0
+        ],
+        "door_deg_end_plus_11": 72.0,
+        "other_box": [
+          0.0,
+          0.0
+        ],
+        "at_rest_after": [
+          0.0,
+          0.0,
+          false
+        ]
+      },
+      "ok": true
+    },
+    "90x45 l2_night": {
+      "box_usable": true,
+      "penalty_frames": 300,
+      "hit_peak_cd": 60.0,
+      "places": {
+        "arena_box_door_neg": {
+          "mesh": "SM_Arena_BoxDoor",
+          "at_cm": [
+            -175.0,
+            6.0,
+            0.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_door_pos": {
+          "mesh": "SM_Arena_BoxDoor",
+          "at_cm": [
+            -175.0,
+            6.0,
+            0.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_hand_neg": {
+          "mesh": "SM_Arena_BoxHand",
+          "at_cm": [
+            -0.0,
+            141.0,
+            235.0
+          ],
+          "visible": true,
+          "ok": true
+        },
+        "arena_box_hand_pos": {
+          "mesh": "SM_Arena_BoxHand",
+          "at_cm": [
+            -0.0,
+            141.0,
+            235.0
+          ],
+          "visible": true,
+          "ok": true
+        }
+      },
+      "hit": {
+        "lit_cd": [
+          48.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "after_12": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "wave": {
+        "lights_cd_f9": [
+          72.0,
+          72.0
+        ],
+        "caps_in_the_air_f9": 3,
+        "end_light_cd": 1200.0,
+        "reacting_after_108": false
+      },
+      "box": {
+        "answers": 1,
+        "door_deg_f11": 72.0,
+        "door_hand_deg_half_way": [
+          0.0,
+          180.0
+        ],
+        "door_deg_end_plus_11": 72.0,
+        "other_box": [
+          0.0,
+          0.0
+        ],
+        "at_rest_after": [
+          0.0,
+          0.0,
+          false
+        ]
+      },
+      "ok": true
+    },
+    "neutral": {
+      "jam.rink.react.hit 0": {
+        "cap_answers": 1,
+        "lit_cd": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "jam.rink.react.wave 0": {
+        "caps_in_the_air_f9": 0,
+        "lights_cd_f9": [
+          0.0,
+          0.0
+        ],
+        "goal_light_lit": true
+      },
+      "jam.rink.react 0": {
+        "door_deg": [
+          72.0,
+          72.0
+        ],
+        "hand_deg": [
+          0.0,
+          0.0
+        ]
+      },
+      "back_on": {
+        "door_deg": [
+          0.0,
+          0.0
         ]
       },
       "ok": true

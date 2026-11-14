@@ -638,3 +638,228 @@ tools/blender/arena/live_bus.sh
   `ARinkActor` (lanes A127, A136): the scorer's table's lamp, the scored end's goal light and net answer a goal; the board cap nearest a hard board hit
   (Strength >= 0.45) and the bench, box or table behind it answer the hit. Cosmetic: frames counted on the bus's sim frame, nothing read by the sim.
   `jam.rink.react 0` switches it off."
+
+---
+
+# Evolution 5 (lane A145): the hit is seen, and the box is used
+
+## 38. What a player gets
+
+A hard hit into the boards is now seen from the game camera. On the hit's frame a short flash of light stands at the hit, in the colour of that half of
+the rink (blue on x < 0, orange on x > 0): the board's face, the kick plate, the struck cap and a pool of ice under it light up and fall dark again in
+twelve frames, stronger for a harder hit. From the game camera 12 m off the boards it changes **4.7 % of the picture on `p3_clay` and 3.8 % on
+`l2_night`** at Strength 0.8 (evolution 4's ripple alone: 0.0 to 0.1 %).
+
+The caps are domes now, in the team colours of the bench rails, so the board top reads as blue to the centre line and orange past it.
+
+A goal runs round the scored end: in every pulse of the lamp a wave leaves the goal light and runs 10 m along the end boards both ways, the caps hop
+as it passes and two red lights ride it, growing as the lamp's own pulse falls. The flash no longer sags between its pulses: **14.8 / 16.2 / 14.5 /
+16.2 % of the picture at frames 0 / 9 / 17 / 45** on `p3_clay` (without the wave 14.8 / 10.4 / 6.2 / 10.4).
+
+On a foul the fouler's team's penalty box is used: its door swings open in ten frames, stands open for fifty and closes; the clock on the box's back wall
+turns its long hand once round in the penalty's frames; the door swings again on the frame the skater is back on the ice. **This last part is counted
+right and is not yet seen from the ice** (section 42): the door stands behind the boards.
+
+Presentation only: lights, instance transforms, component rotations. No physics body, nothing the sim reads, the hash unchanged.
+
+![the 12 m view at rest, p3_clay](img/arena/e5-p3_clay-hit-rest.jpg)
+![a hard hit's frame (Strength 0.8) on the orange half](img/arena/e5-p3_clay-hit-s080-f000.jpg)
+![the same hit on the blue half](img/arena/e5-p3_clay-hitblue-s080-f000.jpg)
+![l2_night, the orange half](img/arena/e5-l2_night-hit-s080-f000.jpg)
+![l2_night, the blue half](img/arena/e5-l2_night-hitblue-s080-f000.jpg)
+![the goal at the lamp's trough (frame 17) with the wave's lights out along the end boards, stand-ins for two figures and two pucks](img/arena/e5-p3_clay-goal-wave-f017.jpg)
+![the caps at the centre line from 3.6 m: orange to the left of the picture (x > 0), blue to the right](img/arena/e5-p3_clay-caps-close.jpg)
+![the caps from the game camera on the +y side](img/arena/e5-p3_clay-caps-side-pos.jpg)
+![the orange box 11 frames after a foul: the open door does not show over the boards](img/arena/e5-p3_clay-box-foul-f011.jpg)
+![half the penalty served: the clock's long hand points down](img/arena/e5-p3_clay-box-foul-f150.jpg)
+
+All ten are off-screen engine stills without a game (section 14): the real `ARinkActor` in B's rig maps, 90 x 45, no HUD.
+
+## 39. The caps: a dome, two colours, two levels
+
+| | |
+|---|---|
+| Near level | `/Game/Arena/SM_Arena_BoardCap`: **40 triangles**, 0.52 x 0.25 x 0.41 m. `arena.py` `Piece.dome`: an eight-sided foot ring 5 cm inside the board top, a belly ring at 0.34 of its height (the widest), a shoulder ring at 0.78 pulled in to two thirds, one top point a little off centre; smooth faces. Its footprint ends 8.8 cm inside the boards' middle line (the inner face is at 10): at the largest instance (1.06) still inside the board's inner face. |
+| Far level | `/Game/Arena/SM_Arena_BoardCapFar`: lane A136's lump, **24 triangles**. |
+| Which | `ARinkActor::Build`: the dome while caps x 40 <= `CapTriangleBudget` 3,000, else the lump. An instanced component draws one level for all its instances, so the level is the rink's: 90 x 45: 73 domes = **2,920 triangles**; 120 x 60: 98 lumps = 2,352; 140 x 70: 115 lumps = 2,760. `AreCapsRound()` says which. |
+| Colours | two instanced components: `ArenaCaps` holds the caps of x < 0 on device B's `MI_Toon_Blue`, `ArenaCapsPos` those of x >= 0 on `MI_Toon_Orange` (by reference, the slot `kick`): 36 + 37 on 90 x 45. A cap's index still runs round the whole ring (`GetCapPlaceM`, `GetCapTransform`). One more draw in the base pass and one in custom depth than evolution 4. |
+| Seen | from the game camera the caps are small round bumps in the bench rails' colours; from 3.6 m the dome still shows its eight sides (a rounder cap is 56 triangles and would pass the budget on every rink). |
+
+## 40. The hit flash, in numbers
+
+Why a light: at 12 m the picture is about 78 pixels a metre at the boards, so 1 % of it is about 2.4 m2 of changed pixels; a cap is 0.2 m2.
+
+| | |
+|---|---|
+| What | four shadowless point lights `ArenaHitLights`, one per live ripple. A skater `board` event with Strength >= 0.45 puts one at the event's place moved `HitLightInM` 0.6 m into the rink along the board's normal (the payload's `Dir`; towards the rink's middle without one), `HitLightHeightM` 1.7 m up, radius 4.5 m. |
+| How bright | `jam.rink.react.hit` (default **300** cd) x Strength x `HitFlashAt`: 1 on the hit's frame, a square fall, a quarter left after 6 frames, dark at `HitFlashFrames` 12 (inside the ripple's 18). `l2_night` takes `NightLightShare` 0.2 (60 cd). |
+| Colour | `jam.rink.react.hit.tint`: **1** the half's team colour (default), 0 warm white, 2 the lamps' red. |
+| Neutral | `jam.rink.react.hit 0`: the cap rocks, nothing lights (evolution 4's hit: 0.0 % of the picture). `jam.rink.caps 0` and `jam.rink.react 0` take the flash away with the ripple. |
+
+Sweeps of off-screen stills from the 12 m view (`ARENA_STILLS_REACT=e5 ARENA_STILLS_E5=sweep`), the share of pixels whose mean channel moves by more than
+24 of 255 against the arena at rest (`pixel_change.py`), `p3_clay`, Strength 0.8 unless said:
+
+| Radius, colour | 300 cd | 600 | 1,000 | 1,500 | 3,000 | 6,000 |
+|---|---|---|---|---|---|---|
+| 9 m, warm white | | | | 23.4 % | 31.2 % | 40.7 % |
+| 9 m, team (orange) | | | | 15.4 % | 21.6 % | 29.2 % |
+| 9 m, red | | | | 10.8 % | 15.5 % | 21.8 % |
+| 6 m, team | 6.2 % | 8.2 % | 9.9 % | | | |
+| **4.5 m, team (chosen)** | **5.0 %** | 6.3 % | 7.1 % | | | |
+| 4.5 m, team, Strength 0.45 | 4.0 % | 5.2 % | 6.1 % | | | |
+
+A hit must be seen, not wash a fifth of the picture forty times a match: the first build's 3,000 cd in 9 m did. On the final build at the defaults:
+
+| The 12 m view | Strength 0.45 | 0.8 | 1.0 | 0.8, four frames later | 0.8 on the blue half | `jam.rink.react.hit 0` |
+|---|---|---|---|---|---|---|
+| `p3_clay` | 3.6 % | **4.7 %** | 5.1 % | 3.2 % | 5.2 % | 0.0 % |
+| `l2_night` | 2.6 % | **3.8 %** | 4.2 % | 2.2 % | 3.0 % | 0.1 % |
+
+The bar (1 % or more at 12 m on both tiers, scaled by Strength) is met at the weakest hard hit. No ice is hidden: a light draws nothing over it.
+
+## 41. The goal wave, in numbers
+
+| | |
+|---|---|
+| What | while the lamp flashes (`LampFlashFrames` 108) a front leaves the goal light at the start of every 18-frame pulse and runs `WaveReachM` 10 m along the end boards towards both corners. A cap behind the scored goal line hops `WaveCapShare` 0.6 of a full rock when the front passes it (5 caps on 90 x 45). Two red lights `ArenaWaveLights` ride the fronts, 2 m inside the end boards and 3 m up, growing from nothing at the pulse's start to `jam.rink.react.wave` x the end light's candelas at its end, under the lamp's fade envelope. |
+| Default | `jam.rink.react.wave` **0.12** (720 cd at a pulse's end beside the end light's 6,000; 144 beside 1,200 on `l2_night`). |
+| Neutral | `jam.rink.react.wave 0`: no cap hops on a goal and no wave light is lit (evolution 4's goal). Nothing is live after the lamp's 108 frames. |
+
+The game camera's view of the scored end on `p3_clay` with stand-ins, share of the picture changed:
+
+| `jam.rink.react.wave` | frame 0 | 9 | 17 (the pulse's end) | 45 | 90 (in the fade) |
+|---|---|---|---|---|---|
+| 0 (evolution 4) | 14.8 % | 10.4 % | 6.2 % | 10.4 % | 8.0 % |
+| 0.08 | 14.8 % | 14.3 % | 12.5 % | 14.3 % | 8.0 % |
+| **0.12** | 14.8 % | **16.2 %** | **14.5 %** | **16.2 %** | 8.1 % |
+| 0.5 | | 25.9 % | 24.1 % | 26.0 % | |
+| 1.0 | | 30.8 % | 27.8 % | 30.8 % | |
+
+0.12 is the smallest share that holds 13 % at the pulse's end too, and it stays near the goal's own frame: the flash is level, not louder. `l2_night` at
+the default: 19.1 / 19.4 / 19.0 / 19.4 % at frames 0 / 9 / 17 / 45. The pucks stay dark and the stand-ins keep their colours (looked at).
+
+## 42. The box in use, in numbers
+
+| | |
+|---|---|
+| Meshes | the door and the clock's long hand left the box mesh: `SM_Arena_PenaltyBox` 2,144 -> 1,872 triangles with the sockets `Door` (-1.75, 0.06, 0 m: the hinge's foot) and `Hand` (0, 1.41, 2.35 m: the clock's middle); `SM_Arena_BoxDoor` 208 triangles, built closed, its hinge at the origin (slots `team`, `dark`); `SM_Arena_BoxHand` 64 triangles, its foot at the origin (slot `team`). |
+| Components | `ArenaBoxDoorNeg / Pos`, `ArenaBoxHandNeg / Pos`: children of their box (they rock with it), placed on the sockets. A box mesh without the sockets leaves them empty. |
+| A foul | the bus's `foul` names the fouler by index; team 0's skaters come first (`game.teams[0]`), so the index picks the box (team 0: x = -3, team 1: x = +3). One `JAMRINK react box team=T who=W frame=F penalty=P ...` line per event. |
+| The door | `DoorAt`: open `DoorOpenDeg` 72 degrees from frame 9 after the foul (it moves on the foul's own frame), stands 50 frames, closed after 74; the same cycle again from frame foul + P, the frame the sim releases the skater (`JAMRINK react box end`). |
+| The hand | 360 degrees x (frame - foul) / P, back at the top at the end; P = `game.rules.penalty_frames` (300 when absent). The sim serves the first penalty frame the frame after the foul's. Clockwise for somebody on the ice. |
+| At rest | the door closed, the hand at the top. With `jam.rink.react 0` (or `jam.rink.arena 0`) the door stands 72 degrees open, as the box mesh had it before: the earlier arena. |
+| Measured | on a real foul of the real sim through the bus (`Jam.Rink.HitSeenBoxUsed`): fouled at sim frame 3, 300 boxed frames, released at 303; the door 72 degrees at foul + 11 and at release + 11, closed in the middle; **the hand at most 0.000 degrees from 360 x served / 300 on every frame**; the other box never moves; hash equal to the twin's. |
+| Seen | **not from the ice.** The door's top is at 1.22 m and the boards are 1.2 m: open or closed it hides behind them from 5.5 m and from the game camera; the hand is 25 cm on a 62 cm clock. Stills: 0.0 % of the picture on `p3_clay`, 0.1 to 0.2 % on `l2_night`. |
+
+## 43. The match start
+
+`UJamPreloadSubsystem::MatchPaths` (`EffectsBinder.cpp`) gets four lines: `ARinkActor::BoardCapMeshPath` (lane A136's cap was never in the list: one
+synchronous load at every match start since it landed), `BoardCapFarMeshPath`, `BoxDoorMeshPath`, `BoxHandMeshPath`.
+
+`tools/perf/syncrows.mjs` reads a packaged, windowed bot run, which a lane without the cursor cannot make. `tools/blender/arena/sync_start.py` makes the
+bot's own step headless: one `-game -nullrhi -Multiprocess` process on the menu map, the preload's `JAMPRELOAD done`, then `open /Game/Maps/Rink` over
+the remote console (port 4745), and counts the `JAMPRELOAD sync` lines.
+
+| Run on the final build, `perf.p3_clay_5v5` | Synchronous loads from the match start | of `/Game/Arena` |
+|---|---|---|
+| control, `jam.PreloadArena=0` | 14 | **10**: BoardCap, BoardCapFar, BoxDoor, BoxHand, GoalLight, Goal and GoalNet W400H061, PenaltyBox, ScorerTable, TeamBench |
+| **default** | 3 | **0** |
+
+505 assets preloaded in 10.0 s behind the menu. The three left are not the arena's: `/Game/UI/T_UI_ScorePlate` (twice) and `/Water/Materials/MPC/MPC_Water`.
+This is the editor binary reading uncooked packages: the packaged number is `syncrows.mjs`'s, the cursor owner's.
+
+## 44. GPU cost
+
+Eight `ProfileGPU` pairs in the off-screen editor from the 12 m view on `p3_clay` 90 x 45, the arena at rest then a Strength 1 hit's frame held
+(`ARENA_STILLS_GPU=1`, `gpu_pairs.py <log> --rows=Lights,DirectLighting`; medians):
+
+| Row (Graphics pipeline, inclusive) | at rest | flash lit | difference |
+|---|---|---|---|
+| DirectLighting | 0.358 ms, 12 draws | 0.367 ms, 13 draws | **+0.009 ms, +1 draw, +432 primitives** (the light's own proxy) |
+| the flash's own `RenderLight` row | | 0.025 to 0.034 ms | the upper bound of what it costs |
+| BasePass | 0.351 ms | 0.351 ms | +0.000 ms |
+| CustomDepth | 0.011 ms | 0.010 ms | -0.001 ms |
+| the whole frame | 5.26 ms (5.07 to 5.47) | 5.34 ms (5.07 to 6.72) | noise: the GPU is shared |
+
+Under the bar of 0.1 ms. Four hits at once are four such lights; the wave's two lights are of the same kind with a 14 m radius (not profiled apart: they
+burn inside the goal pause). Triangles: the ring 2,920 at most (section 39); the door and the hand are 272 triangles that were in the box before.
+
+## 45. Proof
+
+| What | Result |
+|---|---|
+| Blender (`arena.py`, 120 x 60) | PASS: `SM_Arena_BoardCap` 40 triangles, `SM_Arena_BoardCapFar` 24, `SM_Arena_BoxDoor` 208, `SM_Arena_BoxHand` 64, `SM_Arena_PenaltyBox` 1,872; the other nine pieces equal the landed stats in triangles and size |
+| Headless import (`import_arena.py`) | **A119 IMPORT PASS**: the box, the cap, the far cap, the door and the hand imported, nine kept; the box's `Door` and `Hand` sockets read back within 1 cm of Blender's |
+| `verify_arena.py` on the final build | **A119 VERIFY PASS, A127 E3 PASS, A136 E4 PASS, A145 E5 PASS**: section 5 through both cap components (level by budget, `MI_Toon_Blue` / `MI_Toon_Orange`); new section 6 on 90 x 45 and 120 x 60 `p3_clay` and 90 x 45 `l2_night`: the doors and hands on the sockets, one flash of 240 cd at Strength 0.8 (48 on night) dark after 12 frames, wave lights 360 cd each at frame 9 (72 on night) with caps in the air, a foul: door 72 degrees at +11, hand 180 at half the penalty, door 72 at the end +11, at rest after, the other box still; the neutral cvars |
+| `Jam.Rink.HitSeenBoxUsed` (new) | PASS: section 42's foul; the caps' level and colours on 90 x 45 and 140 x 70; the flash's candelas, place, fall, a soft hit and the puck light nothing, `jam.rink.react.hit 0`; the wave: every cap behind the scored line within reach hops in the first pulse, none of the other end ever, the lights' share and places, all at rest at frame 108, `jam.rink.react.wave 0`; `jam.rink.react 0`: the doors stand open, a foul moves nothing |
+| `Jam.Rink.BoardCaps`, `GoalLampAndNet`, `BoardRattle`, `PenaltySeat` | PASS (`BoardCaps` reads the caps through `GetCapTransform` and both components: five lines changed) |
+| Full `Jam` filter (the gate's invocation) on the final build | **PASS: 209 tests, 0 failed** |
+| Hash | `hockey.boost all_star seed 1: 8693 frames, over yes, 6 spawned, 4 taken, 4 effects started, sim hash b99f9c5c3f27a2ca` and `Carpet Cut seed 1: 8154 frames, 3:1, 124 zone entries, 14 effects started, sim hash f3b9484e2e4f5c15`: the same two lines as the main checkout's gate run of 01:11 |
+| The bus in a live match | `live_bus.sh` on the final build (one headless `-game -nullrhi -Multiprocess` process, port 4745, `perf.p3_clay_5v5`, 13,296 sim frames): **5 `JAMEVENT goal` = 5 `JAMRINK react goal`; 38 hard skater `JAMEVENT board` = 38 `JAMRINK react board cap=` on the same frames (farthest cap 1.75 m, 3 pieces rocked too; 8 soft and 28 puck board events answered by nothing); 1 `JAMEVENT foul` (`foul_from_behind`, frame 11,661) = 1 `JAMRINK react box` on the same frame**, `react box end` at 11,961, the boxed figure last drawn in its box on 11,960: the counted end is the sim's release frame, 0 frames and 0.00 degrees off. The run asked for two fouls and saw one before its 420 s ran out (`A136 LIVE BUS FAIL` on that count alone); `live_bus_check.py <log> 1` on the same log: **PASS**. No foul came in the first 9,000 frames, so the lane sent `jam.ctrl.Drill 1` (lane A49's tackle drill) to its own process at about frame 9,900; the foul is one of the drill's tackles |
+| Match start | section 43: 0 synchronous arena loads (control 10) |
+| GPU | section 44: +0.009 ms |
+| Ledger | three rows added, two rewritten; `node tools/gate/check-assets-ledger.mjs` PASS |
+| Engine stills | 40 + 20 sweep stills, 40 final stills, 10 box stills; looked at as contact sheets (the flash on both halves and both tiers, the caps, the goal's trough, the box) |
+| Editor build | PASS four times (943 s the full one, then 40 s, 503 s on a loaded machine, about 280 s) |
+
+Not run: `tools/gate/premerge.ps1` as a whole (its ownership step runs git), the node tests, the acceptance run (no verb changed), a windowed match and
+`tools/perf/syncrows.mjs` on a package (the cursor is another lane's), `rig_clearance.py` (no piece moved; its landed result is evolution 4's).
+
+## 46. How to run it again
+
+```
+BL="C:/Program Files/Blender Foundation/Blender 4.2/blender.exe"
+UE="C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+W=$(pwd -W)
+"$BL" -b --factory-startup -P tools/blender/arena/arena.py -- --length 120 --width 60 --out tools/blender/arena/out
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/import_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a145-import.log"
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/verify_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a145-verify.log"
+"$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="Automation RunTests Jam.Rink; Quit" -unattended -nullrhi -Multiprocess -nosplash -nopause -log -abslog="$W/Game/logs/a145-rink-tests.log"
+ARENA_STILLS_REACT=e5 ARENA_STILLS_GPU=1 ARENA_STILLS_GPU_PAIRS=8 "$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/blender/arena/engine_stills.py" -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$W/Game/logs/a145-e5-stills.log"
+ARENA_STILLS_REACT=e5 ARENA_STILLS_E5=sweep,goal ARENA_STILLS_TINTS=1 ARENA_STILLS_LIGHT=300,600,1000 ARENA_STILLS_HIT_RADIUS=4.5,6.0 ARENA_STILLS_STRENGTHS=0.45,0.8 ARENA_STILLS_WAVE=0,0.08,0.12 ARENA_STILLS_OUT=engine-e5-sweep "$UE" ... (the same line)
+python tools/blender/arena/pixel_change.py tools/blender/arena/out/engine-e5 "*p3_clay*-hit-rest.png" "*p3_clay*-hit-s*.png"
+python tools/blender/arena/pixel_change.py tools/blender/arena/out/engine-e5 "*p3_clay*-goal-rest.png" "*p3_clay*-goal-w*.png"
+python tools/blender/arena/gpu_pairs.py Game/logs/a145-e5-stills.log --rows=Lights,DirectLighting
+python tools/blender/arena/sync_start.py --dp jam.PreloadArena=0 --name a145-sync-start-control
+python tools/blender/arena/sync_start.py
+tools/blender/arena/live_bus.sh "$W/tools/perf/cuts/perf.p3_clay_5v5.cartridge.json" 4745 2 18000 420 2      # goals, hard hits, 2 fouls
+```
+
+## 47. Pitfalls met in evolution 5
+
+1. The first flash was a hundred times too strong for its bar: 3,000 cd in a 9 m radius changed 22 % of the picture, and a fifth of that on `l2_night`
+   still 15 %. The radius bounds what a light may touch; the candelas then set how hard. Sweep both.
+2. The share of the picture a light changes barely follows its candelas once the radius bounds it (4.0 % at Strength 0.45, 5.0 % at 0.8): the Strength
+   shows in how bright the pool is, less in how wide.
+3. The wave at half the end light's candelas made the troughs louder than the goal's own frame (26 % against 15 %). The share that levels the flash is
+   0.12.
+4. The sim serves the first penalty frame the frame AFTER the foul's event and releases on foul + penalty_frames. Counting from the foul's own frame put
+   the hand one frame (1.2 degrees) ahead on every frame; the real-sim test measured it and the count was moved.
+5. A door 1.08 m high behind 1.2 m boards is not seen from the ice, open or closed. The stills said so only after the item was built: look first at
+   what the game camera can see of a piece before giving it a motion.
+6. An instanced component draws one level of detail for all its instances (its bounds are the whole ring): a per-cap level needs a hierarchical
+   instanced component or two rings. The level here is the rink's.
+7. `cfg = unreal.JamGameConfig()` in the stills has no teams, so every fouler is team 1 there: the stills look at the +x box.
+8. The off-screen editor fell from 30 frames a second to 1 when other lanes loaded the CPU: sweep 2 was stopped after 20 of 68 stills (the lane's own
+   process) and the night tier's numbers come from the final run only.
+9. A scripted 5 v 5 match fouls seldom (none in the first 9,000 frames): the live proof asked the lane's own process for lane A49's tackle drill
+   (`jam.ctrl.Drill 1` over the remote console), whose tackles from behind are fouls.
+10. In a fresh worktree the scripts under `tools/blender/arena/` are CRLF on disk, `live_bus.sh` too: the lane ran it from an LF copy (`tr -d '\r'`); whether Git Bash takes the CRLF file as it is was not tried.
+
+## 48. For device B and the Director (evolution 5)
+
+- Referenced by name, not edited: `MI_Toon_Blue` and `MI_Toon_Orange` (the caps' slot `kick`, the doors' and hands' slot `team`, through
+  `LoadConstructionMat` like the bench rails), `MI_Toon_Dark` (the door's hinge post and handle), `MI_Toon_Board`, `MI_Toon_KickPlate`, `MI_Toon_Bench`
+  on the box as before, `MI_Toon_NetFrame` (the three lamps' dynamic instances, unchanged). `MI_Toon_KickPlate` is no longer on the caps. In the stills
+  script only: `MI_Toon_Dark`, `MI_Toon_Blue`, `MI_Toon_Orange` on stand-in cylinders, `MPC_Look.Clay`.
+- When B's lamp instance arrives (handoff A-to-B-0024, ask 2): in `ARinkActor::Build` (`RinkActor.cpp` line 930 today, the second such line, in the Blender dressing block:
+  `UMaterialInterface* FrameMat = LoadConstructionMat(TEXT("MI_Toon_NetFrame"), ...)` feeds both the table's `frame` slot and the lamps) load B's
+  instance by its name into a second variable and use it in the `LampOn` loop instead of `FrameMat`; the loop already makes the dynamic copy and reads
+  its `Emissive` as the resting value. `import_arena.py`'s `SLOT_LOOK["lamp"]` takes the same name. One line each.
+- `/Game/UI/T_UI_ScorePlate` and `/Water/Materials/MPC/MPC_Water` still load synchronously on the match-start frame (section 43): the performance
+  lane's list.
+- Contract text proposed for `contracts/events.md` (C-0003), replacing the sentence proposed in section 37: "`goal`, skater `board` and `foul` are also
+  heard by `ARinkActor` (lanes A127, A136, A145): a goal lights the scorer's table's lamp and the scored end's goal light, shakes its net and runs a wave
+  round its end boards' caps; a hard board hit (Strength >= 0.45) rocks the nearest board cap, flashes a light at the hit and rocks the bench, box or
+  table behind it; a foul opens the fouler's team's penalty box and starts its clock for `game.rules.penalty_frames`. Cosmetic: frames counted on the
+  bus's sim frame, nothing read by the sim. `jam.rink.react 0` switches it off."

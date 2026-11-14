@@ -80,6 +80,7 @@ namespace JamAI
 		bool bRestStick = false;         // lane A86 (R-0043 point 2): the old stick (left at rest while carrying, the before arm); env JAM_PLAYTESTER_STICK=rest
 		int Cuts = 0;                    // lane A95: cuts made (the stats read it)
 		bool bOldVerbs = false;          // lane A95: the before arm of job 3 (env JAM_PLAYTESTER_VERBS=old): no brake intent, no cut, no carry sprint (measurement only)
+		bool bOldCheck = false;          // lane A132: the check press on the playtester's own speed along the line, as before (contact.bPlaytesterClosingPress false, or env JAM_PLAYTESTER_CHECK=old for a measurement's before arm)
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);

@@ -12,6 +12,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Materials/MaterialInterface.h"
 #include "HAL/IConsoleManager.h"
 #include "RinkActor.h"
 #include "JamCartridge.h"
@@ -528,7 +529,7 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 		double Perimeter = 0.0;
 		for (int32 i = 0; i < Line.Num(); ++i) Perimeter += FVector2D::Distance(Line[i], Line[(i + 1) % Line.Num()]);
 		TestEqual(*(Tag + TEXT(": one cap at every stanchion place")), N, FMath::Max(4, FMath::RoundToInt32(Perimeter / ARinkActor::StanchionSpacingM)));
-		TestEqual(*(Tag + TEXT(": one instance for every cap")), Rink->ArenaCaps ? Rink->ArenaCaps->GetInstanceCount() : -1, N);
+		TestEqual(*(Tag + TEXT(": one instance for every cap")), Rink->ArenaCaps && Rink->ArenaCapsPos ? Rink->ArenaCaps->GetInstanceCount() + Rink->ArenaCapsPos->GetInstanceCount() : -1, N);   // lane A145: the two halves
 		TestTrue(*(Tag + TEXT(": the caps add fewer than 3,000 triangles")), Rink->GetCapTriangles() > 0 && Rink->GetCapTriangles() < 3000);
 
 		// Every quarter metre of the outline: a skater's centre 0.45 m inside the boards, a hard hit.
@@ -584,7 +585,7 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 			const int32 Cap = Rink->GetRockedCapIndex();
 			const int32 Next = (Cap + 1) % N, Far = (Cap + 3) % N;
 			FTransform Rest, Hit;
-			Rink->ArenaCaps->GetInstanceTransform(Cap, Hit, false);
+			Hit = Rink->GetCapTransform(Cap);
 			TestTrue(*(Tag + TEXT(": the struck cap tilts CapRockDeg x Strength on the hit's frame")), FMath::IsNearlyEqual(Rink->GetCapTiltDeg(Cap), ARinkActor::CapRockDeg * 0.9f, 1e-3f));
 			TestTrue(*(Tag + TEXT(": and hops CapHopCm x Strength")), FMath::IsNearlyEqual(Rink->GetCapHopCm(Cap), ARinkActor::CapHopCm * 0.9f, 1e-3f));
 			TestTrue(*(Tag + TEXT(": the instance itself is lifted off the board top")), FMath::IsNearlyEqual(Hit.GetLocation().Z, ARinkActor::BoardHeightM * 100.0 + ARinkActor::CapHopCm * 0.9, 1e-2));
@@ -605,7 +606,7 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 			bool bAllRest = true;
 			for (int32 k = 0; k < N; ++k)
 			{
-				Rink->ArenaCaps->GetInstanceTransform(k, Rest, false);
+				Rest = Rink->GetCapTransform(k);
 				bAllRest = bAllRest && FMath::IsNearlyEqual(Rest.GetLocation().Z, ARinkActor::BoardHeightM * 100.0, 1e-3) && FMath::IsNearlyZero(Rest.Rotator().Roll, 1e-3) && Rink->GetCapTiltDeg(k) == 0.f;
 			}
 			TestTrue(*(Tag + TEXT(": every cap stands on the board top as Build put it")), bAllRest);
@@ -701,13 +702,13 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 		Rink->SetConstructionVisible(true);
 		Frame += 100;
 		const int32 Pieces = Rink->GetRattleCount();
-		TestFalse(TEXT("jam.rink.caps 0: no caps stand"), Rink->AreCapsShown() || Rink->ArenaCaps->IsVisible());
+		TestFalse(TEXT("jam.rink.caps 0: no caps stand"), Rink->AreCapsShown() || Rink->ArenaCaps->IsVisible() || Rink->ArenaCapsPos->IsVisible());
 		TestFalse(TEXT("jam.rink.caps 0: a hard hit on the end boards rocks no cap"), Hit(FVector(HalfL - 45.0, 100.0, 4.0), 1.f, Skater));
 		TestFalse(TEXT("jam.rink.caps 0: a hard hit at the penalty box rocks no cap"), Hit(FVector(-300.0, -HalfW, 4.0), 1.f, Skater));
 		TestEqual(TEXT("jam.rink.caps 0: the penalty box still rocks (evolution 3's arena)"), Rink->GetRattleCount(), Pieces + 1);
 	}
 	Rink->SetConstructionVisible(true);
-	TestTrue(TEXT("the caps are back with jam.rink.caps 1"), Rink->AreCapsShown() && Rink->ArenaCaps->IsVisible());
+	TestTrue(TEXT("the caps are back with jam.rink.caps 1"), Rink->AreCapsShown() && Rink->ArenaCaps->IsVisible() && Rink->ArenaCapsPos->IsVisible());
 	for (const TCHAR* Name : { TEXT("jam.rink.react"), TEXT("jam.rink.arena") })
 	{
 		FCvarGuard Guard(Name);
@@ -718,6 +719,323 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 		TestFalse(FString::Printf(TEXT("%s 0: nothing is live"), Name), Rink->IsReacting());
 	}
 	Rink->SetConstructionVisible(true);
+	Rink->BindBus(nullptr);
+	return true;
+}
+
+// Lane A145 (track F3, evolution 5): Jam.Rink.HitSeenBoxUsed. The box in use on a real foul of the real sim (the door open within 12 frames, the clock's
+// hand within 2 degrees of the penalty's own frames on every frame, the door again at the end, the other box still), the hit flash (candelas x Strength on
+// the hit's frame at the hit's place, gone in HitFlashFrames, none for a soft hit or the puck), the goal wave (every cap behind the scored line within reach
+// hops in the first pulse, the other end never, two lights ride the fronts, everything at rest when the lamp is), the caps as domes in the team colours,
+// and the neutral values (`jam.rink.react.hit 0`, `jam.rink.react.wave 0`, `jam.rink.react 0`).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamRinkHitSeenBoxUsed, "Jam.Rink.HitSeenBoxUsed", JamRinkReactionTests::Flags)
+bool FJamRinkHitSeenBoxUsed::RunTest(const FString&)
+{
+	struct FFloatGuard
+	{
+		IConsoleVariable* Var = nullptr;
+		float Was = 0.f;
+		explicit FFloatGuard(const TCHAR* Name) { Var = IConsoleManager::Get().FindConsoleVariable(Name); if (Var) Was = Var->GetFloat(); }
+		void Set(float V) { if (Var) Var->Set(V, ECVF_SetByCode); }
+		~FFloatGuard() { if (Var) Var->Set(Was, ECVF_SetByCode); }
+	};
+	TestEqual(TEXT("the flash is full on the hit's frame"), ARinkActor::HitFlashAt(0, 1.f), 1.f);
+	TestEqual(TEXT("the flash scales with Strength"), ARinkActor::HitFlashAt(0, 0.5f), 0.5f);
+	TestEqual(TEXT("the flash is over at HitFlashFrames"), ARinkActor::HitFlashAt(ARinkActor::HitFlashFrames, 1.f), 0.f);
+	TestTrue(TEXT("the flash ends inside the cap ripple"), ARinkActor::HitFlashFrames <= ARinkActor::CapRippleFrames);
+	TestTrue(TEXT("the door moves on the foul's frame"), ARinkActor::DoorAt(0) > 0.f);
+	TestTrue(TEXT("the door is open within 12 frames"), ARinkActor::DoorOpenFrames <= 12 && ARinkActor::DoorAt(ARinkActor::DoorOpenFrames - 1) == 1.f && ARinkActor::DoorAt(11) == 1.f);
+	TestEqual(TEXT("the door is closed again after its cycle"), ARinkActor::DoorAt(ARinkActor::DoorCycleFrames), 0.f);
+	TestTrue(TEXT("a quarter turn takes the hand's top to the box's -x (clockwise for somebody on the ice)"),
+		FRotator(90.0, 0.0, 0.0).RotateVector(FVector::UpVector).Equals(FVector(-1.0, 0.0, 0.0), 1e-6));
+
+	FJamGameConfig Cfg;
+	if (!LoadRegular(*this, Cfg)) return false;
+	Cfg.Rules.bPenalties = true;
+	FTestWorld W;
+	ARinkActor* Rink = SpawnRink(W, Cfg);
+	if (!TestNotNull(TEXT("the rink spawned"), Rink)) return false;
+	if (!TestTrue(TEXT("the Blender pieces and the caps stand (p3_clay)"), Rink->IsArenaDressingShown() && Rink->AreCapsShown())) return false;
+	UJamEventBus* Bus = MakeBus();
+	Rink->BindBus(Bus);
+	const double HalfW = Cfg.Rink.WidthM * 0.5 * 100.0, HalfL = Cfg.Rink.LengthM * 0.5 * 100.0;
+	const FName Skater(TEXT("skater"));
+	const int32 N = Rink->GetCapCount();
+
+	// ---- The box in use: the drill of Jam.Rink.PenaltySeat (the human checks an opponent without the puck), events through the bus on every frame.
+	if (!TestTrue(TEXT("the doors and the hands hang on the boxes"), Rink->IsBoxUsable())) return false;
+	const int32 P = Cfg.Rules.PenaltyFrames > 0 ? Cfg.Rules.PenaltyFrames : 300;
+	TestEqual(TEXT("the boxes count game.rules.penalty_frames"), Rink->GetBoxPenaltyFrames(), P);
+	TestTrue(TEXT("at rest both doors are closed and both hands at the top"), Rink->GetBoxDoorDeg(0) == 0.f && Rink->GetBoxDoorDeg(1) == 0.f && Rink->GetBoxHandDeg(0) == 0.f && Rink->GetBoxHandDeg(1) == 0.f);
+	{
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 1);
+		Sim->SkipFaceoff();
+		UJamSim* Twin = NewObject<UJamSim>();
+		Twin->Init(Cfg, 1);
+		Twin->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		int32 O = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (O < 0 && S.Team != Sim->GetSkaters()[Me].Team && !S.bHuman) O = S.Index;
+		if (!TestTrue(TEXT("a human and an opponent"), Sim->GetSkaters().IsValidIndex(Me) && O >= 0)) return false;
+		for (UJamSim* S2 : { Sim, Twin })
+		{
+			for (const FJamSkaterState& S : S2->GetSkaters()) if (S.Index != Me && S.Index != O) S2->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.0, 18.0), FVector2D::ZeroVector, 0);
+			S2->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);
+			S2->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+			S2->SetSkater(Me, FVector2D(-1.2, 0), FVector2D(8, 0), 0);
+		}
+		const int32 Team = Sim->GetSkaters()[Me].Team, Other = 1 - Team;
+		UStaticMeshComponent* DoorComp = Team == 0 ? Rink->ArenaBoxDoorNeg.Get() : Rink->ArenaBoxDoorPos.Get();
+		UStaticMeshComponent* HandComp = Team == 0 ? Rink->ArenaBoxHandNeg.Get() : Rink->ArenaBoxHandPos.Get();
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		In[Me].Move = FVector2D(1, 0);
+		In[Me].bCheck = true;
+		int64 FoulAt = -1, ReleasedAt = -1;
+		int32 Boxed = 0, HashDiffs = 0, OtherMoved = 0, CompOff = 0;
+		float WorstHand = 0.f, DoorAt11 = -1.f, DoorOnFoul = -1.f, DoorMid = -1.f, DoorAfterRelease11 = -1.f, DoorOnRelease = -1.f;
+		for (int32 F = 0; F < P + 900; ++F)
+		{
+			if (Sim->GetPhase() == EJamSimPhase::Faceoff) { Sim->SkipFaceoff(); Twin->SkipFaceoff(); }
+			Sim->Step(In);
+			Twin->Step(In);
+			In[Me].bCheck = false;
+			if (F >= 6) In[Me].Move = FVector2D::ZeroVector;
+			if (Sim->StateHash() != Twin->StateHash()) ++HashDiffs;
+			const int32 Before = Rink->GetBoxReactionCount();
+			Deliver(Sim, Bus, Rink);
+			const int64 Now = Sim->GetFrame();
+			if (FoulAt < 0 && Rink->GetBoxReactionCount() > Before) { FoulAt = Now; DoorOnFoul = Rink->GetBoxDoorDeg(Team); }
+			const FJamSkaterState& S = Sim->GetSkaters()[Me];
+			if (Rink->GetBoxDoorDeg(Other) != 0.f || Rink->GetBoxHandDeg(Other) != 0.f) ++OtherMoved;
+			if (DoorComp && !FMath::IsNearlyEqual(static_cast<float>(DoorComp->GetRelativeRotation().Yaw), Rink->GetBoxDoorDeg(Team), 0.01f)) ++CompOff;
+			if (S.InBox())
+			{
+				++Boxed;
+				// The penalty's own frames, as the sim holds them after this step: P - S.PenaltyFrames of P are served.
+				const float Want = 360.f * static_cast<float>(P - S.PenaltyFrames) / static_cast<float>(P);
+				float Err = FMath::Abs(Rink->GetBoxHandDeg(Team) - Want);
+				Err = FMath::Min(Err, 360.f - Err);
+				WorstHand = FMath::Max(WorstHand, Err);
+				if (HandComp)
+				{
+					const FVector Tip = HandComp->GetRelativeRotation().RotateVector(FVector::UpVector);
+					const FVector WantTip = FRotator(Rink->GetBoxHandDeg(Team), 0.0, 0.0).RotateVector(FVector::UpVector);
+					if (!Tip.Equals(WantTip, 1e-3)) ++CompOff;
+				}
+				if (FoulAt >= 0 && Now - FoulAt == 11) DoorAt11 = Rink->GetBoxDoorDeg(Team);
+				if (FoulAt >= 0 && Now - FoulAt == P / 2) DoorMid = Rink->GetBoxDoorDeg(Team);
+			}
+			else if (Boxed > 0 && ReleasedAt < 0) { ReleasedAt = Now; DoorOnRelease = Rink->GetBoxDoorDeg(Team); }
+			if (ReleasedAt >= 0 && Now - ReleasedAt == 11) DoorAfterRelease11 = Rink->GetBoxDoorDeg(Team);
+			if (ReleasedAt >= 0 && Now - ReleasedAt >= ARinkActor::DoorCycleFrames + 2) break;
+		}
+		TestTrue(TEXT("the sim called the foul and the box answered it once"), FoulAt >= 0 && Rink->GetBoxReactionCount() == 1);
+		TestTrue(TEXT("the whole penalty was watched"), Boxed >= P - 8 && ReleasedAt >= 0);
+		TestTrue(TEXT("the door moves on the foul's frame"), DoorOnFoul > 0.f);
+		TestTrue(TEXT("the door is open within 12 frames of the foul"), FMath::IsNearlyEqual(DoorAt11, ARinkActor::DoorOpenDeg, 0.01f));
+		TestEqual(TEXT("the door is closed in the middle of the penalty"), DoorMid, 0.f);
+		TestTrue(TEXT("the clock's hand is within 2 degrees of the penalty's frames on every frame"), WorstHand <= 2.f);
+		TestTrue(TEXT("the door opens again the frame the skater is back on the ice"), DoorOnRelease > 0.f);
+		TestTrue(TEXT("and is open within 12 frames of it"), FMath::IsNearlyEqual(DoorAfterRelease11, ARinkActor::DoorOpenDeg, 0.01f));
+		TestEqual(TEXT("the other team's box never moves"), OtherMoved, 0);
+		TestEqual(TEXT("the door's and the hand's components hold what the read-outs say on every frame"), CompOff, 0);
+		TestTrue(TEXT("after the door's second cycle the box is at rest"), Rink->GetBoxDoorDeg(Team) == 0.f && Rink->GetBoxHandDeg(Team) == 0.f);
+		TestEqual(TEXT("the sim's hash equals the twin's on every frame"), HashDiffs, 0);
+		AddInfo(FString::Printf(TEXT("A145 box: team %d fouled at sim frame %lld, %d boxed frames of a %d-frame penalty, released at %lld (foul + %lld); door %.1f deg on the foul's frame, %.1f at +11, %.1f on the release frame, %.1f at release +11; the hand at most %.3f deg from 360 x served / %d; hash %s"),
+			Team, static_cast<long long>(FoulAt), Boxed, P, static_cast<long long>(ReleasedAt), static_cast<long long>(ReleasedAt - FoulAt), DoorOnFoul, DoorAt11, DoorOnRelease, DoorAfterRelease11, WorstHand, P, *Sim->StateHashHex()));
+	}
+	int64 Frame = 800000;
+	Bus->SetSimFrame(Frame);
+	Rink->AdvanceReactions(Frame);
+	TestFalse(TEXT("nothing is live before the hits"), Rink->IsReacting());
+	{
+		// A foul by a skater of each team by its index (team 0's skaters first), and the still box with jam.rink.react 0.
+		const int32 Split = Cfg.Teams.Num() > 0 ? Cfg.Teams[0].Skaters.Num() : 0;
+		const int32 Count = Rink->GetBoxReactionCount();
+		FJamEventPayload Fl;
+		Fl.Who = Split;       // the first skater of team 1
+		Fl.Where = FVector(0.0, 0.0, 0.0);
+		Fl.Strength = 1.f;
+		Fl.Kind = FName(TEXT("foul_no_puck"));
+		Bus->Broadcast(JamEvents::Foul, Fl);
+		TestTrue(TEXT("a foul by team 1's first skater opens team 1's box, not team 0's"), Rink->GetBoxReactionCount() == Count + 1 && Rink->GetBoxDoorDeg(1) > 0.f && Rink->GetBoxDoorDeg(0) == 0.f);
+		Frame += P + ARinkActor::DoorCycleFrames + 1;
+		Bus->SetSimFrame(Frame);
+		Rink->AdvanceReactions(Frame);
+		TestFalse(TEXT("the box is at rest after the penalty and the door's second cycle"), Rink->IsReacting());
+		FCvarGuard Guard(TEXT("jam.rink.react"));
+		Guard.Set(0);
+		Rink->SetConstructionVisible(true);
+		TestTrue(TEXT("jam.rink.react 0: both doors stand open as the box was built before the lane, the hands at the top"),
+			FMath::IsNearlyEqual(Rink->GetBoxDoorDeg(0), ARinkActor::DoorOpenDeg, 0.01f) && FMath::IsNearlyEqual(Rink->GetBoxDoorDeg(1), ARinkActor::DoorOpenDeg, 0.01f) && Rink->GetBoxHandDeg(0) == 0.f);
+		Bus->Broadcast(JamEvents::Foul, Fl);
+		TestTrue(TEXT("jam.rink.react 0: a foul moves nothing"), Rink->GetBoxReactionCount() == Count + 1 && !Rink->IsReacting());
+	}
+	Rink->SetConstructionVisible(true);
+	TestTrue(TEXT("the doors are closed again with jam.rink.react 1"), Rink->GetBoxDoorDeg(0) == 0.f && Rink->GetBoxDoorDeg(1) == 0.f);
+
+	// ---- The caps: domes in the team colours, under the triangle budget.
+	{
+		int32 Blue = 0, Orange = 0;
+		for (int32 k = 0; k < N; ++k) (Rink->GetCapPlaceM(k).X >= 0.0 ? Orange : Blue)++;
+		TestTrue(TEXT("90 x 45: the caps are the dome"), Rink->AreCapsRound());
+		TestEqual(TEXT("the dome is 40 triangles a cap"), Rink->GetCapTriangles(), N * 40);
+		TestTrue(TEXT("the ring stays within the triangle budget"), Rink->GetCapTriangles() <= ARinkActor::CapTriangleBudget);
+		TestEqual(TEXT("the x < 0 half's caps are ArenaCaps' instances"), Rink->ArenaCaps->GetInstanceCount(), Blue);
+		TestEqual(TEXT("the x >= 0 half's caps are ArenaCapsPos' instances"), Rink->ArenaCapsPos->GetInstanceCount(), Orange);
+		const UMaterialInterface* MatNeg = Rink->ArenaCaps->GetMaterial(0);
+		const UMaterialInterface* MatPos = Rink->ArenaCapsPos->GetMaterial(0);
+		TestTrue(TEXT("the two halves carry two different instances"), MatNeg && MatPos && MatNeg != MatPos);
+		AddInfo(FString::Printf(TEXT("A145 caps: %d caps, %d triangles (%s), %d on %s (x < 0), %d on %s (x >= 0)"), N, Rink->GetCapTriangles(), Rink->AreCapsRound() ? TEXT("the dome") : TEXT("the far level"),
+			Blue, MatNeg ? *MatNeg->GetName() : TEXT("none"), Orange, MatPos ? *MatPos->GetName() : TEXT("none")));
+		FJamGameConfig Big = Cfg;
+		Big.Rink.LengthM = 140.0;
+		Big.Rink.WidthM = 70.0;
+		FTestWorld W2;
+		ARinkActor* BigRink = SpawnRink(W2, Big);
+		if (TestNotNull(TEXT("the 140 x 70 rink spawned"), BigRink))
+		{
+			TestFalse(TEXT("140 x 70: more caps than the dome's budget allows, the rink takes the far level"), BigRink->AreCapsRound());
+			TestTrue(TEXT("140 x 70: 24 triangles a cap, within the budget"), BigRink->GetCapTriangles() == BigRink->GetCapCount() * 24 && BigRink->GetCapTriangles() <= ARinkActor::CapTriangleBudget);
+			AddInfo(FString::Printf(TEXT("A145 caps: 140 x 70: %d caps, %d triangles (the far level)"), BigRink->GetCapCount(), BigRink->GetCapTriangles()));
+		}
+	}
+
+	// ---- The hit flash.
+	auto LitLight = [&]() { int32 Lit = -1, Count = 0; for (int32 i = 0; i < ARinkActor::CapRipples; ++i) if (Rink->GetHitLightIntensity(i) > 0.f) { Lit = i; ++Count; } return Count == 1 ? Lit : -1 - Count; };
+	auto Board = [&](const FVector& Where, float Strength, FName Kind, const FVector& Dir)
+	{
+		Frame += 100;
+		Bus->SetSimFrame(Frame);
+		Rink->AdvanceReactions(Frame);
+		FJamEventPayload Pl;
+		Pl.Who = 0;
+		Pl.Where = Where;
+		Pl.Strength = Strength;
+		Pl.Kind = Kind;
+		Pl.Dir = Dir;
+		Bus->Broadcast(JamEvents::Board, Pl);
+	};
+	const float Peak = Rink->HitLightPeakHere();
+	TestTrue(TEXT("the flash's candelas come from jam.rink.react.hit"), Peak > 0.f && FMath::IsNearlyEqual(Peak, ARinkActor::HitLightPeak(), 0.01f));
+	{
+		Board(FVector(1000.0, HalfW - 45.0, 4.0), 0.8f, Skater, FVector(0.0, -1.0, 0.0));
+		const int32 Lit = LitLight();
+		if (TestTrue(TEXT("a hard hit lights one flash"), Lit >= 0))
+		{
+			const FVector At = Rink->ArenaHitLights[Lit]->GetRelativeLocation();
+			TestTrue(TEXT("candelas x Strength on the hit's frame"), FMath::IsNearlyEqual(Rink->GetHitLightIntensity(Lit), Peak * 0.8f, 0.5f));
+			TestTrue(TEXT("at the hit, HitLightInM into the rink along the board's normal, HitLightHeightM up"),
+				FMath::IsNearlyEqual(At.X, 1000.0, 0.1) && FMath::IsNearlyEqual(At.Y, HalfW - 45.0 - ARinkActor::HitLightInM * 100.0, 0.1) && FMath::IsNearlyEqual(At.Z, ARinkActor::HitLightHeightM * 100.0, 0.1));
+			Bus->SetSimFrame(Frame + 6);
+			Rink->AdvanceReactions(Frame + 6);
+			TestTrue(TEXT("a quarter of it is left after six frames"), FMath::IsNearlyEqual(Rink->GetHitLightIntensity(Lit), Peak * 0.8f * 0.25f, 0.5f));
+			Bus->SetSimFrame(Frame + ARinkActor::HitFlashFrames);
+			Rink->AdvanceReactions(Frame + ARinkActor::HitFlashFrames);
+			TestEqual(TEXT("dark after HitFlashFrames"), Rink->GetHitLightIntensity(Lit), 0.f);
+			Bus->SetSimFrame(Frame + ARinkActor::CapRippleFrames);
+			Rink->AdvanceReactions(Frame + ARinkActor::CapRippleFrames);
+			TestFalse(TEXT("nothing is live after the ripple"), Rink->IsReacting());
+		}
+		Board(FVector(-1000.0, -(HalfW - 45.0), 4.0), 0.5f, Skater, FVector::ZeroVector);
+		const int32 Lit2 = LitLight();
+		if (TestTrue(TEXT("a weaker hard hit lights one flash too"), Lit2 >= 0))
+		{
+			const FVector At = Rink->ArenaHitLights[Lit2]->GetRelativeLocation();
+			TestTrue(TEXT("its candelas follow its Strength"), FMath::IsNearlyEqual(Rink->GetHitLightIntensity(Lit2), Peak * 0.5f, 0.5f));
+			TestTrue(TEXT("without a normal in the payload the flash still stands inside the rink"), FMath::Abs(At.Y) < HalfW - 45.0 && At.Y < 0.0);
+		}
+		Board(FVector(1000.0, HalfW - 45.0, 4.0), 0.3f, Skater, FVector(0.0, -1.0, 0.0));
+		TestTrue(TEXT("a soft hit lights nothing new"), LitLight() == Lit2 || LitLight() == -1);
+		Frame += 100;
+		Board(FVector(1000.0, HalfW - 45.0, 4.0), 1.f, FName(TEXT("puck")), FVector(0.0, -1.0, 0.0));
+		TestEqual(TEXT("the puck lights nothing"), LitLight(), -1);
+		FFloatGuard Guard(TEXT("jam.rink.react.hit"));
+		Guard.Set(0.f);
+		const int32 Rocks = Rink->GetCapRockCount();
+		Board(FVector(1000.0, HalfW - 45.0, 4.0), 1.f, Skater, FVector(0.0, -1.0, 0.0));
+		TestTrue(TEXT("jam.rink.react.hit 0: the cap rocks and nothing lights (evolution 4's hit)"), Rink->GetCapRockCount() == Rocks + 1 && LitLight() == -1);
+	}
+
+	// ---- The goal wave.
+	{
+		Frame += 1000;
+		Bus->SetSimFrame(Frame);
+		Rink->AdvanceReactions(Frame);
+		TestFalse(TEXT("nothing is live before the goal"), Rink->IsReacting());
+		const double GoalLineM = Cfg.Rink.LengthM * 0.5 - 4.0;
+		TArray<int32> EndCaps, OtherCaps;
+		for (int32 k = 0; k < N; ++k)
+		{
+			const FVector2D At = Rink->GetCapPlaceM(k);
+			if (At.X > GoalLineM && FMath::Abs(At.Y) <= ARinkActor::WaveReachM) EndCaps.Add(k);
+			else if (At.X < 0.0 || FMath::Abs(At.Y) > ARinkActor::WaveReachM + 0.01) OtherCaps.Add(k);
+		}
+		TestTrue(TEXT("caps stand behind the +x goal line within the wave's reach"), EndCaps.Num() >= 4);
+		FJamEventPayload Goal;
+		Goal.Where = FVector((GoalLineM + 0.5) * 100.0, 0.0, 4.0);
+		Goal.Strength = 1.f;
+		Bus->Broadcast(JamEvents::Goal, Goal);
+		TArray<float> MaxHop;
+		MaxHop.SetNumZeroed(N);
+		float WaveAt9 = -1.f, WaveMax = 0.f;
+		FVector WavePlace9[2] = { FVector::ZeroVector, FVector::ZeroVector };
+		int32 Hopping9 = 0, HoppingInFade = 0;
+		for (int64 F = 0; F < ARinkActor::LampFlashFrames; ++F)
+		{
+			Bus->SetSimFrame(Frame + F);
+			Rink->AdvanceReactions(Frame + F);
+			if (F < ARinkActor::LampPulseFrames) for (int32 k = 0; k < N; ++k) MaxHop[k] = FMath::Max(MaxHop[k], Rink->GetCapHopCm(k));
+			else for (const int32 k : OtherCaps) MaxHop[k] = FMath::Max(MaxHop[k], Rink->GetCapHopCm(k));
+			WaveMax = FMath::Max(WaveMax, Rink->GetWaveLightIntensity(0));
+			if (F == 9)
+			{
+				WaveAt9 = Rink->GetWaveLightIntensity(1);
+				for (int32 s = 0; s < 2; ++s) WavePlace9[s] = Rink->ArenaWaveLights[s]->GetRelativeLocation();
+				for (const int32 k : EndCaps) if (Rink->GetCapHopCm(k) > 0.f) ++Hopping9;
+			}
+			if (F == 99) for (const int32 k : EndCaps) if (Rink->GetCapHopCm(k) > 0.f) ++HoppingInFade;
+		}
+		int32 Hopped = 0, Strays = 0;
+		for (const int32 k : EndCaps) if (MaxHop[k] > 1.f) ++Hopped;
+		for (const int32 k : OtherCaps) if (MaxHop[k] > 0.f) ++Strays;
+		const float EndPeak = Rink->LampLightPeakAt(2);
+		TestEqual(TEXT("every cap behind the scored line within reach hops in the first pulse"), Hopped, EndCaps.Num());
+		TestEqual(TEXT("no cap of the other end or beyond the reach moves in the whole flash"), Strays, 0);
+		TestTrue(TEXT("caps are in the air in the lamp's trough (frame 9)"), Hopping9 > 0);
+		TestTrue(TEXT("the wave still runs inside the lamp's fade (frame 99)"), HoppingInFade > 0);
+		TestTrue(TEXT("each wave light carries half its share in the middle of a pulse"), FMath::IsNearlyEqual(WaveAt9, EndPeak * ARinkActor::WaveShare() * 0.5f, 1.f));
+		TestTrue(TEXT("the wave lights never pass their share of the end light"), WaveMax <= EndPeak * ARinkActor::WaveShare() + 0.01f);
+		TestTrue(TEXT("in the middle of a pulse the two lights stand half the reach to each side, inside the end boards"),
+			FMath::IsNearlyEqual(WavePlace9[0].Y, -ARinkActor::WaveReachM * 50.0, 0.1) && FMath::IsNearlyEqual(WavePlace9[1].Y, ARinkActor::WaveReachM * 50.0, 0.1)
+			&& WavePlace9[0].X < HalfL && WavePlace9[0].X > GoalLineM * 100.0);
+		Bus->SetSimFrame(Frame + ARinkActor::LampFlashFrames);
+		Rink->AdvanceReactions(Frame + ARinkActor::LampFlashFrames);
+		bool bAllRest = Rink->GetWaveLightIntensity(0) == 0.f && Rink->GetWaveLightIntensity(1) == 0.f;
+		for (int32 k = 0; k < N; ++k) bAllRest = bAllRest && Rink->GetCapHopCm(k) == 0.f && FMath::IsNearlyEqual(Rink->GetCapTransform(k).GetLocation().Z, ARinkActor::BoardHeightM * 100.0, 1e-3);
+		TestTrue(TEXT("when the lamp is at rest every cap stands and the wave lights are dark"), bAllRest);
+		TestFalse(TEXT("nothing is live after LampFlashFrames"), Rink->IsReacting());
+		AddInfo(FString::Printf(TEXT("A145 wave: %d caps behind the +x line within %.0f m all hopped in the first pulse, %d in the air at frame 9; wave lights %.0f cd at frame 9 at y -+%.1f m, at most %.0f cd (the end light %.0f cd)"),
+			EndCaps.Num(), ARinkActor::WaveReachM, Hopping9, WaveAt9, WavePlace9[1].Y / 100.0, WaveMax, EndPeak));
+		FFloatGuard Guard(TEXT("jam.rink.react.wave"));
+		Guard.Set(0.f);
+		Frame += 1000;
+		Bus->SetSimFrame(Frame);
+		Bus->Broadcast(JamEvents::Goal, Goal);
+		float AnyHop = 0.f, AnyLight = 0.f;
+		for (int64 F = 0; F < 2 * ARinkActor::LampPulseFrames; ++F)
+		{
+			Bus->SetSimFrame(Frame + F);
+			Rink->AdvanceReactions(Frame + F);
+			for (int32 k = 0; k < N; ++k) AnyHop = FMath::Max(AnyHop, Rink->GetCapHopCm(k));
+			AnyLight = FMath::Max(AnyLight, FMath::Max(Rink->GetWaveLightIntensity(0), Rink->GetWaveLightIntensity(1)));
+		}
+		TestTrue(TEXT("jam.rink.react.wave 0: a goal moves no cap and lights no wave (evolution 4's goal)"), AnyHop == 0.f && AnyLight == 0.f && Rink->GetGoalLightEmissive(1) > Rink->GetLampRestEmissive());
+		Bus->SetSimFrame(Frame + 200);
+		Rink->AdvanceReactions(Frame + 200);
+	}
 	Rink->BindBus(nullptr);
 	return true;
 }

@@ -86,13 +86,13 @@
       "fbx_mb": 0.089
     },
     "SM_Arena_PenaltyBox": {
-      "triangles": 2144,
+      "triangles": 1872,
       "triangles_by_slot": {
         "board": 432,
         "kick": 272,
         "bench": 96,
-        "team": 864,
-        "dark": 480
+        "team": 720,
+        "dark": 352
       },
       "triangles_by_part": {
         "floor": 96,
@@ -103,12 +103,10 @@
         "seat": 96,
         "legs": 128,
         "backrest": 80,
-        "door": 80,
-        "door_fittings": 128,
-        "clock": 512
+        "clock": 448
       },
-      "vertices": 1112,
-      "uv_loops": 4656,
+      "vertices": 968,
+      "uv_loops": 4048,
       "uv_min": [
         0.0,
         0.0
@@ -123,6 +121,16 @@
         2.663
       ],
       "sockets": {
+        "Door": [
+          -1.75,
+          0.06,
+          0.0
+        ],
+        "Hand": [
+          0.0,
+          1.41,
+          2.35
+        ],
         "Seat": [
           0.35,
           0.62,
@@ -139,7 +147,7 @@
         "team",
         "dark"
       ],
-      "fbx_mb": 0.076
+      "fbx_mb": 0.07
     },
     "SM_Arena_ScorerTable": {
       "triangles": 2088,
@@ -494,6 +502,39 @@
       "fbx_mb": 0.036
     },
     "SM_Arena_BoardCap": {
+      "triangles": 40,
+      "triangles_by_slot": {
+        "kick": 40
+      },
+      "triangles_by_part": {
+        "cap": 40
+      },
+      "vertices": 25,
+      "uv_loops": 88,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        0.644,
+        0.275
+      ],
+      "dimensions_m": [
+        0.515,
+        0.247,
+        0.41
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "budget": 48,
+      "length_m": 0.56,
+      "thumb_presses": 1,
+      "slots": [
+        "kick"
+      ],
+      "fbx_mb": 0.017
+    },
+    "SM_Arena_BoardCapFar": {
       "triangles": 24,
       "triangles_by_slot": {
         "kick": 24
@@ -525,6 +566,75 @@
         "kick"
       ],
       "fbx_mb": 0.016
+    },
+    "SM_Arena_BoxDoor": {
+      "triangles": 208,
+      "triangles_by_slot": {
+        "team": 80,
+        "dark": 128
+      },
+      "triangles_by_part": {
+        "door": 80,
+        "door_fittings": 128
+      },
+      "vertices": 110,
+      "uv_loops": 464,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        0.603,
+        1.129
+      ],
+      "dimensions_m": [
+        1.143,
+        0.16,
+        1.086
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "budget": 400,
+      "length_m": 1.05,
+      "thumb_presses": 0,
+      "slots": [
+        "team",
+        "dark"
+      ],
+      "fbx_mb": 0.022
+    },
+    "SM_Arena_BoxHand": {
+      "triangles": 64,
+      "triangles_by_slot": {
+        "team": 64
+      },
+      "triangles_by_part": {
+        "hand": 64
+      },
+      "vertices": 34,
+      "uv_loops": 144,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        0.201,
+        0.091
+      ],
+      "dimensions_m": [
+        0.065,
+        0.04,
+        0.274
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "budget": 80,
+      "length_m": 0.25,
+      "thumb_presses": 0,
+      "slots": [
+        "team"
+      ],
+      "fbx_mb": 0.017
     }
   },
   "placement_m": {
@@ -580,7 +690,15 @@
     "SM_Arena_BoardCap": {
       "note": "instanced by RinkActor at every stanchion place (the outline's length / 3.6 m, rounded, evenly spaced), on the boards' middle line at z = board height, yaw along the boards",
       "spacing_m": 3.6,
-      "triangles_each": 24
+      "triangles_each": 40,
+      "triangles_each_far": 24
+    },
+    "SM_Arena_BoxDoor": {
+      "note": "hung on the penalty box's socket Door (the hinge); yaw 0 closed, door_open_deg open into the box",
+      "open_deg": 72.0
+    },
+    "SM_Arena_BoxHand": {
+      "note": "on the penalty box's socket Hand (the clock's middle); turned about the box's out axis, one turn for one penalty"
     },
     "goals": {
       "note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
@@ -597,5 +715,5 @@
       ]
     }
   },
-  "total_s": 4.7
+  "total_s": 1.0
 }

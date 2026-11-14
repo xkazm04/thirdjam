@@ -11,10 +11,17 @@ import statistics
 import sys
 
 ROWS = ("<root>", "BasePass", "CustomDepth")
+# Lane A145: `python gpu_pairs.py <log> --all` reads every row of the table (the hit flash's pairs, marked `a145.hit 0|1` by engine_stills.py's e5 mode)
+# and prints the rows whose median moved most between off and on: a light's cost shows in the lighting rows, whatever this engine version calls them.
+ALL = "--all" in sys.argv
+# `--rows=Lights,UnbatchedLights` adds rows by name (a row that exists only with the light on counts as 0 ms off).
+for _a in sys.argv[2:]:
+    if _a.startswith("--rows="):
+        ROWS = ROWS + tuple(n for n in _a[7:].split(",") if n)
 
 
 def main(path):
-    mark = re.compile(r"A119 STILLS gpu (jam\.rink\.caps (\d)|ProfileGPU)")
+    mark = re.compile(r"A119 STILLS gpu ((?:jam\.rink\.caps|a145\.hit) (\d)|ProfileGPU)")
     # ... time ms | incl draws | dispatches | prims | verts | percent | bar | time ms | name |
     row = re.compile(r"ms\s*\S\s*(\d+)\s*\S\s*(\d+)\s*\S\s*(\d+)\s*\S\s*(\d+)\s*\S\s*[0-9.]+%.*?([0-9.]+) ms\s*\S\s*(.+?)\s*\S\s*$")
     state, armed, graphics = None, False, False
@@ -41,7 +48,7 @@ def main(path):
             if not graphics:
                 continue
             m = row.search(line.rstrip())
-            if m and m.group(6) in ROWS and m.group(6) not in cur:
+            if m and (ALL or m.group(6) in ROWS) and m.group(6) not in cur:
                 cur[m.group(6)] = {"draws": int(m.group(1)), "prims": int(m.group(3)), "ms": float(m.group(5))}
     if cur and state is not None and "<root>" in cur:
         got[state].append(cur)
@@ -49,11 +56,20 @@ def main(path):
         print("A136 GPU could not read pairs from %s (caps off %d, caps on %d)" % (path, len(got[0]), len(got[1])))
         return 2
     res = {"tool": "thirdjam.arena.gpu_pairs/1", "frames_off": len(got[0]), "frames_on": len(got[1]), "rows": {}}
-    for name in ROWS:
+    names = list(ROWS)
+    if ALL:
+        seen = sorted({n for g in got[0] + got[1] for n in g if n not in ROWS})
+        def moved(n):
+            a, b = [g[n]["ms"] for g in got[0] if n in g], [g[n]["ms"] for g in got[1] if n in g]
+            return abs(statistics.median(b) - statistics.median(a)) if a and b else 0.0
+        names += sorted(seen, key=moved, reverse=True)[:14]
+    for name in names:
         off = [g[name] for g in got[0] if name in g]
         on = [g[name] for g in got[1] if name in g]
-        if not off or not on:
+        if not on:
             continue
+        if not off:      # a row that is only there while the light is on
+            off = [{"ms": 0.0, "draws": 0, "prims": 0}]
         r = {}
         for key in ("ms", "draws", "prims"):
             a, b = statistics.median(x[key] for x in off), statistics.median(x[key] for x in on)

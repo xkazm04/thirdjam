@@ -21,8 +21,9 @@ If Windows asks about the firewall, that is the joined match's socket: Cancel is
 ## Ten minutes, in this order
 
 1. **A first match on the regular cut at rookie.** A newcomer wins about 85 % there. Does the first minute explain itself?
-2. **The stop-and-go.** Carry at a defender, press **S against your motion** when he is about two stick lengths away, then go the other way. At pro it should work
-   nearly every time from that distance, and never if you just charge. This is the game's central skill: does it feel like one?
+2. **The stop-and-go.** Carry at a defender, press **S against your motion** when he is about 8 m away (five stick lengths; against an all-star 12 m, eight), then go
+   the other way. At pro it should work nearly every time from that distance, and never if you just charge. `jam.ctrl.Drill 21` in a Development build
+   stages it and says the distance on screen. This is the game's central skill: does it feel like one?
 3. **Two hits.** Skate beside an opponent at his speed and check him (RMB): a nudge. Then hit one head-on at full speed: he goes down. Same button.
 4. **Keep the puck.** Carry with a defender on your back and turn your body between him and the puck: his stick should not reach it.
 5. **The season's take 3 and take 4.** Take 3 is easy now (a novice wins 86 %); the step to take 4 is still too steep (the curve lane is on it).

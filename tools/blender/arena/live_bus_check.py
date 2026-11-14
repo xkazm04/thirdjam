@@ -15,6 +15,12 @@ def main(path):
     rg = re.compile(r"JAMRINK react goal end=(\S+) frame=(\d+)")
     rb = re.compile(r"JAMRINK react board cap=(\d+) of (\d+) strength=([0-9.]+) frame=(\d+) tilt ([-0-9.]+) deg hop ([-0-9.]+) cm, ([0-9.]+) m from the hit")
     rr = re.compile(r"JAMRINK react rattle piece=(\S+) strength=([0-9.]+) frame=(\d+)")
+    # lane A145: the box in use. One `react box` line per `foul` event; `react box end` when the counted penalty is over; `box left` when the boxed figure
+    # is no longer drawn in its box (the sim released the skater): the two must agree to a frame for the clock's hand to be right.
+    rx = re.compile(r"JAMRINK react box team=(\d) who=(-?\d+) frame=(\d+) penalty=(\d+)")
+    rxe = re.compile(r"JAMRINK react box end team=(\d) frame=(\d+)")
+    rxl = re.compile(r"JAMRINK box left team=(\d) frame=(\d+) last_seen=(\d+) counted_end=(-?\d+)")
+    fouls, rbox, rbox_end, rbox_left = [], [], [], []
     goals, hard, edge, soft, pucks = [], [], [], 0, 0
     rgoals, rcaps, rpieces = [], [], []
     setup = {}
@@ -27,6 +33,8 @@ def main(path):
                 last = max(last, frame)
                 if name == "goal":
                     goals.append(frame)
+                elif name == "foul":
+                    fouls.append(frame)
                 elif name == "board":
                     if kind != "skater":
                         pucks += 1
@@ -48,6 +56,18 @@ def main(path):
             m = rr.search(line)
             if m:
                 rpieces.append((int(m.group(3)), m.group(1)))
+                continue
+            m = rx.search(line)
+            if m:
+                rbox.append((int(m.group(3)), int(m.group(1)), int(m.group(4))))
+                continue
+            m = rxe.search(line)
+            if m:
+                rbox_end.append((int(m.group(2)), int(m.group(1))))
+                continue
+            m = rxl.search(line)
+            if m:
+                rbox_left.append({"team": int(m.group(1)), "seen_gone_at": int(m.group(2)), "last_boxed_frame": int(m.group(3)), "counted_end": int(m.group(4))})
                 continue
             for key in ("JAMRINK arena caps:", "JAMRINK arena dressing shown", "JAMRINK built"):
                 if key in line:
@@ -74,10 +94,20 @@ def main(path):
         "farthest_cap_m": round(max(dist), 2) if dist else None, "mean_cap_m": round(sum(dist) / len(dist), 2) if dist else None,
         "caps_within_2m": sum(1 for d in dist if d <= 2.0),
     }
-    ok = (res["goal_events"] >= 1 and res["goals_match"] and len(need) >= 1 and not missing and not unexplained and res["caps_within_2m"] == len(dist))
+    # lane A145: the box. The sim's release frame is the frame after the last boxed one; the hand's error is the frames between it and the counted end.
+    penalty = rbox[0][2] if rbox else 300
+    off = [r["counted_end"] - (r["last_boxed_frame"] + 1) for r in rbox_left if r["counted_end"] >= 0]
+    res.update({"foul_events": len(fouls), "box_answers": len(rbox), "fouls_match": sorted(fouls) == sorted(f for f, _, _ in rbox), "box_ends": len(rbox_end), "penalty_frames": penalty,
+                "boxed_figures_seen_leaving": len(rbox_left), "counted_end_minus_release_frames": off, "worst_hand_error_deg": round(max([abs(o) for o in off] or [0]) * 360.0 / penalty, 2),
+                "box_left": rbox_left[:12]})
+    need_fouls = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+    ok = (res["goal_events"] >= 1 and res["goals_match"] and len(need) >= 1 and not missing and not unexplained and res["caps_within_2m"] == len(dist)
+          and res["fouls_match"] and len(fouls) >= need_fouls and res["worst_hand_error_deg"] <= 2.0)
     res["verdict"] = "pass" if ok else "fail"
     print("A136 LIVE BUS %s: %d sim frames; goal events %d, rink goal answers %d; hard skater board events %d (+%d at the threshold), cap answers %d, farthest cap %s m; piece rattles %d; soft %d, puck %d"
           % ("PASS" if ok else "FAIL", last, res["goal_events"], res["goal_answers"], len(need), res["at_the_threshold"], res["cap_answers"], res["farthest_cap_m"], res["piece_rattles"], soft, pucks))
+    print("A145 LIVE BUS box: foul events %d, rink box answers %d (the same frames: %s), counted ends %d, boxed figures seen leaving %d, counted end minus the sim's release %s frames (hand error at most %.2f deg)"
+          % (len(fouls), len(rbox), res["fouls_match"], len(rbox_end), len(rbox_left), off, res["worst_hand_error_deg"]))
     print(json.dumps(res))
     return 0 if ok else 1
 

@@ -393,19 +393,21 @@ def main():
     for (length, width, tier) in ((90, 45, "p3_clay"), (120, 60, "p3_clay"), (140, 70, "p3_clay"), (120, 60, "l2_night")):
         build(length, width, tier)
         caps = rink.get_editor_property("arena_caps")
+        caps_pos = rink.get_editor_property("arena_caps_pos")   # lane A145: the x >= 0 half (orange); arena_caps holds the x < 0 half (blue)
         n = rink.get_cap_count()
         places = [rink.get_cap_place_m(i) for i in range(n)]
         gaps = [math.hypot(places[i].x - places[(i + 1) % n].x, places[i].y - places[(i + 1) % n].y) for i in range(n)] if n else [99.0]
         mesh = caps.get_editor_property("static_mesh")
         mat = caps.get_material(0)
+        mat_pos = caps_pos.get_material(0)
         zs = []
         for i in range(n):
-            t = caps.get_instance_transform(i, False)
-            t = t[1] if isinstance(t, tuple) else t
-            zs.append(t.translation.z)
+            zs.append(rink.get_cap_transform(i).translation.z)
         # every cap in the boards' band: not outside the outer face, not farther inside than a corner's arc reaches
         outside = sum(1 for q in places if abs(q.x) > length * 0.5 + BOARD_T + 1e-6 or abs(q.y) > width * 0.5 + BOARD_T + 1e-6 or (abs(q.x) < length * 0.5 - 1.6 and abs(q.y) < width * 0.5 - 1.6))
-        row = {"caps": n, "instances": caps.get_instance_count(), "shown": bool(rink.are_caps_shown()), "visible": bool(caps.is_visible()), "mesh": mesh.get_name() if mesh else None,
+        row = {"caps": n, "instances": caps.get_instance_count() + caps_pos.get_instance_count(), "instances_by_half": [caps.get_instance_count(), caps_pos.get_instance_count()],
+               "shown": bool(rink.are_caps_shown()), "visible": bool(caps.is_visible() and caps_pos.is_visible()), "mesh": mesh.get_name() if mesh else None,
+               "round": bool(rink.are_caps_round()), "material_pos": mat_pos.get_name() if mat_pos else None,
                "material": mat.get_name() if mat else None, "triangles": rink.get_cap_triangles(), "widest_gap_m": round(max(gaps), 3), "z_cm": [round(min(zs), 2), round(max(zs), 2)] if zs else None,
                "custom_depth": bool(caps.get_editor_property("render_custom_depth")), "cast_shadow": bool(caps.get_editor_property("cast_shadow"))}
         # hard hits: both ends, both long sides, the four corners (a skater's centre 0.45 m inside the boards)
@@ -432,8 +434,9 @@ def main():
         row["end_light_cm"] = [round(lx.x, 1), round(lx.y, 1), round(lx.z, 1)]
         row["end_light_peak_cd"] = [round(rink.lamp_light_peak_at(i), 1) for i in range(3)]
         light_ok = near(lx.x, (length * 0.5 - 4.0 + 3.0) * 100.0) and near(lx.y, 0.0) and near(lx.z, 360.0)
-        row["ok"] = (n >= 4 and row["instances"] == n and row["shown"] and row["visible"] and row["mesh"] == "SM_Arena_BoardCap" and row["material"] == "MI_Toon_KickPlate"
-                     and 0 < row["triangles"] < 3000 and row["widest_gap_m"] <= 3.7 and row["z_cm"] == [120.0, 120.0] and outside == 0 and row["custom_depth"] and not row["cast_shadow"] and hit_ok and light_ok)
+        row["ok"] = (n >= 4 and row["instances"] == n and row["shown"] and row["visible"] and row["mesh"] == ("SM_Arena_BoardCap" if n * 40 <= 3000 else "SM_Arena_BoardCapFar")
+                     and row["round"] == (n * 40 <= 3000) and row["triangles"] == n * (40 if row["round"] else 24) and row["material"] == "MI_Toon_Blue" and row["material_pos"] == "MI_Toon_Orange"
+                     and 0 < row["triangles"] <= 3000 and row["widest_gap_m"] <= 3.7 and row["z_cm"] == [120.0, 120.0] and outside == 0 and row["custom_depth"] and not row["cast_shadow"] and hit_ok and light_ok)
         e4_ok = e4_ok and row["ok"]
         report["e4"]["%dx%d %s" % (length, width, tier)] = row
         log("e4 %dx%d %s ok=%s: %d caps, %d triangles, widest gap %.2f m, hits %s, end light %s cd %s" % (length, width, tier, row["ok"], n, row["triangles"], row["widest_gap_m"],
@@ -472,6 +475,103 @@ def main():
     ok = ok and e4_ok
     log("e4 still boards ok=%s %s" % (still4_ok, json.dumps(still4)))
     log("A136 E4 %s" % ("PASS" if e4_ok else "FAIL"))
+
+    # ---- 6. lane A145 (evolution 5): the hit flash, the goal wave, the box in use (ARinkActor's own read-outs on three rink/tier pairs)
+    report["e5"] = {}
+    e5_ok = True
+    hit_cd = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.hit")
+    wave = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.wave")
+    for (length, width, tier) in ((90, 45, "p3_clay"), (120, 60, "p3_clay"), (90, 45, "l2_night")):
+        build(length, width, tier)
+        night = 0.2 if tier == "l2_night" else 1.0
+        row = {"box_usable": bool(rink.is_box_usable()), "penalty_frames": rink.get_box_penalty_frames(), "hit_peak_cd": round(rink.hit_light_peak_here(), 1)}
+        # the door and the hand hang on the box's sockets: their places in the box's own space are Blender's (arena.json sockets, metres)
+        want = blender["pieces"]["SM_Arena_PenaltyBox"]["sockets"]
+        places = {}
+        for prop, sock in (("arena_box_door_neg", "Door"), ("arena_box_door_pos", "Door"), ("arena_box_hand_neg", "Hand"), ("arena_box_hand_pos", "Hand")):
+            comp = rink.get_editor_property(prop)
+            loc = comp.get_editor_property("relative_location")
+            m = comp.get_editor_property("static_mesh")
+            places[prop] = {"mesh": m.get_name() if m else None, "at_cm": [round(loc.x, 1), round(loc.y, 1), round(loc.z, 1)], "visible": bool(comp.is_visible()),
+                            "ok": bool(m) and comp.is_visible() and all(abs(a - b * 100.0) < 1.0 for a, b in zip([loc.x, loc.y, loc.z], want[sock]))}
+        row["places"] = places
+        # a hard hit on the +y boards at Strength 0.8: one flash, candelas x Strength (x the night share), gone after 12 frames
+        frame = 50000
+        rink.advance_reactions(frame)
+        hit_at(length * 25.0, (width * 0.5 - 0.45) * 100.0, 0.8, frame)
+        lit = [round(rink.get_hit_light_intensity(i), 1) for i in range(4)]
+        rink.advance_reactions(frame + 12)
+        row["hit"] = {"lit_cd": lit, "after_12": [round(rink.get_hit_light_intensity(i), 1) for i in range(4)]}
+        rink.advance_reactions(frame + 18)
+        hit_ok = sorted(lit)[:3] == [0.0, 0.0, 0.0] and near(max(lit), hit_cd * night * 0.8, 1.0) and max(row["hit"]["after_12"]) == 0.0 and not rink.is_reacting()
+        # a goal in the +x net: the wave's two lights at frame 9, caps in the air, all at rest after the lamp's 108 frames
+        frame = 60000
+        rink.advance_reactions(frame)
+        pl = unreal.JamEventPayload()
+        pl.set_editor_property("where", unreal.Vector((length * 0.5 - 3.5) * 100.0, 0.0, 4.0))
+        pl.set_editor_property("strength", 1.0)
+        rink.react_to_event("goal", pl, frame)
+        rink.advance_reactions(frame + 9)
+        hopping = sum(1 for i in range(rink.get_cap_count()) if rink.get_cap_hop_cm(i) > 0.0)
+        wl = [round(rink.get_wave_light_intensity(i), 1) for i in range(2)]
+        rink.advance_reactions(frame + 108)
+        row["wave"] = {"lights_cd_f9": wl, "caps_in_the_air_f9": hopping, "end_light_cd": round(rink.lamp_light_peak_at(2), 1), "reacting_after_108": bool(rink.is_reacting())}
+        wave_ok = near(wl[0], rink.lamp_light_peak_at(2) * wave * 0.5, 1.0) and wl[0] == wl[1] and hopping >= 1 and not row["wave"]["reacting_after_108"]
+        # a foul by skater 0 (no teams in this config: team 1, the box at x = +3): door open by frame 11, the hand half way at half the penalty, at rest after
+        frame = 70000
+        rink.advance_reactions(frame)
+        pl = unreal.JamEventPayload()
+        pl.set_editor_property("who", 0)
+        pl.set_editor_property("strength", 1.0)
+        c0 = rink.get_box_reaction_count()
+        rink.react_to_event("foul", pl, frame)
+        pf = rink.get_box_penalty_frames()
+        rink.advance_reactions(frame + 11)
+        d11 = round(rink.get_box_door_deg(1), 2)
+        rink.advance_reactions(frame + pf // 2)
+        mid = [round(rink.get_box_door_deg(1), 2), round(rink.get_box_hand_deg(1), 2)]
+        rink.advance_reactions(frame + pf + 11)
+        d_end = round(rink.get_box_door_deg(1), 2)
+        rink.advance_reactions(frame + pf + 80)      # the door's second cycle (74 frames) is over
+        row["box"] = {"answers": rink.get_box_reaction_count() - c0, "door_deg_f11": d11, "door_hand_deg_half_way": mid, "door_deg_end_plus_11": d_end,
+                      "other_box": [round(rink.get_box_door_deg(0), 2), round(rink.get_box_hand_deg(0), 2)], "at_rest_after": [round(rink.get_box_door_deg(1), 2), round(rink.get_box_hand_deg(1), 2), bool(rink.is_reacting())]}
+        box_ok = (row["box_usable"] and all(p["ok"] for p in places.values()) and row["box"]["answers"] == 1 and near(d11, 72.0, 0.01) and mid[0] == 0.0 and near(mid[1], 180.0, 0.01)
+                  and near(d_end, 72.0, 0.01) and row["box"]["other_box"] == [0.0, 0.0] and row["box"]["at_rest_after"] == [0.0, 0.0, False])
+        row["ok"] = bool(hit_ok and wave_ok and box_ok and near(row["hit_peak_cd"], hit_cd * night, 0.5))
+        e5_ok = e5_ok and row["ok"]
+        report["e5"]["%dx%d %s" % (length, width, tier)] = row
+        log("e5 %dx%d %s ok=%s (hit %s wave %s box %s): %s" % (length, width, tier, row["ok"], hit_ok, wave_ok, box_ok, json.dumps(row)))
+    # the neutral values: jam.rink.react.hit 0 (no flash), jam.rink.react.wave 0 (no wave), jam.rink.react 0 (the doors stand open as the box was built before)
+    still5 = {}
+    build(90, 45, "p3_clay")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.hit 0")
+    c0 = rink.get_cap_rock_count()
+    hit_at(2250.0, 2205.0, 1.0, 80000)
+    still5["jam.rink.react.hit 0"] = {"cap_answers": rink.get_cap_rock_count() - c0, "lit_cd": [round(rink.get_hit_light_intensity(i), 1) for i in range(4)]}
+    rink.advance_reactions(80100)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.hit %g" % hit_cd)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.wave 0")
+    pl = unreal.JamEventPayload()
+    pl.set_editor_property("where", unreal.Vector(4150.0, 0.0, 4.0))
+    rink.react_to_event("goal", pl, 81000)
+    rink.advance_reactions(81009)
+    still5["jam.rink.react.wave 0"] = {"caps_in_the_air_f9": sum(1 for i in range(rink.get_cap_count()) if rink.get_cap_hop_cm(i) > 0.0), "lights_cd_f9": [round(rink.get_wave_light_intensity(i), 1) for i in range(2)],
+                                       "goal_light_lit": rink.get_goal_light_emissive(1) > rink.get_lamp_rest_emissive()}
+    rink.advance_reactions(81200)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.wave %g" % wave)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react 0")
+    rink.set_construction_visible(True)
+    still5["jam.rink.react 0"] = {"door_deg": [round(rink.get_box_door_deg(t), 2) for t in range(2)], "hand_deg": [round(rink.get_box_hand_deg(t), 2) for t in range(2)]}
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react 1")
+    rink.set_construction_visible(True)
+    still5["back_on"] = {"door_deg": [round(rink.get_box_door_deg(t), 2) for t in range(2)]}
+    still5_ok = (still5["jam.rink.react.hit 0"] == {"cap_answers": 1, "lit_cd": [0.0, 0.0, 0.0, 0.0]} and still5["jam.rink.react.wave 0"] == {"caps_in_the_air_f9": 0, "lights_cd_f9": [0.0, 0.0], "goal_light_lit": True}
+                 and still5["jam.rink.react 0"] == {"door_deg": [72.0, 72.0], "hand_deg": [0.0, 0.0]} and still5["back_on"] == {"door_deg": [0.0, 0.0]})
+    report["e5"]["neutral"] = dict(still5, ok=still5_ok)
+    e5_ok = e5_ok and still5_ok
+    ok = ok and e5_ok
+    log("e5 neutral ok=%s %s" % (still5_ok, json.dumps(still5)))
+    log("A145 E5 %s" % ("PASS" if e5_ok else "FAIL"))
 
     eas.destroy_actor(rink)
     report["verdict"] = "pass" if ok else "fail"
