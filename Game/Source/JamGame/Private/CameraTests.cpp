@@ -1059,6 +1059,20 @@ bool FJamHudClearDown::RunTest(const FString&)
 	return true;
 }
 
+// ---- lane A168 (track U1): the black post at the faceoff. The upright marker in device B's puck disc is flat by default (jam.puck.Post 0); the proof
+// in the game is the JAMPUCK line and the disc's bounds in the JAMSCREEN nearpuck lines (jam.hud.NearPuck 1).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudPuckPostFlat, "Jam.Hud.PuckPostFlat", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudPuckPostFlat::RunTest(const FString&)
+{
+	IConsoleVariable* Post = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.puck.Post"));
+	TestNotNull(TEXT("jam.puck.Post exists"), Post);
+	if (Post) TestEqual(TEXT("the puck disc's upright marker is flat by default"), Post->GetInt(), 0);
+	IConsoleVariable* Dump = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.NearPuck"));
+	TestNotNull(TEXT("jam.hud.NearPuck exists"), Dump);
+	if (Dump) TestEqual(TEXT("the proof's dump is off by default"), Dump->GetInt(), 0);
+	return true;
+}
+
 // ---- lane A135 (track U1, evolution 3): bark text on a fixed lane, and the brake prompt in the player's own input. Pure rules, no world.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudBarkLane, "Jam.Hud.BarkLane", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 bool FJamHudBarkLane::RunTest(const FString&)

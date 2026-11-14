@@ -442,3 +442,4 @@
 - link green 04:52: main 1f5b6389 (Nothing is drawn over a downed player (A158, track U1), and the contact track's next three) pushed.
 - link green 05:00: main d21fa8b8 (The player sees why: a yellow ring while no stick can take the puck, STICK LOCKED after a ) pushed.
 - link green 05:21: main 85de64b8 (Click a level, press Return, play that level: the first screen has no dead key (A164, trac) pushed.
+- link green 05:31: main 84ab6c03 (The ladder the operator plays (A162, track C0, the last pass: R-0061, R-0062): five cells ) pushed.

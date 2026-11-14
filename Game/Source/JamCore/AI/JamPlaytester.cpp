@@ -3,6 +3,7 @@
 #include "JamSimAdapter.h"
 #include "JamEventBus.h"
 #include "JamSim.h"
+#include "JamCarrierMarks.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -604,6 +605,15 @@ namespace JamAI
 				}
 			}
 		}
+		// Lane A166 (env JAM_PLAYTESTER_CONTEST=brake; off by default: nothing here runs): the contested puck. The mark is up and the puck is not mine: stop
+		// short of it (against my motion while I move, then stand), and let the other one have it. The hand's reaction lag applies as to every decision.
+		bool bContestStop = false;
+		if (bContestBrake && bContestedNow && !bCarrying && !Me.bDown)
+		{
+			++ContestBrakeFrames;
+			In.Move = MySpeed > 1.5 ? Me.Vel * (-1.0 / MySpeed) : FVec2();
+			bContestStop = MySpeed > 1.5;
+		}
 		// Lane A95 (brief A95 job 3): the reverse brake on purpose. The move reverses against my velocity: the class means to stop (2: always, stop and go;
 		// 1: only on a target within BrakeNearM); Think carves any other reversal into a turn.
 		if (!bOldVerbs && W.ReverseBrakeDecel > 0.0 && P.BrakeIntent > 0 && MySpeed > 1.0 && In.Move.Length() > 1e-6
@@ -611,6 +621,7 @@ namespace JamAI
 		{
 			bBrakeWanted = P.BrakeIntent >= 2 || Dist < P.BrakeNearM;
 		}
+		if (bContestStop) { bBrakeWanted = true; }   // lane A166: this reversal is a stop he means, whatever the class
 		// Lane A86 (R-0043 point 2): the stick where the mouse holds it. A person aims the cursor where he looks, metres away, so the blade sits at full reach
 		// (HokejGameMode::CursorAimRink: magnitude 1 from 3 m out) in that direction, never at rest (the sim's rest is ahead at half reach): carrying, at the net
 		// while lining up a shot, at the mate while passing, otherwise where he skates, bent away from the nearest opponent inside the pressure distance; without
@@ -742,6 +753,8 @@ namespace JamAI
 			if (bEnvCourse && CheckEnv[6] == ':') { Tester.CoursePctOverride = std::atoi(CheckEnv + 7); }   // course:NN = NN per cent of the chances
 			Tester.bOldCheck = (CheckEnv && std::strcmp(CheckEnv, "old") == 0) || (!bEnvClosing && !bEnvCourse && CfgSim && !CfgSim->GetConfig().Contact.bPlaytesterClosingPress);
 			Tester.bCourseCheck = !Tester.bOldCheck && (bEnvCourse || (!bEnvClosing && CfgSim && CfgSim->GetConfig().Contact.bPlaytesterCoursePress));
+			const char* ContestEnv = std::getenv("JAM_PLAYTESTER_CONTEST");   // lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped
+			Tester.bContestBrake = ContestEnv && std::strcmp(ContestEnv, "brake") == 0;
 			const char* PokeEnv = std::getenv("JAM_PLAYTESTER_POKE");   // lane A152: read = the poke when it can land, old = the press as it was (measurement arms); absent = the config's switch
 			Tester.bPokeReadOn = PokeEnv ? std::strcmp(PokeEnv, "read") == 0 : (CfgSim && CfgSim->GetConfig().Stick.bPlaytesterPokeRead);
 			if (CfgSim && CfgSim->GetConfig().Stick.bPokeRulesOff) { Tester.bPokeReadOn = false; }   // the test seam: the press as it was
@@ -774,6 +787,7 @@ namespace JamAI
 			const int PreLastTouch = W.PuckLastTouch;
 			for (int i = 0; i < kMaxSkaters; ++i) { In[i] = FJamAIInput(); }
 			Brain.Think(W, In);
+			if (Pi >= 0 && Tester.bContestBrake) { const UJamSim* MarkSim = Sim.GetSim(); Tester.bContestedNow = MarkSim && JamCarrierMarks::Contested(*MarkSim, Pi).bOn; }   // lane A166
 			if (Pi >= 0) { In[Pi] = Tester.Think(W); ++St.Acts[static_cast<int>(Tester.LastAct())]; }
 			if (Pi >= 0 && MashPeriod > 0 && F % MashPeriod == 0) { In[Pi].bCheck = true; }   // lane A157: the masher (measurement only)
 			if (Pi >= 0) { if (const UJamSim* AbSim = Sim.GetSim()) { In[Pi].bAbility = PlaytesterAbility(*AbSim, Pi, In[Pi]); } }   // lane A84

@@ -96,6 +96,11 @@ namespace JamAI
 		// show both): no poke and no lift the sim would refuse (StickCannotTake), so the poke is there the frame the puck is in the open.
 		// env JAM_PLAYTESTER_READ=0 | 1 forces it (measurement). Off: it swings into every shield (14 pokes a match on the big ice, 0.7 clean).
 		bool bReadShield = false;
+		// Lane A166 (track F2 evolution 7; env JAM_PLAYTESTER_CONTEST=brake, off by default: every measurement before stays comparable): the player obeys the
+		// contested-puck mark (JamCarrierMarks::Contested, set by RunPlaytestMatch each frame): without the puck he brakes instead of racing an opponent to it.
+		bool bContestBrake = false;
+		bool bContestedNow = false;
+		int ContestBrakeFrames = 0;      // frames the decision braked for it (the stats read it)
 		bool bPokeReadOn = false;        // lane A152: the profile's bPokeRead applies (stick.bPlaytesterPokeRead, or env JAM_PLAYTESTER_POKE=read; =old forces the press as it was)
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
