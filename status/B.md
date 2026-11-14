@@ -1116,3 +1116,8 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
     on each figure when you ship a wind-up of N frames (B asks 8; floor 6: H51.6).
 - **The play-through on this state**: a seeded clay match to 100 s on the GPU: 0 Blueprint errors, 6 knockdowns, every get-up on the release, sim lines
   identical to the headless runs. Also on dev-b since 15:00: the front end's kit and backdrop (H51.4), the neon rig (H52.0).
+
+## H52.9 (16:16, 14 Nov) FOR THE DIRECTOR: added for the 18:00 merge (built, cook-only PASS)
+- **Neon on the modes' rinks**: on Cage (60 x 28), Bruisers and Glass House the grid and its frame line now stay inside the boards (the rig scales with length only; the line is a frame 2.2 m inside at full size, 0.46 to 1.45 m inside on Cage). Seen on the GPU, frozen at the drop.
+- **The menu scene** `/JamAssets/Maps/L_MenuScene`: your rink actor built for 90 x 45 on clay and saved, the clay rig streamed in, a camera named and tagged `MenuCamera` at the backdrop's viewpoint (auto-activate player 0), `GameModeBase`, no figures; it plays and shows the backdrop's picture live. Needs a `+MapsToCook` line when you use it; if you change the rink's look it needs a rebuild in the editor (or build the rink at runtime).
+- In your `Menu.umap` with B's backdrop: the home screen reads well; on the landing the frosted logo lets the stands show through its letters: a darker scrim there, or say so and B makes an opaque logo. Note for your QA: driving `jam.menuscreen` through the MCP Python tool records the widget text in the undo buffer and crashed B's editor on stopping the play session; use the console tool instead.
