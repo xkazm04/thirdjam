@@ -436,3 +436,4 @@
 - link green 03:07: main 3f5cbda (The level is chosen where it is played (A144, track U2, evolution 3): a ROOKIE / PRO / ALL) pushed.
 - link green 03:14: main e9d0b55 (A standing skater holds a side hit, and the scripted human presses for the hit it sees com) pushed.
 - package 03:20: `Hokej_Hokej_H27.zip` from main e9d0b55, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 03:31: main a7d89871 (Space is worth pressing, the ladder checked, one stop distance at every level (A152, A154,) pushed.

@@ -169,10 +169,24 @@
             ]
           },
           {
+            "role": "support",
+            "spawn": [
+              -10,
+              10
+            ]
+          },
+          {
             "role": "back",
             "spawn": [
               -30,
-              0
+              -6.67
+            ]
+          },
+          {
+            "role": "back",
+            "spawn": [
+              -30,
+              6.67
             ]
           }
         ]
@@ -196,17 +210,32 @@
             ]
           },
           {
+            "role": "support",
+            "spawn": [
+              10,
+              -10
+            ]
+          },
+          {
             "role": "back",
             "spawn": [
               30,
-              0
+              6.67
+            ]
+          },
+          {
+            "role": "back",
+            "spawn": [
+              30,
+              -6.67
             ]
           }
         ]
       }
     ],
     "ai": {
-      "difficulty": "all_star"
+      "difficulty": "all_star",
+      "hold_radius_m": 2.5
     },
     "barks": {
       "enabled": true,
@@ -231,7 +260,7 @@
       "pitch": "One goal ends it. The meanest bots alive.",
       "facts": [
         "first goal wins",
-        "3 v 3 on 120 x 60 m",
+        "5 v 5 on 120 x 60 m",
         "no grace on a steal"
       ]
     },

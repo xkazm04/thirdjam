@@ -493,6 +493,7 @@ void UJamDesignerSubsystem::ScheduleCutApply(const FString& Path)
 	// editor. The match rebuild and OnCutChanged therefore run on the next core-ticker tick (start of the next frame, outside
 	// any world tick). Several loads in one frame coalesce: the last one wins.
 	PendingApplyPath = Path;
+	bApplyCancelled = false;
 	if (bApplyScheduled) return;
 	bApplyScheduled = true;
 	TWeakObjectPtr<UJamDesignerSubsystem> Weak(this);
@@ -503,6 +504,12 @@ void UJamDesignerSubsystem::ScheduleCutApply(const FString& Path)
 		S->bApplyScheduled = false;
 		const FString P = S->PendingApplyPath;
 		S->PendingApplyPath.Reset();
+		if (S->bApplyCancelled)
+		{
+			S->bApplyCancelled = false;
+			UE_LOG(LogJamDesigner, Log, TEXT("JAMDESIGNER scheduled apply taken back: the caller opens the match itself"));
+			return false;
+		}
 		if (S->Current) S->OnCutChanged.Broadcast(S->Current);
 		if (!S->CallGameMode(TEXT("LoadCut"), P, nullptr))
 		{
@@ -510,6 +517,12 @@ void UJamDesignerSubsystem::ScheduleCutApply(const FString& Path)
 		}
 		return false;
 	}));
+}
+
+void UJamDesignerSubsystem::CancelScheduledApply()
+{
+	if (bApplyScheduled) bApplyCancelled = true;
+	PendingApplyPath.Reset();
 }
 
 FString UJamDesignerSubsystem::SaveCut(const FString& Name, const FString& Json, const FString& Sentence, FString& OutError)

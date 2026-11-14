@@ -76,6 +76,12 @@ try {
         Write-Step 'FAIL' 'node-tests' "$pn passed, $fn failed (log $($r.log))"
     }
 
+    # 3b. test guards (lane A159, R-0057 point 3): test code closes inside #if WITH_DEV_AUTOMATION_TESTS; no Unreal, seconds.
+    # Only the Shipping game target fails on a test below its #endif; the Development editor and every test stay green.
+    $r = Invoke-Node @('tools/gate/check-test-guards.mjs') 'test-guards'
+    if ($r.code -eq 0) { Write-Step 'PASS' 'test-guards' ($r.out | Where-Object { $_ -match '^PASS' } | Select-Object -Last 1) }
+    else { foreach ($l in ($r.out | Where-Object { $_ -match '^FAIL' } | Select-Object -First 15)) { Write-Host "  | $l" }; Write-Step 'FAIL' 'test-guards' "exit $($r.code): test code outside its WITH_DEV_AUTOMATION_TESTS guard (log $($r.log))" }
+
     # 4. editor build
     if ($SkipBuild) { Write-Host 'SKIP build (-SkipBuild)'; $skipped += 'build' }
     else {

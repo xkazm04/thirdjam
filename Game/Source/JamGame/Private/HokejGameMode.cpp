@@ -326,7 +326,10 @@ bool AHokejGameMode::LoadCut(const FString& NameOrPath)
 		return false;
 	}
 	Cartridge = C;
-	CutName = NameOrPath;
+	// Director, 14 Nov: the same file loaded again by its path is still the cut this open named (the level asked for it stays in force).
+	const bool bSameAsRequested = !RequestedForCut.IsEmpty() && NameOrPath != RequestedForCut && !Path.IsEmpty()
+		&& FPaths::IsSamePath(Path, UJamCartridge::ResolveCartridgePath(RequestedForCut));
+	CutName = bSameAsRequested ? RequestedForCut : NameOrPath;
 	UE_LOG(LogHokej, Log, TEXT("JAMCART loaded %s id=%s title=\"%s\" seed=%lld rink=%gx%g visual=%s tier=%s"), *Path, *C->Id, *C->Title, C->Seed,
 		C->Game.Rink.LengthM, C->Game.Rink.WidthM, *C->Game.Skater.Visual.ToString(), *C->Game.Look.Tier);
 	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetCurrentCartridge(C);

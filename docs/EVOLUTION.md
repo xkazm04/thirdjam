@@ -103,3 +103,23 @@ lane's first evolution: `tj/c0.patch`.
 | S3 fuzz | `a109` | next: Designer-reply parity, a timer oracle, rule chains | |
 | F0 design eye | | REVIEW-2 on the first package after the curve | |
 
+
+
+**Board at 03:30 (R-0061). Main e9d0b55 pushed; H27 cut from it at 03:20 (acceptance green on the first try, zip 275.5 MB). In the gate as one landing:
+A152 (the poke), A154 (the ladder check), A153 item 1 (one stop distance). The operator plays at 10:00; his package (H28) is cut by 09:00, chain from 07:00.**
+| Track | Worktree | Running now | Then |
+|---|---|---|---|
+| S2 acceptance | `a108` | A155: H27 through the real window: the menu row, the queued rows, the matrix on tonight's modes, twelve stills, the Shipping zip played (cursor owner until 06:30) | H28's rows |
+| C0 curve | `c0b` | starts on the landing: A162, the last pass (R-0061): `LADDER SET` by 06:15 | after 10:00: the long shot, the operator's answer on which player he is |
+| Q2 brain | `q2b` | A153 items 2 and 3 (a mate that finishes, the big ice): neutral tunes, measured | from its report |
+| M1 modes | `m1b` | A156: five a side where the mode allows it, the Marathon's puck, Arsenal's tricks | cartridges may land until 06:45 |
+| F1 contact | `f1b` | starts on the landing: A157: nobody stands in a downed body (B's critic), a check's cooldown, the lunge, the board slam: all neutral | turned on with the operator's priorities |
+| F2 carrier | `f2b` | starts on the landing: A163: the cues (take grace, stick lock), where the carry ends, time lying down | |
+| U1 screen | `u1b` | A158: nothing drawn over a downed player (B's critic), captions off the middle third, the corner camera's pitch | for the 09:00 package |
+| F3 arena | `f3c` | A160: the boxes' clock faces on clay, round caps on every rink, the goal in time with B's effect | for the 09:00 package |
+| Q3 performance | `q3b` (main + `origin/dev-b` merged locally) | A161: is B's night safe for the package (build, tests, cook, the stands timed), 183 MB of unused figures out of the cook, B's five timings | dev-b merges into main at about 06:45 on its word |
+| S3 hardening | `a109` | starts on the landing: A159: a gate step for test code outside its guard, every launch cut reaches its match, fuzz of tonight's keys | |
+| S1 soak | `a107` | idle until `LADDER SET`: then a fresh baseline | |
+| Q1 lockstep | `a104` | idle (live cuts as protocol 9: not before the operator plays) | two physical machines with the operator |
+| D1 submission | `d1` | idle until the operator answers the fourteen questions | the page and the video's shot list after 10:00 |
+| Device B | `dev-b` | nine lanes (B-to-A-0040): three new figure sets, stands and crowd, effects, a critic (B-to-A-0041: answered in A-to-B-0025) | last push for the package by 06:30 |

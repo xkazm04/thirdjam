@@ -229,18 +229,22 @@ bool FJamHockey4Screen::RunTest(const FString& Parameters)
 {
 	using namespace JamHockeyBrain4TestsLocal;
 	// The human has just taken the puck at centre ice; an opponent stands 5 m from him up the ice; the mate is 4 m to the side of that opponent.
-	auto Play = [](int ScreenFrames, int Thinks) -> double
+	// Five a side (another forward is there to offer the lane); bThree: three a side, where the only forward keeps offering it.
+	auto Play = [](int ScreenFrames, int Thinks, bool bThree = false) -> double
 	{
-		FJamAIWorld W = Three();
+		FJamAIWorld W = bThree ? Three() : Five();
+		const int Opp = bThree ? 3 : 5;
+		W.PlayerIndex = 0;
+		W.Skaters[0].Role = ERole::Player;
 		Carry(W, 0, FVec2(0.0, 0.0), FVec2(3.0, 0.0), FVec2(1.0, 0.0));
-		W.Skaters[3].Pos = FVec2(5.0, 0.0);
+		W.Skaters[Opp].Pos = FVec2(5.0, 0.0);
 		W.Skaters[1].Pos = FVec2(5.0, 4.0);
 		FJamBrain B;
 		Start(B);
 		B.Params.Mate.Hk.ScreenFrames = ScreenFrames;
 		FJamAIInput In[kMaxSkaters];
 		for (int f = 0; f < Thinks; ++f) { W.Frame = 1000 + f; B.Think(W, In); }
-		const FVec2 Spot = W.Skaters[3].Pos + (W.Skaters[0].Pos - W.Skaters[3].Pos).Normalized() * 1.2;
+		const FVec2 Spot = W.Skaters[Opp].Pos + (W.Skaters[0].Pos - W.Skaters[Opp].Pos).Normalized() * 1.2;
 		return In[1].Move.Normalized().Dot((Spot - W.Skaters[1].Pos).Normalized());
 	};
 	const double Before = Play(0, 1), After = Play(60, 1), Late0 = Play(0, 70), Late1 = Play(60, 70);
@@ -248,6 +252,9 @@ bool FJamHockey4Screen::RunTest(const FString& Parameters)
 	TestTrue(TEXT("before: the mate goes to offer a lane"), Before < 0.7);
 	TestTrue(TEXT("after: it steps between the opponent and the human"), After > 0.9);
 	TestTrue(TEXT("once the frames are up it offers a lane as before"), FMath::IsNearlyEqual(Late0, Late1, 1e-6));
+	const double Three0 = Play(0, 1, true), Three1 = Play(60, 1, true);
+	AddInfo(FString::Printf(TEXT("three a side, the same scene: %.2f and %.2f (the only forward offers the lane)"), Three0, Three1));
+	TestTrue(TEXT("three a side: no screen, the only forward offers the lane"), FMath::IsNearlyEqual(Three0, Three1, 1e-9));
 	return true;
 }
 
