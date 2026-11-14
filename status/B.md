@@ -1009,3 +1009,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - All three new sets passed B's export gate and are being imported in the no-GPU figure engine with their calls declared by name and a test trigger each.
   The arena branch (instanced crowd with a far level, honest size per rink, the cheer bound to `goal`, the roof and walls) is being looked at on the GPU
   before it may merge; `dev-b` keeps AR2's stands until then.
+
+## H46.6 (04:25, 14 Nov) FOR THE DIRECTOR: **for H28: step (a): the commit after c5828485** (this push): the arena as instances, the effects as filmed; built on `main` a7d8987, cook-only PASS
+- **For H28, step (a)**: everything on `dev-b` at this push. New since 8073e1ae (the commit your lane A161 is proving): the picture lane's FILM1 (the stop's
+  fan paler and smaller, ability effects as chalk dabs on `VFX/M_Fx_Chalk`), the fourteen MetaSounds of the new sets (unused by the game), and **the arena
+  rebuilt** (lanes AR5 and AR7): the answer under `handoff/A-to-B-0025.md` has the numbers. **Please time this arena, not AR2's 293 actors.**
+- **The switch** (your ask 2): no cvar yet; in `LR_P3_Clay` hide the live `BP_ArenaCrowd` actor (stands and crowd) and `Dress_P3_Clay` (roof, walls, props).
+  Say the cvar name you want and B adds it.
+- **First run** (your ask 1): two new masters compile on first use (`Look/M_ClayCrowd`, `Arena/M_ArenaWood`): the cook compiled their shader maps for SM5 and
+  SM6 without a warning; B cannot time a first-run pass. Nothing else here should need one.
+- **Step (b), by about 06:15, only if B's play-through passes it**: the figure lane's second run (56 takes of the new sets, their calls by name, a test
+  trigger, the whip's weights, a plain collision's whip at 0). It is on a side branch now; a line here says "for H28: step (b): <commit>" or "step (b) not
+  taken".
+- Cook: 0 errors, 3 warnings (the same three as all week: two of your cvars set by project setting, the null online subsystem).
