@@ -1,4 +1,83 @@
-# Lane V3 report: the puck's streak by speed; the pass, shot, possession and body-block sounds (device B), 2026-11-14, first hand-back
+# Lane V3 report: the puck's streak by speed; the pass, shot, possession and body-block sounds (device B), 2026-11-14
+
+## Second session (after the lead's commit 8c4ece6e): the streak on night and neon; the thresholds for A207
+
+**No asset changed in this session.**
+- GPU from 22:22 to 22:28: GPU-FREE.txt taken ("free from E3 at 22:22"), written back "free from V3 at 22:28".
+- Editor pid 30872 left through `ExitEditor`; the process is gone.
+- The before copy (`/JamAssets/VFX/_V3tmp`: the old trail's expressions and an instance with the old clay values) was made again, used and deleted.
+  It is not on disk. Settings restored, no dirty package.
+
+**Streak on two more tiers** (the same rig and camera as the clay still; `hockey.regular` with `"tier"` set to `l2_night` and to `l3_neon`, the neon
+mode's tier; P4 broadcast is dropped). Stills, each with a `.txt` caption:
+- `C:/Users/kazda/jam/wt/b-aud/devlog/shots/20261114-222740-B-v3-streak-night-ab.png` (+ `-crop.png`)
+- `C:/Users/kazda/jam/wt/b-aud/devlog/shots/20261114-222740-B-v3-streak-neon-ab.png` (+ `-crop.png`)
+
+**What I looked at** (Read: `sheet_tiers.png`, `sheet_tiers_c.png`, `sheet_night_c.png`).
+- Night: before, three thin faint yellow-green lines. After, the doubled shot is a solid yellow-green line along the red line, longer and wider; the
+  20 and 22 m/s streaks stay faint over the lit white patches. Nothing is drawn over a figure: the slow pass's line with `User.Carried` 0 passes
+  behind #7 and is hidden by him, because the ribbon is depth-tested on the ice.
+- Neon: the same yellow-green lines, a little wider, readable against the black floor and the white and purple grid. They do not compete with the
+  centre circle.
+- Calm: the streak never rises off the ice and fades over 0.15 s. The night look is louder than before only for the doubled shot.
+
+**Number** (pixels with green over blue > 40, the yellow-green streak, in the band left of the heads, x 300..640, y 280..480):
+- night 853 -> 1454;
+- neon 884 -> 1441.
+
+**Off clay the colour is `User.Colour`.** Device A sets none, so it is the default yellow-green (0.75, 1, 0.15) x 2.5 at 0.8, as before V3. Decision for
+the operator: keep it, or set the default to the clay cream so the streak is one colour on every tier. That is one value on `NS_puck_trail`.
+
+**Thresholds re-set to A207** (origin/main d0d132bf, 23:02, read after `git fetch` only; `status/A207.md` "PASS READY 1").
+- Headless editor pid 10656, 23:06 to 23:09, left through `ExitEditor`, process gone.
+- Changed: `MS_pass` and `MS_shot` only. `MS_possess` was re-saved by accident (my save script saves all four) and is restored byte for byte to its
+  committed content (256,337 bytes; `git status` clean for it).
+
+What A207 ships, and what the sounds receive:
+- **Pass**: a tap is 14 m/s; the hold grows the speed evenly to 23.3 m/s at 30 frames; bots' passes are solved between the two. `pass` Strength =
+  speed / `puck.max_speed` (30, unchanged), so tap 0.467 and full hold 0.777.
+- **Shot**: tap / half / full = 35.7 / 39.9 / 51.6 m/s. `shot` Strength = speed / (`max_speed` x `shot.speed_scale` 2) = speed / 60, so 0.595 / 0.665 /
+  0.86: the same Strength range as today's shots. **With the first hand-back's ramp (0.88) the doubled shot played no crack at all**: measured
+  below, it was identical to today.
+
+The change (graph values; one pair of edges re-routed in `MS_pass`):
+- `MS_pass`, the snap ramp: from Strength 0.4667 (the 14 m/s tap: no snap) to 0.7767 (the 23.3 m/s full hold: full snap). `Subtract_f0fe` 0.45 ->
+  0.4667, `Multiply_9787` 2.857 -> 3.226.
+- `MS_pass`, the lowpass: now driven by that same ramp t (0 at tap, 1 at full) instead of raw Strength: cutoff = 1500 + 12000 x t^2 Hz, so the tap is
+  soft (1.5 kHz) and the full pass bright (13.5 kHz).
+  - The square's two inputs moved from `Clamp_6fdc` to `Clamp_1cd2`; `Multiply_2e92` 18000 -> 12000; `Add_3c9e` 600 -> 1500.
+  - The tap is now softer than today's pass on purpose: the brief's "soft tap".
+- `MS_shot`, the crack ramp: from 30 m/s (Strength 0.5) to 42 m/s (0.7). `Subtract_2da4` 0.88 -> 0.5, `Multiply_7986` 8.333 -> 5. Every doubled shot cracks:
+  the tap lightly (0.48), half and full fully. Variant 1 still forces the crack.
+
+| Case (A207 speed) | Before (committed 8c4ece6e) LUFS / peak, centroid | After |
+|---|---|---|
+| pass tap 14 m/s (S 0.467) | -35.1 / -18.0, 1184 Hz | -34.1 / -18.0, **553 Hz** (soft) |
+| pass 10-frame hold 16 m/s (0.533) | -33.3 / -17.0, 2369 Hz | -33.4 / -17.1, 2262 Hz |
+| pass full hold 23.3 m/s (0.777) | -30.1 / -12.3, 3639 Hz | -29.8 / -12.0, **3688 Hz** (snap) |
+| shot tap 35.7 m/s (0.595) | -34.1 / -17.4 (= today's tap) | **-31.3 / -13.3** (light crack) |
+| shot half 39.9 m/s (0.665) | -33.5 / -15.8 | **-28.0 / -8.6** |
+| shot full 51.6 m/s (0.86) | -32.0 / -13.1 | **-25.8 / -6.3** |
+
+- All peaks are inside -3 dBTP.
+- WAVs: `C:/Users/kazda/jam/wt/b-aud/devlog/shots/20261114-230843-B-v3-a207-*.wav` (after) and `...-a207-before-*.wav`, six cases each.
+- What I looked at: the numbers above (measure.py, wavstat.py). Not heard.
+- For device A, this replaces items 2 and 3 of the first hand-back's section 4: **no binder change is needed for the pass or the shot now**.
+  Shot Variant 1 remains an optional "force the crack" (for example a one-timer). The `possess` event, `shot_blocked` Variant 1 and the optional
+  `User.Carried` call still stand.
+- Caveat for device A: with `game.shot.speed_scale` back at 1 (the neutral), Strength is speed / 30 and today's 17.8 m/s tap would sit at 0.59,
+  over the crack's 0.5 start. With the keys ON as A207 ships them, it is right.
+
+Ledger rows for this session (`MS_pass` and `MS_shot` **replace** the rows given in the first hand-back):
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Audio/MS_pass.uasset | audio | 0.24 | original | UE 5.9 MetaSounds via MCP/Python |  |  | 2026-11-14 | B | y | MetaSound source, mono; pass: 300 Hz blip + 2 kHz noise click + delayed 1.8 kHz swoosh, through a lowpass whose cutoff is 1500 + 12000 x t^2 Hz, with t = clamp((Strength - 0.4667) x 3.226): soft at the 14 m/s tap, bright at A207's 23.3 m/s full hold (Strength = speed / 30); plus a snap (input Snap = SFX_SlapShot_02, +4 semitones, gain 1.5) at t; level 0.3 + 0.7 x Strength; FxTrim 0.70 (lanes AU8, V3) (237539 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_shot.uasset | audio | 0.27 | original | UE 5.9 MetaSounds via MCP/Python |  |  | 2026-11-14 | B | y | MetaSound source, mono; shot: 2 kHz noise crack + sine thump 150 + 60 x Strength Hz + SFX_SlapShot_01, level 0.3 + 0.7 x Strength; a hard-shot crack (input Crack = SFX_SlapShot_02 gain 1.6, 3.5 kHz noise burst 0.5/12 ms gain 0.9 with seed 7, 95 Hz thump 1/80 ms gain 0.8) at clamp(clamp(Variant,0,1) + (Strength - 0.5) x 5) x (0.6 + 0.4 x Strength): from 30 m/s to full at 42 m/s with A207's Strength = speed / 60 (shot.speed_scale 2), or at Variant 1; FxTrim 0.70 (lanes AU8, V3) (266449 bytes) |
+
+---
+
+# First hand-back
 
 - Tree `C:/Users/kazda/jam/wt/b-aud`, branch `lane/b-aud` at dev-b 27a0ba99. Built first (ThirdJamEditor Development: pass). Port 8006.
 - Editor sessions: headless (`-nullrhi -unattended`, pid 40444) for the sounds, then GPU (pid 18808) from 21:41 to 21:52 for the streak. GPU-FREE.txt
