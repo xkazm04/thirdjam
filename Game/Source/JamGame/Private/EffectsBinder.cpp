@@ -33,6 +33,13 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
+#include "JamPawns.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "SettingsWidget.h"
+#include "MenuStyle.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Fonts/FontMeasure.h"
+#include "Rendering/SlateRenderer.h"
 
 DEFINE_LOG_CATEGORY(LogJamFx);
 
@@ -472,6 +479,10 @@ FString UJamPreloadSubsystem::LikelyNextCut()
 static TAutoConsoleVariable<int32> CVarJamPreloadArena(TEXT("jam.PreloadArena"), 1,
 	TEXT("Lane A137: 1 (default): the arena's static meshes (/Game/Arena benches, penalty boxes, scorer's table, goal light, goals and nets) and their team instances are loaded asynchronously behind the menu with the match assets. 0: they load synchronously in the menu -> match frame (before)."));
 
+// Lane A150 (track Q3 evolution 5): see UJamPreloadSubsystem::WarmMatchItems. 0: lane A137's warm scene and guess (before).
+static TAutoConsoleVariable<int32> CVarJamWarmSceneMatch(TEXT("jam.WarmScene.Match"), 1,
+	TEXT("Lane A150: 1 (default): the warm scene and the preload follow the first match: the settings' look tier override, a figure of each team, the puck, the HUD's typefaces, MPC_Water, the HUD's score plate lookup. 0: lane A137's warm scene (before)."));
+
 TArray<FSoftObjectPath> UJamPreloadSubsystem::MatchPaths(FName Visual, const FString& Tier)
 {
 	TArray<FSoftObjectPath> P;
@@ -508,6 +519,14 @@ TArray<FSoftObjectPath> UJamPreloadSubsystem::MatchPaths(FName Visual, const FSt
 	static const TCHAR* const UiNames[] = { TEXT("T_UI_Panel"), TEXT("T_UI_CallCard"), TEXT("T_UI_Button_Normal"), TEXT("T_UI_Button_Hover"),
 		TEXT("T_UI_Button_Pressed"), TEXT("T_UI_RingPlain"), TEXT("T_UI_Ring"), TEXT("T_UI_CutFrame"), TEXT("T_UI_TitleHokej") };
 	for (const TCHAR* N : UiNames) Add(FString::Printf(TEXT("/Game/UI/%s.%s"), N, N));
+	// Lane A150: the HUD's score plate (absent today: filtered by the existence check) and the Water plugin's parameter collection, which the match world
+	// asked for synchronously in the menu -> match frame (JAMPRELOAD sync /Water/Materials/MPC/MPC_Water).
+	if (CVarJamWarmSceneMatch.GetValueOnGameThread() != 0)
+	{
+		Add(TEXT("/Game/UI/T_UI_ScorePlate.T_UI_ScorePlate"));
+		Add(TEXT("/Water/Materials/MPC/MPC_Water.MPC_Water"));
+		Add(ARinkActor::BoardCapMeshPath);   // lane A136's board caps: a synchronous load in the match-start frame of the PLAY NOW smoke (a150-base-smoke)
+	}
 	// The commentary waves (UJamCommentarySystem asks for them asynchronously at match start; the first line loaded synchronously).
 	for (const FJamCommentaryLine& L : FJamCommentaryBank::Embedded().Lines) if (!L.Sound.IsNull()) P.AddUnique(L.Sound);
 	// Lane A137: the arena pieces ARinkActor::Build loads (RinkActor.h's mesh paths; the goal variants of RinkActor.cpp's GArenaGoalVariants) and the team
@@ -569,6 +588,76 @@ static TAutoConsoleVariable<int32> CVarJamWarmScene(TEXT("jam.WarmScene"), 1,
 static TAutoConsoleVariable<int32> CVarJamWarmSceneFrames(TEXT("jam.WarmScene.Frames"), 90,
 	TEXT("Lane A137: rendered frames the menu's warm scene stays up before it is taken down (the rig level unloaded, the planes destroyed)."));
 
+// Lane A150 (track Q3 evolution 5): the warm scene follows the first match PLAY NOW starts (hockey.regular on p3_clay, 5 v 5). 1 (default): the tier
+// guess takes the settings' look tier override; the warm scene also stands a figure of each team and the puck in front of the menu camera and measures
+// the HUD's typefaces; the preload also holds the Water plugin's MPC_Water (asked for synchronously by the match world) and the HUD's absent score plate
+// is looked up once behind the menu. 0: lane A137's warm scene and guess (before). (The console variable jam.WarmScene.Match is defined above MatchPaths.)
+
+int32 UJamPreloadSubsystem::WarmMatchItems(UWorld* W, const FTransform& Cam)
+{
+	int32 N = 0;
+	FActorSpawnParameters SP;
+	SP.ObjectFlags |= RF_Transient;
+	SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	// The figure class the match resolves (AHokejGameMode::ResolveVisualClass): the first of its paths the preload holds.
+	UClass* VisualClass = nullptr;
+	for (const FString& C : AHokejGameMode::VisualClassPathsFor(LikelyVisual, LikelyFigureTier))
+		if ((VisualClass = FindObject<UClass>(nullptr, *C)) != nullptr) break;
+	// Facing the camera, feet below its line, either side of the planes and nearer than them (nothing in front of them occludes them).
+	const FRotator Face(0.0, Cam.Rotator().Yaw + 180.0, 0.0);
+	for (int32 Team = 0; Team < 2 && VisualClass; ++Team)
+	{
+		const FVector At = Cam.TransformPosition(FVector(480.0, Team == 0 ? -150.0 : 150.0, -140.0));
+		if (AJamSkater* S = W->SpawnActor<AJamSkater>(AJamSkater::StaticClass(), FTransform(Face, At), SP))
+		{
+			S->InitSkater(Team, Team, LikelyTeamColours[Team], Team == 0 ? 7 : 9, VisualClass);
+			WarmExtras.Add(S);
+			++N;
+		}
+	}
+	if (AJamPuck* P = W->SpawnActor<AJamPuck>(AJamPuck::StaticClass(), FTransform(Cam.TransformPosition(FVector(360.0, 0.0, -90.0))), SP))
+	{
+		P->InitPuck(LikelyPuckRadiusM, LikelyPuckColour);
+		WarmExtras.Add(P);
+		++N;
+	}
+	// Lane A136's board caps: one instanced mesh for the ring (the instanced vertex factory: a plane of the same material does not cover it).
+	if (UStaticMesh* Cap = FindObject<UStaticMesh>(nullptr, ARinkActor::BoardCapMeshPath))
+		if (AActor* CapActor = W->SpawnActor<AActor>(AActor::StaticClass(), FTransform(Cam.TransformPosition(FVector(420.0, 0.0, -150.0))), SP))
+		{
+			UInstancedStaticMeshComponent* ISM = NewObject<UInstancedStaticMeshComponent>(CapActor);
+			ISM->SetStaticMesh(Cap);
+			ISM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			ISM->SetRenderCustomDepth(true);
+			ISM->SetCustomDepthStencilValue(1);
+			CapActor->SetRootComponent(ISM);
+			ISM->RegisterComponent();
+			ISM->AddInstance(FTransform::Identity);
+			ISM->AddInstance(FTransform(FVector(0.0, 60.0, 0.0)));
+			WarmExtras.Add(CapActor);
+			++N;
+		}
+	// The HUD's typefaces (HUDWidget.cpp: BoldCondensed score digits, Black titles, outlined): Slate loads a face file synchronously on first use, which
+	// was the match-start frame (two 'Synchronously lazy loading font file' lines there). Measuring loads them here.
+	if (FSlateApplication::IsInitialized() && FSlateApplication::Get().GetRenderer())
+	{
+		const TSharedRef<FSlateFontMeasure> M = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+		const FString Sample(TEXT("0123456789:. HOKEJ TAKE"));
+		const FSlateFontInfo Fonts[] = { FJamUiStyle::ScoreFont(56, true), FJamUiStyle::ScoreFont(56, false), FJamUiStyle::Font(72, FName("Black"), 0, true),
+			FJamUiStyle::Font(FJamUiStyle::Label, FName("Black"), FJamUiStyle::TrackTitle, true), FJamUiStyle::Font(FJamUiStyle::Body, FName("Bold"), 20, true),
+			FJamUiStyle::CaptionFont(true), FJamUiStyle::LabelFont(true) };
+		for (const FSlateFontInfo& F : Fonts)
+		{
+			M->Measure(Sample, F);
+			++N;
+		}
+	}
+	// The HUD's score plate (FJamUiStyle::Art): absent today, so its lookup was a synchronous load attempt in the match-start frame; asked once here, the
+	// process remembers it is absent (and when B adds it, the match preload holds it: MatchPaths).
+	FJamUiStyle::Art(TEXT("T_UI_ScorePlate"));
+	return N;
+}
+
 void UJamPreloadSubsystem::TickWarmScene(UWorld* W)
 {
 	// Taking it down after its frames (a travel takes the planes and the rig with the menu world anyway).
@@ -576,6 +665,8 @@ void UJamPreloadSubsystem::TickWarmScene(UWorld* W)
 	{
 		if (--WarmFramesLeft > 0) return;
 		if (AActor* A = WarmActor.Get()) A->Destroy();
+		for (const TWeakObjectPtr<AActor>& E : WarmExtras) if (AActor* X = E.Get()) X->Destroy();
+		WarmExtras.Reset();
 		if (ULevelStreamingDynamic* L = WarmLevel.Get()) L->SetIsRequestingUnloadAndRemoval(true);
 		UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD warm scene down after %d frames (%.2f s) frame=%llu"), CVarJamWarmSceneFrames.GetValueOnGameThread(),
 			FPlatformTime::Seconds() - WarmStartedAt, static_cast<unsigned long long>(GFrameCounter));
@@ -638,11 +729,12 @@ void UJamPreloadSubsystem::TickWarmScene(UWorld* W)
 		C->RegisterComponent();
 		++Index;
 	}
+	const int32 MatchItems = CVarJamWarmSceneMatch.GetValueOnGameThread() != 0 ? WarmMatchItems(W, FTransform(Rot, Eye)) : 0;
 	WarmActor = A;
 	WarmFramesLeft = FMath::Max(1, CVarJamWarmSceneFrames.GetValueOnGameThread());
 	WarmStartedAt = FPlatformTime::Seconds();
-	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD warm scene up: rig %s (%s), %d items in front of the menu camera, %d frames frame=%llu"), *LikelyTier,
-		RigOk ? TEXT("streaming in") : TEXT("none"), Index, WarmFramesLeft, static_cast<unsigned long long>(GFrameCounter));
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD warm scene up: rig %s (%s), %d items in front of the menu camera, %d match items (figure %s), %d frames frame=%llu"), *LikelyTier,
+		RigOk ? TEXT("streaming in") : TEXT("none"), Index, MatchItems, *LikelyVisual.ToString(), WarmFramesLeft, static_cast<unsigned long long>(GFrameCounter));
 }
 
 void UJamPreloadSubsystem::HandleBeginFrame()
@@ -766,14 +858,24 @@ void UJamPreloadSubsystem::StartPreload(const FString& CutNameOrPath)
 	{
 		Visual = C->Game.Skater.Visual;
 		if (!C->Game.Look.Tier.IsEmpty()) Tier = C->Game.Look.Tier;
+		for (int32 T = 0; T < 2 && T < C->Game.Teams.Num(); ++T) LikelyTeamColours[T] = C->Game.Teams[T].Colour;
+		LikelyPuckRadiusM = C->Game.Puck.RadiusM;
+		LikelyPuckColour = C->Game.Puck.Colour;
 	}
 	LikelyTier = Tier;
+	LikelyVisual = Visual;
+	LikelyFigureTier = Tier;   // the figure follows the cartridge's tier (the settings' override moves the rig only)
+	if (CVarJamWarmSceneMatch.GetValueOnGameThread() != 0)
+	{
+		const FJamSettings Settings = FJamSettings::Load();
+		if (!Settings.LookTierOverride.IsEmpty() && !ULookTierSwitcher::GetRigMapPath(Settings.LookTierOverride).IsEmpty()) LikelyTier = Settings.LookTierOverride;
+	}
 	TArray<FSoftObjectPath> Want;
 	int32 Missing = 0;
 	TArray<FSoftObjectPath> Paths = MatchPaths(Visual, Tier);
 	// Lane A124: the tier's light rig map (packaged and -game only; in the editor the rig is the editor's). The handle holds it as an Inactive world, which
 	// LoadMap's world-leak check exempts; the match's level instance loads its own renamed copy and finds the rig's meshes, materials and lights in memory.
-	const FString Rig = ULookTierSwitcher::GetRigMapPath(Tier);
+	const FString Rig = ULookTierSwitcher::GetRigMapPath(LikelyTier);
 	if (!GIsEditor && !Rig.IsEmpty() && CVarJamPreloadRig.GetValueOnGameThread() != 0) Paths.Add(FSoftObjectPath(Rig));
 	for (const FSoftObjectPath& P : Paths)
 	{

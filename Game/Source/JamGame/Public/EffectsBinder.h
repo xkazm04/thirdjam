@@ -213,6 +213,16 @@ private:
 	TWeakObjectPtr<UWorld> WarmWorld;
 	int32 WarmFramesLeft = -1;
 	double WarmStartedAt = 0.0;
+	// Lane A150 (track Q3 evolution 5): what the first match draws besides the rink and the rig, warmed with them (jam.WarmScene.Match): a figure of each
+	// team (the resolved visual class, the cartridge's team colours), the puck, the HUD's typefaces. The guess also takes the settings' look tier override
+	// (the match applies it: DirectorsCallController.cpp ApplySettingsForMatch). Read from the cartridge at StartPreload; nothing is loaded for them.
+	TArray<TWeakObjectPtr<AActor>> WarmExtras;
+	FName LikelyVisual;
+	FString LikelyFigureTier;
+	FLinearColor LikelyTeamColours[2] = { FLinearColor(0.95f, 0.45f, 0.08f), FLinearColor(0.05f, 0.25f, 0.85f) };
+	double LikelyPuckRadiusM = 0.0381;
+	FLinearColor LikelyPuckColour = FLinearColor(0.0056f, 0.0056f, 0.0056f, 1.f);
+	int32 WarmMatchItems(UWorld* W, const FTransform& Camera);
 
 	TArray<TSharedPtr<FStreamableHandle>> Handles;
 	TSet<FString> PreloadedCuts;

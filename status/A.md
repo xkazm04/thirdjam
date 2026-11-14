@@ -429,3 +429,4 @@
 - 02:21: acceptance run RED on main d126779 (exit 1): no H27. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H27-2.txt
 - link green 02:28: main a9f7443 (On big ice the human's mates check the carrier and the back steps up (A134, track Q2); dev) pushed.
 - link green 02:31: main 4cab387 (The season is a ramp (A133, track C0, R-0057): the novice steps down 86 / 81.5 / 67.5 / 58) pushed.
+- link green 02:37: main c6d8a86 (The settings' level reaches the match, and the end card says what happened (A144, track U2) pushed.
