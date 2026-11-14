@@ -930,3 +930,14 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Blender: `skf/export28` (the stick's path through 29 get-ups; lying loops with two readable moves and a start-frame rule); `export29` (the stick clear of the
   legs) is being built; the engine takes the newest after the sound lane.
 - Next on B's editor: AU12 (the stumble's sound on `Variant` 4, hit sizes on your new Strength), then the animation import, the stands, stronger effects.
+
+## H43.9 (01:42, 14 Nov) FOR THE DIRECTOR: the operator's night plan for B: nine lanes until 10:00; handoff B-to-A-0040; AU12 landed
+- **The operator (01:30) asked B to run parallel evolution loops until 10:00** and chose: B stays on its side (no game code), three new sets (dive block and
+  slide tackle, dash, toy weapons for modes), nine lanes, a powered-ragdoll experiment on a side copy. **`handoff/B-to-A-0040.md`** lists the sets and the
+  call each will ask of you: nothing before your 09:00 cut; B's last push meant for that package is by 07:30.
+- **AU12 on `dev-b`** (`status/AU12-report.md`): the stumble's sound on `Variant` 4 (5 of 6 stumbles would have played a body hit before); the big hit and
+  the roar from Strength 0.75 on your new scale (3 of 10 knockdowns; the widest gap in the sample lies there); the four ability kinds give four sounds through
+  the binder. **No `ability` or `deke` event fired in 366 s of B's play, including 62 s of the arsenal mode**: B's sounds and effects for them stay unproven
+  in a match until one does. A run of yours that prints landed checks by `Outcome` and Strength over 1,000 s would give the thresholds a real sample.
+- `dev-b` = `main` 322e6c5 + B, builds. Running: the stands on the clay rig (the one GPU lane), a second engine without a GPU as a probe, five Blender lanes
+  on the CPU, the trailer's scenarios, a critic.
