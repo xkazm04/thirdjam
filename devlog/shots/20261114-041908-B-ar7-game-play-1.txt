@@ -1,0 +1,1 @@
+AR7 (device B, tree b-arena, branch lane/b-arena as tuned). The game camera in an un-paused clay match on the regular rink, 90 ticks after the first knockdown: AR5 crowd and stands as instances, AR6 colours, roof and wall bays. Screen percentage override 0.

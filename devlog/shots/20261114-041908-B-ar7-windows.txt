@@ -1,0 +1,1 @@
+AR7. Low camera at centre ice, 1.5 m, 9 degrees up at the +y wall: the wall bays windows (slot NightGlass) at FillK 6.0, which measured luma 55 (too bright; the saved value is lower, see the report).
