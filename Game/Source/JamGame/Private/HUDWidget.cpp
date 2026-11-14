@@ -595,7 +595,9 @@ void UJamHudWidget::BuildTree()
 	AbilityPlate->SetVisibility(ESlateVisibility::Collapsed);
 	AbilityText = MakeText(T, TEXT("AbilityText"), S::LabelFont(true), S::Paper());
 	AbilityPlate->SetContent(AbilityText);
-	Place(Root, AbilityPlate, FVector2D(1, 1), FVector2D(1, 1), FVector2D(-S::EdgePx, -(S::EdgePx + UJamRadarWidget::RadarHeightPx + 30.f)), FVector2D(AbilitySlotW, 34));
+	// Lane A144 (evolution 3, the Director's order): 46 high, not 34. The label's line is 32 units and the plate left it 22, so the words ran down
+	// over the cooldown fill at the plate's foot: a rule struck through "F  SHIELD  READY". The fill keeps its place, 2 units above the foot.
+	Place(Root, AbilityPlate, FVector2D(1, 1), FVector2D(1, 1), FVector2D(-S::EdgePx, -(S::EdgePx + UJamRadarWidget::RadarHeightPx + 30.f)), FVector2D(AbilitySlotW, 46));
 	AbilityFill = S::Plate(T, S::Chalk(), FMargin(0));
 	AbilityFill->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, AbilityFill, FVector2D(1, 1), FVector2D(0, 1), FVector2D(-S::EdgePx - AbilitySlotW + 10.f, -(S::EdgePx + UJamRadarWidget::RadarHeightPx + 32.f)), FVector2D(AbilitySlotW - 20.f, 4));

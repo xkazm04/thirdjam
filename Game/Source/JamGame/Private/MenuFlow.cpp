@@ -391,6 +391,13 @@ FString UJamMenuFlow::FirstMatchLine(const FString& Level)
 	return FString::Printf(TEXT("ONE MATCH, %s.  ENTER / A, OR CLICK."), *FJamSettings::DifficultyLabel(D));
 }
 
+FString UJamMenuFlow::LevelMeaning(const FString& Level)
+{
+	if (Level == TEXT("rookie")) return TEXT("Rookies rarely hit. Learn the hits here: a first-timer wins most nights.");
+	if (Level == TEXT("all_star")) return TEXT("All-stars hunt whoever has the puck. A good player wins one night in four.");
+	return TEXT("Pros hit as a habit. Even odds for a regular.");
+}
+
 FString UJamMenuFlow::CutLevel(const UJamCartridge& C)
 {
 	JamAI::FJamDifficultyResolution R;

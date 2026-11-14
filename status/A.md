@@ -431,3 +431,5 @@
 - link green 02:31: main 4cab387 (The season is a ramp (A133, track C0, R-0057): the novice steps down 86 / 81.5 / 67.5 / 58) pushed.
 - link green 02:37: main c6d8a86 (The settings' level reaches the match, and the end card says what happened (A144, track U2) pushed.
 - link green 02:45: main 425f54e (The first match loads nothing on its start frame (A150, track Q3): the warm scene follows ) pushed.
+- link green 02:50: main b7ee3da (Twelve modes on the real ladder: each a contest, each winnable, the whistle out of all but) pushed.
+- 03:03: acceptance run RED on main b7ee3da (exit 1): no H27. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H27-2.txt

@@ -2,7 +2,7 @@
 
 **Two evolutions.** Sections 1 to 6 are evolution 1 (the first screen, the cards, the controls, the lobby), corrected where evolution 2 changed them.
 Section 7 is evolution 2 (the operator's first two minutes: a rookie first match, the brand line that follows the cut, the end card, the hook that ends a
-match, the pad walk).
+match, the pad walk) and the level wire. Section 8 is evolution 3 (the level switch on the first screen, the pause card).
 
 A judge opens the game, reads the first screen, picks something and plays. This page is what that path is after lane A144, what it was on main
 `e71ebf7`, and how to look at it again without a window or a cursor. Family: `MenuFlow.*`, `MenuWidget.*`, `SettingsWidget.*`, `MenuGameMode.cpp` (the QA
@@ -109,6 +109,9 @@ command (`jam.menuscreen main|cuts|direct|settings|credits|controls`, `play`, `w
 | `Jam.Menu.ControlsComplete` | every key `UJamInputMap` binds is on a row and every key a row names is bound (15 rows, 37 keys, 37 mappings); the rows say tap = flat shot, held pass = saucer, S against your motion, MMB lift, Q, F, E, wheel, Shift, Space |
 | `Jam.Menu.DirectorsChoices` (A67, A81) | twelve cards on disk with a pitch and three facts |
 | `Jam.Menu.FirstMatchLevel` (evolution 2, the level wire) | a fresh profile is rookie; a picked level plays itself; a saved "pro" without the pick key is no pick; the rule (regular cut: the player's level; mode, take, saved cut, path: their own); the `?level=` option; the brain's profile for each of the three levels |
+| `Jam.Menu.OldProfileThenPro` (evolution 3) | a profile saved before the level wire shows and plays rookie; PRO picked then stays PRO across three restarts (the saved form's round trip); an old all-star stays; nothing saved is rookie |
+| `Jam.Menu.PickSurvivesSaveAndLoad` (evolution 3) | the game's `Save()` and `Load()` through the config system (a scratch section, emptied after): an old profile's three lines load as rookie; PRO picked is saved under its key and loads as PRO with the rest of the profile |
+| `Jam.Menu.PauseCardFits` (evolution 3) | the pause card's controls table: five lines, each inside the card's inner width with the card's font; every verb of the binding table named |
 | `Jam.Menu.LaunchCutWins` (Director, 14 Nov) | with `-cut=` on the command line PLAY NOW starts that cut, not the regular one; the brain plays the cut's own level with all-star picked; the source reads `launch` |
 | `Jam.Menu.LevelReachesTheBrain` (the level wire) | five matches through the menu in the game: the brain's profile name and its source for PLAY NOW fresh, pro picked, all-star picked, a season take, a Director's mode; the match card ends with the level |
 | `Jam.Menu.BrandLineFollowsTheCut` (evolution 2) | the rule for both values of `rules.penalties`, and the line on screen against the cut on disk |
@@ -162,7 +165,7 @@ level (ROOKIE on a first run).
 
 **What the acceptance run depends on in the menu** (`tools/qa/accept/accept.ps1`; change none of these without running it):
 1. The first screen opens with the keyboard focus on a button that starts a match: one posted Return must log `JAMMENU start match` within 6 s.
-   That button is PLAY NOW.
+   That button is PLAY NOW. The level switch under it takes no focus (left and right on PLAY NOW step it), so this holds with the switch.
 2. PLAY NOW obeys the `-cut=` launch argument: the run starts the package with its own cut (`accept-cut.json`: first to 9, rookie on purpose) and
    a PLAY NOW that loads `hockey.regular` instead ends the run after its third shot (it did, once: H27 was not cut).
 3. The launch cut plays its own level: the settings' level never reaches it (`source=launch`).
@@ -191,3 +194,55 @@ from 0:0 takes three placed pucks and their pauses (7.4 s from the command to th
 **Stills** (`docs/experiments/img/a144-2/`): `end-win-720.png`, `end-win-1080.png`, `end-loss-720.png`, `end-loss-1080.png`, `main-720.png` (PLAY NOW
 says ROOKIE), `settings-720.png` (the level button and where it applies), `match-card-1080.png` (the level on the match card), `pause-720.png` (the
 level and whose it is).
+
+## 8. Evolution 3: the level is chosen where it is played
+
+**The switch.** Under PLAY NOW: `<  ROOKIE | PRO | ALL-STAR  >`, the level in force lit (a yellow edge on a yellow wash), and one line on what it means.
+PLAY NOW's small line follows it (*ONE MATCH, PRO.  ENTER / A, OR CLICK.*).
+- **A click** on a segment picks it. **Left and right on PLAY NOW** step it, with the arrows, the D-pad or the stick: a custom navigation rule on the
+  button (`OnPlayNowNavigate`), so the focus never leaves PLAY NOW and one Enter still starts the match. The ends hold. The segments take no focus.
+- It writes the setting the SETTINGS button writes (`FJamSettings::Difficulty` with `bDifficultyChosen`); each screen re-reads it when it shows, so
+  the two stay in step.
+- **What a level means** (`UJamMenuFlow::LevelMeaning`; the voice's own ladder words, true of the ladder as set: a newcomer wins 85 % at rookie, a
+  regular player half at pro, a good player a quarter at all-star):
+  - rookie: *Rookies rarely hit. Learn the hits here: a first-timer wins most nights.*
+  - pro: *Pros hit as a habit. Even odds for a regular.*
+  - all-star: *All-stars hunt whoever has the puck. A good player wins one night in four.*
+  If the curve moves a cell by more than a few points, these three lines move with it.
+- **A profile saved before the level wire** (a saved `pro` and no pick key) shows ROOKIE on the switch, with no message; a player who then picks PRO
+  keeps PRO across restarts (`Jam.Menu.OldProfileThenPro`: the saved form `FJamSettings::ToSaved` / `FromSaved` is the one `Save()` and `Load()` use;
+  `Jam.Menu.PickSurvivesSaveAndLoad`: the game's own `Save()` and `Load()` through the config system, in a scratch section).
+- **What no headless proof shows:** the file on disk. A process started with `-Multiprocess` (the gate, the off-screen stills) writes no config file,
+  so a level picked there lives for that process only (the next off-screen process shows ROOKIE again: that is the flag, not the game). A package
+  writes `Saved/Config/Windows/GameUserSettings.ini`, section `[Jam.Settings]`; a profile from an earlier package holds `Difficulty=pro` and no pick
+  key there, which is exactly the old profile above: it meets ROOKIE.
+
+**Proof.** In the game process, off screen, by real key presses given to Slate (`u2-stills.ps1 -Switch`, `jam.menuscreen key right|left|arrowright|enter`):
+D-pad right twice (pro, all-star), right again (the end holds), left twice (pro, rookie), the keyboard's right arrow (pro), Enter:
+`JAMMENU start match cut=hockey.regular level=pro`, `JAMMATCH level=pro source=settings`; every press logged `focus_on_play_now=1`.
+`Jam.Menu.LevelReachesTheBrain` plays two more matches from the switch (clicked to all-star, stepped right to pro) and reads the brain's profile.
+`Jam.Menu.FirstScreen` holds the segments, the lit one, the two lines and the ends; `Jam.Menu.FitsTheScreen` holds the first screen at or under 1000
+of 1080 units (measured 981; the title picture went from 480 to 400 units wide to pay for the switch) and each meaning on one line.
+
+**The pause card** (the Director's order for this card). Its controls table was three lines of 100, 105 and 150 characters on a card 744 units wide
+inside: at 1280 x 720 the third reached past both edges. Now five lines of at most 80 characters and a wrap at the card's width
+(`UJamDirectorsCallWidget::PauseControlsText`; `Jam.Menu.PauseCardFits`: the widest line is 730 of 744, and every verb of the binding table is named).
+**The ability slot** (`HUDWidget.cpp`): the plate was 34 units high for a 32-unit line with 12 of padding, so the words ran down over the cooldown fill at
+the plate's foot (a rule through "F  SHIELD  READY"); the plate is 46 high and the fill sits under the words.
+
+**Buttons moved** (centres at 1920 x 1080; x 2/3 for 1280 x 720). None renamed. New: the three segments (click only).
+
+| Button | Evolution 2 | Evolution 3 |
+|---|---|---|
+| PLAY NOW | 960, 528 | 960, 472 |
+| ROOKIE / PRO / ALL-STAR (new) | none | 788, 551 / 959, 551 / 1131, 551 |
+| PLAY THE SEASON | 960, 622 | 960, 635 |
+| CHOOSE YOUR CUT | 960, 691 | 960, 702 |
+| DIRECT A CUT | 960, 760 | 960, 769 |
+| BRAWL WITH A FRIEND | 960, 829 | 960, 836 |
+| CONTROLS / SETTINGS / CREDITS / QUIT | y 895 | y 901 (x unchanged: 696, 871, 1047, 1223) |
+| pause card: RESUME / DIRECTOR'S CALL / RESTART / QUIT TO MENU | 960, 453 / 522 / 591 / 660 | 960, 432 / 501 / 570 / 639 |
+
+**Stills** (`docs/experiments/img/a144-3/`): `first-720-rookie.png`, `first-720-pro.png`, `first-1080-rookie.png`, `first-1080-allstar.png`,
+`pause-720.png` (the table inside the card), `ability-1080.png` (the slot's words clear of its rule), `settings-720-in-step.png` (PRO picked on the
+switch, the SETTINGS button reads PRO in the same process).

@@ -79,6 +79,10 @@ public:
 	static FString FirstMatchLevel(const FJamSettings& Settings);
 	// "ONE MATCH, ROOKIE.  ENTER / A, OR CLICK."
 	static FString FirstMatchLine(const FString& Level);
+	// Lane A144 (evolution 3): what a level means, one line under the first screen's switch, in the voice's words (VOICE.md: rookies rarely hit,
+	// pros hit as a habit, all-stars hunt the carrier) and true of the ladder as set (R-0046: a newcomer wins 85 % at rookie, a regular player
+	// half at pro, a good player a quarter at all-star).
+	static FString LevelMeaning(const FString& Level);
 	// The level a cartridge plays as the game's loader and JamAI::ResolveDifficulty read it: "rookie" | "pro" | "all_star".
 	static FString CutLevel(const UJamCartridge& C);
 	// The one line under a cut card's name: a shipped cut's first four facts ("120 x 60 m, pickups on the ice, first to 3, body checks"), a saved

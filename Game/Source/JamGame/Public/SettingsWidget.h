@@ -49,6 +49,10 @@ struct JAMGAME_API FJamSettings
 	static const TCHAR* Section;   // "Jam.Settings"
 
 	static FJamSettings Load();
+	// Lane A144 (evolution 3): the saved form, key by key, the one Load() reads and Save() writes (GameUserSettings.ini, [Jam.Settings]). A test
+	// holds a profile across a "restart" with these two and no file: FromSaved(ToSaved()).
+	static FJamSettings FromSaved(const TMap<FString, FString>& Saved);
+	TMap<FString, FString> ToSaved() const;
 	// Tests: Load() returns this instead of the saved file while it is set (null clears it). Nothing is written.
 	static void SetOverrideForTest(const FJamSettings* Settings);
 	void Save() const;

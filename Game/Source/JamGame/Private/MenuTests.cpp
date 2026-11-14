@@ -5,6 +5,8 @@
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 #include "Misc/Paths.h"
+#include "Misc/ScopeExit.h"
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/FileHelper.h"
@@ -315,8 +317,36 @@ namespace JamMenuTests
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuFirstScreen, "Jam.Menu.FirstScreen", JamMenuTests::MenuTestFlags)
 bool FJamMenuFirstScreen::RunTest(const FString&)
 {
+	// A fresh profile, held in memory for the test (nothing of it reaches the player's settings file).
+	const FJamSettings Fresh = FJamSettings();
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
 	JamMenuTests::FMenuFixture F;
 	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+
+	// Evolution 3: the level is chosen where it is played. Three segments under PLAY NOW, the level in force lit, one line on what it means.
+	const TArray<FString> Segments = F.Menu->GetSwitchLabels();
+	TestTrue(TEXT("the switch reads ROOKIE / PRO / ALL-STAR"), Segments.Num() == 3 && Segments[0] == TEXT("ROOKIE") && Segments[1] == TEXT("PRO") && Segments[2] == TEXT("ALL-STAR"));
+	TestEqual(TEXT("a fresh profile lights ROOKIE"), static_cast<int32>(F.Menu->GetSwitchLevel()), static_cast<int32>(EJamMenuDifficulty::Rookie));
+	TestEqual(TEXT("PLAY NOW's line follows the switch"), F.Menu->GetFirstPressLine(), UJamMenuFlow::FirstMatchLine(TEXT("rookie")));
+	TestEqual(TEXT("the line under the switch says what rookie means"), F.Menu->GetLevelMeaningLine(), UJamMenuFlow::LevelMeaning(TEXT("rookie")));
+	F.Menu->PickLevel(EJamMenuDifficulty::AllStar);
+	TestEqual(TEXT("a click on ALL-STAR lights it"), static_cast<int32>(F.Menu->GetSwitchLevel()), static_cast<int32>(EJamMenuDifficulty::AllStar));
+	TestTrue(TEXT("PLAY NOW's line says ALL-STAR"), F.Menu->GetFirstPressLine().Contains(TEXT("ALL-STAR")));
+	TestEqual(TEXT("the line says what all-star means"), F.Menu->GetLevelMeaningLine(), UJamMenuFlow::LevelMeaning(TEXT("all_star")));
+	TestTrue(TEXT("the switch wrote the setting the SETTINGS button writes"), FJamSettings::Load().bDifficultyChosen && FJamSettings::Load().Difficulty == EJamMenuDifficulty::AllStar);
+	F.Menu->StepLevel(-1);
+	TestEqual(TEXT("left steps to PRO"), static_cast<int32>(F.Menu->GetSwitchLevel()), static_cast<int32>(EJamMenuDifficulty::Pro));
+	F.Menu->StepLevel(-1);
+	F.Menu->StepLevel(-1);
+	TestEqual(TEXT("the left end holds at ROOKIE"), static_cast<int32>(F.Menu->GetSwitchLevel()), static_cast<int32>(EJamMenuDifficulty::Rookie));
+	TestTrue(TEXT("a rookie picked on the switch is a pick"), FJamSettings::Load().bDifficultyChosen && FJamSettings::Load().EffectiveDifficulty() == EJamMenuDifficulty::Rookie);
+	F.Menu->StepLevel(1);
+	F.Menu->StepLevel(1);
+	F.Menu->StepLevel(1);
+	TestEqual(TEXT("the right end holds at ALL-STAR"), static_cast<int32>(F.Menu->GetSwitchLevel()), static_cast<int32>(EJamMenuDifficulty::AllStar));
+	// The three meanings are three different lines, and none names a number the ladder does not hold.
+	TestTrue(TEXT("each level has its own line"), UJamMenuFlow::LevelMeaning(TEXT("rookie")) != UJamMenuFlow::LevelMeaning(TEXT("pro")) && UJamMenuFlow::LevelMeaning(TEXT("pro")) != UJamMenuFlow::LevelMeaning(TEXT("all_star")));
 	const TArray<FString> Labels = F.Menu->GetMainLabels();
 	const TArray<FString> Expected = { TEXT("PLAY NOW"), TEXT("PLAY THE SEASON"), TEXT("CHOOSE YOUR CUT"), TEXT("DIRECT A CUT"), TEXT("BRAWL WITH A FRIEND"),
 		TEXT("CONTROLS"), TEXT("SETTINGS"), TEXT("CREDITS"), TEXT("QUIT") };
@@ -344,6 +374,9 @@ bool FJamMenuFirstScreen::RunTest(const FString&)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuFitsTheScreen, "Jam.Menu.FitsTheScreen", JamMenuTests::MenuTestFlags)
 bool FJamMenuFitsTheScreen::RunTest(const FString&)
 {
+	const FJamSettings Fresh = FJamSettings();
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
 	JamMenuTests::FMenuFixture F;
 	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
 	const TPair<EJamMenuScreen, const TCHAR*> Screens[] = {
@@ -358,6 +391,8 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		AddInfo(FString::Printf(TEXT("JAMMENU measure %s %.0f x %.0f of %.0f x %.0f"), Sc.Value, Size.X, Size.Y + Extra, JamMenuTests::ViewW, JamMenuTests::ViewH));
 		TestTrue(*FString::Printf(TEXT("%s is at most %.0f wide (%.0f)"), Sc.Value, JamMenuTests::ViewW, Size.X), Size.X > 100.f && Size.X <= JamMenuTests::ViewW);
 		TestTrue(*FString::Printf(TEXT("%s is at most %.0f high (%.0f)"), Sc.Value, JamMenuTests::ViewH, Size.Y + Extra), Size.Y > 100.f && Size.Y + Extra <= JamMenuTests::ViewH);
+		// Evolution 3 (the Director's bar): the first screen with its level switch stays at or under 1000 of the 1080 units.
+		if (Sc.Key == EJamMenuScreen::Main) TestTrue(*FString::Printf(TEXT("the first screen is at most 1000 high (%.0f)"), Size.Y), Size.Y <= 1000.f);
 	}
 
 	// The twelve cards are on the screen, and their words fit the card's own text width with the card's own type: the name on one line, the pitch
@@ -385,6 +420,13 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		}
 	}
 	AddInfo(FString::Printf(TEXT("JAMMENU measure cards: widest name %.0f (%s), widest pitch %.0f, widest fact %.0f, text width %.0f"), WidestName, *WidestNameIs, WidestPitch, WidestFact, TextW));
+
+	// Evolution 3: what a level means fits one line under the switch (816 units, the card's text width).
+	for (const TCHAR* Level : { TEXT("rookie"), TEXT("pro"), TEXT("all_star") })
+	{
+		const float W = static_cast<float>(Measure->Measure(UJamMenuFlow::LevelMeaning(Level), FJamUiStyle::CaptionFont()).X);
+		TestTrue(*FString::Printf(TEXT("the %s line fits one line (%.0f of 816)"), Level, W), W > 0.f && W <= 816.f);
+	}
 
 	// The cut cards: every shipped cut's name on one line and its line on two, inside a third of the list.
 	for (const FJamMenuCutRow& R : UJamMenuFlow::BuildCutRows(MakeDesigner()->ListCuts()))
@@ -510,7 +552,7 @@ bool FJamMenuFirstMatchLevel::RunTest(const FString&)
 }
 
 // ---- Jam.Menu.LevelReachesTheBrain: the whole wire, in the game. The menu starts a match, the rink's game mode gives the brain its level.
-// Five matches: PLAY NOW on a fresh profile (rookie), a regular cut with pro picked, with all-star picked (the player's level each time, the
+// (Evolution 3 adds two: the first screen's switch clicked and stepped, then PLAY NOW.) Five matches: PLAY NOW on a fresh profile (rookie), a regular cut with pro picked, with all-star picked (the player's level each time, the
 // brain's profile name), the season's take with all-star picked (the take's own level), a Director's mode with rookie picked (the mode's own).
 
 namespace JamMenuTests
@@ -529,6 +571,9 @@ namespace JamMenuTests
 		{ TEXT("PLAY NOW with all-star picked"), 0, true, EJamMenuDifficulty::AllStar, TEXT("all_star") },
 		{ TEXT("the season's take with all-star picked"), 2, true, EJamMenuDifficulty::AllStar, nullptr },
 		{ TEXT("Sudden Death with rookie picked"), 3, true, EJamMenuDifficulty::Rookie, nullptr },
+		// Evolution 3: the first screen's switch, then PLAY NOW. A fresh profile each time.
+		{ TEXT("the switch clicked to ALL-STAR, then PLAY NOW"), 4, false, EJamMenuDifficulty::Pro, TEXT("all_star") },
+		{ TEXT("the switch stepped right from ROOKIE, then PLAY NOW"), 5, false, EJamMenuDifficulty::Pro, TEXT("pro") },
 	};
 	static const int32 NumLevelSteps = UE_ARRAY_COUNT(LevelSteps);
 }
@@ -562,6 +607,14 @@ public:
 			switch (S.Kind)
 			{
 			case 0: bStarted = GM->GetMenu()->PlayNow(); break;
+			case 4:
+			case 5:
+				// The switch writes the setting (into the test's in-memory profile), PLAY NOW's line follows it, and the match plays it.
+				if (S.Kind == 4) GM->GetMenu()->PickLevel(EJamMenuDifficulty::AllStar); else GM->GetMenu()->StepLevel(1);
+				Test->TestEqual(*FString::Printf(TEXT("%s: PLAY NOW's line names the level"), S.What), GM->GetMenu()->GetFirstPressLine(), UJamMenuFlow::FirstMatchLine(S.Expect));
+				Test->TestTrue(*FString::Printf(TEXT("%s: the switch is the player's pick"), S.What), FJamSettings::Load().bDifficultyChosen);
+				bStarted = GM->GetMenu()->PlayNow();
+				break;
 			case 1: bStarted = GM->GetMenu()->ChooseCut(TEXT("hockey.regular")); break;
 			case 2:
 				// The season's own start; where this machine's season cannot start (wrapped, no progress file), the call the season makes for a
@@ -752,6 +805,119 @@ bool FJamMenuBrandLine::RunTest(const FString&)
 	if (!TestNotNull(TEXT("the first cut loads"), C)) return false;
 	TestEqual(TEXT("the line on the first screen is the one for the cut on disk"), UJamMenuFlow::BrandLine(), UJamMenuFlow::BrandLineFor(C->Game.Rules.bPenalties));
 	AddInfo(FString::Printf(TEXT("JAMMENU brand line: rules.penalties %s -> %s"), C->Game.Rules.bPenalties ? TEXT("true") : TEXT("false"), *UJamMenuFlow::BrandLine()));
+	return true;
+}
+
+// ---------------------------------------------------------------- lane A144, evolution 3
+
+// A profile saved before the level wire (Save() wrote "pro" with every volume change, and no pick key) shows ROOKIE; the player who then picks PRO
+// keeps PRO across restarts. The saved form is the one Load() reads and Save() writes (FromSaved / ToSaved): a restart is a round trip through it.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuOldProfileThenPro, "Jam.Menu.OldProfileThenPro", JamMenuTests::MenuTestFlags)
+bool FJamMenuOldProfileThenPro::RunTest(const FString&)
+{
+	TMap<FString, FString> Old;
+	Old.Add(TEXT("Difficulty"), TEXT("pro"));
+	Old.Add(TEXT("Volume"), TEXT("0.650000"));
+	Old.Add(TEXT("Barks"), TEXT("-1"));
+	const FJamSettings Met = FJamSettings::FromSaved(Old);
+	TestFalse(TEXT("an old profile's saved pro is no pick"), Met.bDifficultyChosen);
+	TestEqual(TEXT("the old profile shows ROOKIE"), FJamSettings::DifficultyLabel(Met.EffectiveDifficulty()), FString(TEXT("ROOKIE")));
+	TestEqual(TEXT("the old profile plays rookie"), UJamMenuFlow::FirstMatchLevel(Met), FString(TEXT("rookie")));
+	TestTrue(TEXT("its volume is kept"), FMath::IsNearlyEqual(Met.Volume, 0.65f, 0.001f));
+
+	// The player picks PRO (the switch and the SETTINGS button write the same two fields), the game saves, the game restarts.
+	FJamSettings Picked = Met;
+	Picked.Difficulty = EJamMenuDifficulty::Pro;
+	Picked.bDifficultyChosen = true;
+	const TMap<FString, FString> Saved = Picked.ToSaved();
+	TestTrue(TEXT("the pick is saved with its key"), Saved.Contains(TEXT("DifficultyChosen")) && Saved[TEXT("DifficultyChosen")].ToBool() && Saved[TEXT("Difficulty")] == TEXT("pro"));
+	FJamSettings After = FJamSettings::FromSaved(Saved);
+	for (int32 Restart = 1; Restart <= 3; ++Restart)
+	{
+		TestTrue(*FString::Printf(TEXT("restart %d: PRO is still the player's pick"), Restart), After.bDifficultyChosen && After.EffectiveDifficulty() == EJamMenuDifficulty::Pro);
+		TestEqual(*FString::Printf(TEXT("restart %d: PLAY NOW plays pro"), Restart), UJamMenuFlow::FirstMatchLevel(After), FString(TEXT("pro")));
+		TestTrue(*FString::Printf(TEXT("restart %d: the volume is kept"), Restart), FMath::IsNearlyEqual(After.Volume, 0.65f, 0.001f));
+		After = FJamSettings::FromSaved(After.ToSaved());
+	}
+	// An old profile that had all-star saved could only have got it from the button: it stays the player's.
+	TMap<FString, FString> OldStar;
+	OldStar.Add(TEXT("Difficulty"), TEXT("all_star"));
+	TestTrue(TEXT("an old all-star stays all-star"), FJamSettings::FromSaved(OldStar).EffectiveDifficulty() == EJamMenuDifficulty::AllStar);
+	TestTrue(TEXT("nothing saved at all is a fresh profile: rookie"), FJamSettings::FromSaved(TMap<FString, FString>()).EffectiveDifficulty() == EJamMenuDifficulty::Rookie);
+	return true;
+}
+
+// The same through the game's own Save() and Load() and the config system they use, in a scratch section of the settings file's cache (emptied
+// after; the player's section is not touched): the old profile is the three lines an old package wrote, the pick is saved under its key and read
+// back. What this cannot show is the engine writing the file to disk: a process started with -Multiprocess (the gate, the off-screen stills)
+// writes no config file at all; a package does (its [Jam.Settings] section is on this machine from earlier packages).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuPickSurvivesSaveAndLoad, "Jam.Menu.PickSurvivesSaveAndLoad", JamMenuTests::MenuTestFlags)
+bool FJamMenuPickSurvivesSaveAndLoad::RunTest(const FString&)
+{
+	if (!GConfig) { AddError(TEXT("no config system")); return false; }
+	const TCHAR* RealSection = FJamSettings::Section;
+	FJamSettings::Section = TEXT("Jam.Settings.A144Test");
+	FJamSettings::SetOverrideForTest(nullptr);
+	ON_SCOPE_EXIT
+	{
+		GConfig->EmptySection(FJamSettings::Section, GGameUserSettingsIni);
+		GConfig->Flush(false, GGameUserSettingsIni);   // where this process writes config files at all, the scratch section leaves the file too
+		FJamSettings::Section = RealSection;
+	};
+	GConfig->EmptySection(FJamSettings::Section, GGameUserSettingsIni);
+	TestFalse(TEXT("nothing saved: a fresh profile, rookie"), FJamSettings::Load().bDifficultyChosen);
+	TestTrue(TEXT("nothing saved plays rookie"), FJamSettings::Load().EffectiveDifficulty() == EJamMenuDifficulty::Rookie);
+
+	// What a package of before tonight left behind.
+	GConfig->SetString(FJamSettings::Section, TEXT("Difficulty"), TEXT("pro"), GGameUserSettingsIni);
+	GConfig->SetString(FJamSettings::Section, TEXT("Volume"), TEXT("1"), GGameUserSettingsIni);
+	GConfig->SetString(FJamSettings::Section, TEXT("Barks"), TEXT("-1"), GGameUserSettingsIni);
+	FJamSettings Met = FJamSettings::Load();
+	TestFalse(TEXT("the old profile's pro is no pick"), Met.bDifficultyChosen);
+	TestTrue(TEXT("the old profile shows ROOKIE"), Met.EffectiveDifficulty() == EJamMenuDifficulty::Rookie);
+
+	// The player picks PRO; the game saves; the next start loads.
+	Met.Difficulty = EJamMenuDifficulty::Pro;
+	Met.bDifficultyChosen = true;
+	Met.Volume = 0.7f;
+	Met.Save();
+	FString Key;
+	TestTrue(TEXT("Save() writes the pick's key"), GConfig->GetString(FJamSettings::Section, TEXT("DifficultyChosen"), Key, GGameUserSettingsIni) && Key.ToBool());
+	const FJamSettings Next = FJamSettings::Load();
+	TestTrue(TEXT("Load() reads the pick back: PRO stays PRO"), Next.bDifficultyChosen && Next.EffectiveDifficulty() == EJamMenuDifficulty::Pro);
+	TestTrue(TEXT("and the rest of the profile with it"), FMath::IsNearlyEqual(Next.Volume, 0.7f, 0.001f) && Next.Barks == -1);
+	TestEqual(TEXT("PLAY NOW then plays pro"), UJamMenuFlow::FirstMatchLevel(Next), FString(TEXT("pro")));
+	return true;
+}
+
+// The pause card's controls table stays inside the card: every line, with the card's own font, within its inner width; and it still names every
+// verb of the binding table.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuPauseCardFits, "Jam.Menu.PauseCardFits", JamMenuTests::MenuTestFlags)
+bool FJamMenuPauseCardFits::RunTest(const FString&)
+{
+	if (!FSlateApplication::IsInitialized()) { AddError(TEXT("no Slate application to measure with")); return false; }
+	const TSharedRef<FSlateFontMeasure> Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+	const FString Table = UJamDirectorsCallWidget::PauseControlsText();
+	TArray<FString> Lines;
+	Table.ParseIntoArrayLines(Lines);
+	TestEqual(TEXT("five lines"), Lines.Num(), 5);
+	float Widest = 0.f;
+	for (const FString& Line : Lines)
+	{
+		const float W = static_cast<float>(Measure->Measure(Line, FJamUiStyle::CaptionFont()).X);
+		Widest = FMath::Max(Widest, W);
+		TestTrue(*FString::Printf(TEXT("'%s' fits the card (%.0f of %.0f)"), *Line.Left(40), W, UJamDirectorsCallWidget::PauseCardInnerWidth), W > 0.f && W <= UJamDirectorsCallWidget::PauseCardInnerWidth);
+	}
+	AddInfo(FString::Printf(TEXT("JAMMENU pause card: widest controls line %.0f of %.0f"), Widest, UJamDirectorsCallWidget::PauseCardInnerWidth));
+	TArray<FString> Rows;
+	UJamInputMap::BindingTableText(false).ParseIntoArrayLines(Rows);
+	TestTrue(TEXT("the binding table has rows"), Rows.Num() >= 10);
+	for (const FString& Row : Rows)
+	{
+		FString Verb, Keys;
+		if (!Row.Split(TEXT("  "), &Verb, &Keys)) continue;
+		TestTrue(*FString::Printf(TEXT("the pause card names %s"), *Verb), Table.Contains(Verb));
+	}
 	return true;
 }
 
