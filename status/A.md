@@ -453,3 +453,4 @@
 - package 07:03: `Hokej_Hokej_H30.zip` from main 95ae15a6, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 07:13: main 3fa9c2e6 (H30 is the package the operator plays (R-0063): the window lane's tools and report (A155),) pushed.
 - link green 07:38: main 05c70170 (A soak baseline that is true of the package: 60 cells on ca493723, every one bit-identical) pushed.
+- link green 08:02: main 81eebe96 (The release chain runs the rows that caught H27 by hand; the acceptance drill cannot crash) pushed.

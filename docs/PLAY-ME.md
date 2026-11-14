@@ -104,6 +104,12 @@ Enter still plays.
 3. **RMB:** turn on the cooldown (60 frames, and a too-early press restarts it: a mashed button then lands fewer hits than a timed one, 2.9 against 3.3 a
    match; costs the ladder half a point) and the lunge (a press commits your body; two and a half points at all-star, where the curve has no dial yet)?
    Yes or no to each.
+3a. **On the ice as you win the puck** (two knockdowns in three at pro): a rule is built and off: for a quarter second after anyone wins the puck, a hit
+   that would fell him is a stumble instead (he keeps his feet, loses half his speed and the puck; a harder hit is a longer stumble). Measured: your
+   knockdowns at pro 6.9 to 3.7 a match, on the ice 9 % of play to 4.5 %. The price: in that quarter second a head-on hit at full speed no longer
+   puts a man down (the one place "a hit obeys momentum" is bent), and pro gets 3 points easier, all-star 6 (pro's dial pays pro back; all-star has
+   no dial yet). Yes or no. With it: the push-out that ends a skater standing at a downed body (measured together: 1,468 such moments in 200 pro
+   matches become 2).
 4. **The look:** clay with the stands as the first look: yes? Anything that reads badly from the game camera?
 5. **Which three modes stay on the page**, if only three could.
 6. **New verbs from device B** (figures, sounds and effects exist; none is wired): a **dash**, a **slide tackle**, a **dive block**, and toy weapons for the modes
