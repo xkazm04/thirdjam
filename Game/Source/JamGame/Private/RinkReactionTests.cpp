@@ -454,7 +454,7 @@ bool FJamRinkPenaltySeat::RunTest(const FString&)
 		for (const FJamSkaterState& S : S2->GetSkaters()) if (S.Index != Me && S.Index != O) S2->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.0, 18.0), FVector2D::ZeroVector, 0);
 		S2->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);
 		S2->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		S2->SetSkater(Me, FVector2D(-1.2, 0), FVector2D(8, 0), 0);
+		S2->SetSkater(Me, FVector2D(-1.2 - 8.0 * S2->GetConfig().Contact.CheckWindupFrames / 60.0, 0), FVector2D(8, 0), 0);   // lane A192: the wind-up's ground farther out
 	}
 	const int32 Team = Sim->GetSkaters()[Me].Team;
 	AJamSkater* Pawn = W.World->SpawnActor<AJamSkater>();
@@ -477,7 +477,7 @@ bool FJamRinkPenaltySeat::RunTest(const FString&)
 		Sim->Step(In);
 		Twin->Step(In);
 		In[Me].bCheck = false;
-		if (F >= 6) In[Me].Move = FVector2D::ZeroVector;
+		if (F >= 6 + Sim->GetConfig().Contact.CheckWindupFrames) In[Me].Move = FVector2D::ZeroVector;   // lane A192: the charge lasts the wind-up longer
 		if (Sim->StateHash() != Twin->StateHash()) ++HashDiffs;
 		const FJamSkaterState& S = Sim->GetSkaters()[Me];
 		Pawn->ApplyRender(S, 1.f);
@@ -831,7 +831,7 @@ bool FJamRinkHitSeenBoxUsed::RunTest(const FString&)
 			for (const FJamSkaterState& S : S2->GetSkaters()) if (S.Index != Me && S.Index != O) S2->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.0, 18.0), FVector2D::ZeroVector, 0);
 			S2->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);
 			S2->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-			S2->SetSkater(Me, FVector2D(-1.2, 0), FVector2D(8, 0), 0);
+			S2->SetSkater(Me, FVector2D(-1.2 - 8.0 * S2->GetConfig().Contact.CheckWindupFrames / 60.0, 0), FVector2D(8, 0), 0);   // lane A192: the wind-up's ground farther out
 		}
 		const int32 Team = Sim->GetSkaters()[Me].Team, Other = 1 - Team;
 		UStaticMeshComponent* DoorComp = Team == 0 ? Rink->ArenaBoxDoorNeg.Get() : Rink->ArenaBoxDoorPos.Get();
@@ -849,7 +849,7 @@ bool FJamRinkHitSeenBoxUsed::RunTest(const FString&)
 			Sim->Step(In);
 			Twin->Step(In);
 			In[Me].bCheck = false;
-			if (F >= 6) In[Me].Move = FVector2D::ZeroVector;
+			if (F >= 6 + Sim->GetConfig().Contact.CheckWindupFrames) In[Me].Move = FVector2D::ZeroVector;   // lane A192: the charge lasts the wind-up longer
 			if (Sim->StateHash() != Twin->StateHash()) ++HashDiffs;
 			const int32 Before = Rink->GetBoxReactionCount();
 			Deliver(Sim, Bus, Rink);

@@ -344,6 +344,12 @@ public:
 	// STICK LOCKED stands for the lock's length: when the lock ends, the line is put at the start of its fade (ContactFadeFrames).
 	static int64 CarrierCueFadeStart(int64 SimFrame) { return SimFrame - (ContactLineFrames - ContactFadeFrames); }
 	void UpdateCarrierCues(const FJamPresentationFrame& Frame);
+	// ---- Lane A192 (track F1, evolution 10): the held cross-check says so. One function (UpdateBraceLine, HUDBrace.cpp; called after UpdateCarrierCues):
+	// the human's braced hit that landed (FJamSkaterState::CrossBraceHits grew) shows BraceLineFor(true) on the contact line; one he took out of an
+	// opponent's brace (CrossBraceTaken grew) shows BraceLineFor(false). Presentation only; a restart (the counters back to 0) shows nothing.
+	static FString BraceLineFor(bool bGiven) { return bGiven ? TEXT("BRACED HIT") : TEXT("RUN THROUGH"); }
+	void UpdateBraceLine(const FJamPresentationFrame& Frame);
+	int32 BraceSeenGiven = 0, BraceSeenTaken = 0;
 	bool bCueStickLocked = false, bCuePressIntoGrace = false;
 	int32 CueGraceCarrier = -1;
 	// ---- Lane A166 (track F2, evolution 7): the two warnings on the ice, one function (UpdateMarks, HUDMarks.cpp; called after UpdateCarrierCues).

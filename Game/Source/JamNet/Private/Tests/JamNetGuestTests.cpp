@@ -219,6 +219,7 @@ namespace JamNetGuestTests
 		{ TEXT("CrossBraceFrames"), TEXT("read-out counter: frames braced with the held cross-check (lane A184); read by no rule") },
 		{ TEXT("CrossBraceHits"), TEXT("read-out counter: hits delivered out of the brace (lane A184); read by no rule") },
 		{ TEXT("bCrossBraceHit"), TEXT("read-out, one frame: this frame's hit on this skater came out of a brace (lane A184); read by no rule") },
+		{ TEXT("CrossBraceTaken"), TEXT("read-out counter: braced hits taken, behind the HUD's contact line (lane A192); read by no rule") },
 		{ TEXT("WindupFrames"), TEXT("read-out, one frame: the frames to contact the figure is told on this frame's press (lane A184); read by no rule") },
 		{ TEXT("ChecksGraced"), TEXT("read-out counter behind the HUD's JUST GOT UP line (lane A113); read by no rule") },
 		{ TEXT("ChecksSoft"), TEXT("read-out counter behind the HUD's TOO SOFT line (lane A113); read by no rule") },
@@ -302,6 +303,7 @@ namespace JamNetGuestTests
 		{ TEXT("DekeSide"), TEXT("DekeFrames"), 5 }, { TEXT("AbilityCharges"), TEXT("AbilitySlot"), 0 }, { TEXT("AbilityReadyFrame"), TEXT("AbilitySlot"), 0 },
 		{ TEXT("AbilityArmed"), TEXT("AbilitySlot"), 0 },
 		// Lane A151 (track F1): the late press's memory is hashed while LateFrames runs.
+		{ TEXT("CrossTarget"), TEXT("LiftWindupLeft"), 5 }, { TEXT("bCrossTargetStickOnly"), TEXT("LiftWindupLeft"), 5 },   // lane A192: the deferred shove's man
 		{ TEXT("LateWho"), TEXT("LateFrames"), 5 }, { TEXT("LateDir"), TEXT("LateFrames"), 5 }, { TEXT("LateVelSelf"), TEXT("LateFrames"), 5 }, { TEXT("LateVelOther"), TEXT("LateFrames"), 5 },
 	};
 	const FGuard PuckGuards[] = {

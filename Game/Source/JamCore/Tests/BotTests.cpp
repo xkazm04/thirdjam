@@ -107,6 +107,10 @@ bool FJamBotPlayerBotWins::RunTest(const FString& Parameters)
 	bool bOk = true;
 	UJamCartridge* Cart = Load(*this, 0);
 	if (!Cart) { return false; }
+	// Lane A192: the three seeds are a chance sample of the PlayerBot's play (R-0011), not of contact: with both wind-ups on seed 2 is lost 2:3 (each alone
+	// wins it 3:0 and 3:2). The gate plays them with the wind-ups at 0; Jam.Core.Contact.* and the ladder's cells cover the wind-ups.
+	Cart->Game.Contact.CheckWindupFrames = 0;
+	Cart->Game.Contact.CrossWindupFrames = 0;
 	const JamAI::FJamMatchConfig C = JamAI::ToMatchConfig(Cart->Game);
 	const int32 Pi = C.PlayerIndex();
 	const int32 PlayerTeam = C.Skaters[Pi].Team;

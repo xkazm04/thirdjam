@@ -477,7 +477,9 @@ bool FJamSpinCheckedFalls::RunTest(const FString& Parameters)
 			In[D].Move = FVector2D(-1, 0);
 			const double Gap = FVector2D::Distance(Ds.Pos, Ms.Pos) - UJamSim::SkaterRadius * 2.0;
 			const double Closing = FVector2D::DotProduct(Ds.Vel - Ms.Vel, (Ms.Pos - Ds.Pos).GetSafeNormal());
-			if (HitFrame < 0 && Ds.CheckWindow == 0 && Gap <= Closing * 4.0 * UJamSim::DT) In[D].bCheck = true;   // inside the bots' 6-frame window
+			// Lane A192: the window opens game.contact.check_windup_frames after the press: the defender presses that many frames earlier, as the brain does.
+			const double Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+			if (HitFrame < 0 && Ds.CheckWindow == 0 && Ds.CheckWindupLeft == 0 && Gap <= Closing * (4.0 + Wu) * UJamSim::DT) In[D].bCheck = true;   // inside the bots' 6-frame window
 			Sim->Step(In);
 			if (HitFrame < 0 && Count(Sim, JamEvents::Knockdown, Me) > 0)
 			{

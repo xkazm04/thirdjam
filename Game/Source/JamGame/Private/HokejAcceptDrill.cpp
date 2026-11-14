@@ -172,7 +172,9 @@ void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
 			In.bSprint = true;
 			const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
 			const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(O.Vel - H.Vel, ToH / Dist) : 0.0;
-			if ((Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::CheckWindowFrames - 2) * UJamSim::DT)) && !H.IsDown() && O.CanAct() && G.DownFrame < 0)
+			// Lane A192: the window opens game.contact.check_windup_frames after the press: the opponent presses that much earlier (as the brain does).
+			const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+			if ((Gap <= 0.25 + Closing * Wu * UJamSim::DT || (Closing > 0.5 && Gap <= Closing * (UJamSim::CheckWindowFrames - 2 + Wu) * UJamSim::DT)) && !H.IsDown() && O.CanAct() && G.DownFrame < 0)
 			{
 				In.bCheck = true;
 				if (G.CueFrame < 0) { G.CueFrame = F; G.Closing = Closing; }
@@ -594,7 +596,7 @@ void AHokejGameMode::AcceptDrillObserve()
 		// Lane A92: by momentum the press must come before the hit (a press after the first touch hits with the closing speed that is left): the RMB cue comes ten
 		// frames before contact, inside the human's 12-frame window whatever the hand's latency; the MMB cue comes at cross_reach_m (the shove needs arm's length).
 		const bool bCue = !Cfg.Contact.bMomentum ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 6) * UJamSim::DT))
-			: G.K == 1 ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 2) * UJamSim::DT))
+			: G.K == 1 ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 2 + Cfg.Contact.CheckWindupFrames) * UJamSim::DT))   // lane A192: the cue comes the wind-up earlier
 			: Gap <= Cfg.Contact.CrossReachM;
 		if (G.K == 3)
 		{

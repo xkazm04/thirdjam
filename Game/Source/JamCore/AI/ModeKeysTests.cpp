@@ -183,13 +183,15 @@ bool FJamModeKeysPenalty::RunTest(const FString& Parameters)
 		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Index != Me && S.Index != O) Sim->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.0, 18.0), FVector2D::ZeroVector, 0);
 		Sim->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		Sim->SetSkater(Me, FVector2D(-1.2, 0), FVector2D(8, 0), 0);
+		// Lane A192: the window opens game.contact.check_windup_frames after the press: the charger starts that much ground farther out, the scene runs that much longer.
+		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+		Sim->SetSkater(Me, FVector2D(-1.2 - 8.0 * Wu / 60.0, 0), FVector2D(8, 0), 0);
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());
 		In[Me].Move = FVector2D(1, 0);
 		In[Me].bCheck = true;
 		int32 Fouls = 0;
-		for (int32 F = 0; F < 6; ++F)
+		for (int32 F = 0; F < 6 + Wu; ++F)
 		{
 			Sim->Step(In);
 			In[Me].bCheck = false;

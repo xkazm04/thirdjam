@@ -41,7 +41,9 @@ namespace JamTacklingTests
 			Sim->SetSkater(S.Index, FVector2D(-Hx + 2.0 * K, (K % 2 ? 1.0 : -1.0) * Hz), FVector2D::ZeroVector, 0.0);
 			++K;
 		}
-		Sim->SetPuck(FVector2D(Hx, 0.0), FVector2D::ZeroVector);
+		// Lane A192: the puck at the side boards' middle. At (Hx, 0) it sat in a net mouth and the scene's first frame was a goal: everything after it ran in the
+		// goal pause (braking, no presses), which a check pressed with a wind-up does not survive.
+		Sim->SetPuck(FVector2D(0.0, Hz + 1.5), FVector2D::ZeroVector);
 	}
 
 	// Runs until a check event or MaxFrames; returns the event (Name None when none).
@@ -92,7 +94,8 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 			ClearIce(Sim, 0, 3);
 			Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, C.VictimYaw);
 			const FVector2D Dir = -C.From;   // the push: from the checker toward the victim
-			Sim->SetSkater(0, C.From * 1.2, Dir * V, FMath::Atan2(Dir.Y, Dir.X));
+			// Lane A192: the window opens game.contact.check_windup_frames after the press: the checker starts that much ground farther out (the same contact).
+			Sim->SetSkater(0, C.From * (1.2 + V * Sim->GetConfig().Contact.CheckWindupFrames / 60.0), Dir * V, FMath::Atan2(Dir.Y, Dir.X));
 			uint64 Hash = 0;
 			const FJamSimEvent E = RunUntil(Sim, JamEvents::Check, 0, 12, &Hash);
 			const FString Label = FString::Printf(TEXT("%s at %.0f m/s"), C.Name, V);

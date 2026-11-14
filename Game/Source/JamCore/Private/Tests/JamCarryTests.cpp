@@ -64,6 +64,8 @@ namespace JamCarryTests
 		bool bStopCover = false;
 		// a carry that "drifted": he had it again himself with nobody else touching it
 		bool bRegained = false; int32 RegainGap = 0;
+		// Lane A194 (track F2 evolution 10): the breakaway burst ran in this carry; the one who ended it stood behind him (along his travel half a second before)
+		bool bBreakaway = false, bEnderBehind = false;
 	};
 
 	struct FDown
@@ -148,6 +150,12 @@ namespace JamCarryTests
 			}
 		}
 		for (const FSnap& S : T.Snaps) if (S.Frame >= FMath::Max(C.Start, Now - 60) && S.Frame <= Now && S.bCarry && S.bPassOn) C.bPassAny = true;
+		if (Ender >= 0 && Ender < MaxSk)
+		{
+			const FSnap* Sh = T.Back(FMath::Max(C.Start, Now - 30));
+			const FSnap* Sn = T.Back(Now - 1);
+			if (Sh && Sn) C.bEnderBehind = FVector2D::DotProduct(Sn->Pos[Ender] - Sn->Pos[T.Me], Sh->Vel[T.Me]) < 0.0;
+		}
 		// The spin shields the puck from a stick: ready a fifth of a second before the stick took it.
 		if (End == Poke || End == Lift) { const FSnap* S1 = T.Back(FMath::Max(C.Start, Now - 12)); C.bSpinOn = S1 && S1->bSpinReady && !C.bSpun; }
 		(void)EndFrame;
@@ -266,6 +274,7 @@ namespace JamCarryTests
 			if (H.bReverseBraking) T.Cur.bBraked = true;
 			if (H.bSprinting) T.Cur.bSprinted = true;
 			if (H.SpinFrames > 0) T.Cur.bSpun = true;
+			if (H.BreakawayFrames > 0) T.Cur.bBreakaway = true;   // lane A194
 			T.Cur.EndSpeed = H.Vel.Size(); T.Cur.bEndSprint = H.bSprinting;
 		}
 		else if (T.bOpen)
@@ -340,6 +349,9 @@ namespace JamCarryTests
 			else if (K == TEXT("stop_grace_bots")) G.Stick.bStopGraceBots = V > 0.5;   // the measurement's arm (no key)
 			else if (K == TEXT("contact.down_frames_max")) G.Contact.DownFramesMax = FMath::RoundToInt32(V);
 			else if (K == TEXT("skater.free_speed_mult")) G.Skater.FreeSpeedMult = V;   // lane A185 (track F2 evolution 9): 1 = the game before the lane
+			else if (K == TEXT("skater.breakaway.speed_bonus")) G.Skater.BreakawaySpeedBonus = V;   // lane A194 (track F2 evolution 10)
+			else if (K == TEXT("carry_brake_mult")) G.Skater.CarryReverseBrakeMult = V;   // lane A194: the measurement's number (no key)
+			else if (K == TEXT("burst_carry_accel_mult")) G.Skater.BurstCarryAccelMult = V;
 			else T.AddError(FString::Printf(TEXT("JAM_CARRY_TRACE set: unknown key %s"), *K));
 		}
 	}
@@ -446,6 +458,20 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 			AddInfo(FString::Printf(TEXT("CARRYTRACE row | %-40s | %4d | %5.1f %% | median %.2f s | 40 frames or less %5.1f %%, a second or less %5.1f %% | a second earlier (or at the start): a pass open %5.1f %% (at any frame of that second %5.1f %%), the stop on %5.1f %%, the spin ready %5.1f %%, any of them %5.1f %% | he had braked in it %5.1f %%, sprinting as it ended %5.1f %%, nearest opponent as it began %.1f m"),
 				EndName(E), N, 100.0 * N / FMath::Max(1, All.Num()), Median(L) / 60.0, 100.0 * G40 / FMath::Max(1, N), 100.0 * G60 / FMath::Max(1, N), 100.0 * Pass / FMath::Max(1, N), 100.0 * PassAny / FMath::Max(1, N), 100.0 * Brake / FMath::Max(1, N),
 				100.0 * Spin / FMath::Max(1, N), 100.0 * Any / FMath::Max(1, N), 100.0 * Braked / FMath::Max(1, N), 100.0 * Sprint / FMath::Max(1, N), N ? Near / N : 0.0));
+		}
+		// Lane A194 (track F2 evolution 10): the human's breakaways (the burst ran in the carry) and how they ended; "caught from behind" = a stick or a hit by an
+		// opponent who stood behind him along his travel.
+		{
+			int32 Nb = 0, Shot = 0, Pass = 0, Wh = 0, Taken = 0, Behind = 0;
+			for (const FCarry& K : All)
+			{
+				if (!K.bBreakaway) continue;
+				++Nb;
+				if (K.End == OwnShot) ++Shot; else if (K.End == OwnPass) ++Pass; else if (K.End == Whistle) ++Wh;
+				else if (K.End == Poke || K.End == Lift || K.End == CheckDown || K.End == CheckStumble || K.End == TouchOpp) { ++Taken; if (K.bEnderBehind) ++Behind; }
+			}
+			AddInfo(FString::Printf(TEXT("CARRYTRACE breakaway %s at %s: %d breakaway carries (%.2f a match): his shot %d (%.1f %%), his pass %d, the whistle %d, taken %d (%.1f %%), caught from behind %d (%.1f %%, %.3f a match)"),
+				*O.Player, *O.Level, Nb, Nb / Mn, Shot, Nb ? 100.0 * Shot / Nb : 0.0, Pass, Wh, Taken, Nb ? 100.0 * Taken / Nb : 0.0, Behind, Nb ? 100.0 * Behind / Nb : 0.0, Behind / Mn));
 		}
 		AddInfo(FString::Printf(TEXT("CARRYTRACE kept %s at %s: %d carries lost (a stick, a hit, a lost handle) of %d (%.1f %%); of the lost, shorter than a second %d (%.1f %%: no second earlier to act in); a pass was open a second earlier (or at the start) in %d (%.1f %%), the stop was on in %d (%.1f %%), the spin was ready against the stick in %d (%.1f %%), any of the three in %d (%.1f %%); of the %d lost carries of a second or longer, any of the three in %d (%.1f %%)"),
 			*O.Player, *O.Level, LossN, All.Num(), 100.0 * LossN / FMath::Max(1, All.Num()), LossShort, 100.0 * LossShort / FMath::Max(1, LossN), LossPass, 100.0 * LossPass / FMath::Max(1, LossN), LossBrake, 100.0 * LossBrake / FMath::Max(1, LossN),
@@ -788,7 +814,7 @@ bool FJamMovementMarks::RunTest(const FString& Parameters)
 		TestFalse(TEXT("nobody ahead: no mark"), JamCarrierMarks::StopMark(*Sim, Me).bShow);
 		const JamCarrierMarks::FStopMark Far = At(15.0, 0.0, -5.0);
 		TestTrue(TEXT("a closing defender 15 m ahead: the mark is armed, not lit"), Far.bShow && !Far.bLit && Far.Def == Opp);
-		TestTrue(TEXT("... and stands five stick lengths (8 m) from the human, towards him"), FMath::IsNearlyEqual(FVector2D::Distance(Far.At, HP), 8.0, 0.01) && Far.At.X > HP.X);
+		TestTrue(TEXT("... and stands five stick lengths (8.5 m, lane A194) from the human, towards him"), FMath::IsNearlyEqual(FVector2D::Distance(Far.At, HP), 8.5, 0.01) && Far.At.X > HP.X);
 		const JamCarrierMarks::FStopMark Lit = At(10.0, 0.0, -5.0);
 		TestTrue(TEXT("the defender 10 m ahead closing at 13 m/s: lit (the stop passes from 9.5 m to 7 m, plus the hand's lead)"), Lit.bShow && Lit.bLit);
 		TestTrue(TEXT("the defender 12 m ahead closing at 13 m/s: lit already (a quarter second of lead for the hand: 9 m + 3.25 m; lane A185: the far edge 9.5 -> 9 m)"), At(12.0, 0.0, -5.0).bLit);
@@ -805,7 +831,7 @@ bool FJamMovementMarks::RunTest(const FString& Parameters)
 		TestTrue(TEXT("the defender 8 m ahead backing off at 5 m/s (closing at 3): the pale line is there, not lit"), Slow.bShow && !Slow.bLit);
 		const JamCarrierMarks::FStopMark Wide = At(8.0, 8.0, -5.0);
 		TestTrue(TEXT("the defender 45 degrees off his travel: the mark knows the angle, and its place across his path is straight ahead of him"),
-			Wide.bShow && FMath::IsNearlyEqual(Wide.OffDeg, 45.0, 1.0) && FMath::IsNearlyEqual(Wide.AtPath.Y, HP.Y, 0.01) && FMath::IsNearlyEqual(Wide.AtPath.X - HP.X, 8.0, 0.01) && Wide.At.Y > HP.Y + 1.0);
+			Wide.bShow && FMath::IsNearlyEqual(Wide.OffDeg, 45.0, 1.0) && FMath::IsNearlyEqual(Wide.AtPath.Y, HP.Y, 0.01) && FMath::IsNearlyEqual(Wide.AtPath.X - HP.X, 8.5, 0.01) && Wide.At.Y > HP.Y + 1.0);
 		// he brakes: the mark has said what it had to say
 		At(10.0, 0.0, -5.0);
 		In[Me].Move = FVector2D(-1.0, 0.0);

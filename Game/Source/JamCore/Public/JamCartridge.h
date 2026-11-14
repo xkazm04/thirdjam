@@ -70,7 +70,7 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FreeSpeedMult = 1.15;
 	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.3;   // lane A194 (track F2 evolution 10): 0.2 -> 0.3 (0.92 x 1.3 = 1.196 > a free skater's 1.15); 0.2 = the neutral value
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BreakawayFrames = 60;
 	// game.skater.sprint (lane A49): Shift / LT held adds bonus to top speed and thrust while the stamina lasts; it drains in drain_frames of sprint and
 	// refills in refill_frames at rest. bonus 0 = off.
@@ -97,6 +97,8 @@ struct JAMCORE_API FJamSkaterConfig
 	// Not a cartridge key (lane A121 measured it as the other candidate, MOVEMENT-3.md): the carrier's own burst multiplier; 0 = accel_mult, as everyone's.
 	// Bar.Movement.StopAndGoSweep sets it.
 	double BurstCarryAccelMult = 0.0;
+	// Lane A194 (track F2 evolution 10, a measurement's number, no key): the carrier's reverse brake at this multiple of reverse_brake_decel (1 = everyone's).
+	double CarryReverseBrakeMult = 1.0;
 	// Not a cartridge key (lane A163, the measurement's second arm; docs/experiments/MOVEMENT-7.md section 3): the take's first step. The frame a skater a
 	// person steers wins the puck (the frame its take grace begins), its first-step burst runs this many frames. 0 = off. bBurstTakeBots: every skater's.
 	int32 BurstTakeFrames = 0;
@@ -379,12 +381,11 @@ struct JAMCORE_API FJamContactConfig
 	// check_windup_frames, cross_windup_frames: the hit has a beat the eye catches. A pressed body check opens its window this many frames after the press
 	// (the cooldown and the figure's call stay on the press); a pressed cross-check (the lift's swing: its shove and its strip) resolves this many frames
 	// after the press. The figure is told the frames on the press. 0 = the neutral value: the hit lands on the press's frame, as before (same state hash).
-	// cross_hold ships ON (R-0064: the operator's order; CONTACT-10.md section 0). The wind-ups ship at 0 in this landing: measured and recommended at 4 / 4
-	// (the three cells -1.3 / 0.0 / 0.0 with the brace), but 17 staged tests and law 3's drill press and land on one frame (CONTACT-10.md section 4): the next
-	// evolution names their wind-up and turns these two on. JamBaseline::MakeNeutral gives back the game before the lane (false, 0, 0: hash-identical).
+	// Ship ON (R-0064: the operator's order): cross_hold true (lane A184, CONTACT-10.md), the wind-ups 4 / 4 (lane A192, CONTACT-11.md: the staged tests, law 3's
+	// drill and the acceptance drill wait the wind-up). JamBaseline::MakeNeutral gives back the game before the lanes (false, 0, 0: hash-identical).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossHold = true;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 0;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 4;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 4;
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

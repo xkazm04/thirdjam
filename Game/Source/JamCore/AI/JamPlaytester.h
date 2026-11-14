@@ -94,9 +94,15 @@ namespace JamAI
 		// Lane A184 (track F1, evolution 9): the held cross-check. BraceMode 0 = never; 1 = as a person would (the rule's own switch, contact.cross_hold: held from
 		// BraceFromM out when skating at an opposing carrier, closing at BraceClosingMps or more and not into his back; the body-check press is not made while
 		// braced); 2 = held whenever it does not carry (the "held all match" arm: env JAM_PLAYTESTER_BRACE=always; =off forces 0; measurement only).
+		// Lane A192 (evolution 10): a person uses both. He commits to the brace only on a long run: the carrier more than BraceMinM (body to body) and at most
+		// BraceFromM away, closing at BraceClosingMps or more, not into his back; he keeps it on that carrier while he still closes on him. On a short approach
+		// (the man already inside BraceMinM, or closing slower) he presses the body check as before. Env JAM_PLAYTESTER_BRACE_CLOSING tunes the speed (a
+		// measurement's arm).
 		int BraceMode = 0;
-		static constexpr double BraceFromM = 5.0;
-		static constexpr double BraceClosingMps = 3.0;
+		int BraceTarget = -1;
+		double BraceClosingMps = 6.0;
+		static constexpr double BraceMinM = 2.5;
+		static constexpr double BraceFromM = 6.0;
 		bool bOldCheck = false;          // lane A132: the check press on the playtester's own speed along the line, as before (contact.bPlaytesterClosingPress false, or env JAM_PLAYTESTER_CHECK=old for a measurement's before arm)
 		// Lane A134 (track Q2, evolution 3, item 1): the scripted human reads the body shield and the take grace as a person does (the HUD and the figure
 		// show both): no poke and no lift the sim would refuse (StickCannotTake), so the poke is there the frame the puck is in the open.

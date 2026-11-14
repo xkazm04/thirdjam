@@ -106,7 +106,7 @@ bool FJamPayoffKeys::RunTest(const FString& Parameters)
 	const FJamGameConfig& G = C->Game;
 	TestEqual(TEXT("shot.one_timer.window_frames default 10"), G.Shot.OneTimerWindowFrames, 10);
 	TestEqual(TEXT("shot.one_timer.cone_bonus_deg default 8"), G.Shot.OneTimerConeBonusDeg, 8.0);
-	TestEqual(TEXT("skater.breakaway.speed_bonus default 0.2"), G.Skater.BreakawaySpeedBonus, 0.2);
+	TestEqual(TEXT("skater.breakaway.speed_bonus default 0.3 (lane A194)"), G.Skater.BreakawaySpeedBonus, 0.3);
 	TestEqual(TEXT("skater.breakaway.frames default 60"), G.Skater.BreakawayFrames, 60);
 	TestEqual(TEXT("stick.deke.offset_m default 1.0"), G.Stick.DekeOffsetM, 1.0);
 	TestEqual(TEXT("stick.deke.commit_frames default 15"), G.Stick.DekeCommitFrames, 15);
@@ -336,10 +336,10 @@ bool FJamPayoffBreakaway::RunTest(const FString& Parameters)
 	TestTrue(TEXT("both runs reached the slot"), Arrive[0] > 0 && Arrive[1] > 0);
 	if (Arrive[0] > 0 && Arrive[1] > 0)
 	{
-		// Lane A185 (R-0064 point 2): the chaser is a free skater, 15 % faster than before, and closes more of what the burst wins (the burst's 0.92 x 1.2 =
-		// 1.104 of the base is now under a free skater's 1.15): 8 frames and 1.5 m before the lane, 4 frames and 0.74 m after it.
-		TestTrue(*FString::Printf(TEXT("the burst reaches the slot earlier (%d vs %d frames, need 3 fewer)"), Arrive[0], Arrive[1]), Arrive[0] <= Arrive[1] - 3);
-		TestTrue(*FString::Printf(TEXT("... and farther ahead of the chaser (%.2f vs %.2f m, need 0.5 more)"), Gap[0], Gap[1]), Gap[0] >= Gap[1] + 0.5);
+		// Lane A185 (R-0064 point 2): the chaser became a free skater 15 % faster and closed what the burst won (4 frames and 0.74 m at speed_bonus 0.2).
+		// Lane A194 (track F2 evolution 10): speed_bonus 0.3 (0.92 x 1.3 = 1.196 > 1.15): the bars before lane A185 again, 8 frames and 1.5 m.
+		TestTrue(*FString::Printf(TEXT("the burst reaches the slot earlier (%d vs %d frames, need 8 fewer)"), Arrive[0], Arrive[1]), Arrive[0] <= Arrive[1] - 8);
+		TestTrue(*FString::Printf(TEXT("... and farther ahead of the chaser (%.2f vs %.2f m, need 1.5 more)"), Gap[0], Gap[1]), Gap[0] >= Gap[1] + 1.5);
 	}
 	return true;
 }

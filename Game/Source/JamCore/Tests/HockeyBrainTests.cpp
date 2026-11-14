@@ -239,11 +239,13 @@ bool FJamHockeyBoxedIsOffIce::RunTest(const FString& Parameters)
 	for (const FJamSkaterState& S : Sim->GetSkaters()) Sim->SetSkater(S.Index, FVector2D(-30.0 + S.Index * 3.0, 20.0), FVector2D::ZeroVector, 0.0);
 	Sim->SetPuck(FVector2D(-35.0, -15.0), FVector2D::ZeroVector);
 	Sim->SetSkater(A, FVector2D(0.0, 0.0), FVector2D(7.0, 0.0), 0.0);
-	Sim->SetSkater(V, FVector2D(1.2, 0.0), FVector2D(-4.0, 0.0), PI);   // head-on: the biggest hit, a knockdown
+	// Lane A192: the window opens game.contact.check_windup_frames after the press: the victim starts the closing's ground farther out, the scene runs that much longer.
+	const int32 Wu = G.Contact.CheckWindupFrames;
+	Sim->SetSkater(V, FVector2D(1.2 + 11.0 * Wu / 60.0, 0.0), FVector2D(-4.0, 0.0), PI);   // head-on: the biggest hit, a knockdown
 	TArray<FJamInput> In;
 	In.SetNum(Sim->GetSkaters().Num());
 	In[A].bCheck = true;
-	for (int32 f = 0; f < 10 && !Sim->GetSkaters()[A].InBox(); ++f) { Sim->Step(In); In[A].bCheck = false; }
+	for (int32 f = 0; f < 10 + Wu && !Sim->GetSkaters()[A].InBox(); ++f) { Sim->Step(In); In[A].bCheck = false; }
 	if (!Sim->GetSkaters()[A].InBox()) { AddError(TEXT("staging: the check from behind did not send the checker to the box")); return false; }
 	JamAI::FJamAIWorld W;
 	JamAI::FJamSimAdapter::BuildWorld(*Sim, W);

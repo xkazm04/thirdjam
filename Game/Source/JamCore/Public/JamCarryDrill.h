@@ -135,10 +135,12 @@ struct FJamCarryDrill
 	// lets anything from 7 m out pass). Drill 21 script 1 takes its distance from here; jam.ctrl.CarryBrakeAtM overrides it.
 	// Lane A153 (R-0058 point 1): all_star's presser stays on its job inside the hunt (JamAI: Opp.Hk.bPressInHunt), so its window is pro's: the stop begins
 	// at 8 m at every level (12 m at all_star before). The level is still asked: a level whose approach changes says its distance here.
+	// Lane A194 (track F2 evolution 10, MOVEMENT-11.md): 8 -> 8.5 m, the centre of the window the faster free skaters (lane A185) left at pro: 90 % or more
+	// from 8 to 9 m; 8 m passes 94 %, 8.5 m 99.5 %. Still "five stick lengths" on screen (8.5 / 1.6 rounds to five).
 	static double StopAtForLevel(FName Level)
 	{
 		(void)Level;
-		return 8.0;
+		return 8.5;
 	}
 	// The distance in words a player can use: stick lengths (ReachM = the body's centre to the blade at full reach, UJamSim::SkaterRadius + game.stick.reach_m: 1.6 m). 8 m = "FIVE", 12 m = "EIGHT" (7.5 rounds up).
 	static const TCHAR* StickLengthsWord(double AtM, double ReachM)
