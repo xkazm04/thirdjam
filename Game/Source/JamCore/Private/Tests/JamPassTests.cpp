@@ -9,6 +9,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamEventBus.h"
 #include "JamAICore.h"
 #include "JamSimAdapter.h"
@@ -94,6 +95,7 @@ bool FJamPassReception::RunTest(const FString& Parameters)
 	for (int32 Run = 0; Run < 3; ++Run)
 	{
 		FJamGameConfig G = C->Game;
+		JamBaseline::PassShotNeutral(G);   // lane A207: this scene pins the pass and shot before game.pass.power / aim / catch_m / clear_own_body and game.shot.speed_scale: their neutral values
 		G.Skater.PassSpeed = Run == 1 ? 19.0 : 12.0;   // scene numbers, not calibrations
 		if (Run == 2) G.Stick.ReceptionM = 0.0;
 		FPassScene Sc(*C, G, 1, TEXT("pro"));

@@ -12,6 +12,7 @@
 #include "../AI/JamAICore.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -112,6 +113,7 @@ bool FJamBotPlayerBotWins::RunTest(const FString& Parameters)
 	Cart->Game.Contact.CheckWindupFrames = 0;
 	Cart->Game.Contact.CrossWindupFrames = 0;
 	Cart->Game.Contact.BotCheckWindupFrames = Cart->Game.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own
+	JamBaseline::PassShotNeutral(Cart->Game);   // lane A207: likewise the pass and shot it was sampled on (the doubled shot scores the PlayerBot's first goal at pro inside 600 frames in 2 of 3 seeds: status/A207.md; the ladder's cells cover it)
 	const JamAI::FJamMatchConfig C = JamAI::ToMatchConfig(Cart->Game);
 	const int32 Pi = C.PlayerIndex();
 	const int32 PlayerTeam = C.Skaters[Pi].Team;

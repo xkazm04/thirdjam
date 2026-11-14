@@ -291,6 +291,9 @@ struct JAMCORE_API FJamShotConfig
 	// A human's click is never zero frames long: a 40 ms click reads as 2 to 4 charge frames and arrived 9 to 20 cm up (A85, MECHANICS-3 section 2). The human
 	// and the bots alike. 0 = off (every held frame charges, the game before R-0044).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TapFrames = 4;
+	// Lane A207 (track P1, the night of 14 Nov; the operator: "shoot speed should double"): game.shot.speed_scale multiplies the shot's speed (shot.speed and
+	// the charge bonus) and the puck's speed cap (puck.max_speed) alike: 2 = a tap 36, a full charge 52 m/s. 1 = the neutral value (the game before the lane).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpeedScale = 2.0;
 };
 
 // Lane A77 (R-0036): game.pass. The saucer pass: a pass held saucer.half_frames or more lifts saucer.lift_m at its apex, flies over a blade in the lane and lands
@@ -301,6 +304,23 @@ struct JAMCORE_API FJamPassConfig
 	GENERATED_BODY()
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SaucerHalfFrames = 8;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SaucerLiftM = 0.35;
+	// Lane A207 (track P1, docs/experiments/PASS-SHOT.md; the operator: "passes need to be able to be hold enough to cross 1/3 of arena length on max"):
+	// game.pass.power { full_frames, reach_share, arrive_mps }: the human's held pass is its power. A hold of shot.tap_frames or fewer is the tap at
+	// skater.pass_speed; longer, the speed grows evenly to the full speed at full_frames: the speed that carries reach_share of the rink's length and still moves
+	// arrive_mps there (UJamSim::PassFullSpeed). A bot's or script's edge pass gets the speed that arrives at arrive_mps at its man. Under power the saucer is
+	// the sim's (a blade in the flat lane), not the hold's. full_frames 0 = the neutral value (the pass before the lane: pass_speed always, the saucer by hold).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PowerFullFrames = 30;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PowerReachShare = 0.3333;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PowerArriveMps = 8.0;
+	// game.pass.aim.cone_deg: the human's pass goes to the team-mate nearest the stick's line inside this half-angle (led to where his blade will be); with
+	// nobody inside it the pass goes along the stick. 0 = the neutral value (the sim's best open mate, whatever the stick points at; nobody open = no pass).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double AimConeDeg = 25.0;
+	// game.pass.catch_m: a pass in flight is seated on a team-mate's blade passing within this many metres of it at more than 1 m/s (UJamSim::TryCatchPass).
+	// 0 = the neutral value (only the 0.6 m blade disc over 6 m/s and stick.reception_m's body reception).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CatchM = 1.2;
+	// game.pass.clear_own_body: the passer's or shooter's own body does not stop the puck he just released while his cooldown runs (a pass to a mate on the
+	// far side of his body bounced back onto his stick). false = the neutral value.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bClearOwnBody = true;
 };
 
 // Lane A92 (R-0045, docs/VISION.md law 1): game.contact, contact by momentum (UJamSim::StabilityOf, UJamSim::ResolveContact; docs/experiments/CONTACT.md).

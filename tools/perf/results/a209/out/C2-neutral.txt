@@ -1,0 +1,6 @@
+B0-rk-reg vs C2-N-rk-reg: 100 / 100 hash-identical
+B0-rk-large vs C2-N-rk-large: 100 / 100 hash-identical
+B0-pro-reg vs C2-N-pro-reg: 100 / 100 hash-identical
+B0-pro-large vs C2-N-pro-large: 100 / 100 hash-identical
+B0-as-reg vs C2-N-as-reg: 100 / 100 hash-identical
+B0-as-large vs C2-N-as-large: 100 / 100 hash-identical

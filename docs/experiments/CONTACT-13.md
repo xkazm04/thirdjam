@@ -148,3 +148,43 @@ ladder after the game plays; the night's neutral values give back the old cells 
 - Step 7 k=3 (the held brace) and the stage that waits for a man on his feet (the Director's fix of 17:15): unchanged, kept.
 - Step 8 (be checked): the bot's own wind-up (8), unchanged.
 - **Not run on a package by this lane** (no cursor): the Director's release run is the proof.
+
+## 8. Wave 2 (after READY 1): the window, the cross-check's meeting, the brace
+
+Four rules on top of section 2 (same keys; nothing new for a cartridge; all of it the pulled human's only, so the neutral values still replay H34):
+1. **The window pulls at once**: after the wind-up a man still within half of the pull (plus what his speed covers in the window) is drawn at
+   `0.5 x check_pull_m / 12` a frame until the bodies meet (was: spread over the window's frames left, so the meeting came late or not at all).
+2. **The cross-check follows its man**: drawn to half of arm's length by HALF of the wind-up and kept there (was: by its end), and **a meeting of the two
+   bodies inside the wind-up lands the shove then** (`UJamSim::CrossMeets` / `LandCrossOnMeeting`, one `else if` in `CollideSkaters`): head-on, the bounce of
+   that meeting used to part them before frame 8. The committed shove lands up to two frames' pull farther (0.75 m of gap at 8 frames).
+3. **The brace finds the body**: braced, a man in front of him within 0.5 m of gap (`UJamSim::BracePullGapM`) is drawn onto him (a frame's share of the
+   pull), so a body passing by the stick's width meets it; the brace's own rule decides the hit (not into a back, by the speed brought).
+
+| person hand, 100 a cell | wave 1 rookie | **wave 2 rookie** | wave 1 pro | **wave 2 pro** |
+|---|---|---|---|---|
+| body check landed / any contact | 85.8 / 93.0 | 86.2 / 92.6 | 79.2 / 84.8 | 79.4 / 84.8 |
+| ... inside 2.5 m: landed / any contact | 88.4 / - | 87.8 / **93.9** | 81.4 / - | 82.2 / **88.0** |
+| cross-check landed / inside 2.5 m | 49.9 / 61.5 | **53.0 / 63.1** | 45.2 / 52.4 | **47.2 / 56.2** |
+| held brace landed | 34.4 | **43.3** | 32.0 | **36.0** |
+| human on his back, % of play | 3.1 | 2.9 | 5.9 | 6.8 |
+
+The bar "inside 2.5 m in the cone, 85 %": with the bumps a standing press gives (a landing by intent, small by speed) rookie 93.9 and pro 88.0 %: met;
+stumble or knockdown only: 87.8 / 82.2. The cross-check's remaining misses inside 2.5 m (pro): a carrier's back 12 % (the strip, no shove: the stick
+lift from behind stays the brain's steal and law 1's rule), the man out of reach when the shove is due 9 %, a carrier turning his back in the wind-up
+4.5 %, shielded (spin, sweep, ability) 4.7 %, the lift's 30-frame cooldown 3 %.
+
+Wave 2's proof (b15): neutral 100 / 100 hash-identical in all six cells (`out/C2-neutral.txt`); law 3 identical to as built (pro 94.0 / 99.5 / 93.0 /
+83.5, straight 0; all_star 99.5 / 99.5 / 99.0 / 93.0, straight 0); the full `Jam` filter 329 / 0 in a cleared environment (`Game/logs/a209/gate3.log`);
+test-guards PASS; schema 99 / 99. The six cells at 600: rookie 86.7 / 91.0, pro 63.8 / 68.0, all_star 38.2 / 35.8 (regular / large; as built 87.3 / 86.8,
+48.0 / 47.3, 27.5 / 24.5).
+
+## 9. The next three evolutions (track F1)
+
+1. **The bots know they are a target** (with A206): a skater without the puck in front of the human whose check winds up (`CheckWindupLeft`, `PullTarget`)
+   or whose cross-check is aimed at him (`CrossTarget`) braces or turns his shoulder (the stand brace, the side brace): the hit still lands, its size
+   drops. Proving number: the human's knockdowns given a match at rookie from 18.8 back toward 10 to 12 with the landing rate held (85 % or more).
+2. **The press buffered through the stick's recovery and the lift's cooldown**: a press inside them is kept (up to 8 frames) and fires when they end
+   (one hashed field). Proving number: the person's cooling and cooldown misses (2 to 3 % body, 3 % cross) to 0, the landing rate +2 to 3 points.
+3. **The carrier's back**: the human's cross-check into a carrier's back is a shove when he closes (as on a man without the puck: the thrust as far as
+   he closes) and stays the strip when he only reaches; with law 3's drill and the brain's steal measured. Proving number: the cross-check inside 2.5 m
+   at pro from 56 % to 65 % or more, law 3's gate rows unchanged.

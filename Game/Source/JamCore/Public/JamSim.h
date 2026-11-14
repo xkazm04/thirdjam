@@ -435,6 +435,10 @@ struct JAMCORE_API FJamPuckState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SlowFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SlowBy = -1;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double SlowMul = 1;
+	// Lane A207 (track P1): a pass in flight: frames left (0 = none) and the passer. Set by TryPass only while game.pass.catch_m is on; any touch by another
+	// skater, a shot or a placed puck ends it. A team-mate's blade within catch_m seats it (TryCatchPass). Hashed only while it runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassBy = -1;
 };
 
 // An event the step produced; the game mode hands it to UJamEventBus (converting Where to centimetres).
@@ -508,6 +512,9 @@ public:
 	static constexpr double DeflectKeep = 0.7;       // ... at 70 % of its speed
 	static constexpr double DeflectMinSpeed = 6.0;   // slower pucks are just pushed
 	static constexpr int32 PassCooldownFrames = 12;
+	// Lane A207: a pass in flight lasts at most this many frames (3 s) and ends under PassCatchMinMps; the forgiving catch takes it above that speed.
+	static constexpr int32 PassFlightFrames = 180;
+	static constexpr double PassCatchMinMps = 1.0;
 	static constexpr double CarryYawRateMax = 1.5707963; // rad/s (90 deg/s): carry assist off above it (C-0005)
 	// R-0029 point 4 (lane A39): the deke moves the puck over this many frames, a second tap inside the lockout does nothing, the puck sits this far
 	// ahead of the body while deked (so it stays inside shot reach at the full offset), the burst needs this clear corridor to the net (half-width, and
@@ -766,11 +773,15 @@ public:
 	// frame), so the bodies touch as it ends; during his cross-check's wind-up it draws him toward CrossTarget to half of cross_reach_m. Speed is never
 	// added. PullTarget: the nearest opponent on his feet, out of the box, inside CheckReachConeDeg of S's facing, going or stick, gap at most MaxGap; -1 none.
 	// PullsHuman: the rule applies to S (a human, the key on, momentum on). EndWindupOnContact: a body check that met its man inside the wind-up is spent.
-	static constexpr double PullGoalGapM = -0.01;   // the bodies just overlap at the wind-up's end, so the meeting registers on that frame
+	static constexpr double PullGoalGapM = -0.01;
+	static constexpr double BracePullGapM = 0.5;   // lane A209 wave 2: the braced human is drawn onto a man in front within this gap   // the bodies just overlap at the wind-up's end, so the meeting registers on that frame
 	bool PullsHuman(const FJamSkaterState& S) const;
 	int32 PullTarget(const FJamSkaterState& S, double MaxGap) const;
 	void StepCheckPull(FJamSkaterState& S);
 	void EndWindupOnContact(FJamSkaterState& S);
+	// Lane A209 wave 2: a pulled human's cross-check whose man's body meets his inside the wind-up lands then (CollideSkaters; the bounce would part them).
+	bool CrossMeets(const FJamSkaterState& X, const FJamSkaterState& O) const;
+	bool LandCrossOnMeeting(FJamSkaterState& X);
 	double CrossPullFor(const FJamSkaterState& S) const;
 	// Lane A209: the cross-check's cone for a pulled human: stick.lift_cone_deg of his facing OR of his stick's aim (the mouse); everyone else OutsideLiftCone.
 	bool OutsideCrossCone(const FJamSkaterState& S, const FJamSkaterState& O) const;
@@ -831,7 +842,28 @@ public:
 	// Lane A51: the nearest standing opponent of S (-1 none).
 	int32 NearestOpponent(const FJamSkaterState& S) const;
 	// The teammate a pass from Skater would go to right now (the rule of TryPass) and the aim point; -1 when nobody is open. Scripts and the brain read it.
-	int32 BestPass(int32 Skater, FVector2D& OutAim, bool bSaucer = false) const { return Skaters.IsValidIndex(Skater) ? PickReceiver(Skaters[Skater], OutAim, bSaucer) : -1; }
+	// Lane A207: under game.pass.power the receiver is chosen with the powered flight (PickReceiverPowered); its flat set includes the auto-saucer's receivers
+	// only when bSaucer asks for them, as before.
+	int32 BestPass(int32 Skater, FVector2D& OutAim, bool bSaucer = false) const { return Skaters.IsValidIndex(Skater) ? (PassPowerOn() ? PickReceiverPowered(Skaters[Skater], OutAim, bSaucer) : PickReceiver(Skaters[Skater], OutAim, bSaucer)) : -1; }
+	// Lane A207 (track P1, docs/experiments/PASS-SHOT.md): the pass's aim helper, for the sim and the brain alike. Where Passer's pass to Receiver must go so the
+	// puck meets the receiver's blade where it will be (his velocity held, the puck's drag and the ice's friction solved), at Speed (<= 0: the speed that arrives
+	// at pass.power.arrive_mps, between skater.pass_speed and PassFullSpeed()). OutSpeed = the release speed, OutArrive = its speed at him, OutFlightS = the flight.
+	// False when the puck stops before it reaches him at that speed (OutAim is then where he will be when it stops). Pure: reads the state, changes nothing.
+	bool AimPassAt(int32 Passer, int32 Receiver, double Speed, FVector2D& OutAim, double& OutSpeed, double& OutArrive, double& OutFlightS) const;
+	// Lane A207: game.pass.power on (full_frames > 0); the full pass's speed on this rink; the held pass's speed after HoldFrames of hold.
+	bool PassPowerOn() const { return Config.Pass.PowerFullFrames > 0; }
+	double PassFullSpeed() const;
+	double PassSpeedForHold(int32 HoldFrames) const;
+	// Lane A207: the puck on the ice from speed V0: its speed after DistM metres (0 if it stops first), and the release speed that arrives at ArriveMps after DistM.
+	double PuckSpeedAfter(double V0, double DistM) const;
+	double PuckSpeedToArrive(double DistM, double ArriveMps) const;
+	// Lane A207: for the power meter (the HUD): how far a pass released at V0 goes before it slows to pass.power.arrive_mps; and whom the human's pass held
+	// HoldFrames with the blade towards StickDir would go to now (-1: nobody in the cone; OutAim then lies along the stick at that reach).
+	double PassReachM(double V0) const;
+	int32 HumanPassTarget(int32 Skater, const FVector2D& StickDir, int32 HoldFrames, FVector2D& OutAim) const;
+	// Lane A207: game.shot.speed_scale (the shot's speed) and the puck's cap factor (never under 1: the cap never drops under puck.max_speed).
+	double ShotSpeedScale() const { return FMath::Clamp(Config.Shot.SpeedScale, 0.25, 4.0); }
+	double PuckCapScale() const { return FMath::Max(1.0, ShotSpeedScale()); }
 	// Timer mode: frames left (0 when not in timer mode). In timer mode a tie at 0 plays on to the next goal.
 	int32 GetTimerFrames() const { return TimerLeft; }
 	bool IsOvertime() const { return bOvertime; }
@@ -912,6 +944,19 @@ private:
 	int32 SweepShieldFramesFor(const FJamSkaterState& S) const;
 	// The teammate a pass from S goes to, and where to aim (lead); -1 when nobody is open.
 	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim, bool bSaucer = false) const;
+	// Lane A207: PickReceiver's rule (the best open mate) with the powered flight and the blade-led aim (AimPassAt, speed solved); a mate the full pass cannot
+	// reach alive is no receiver. And the human's pick: the mate nearest the line Dir inside pass.aim.cone_deg, at Speed (-1: nobody in the cone).
+	int32 PickReceiverPowered(const FJamSkaterState& S, FVector2D& OutAim, bool bSaucer = false) const;
+	int32 PickReceiverInCone(const FJamSkaterState& S, const FVector2D& Dir, double Speed, FVector2D& OutAim) const;
+	// Lane A207: the nearest opponent to the segment From -> To (distance, and how far along the segment), for the flat pass's and the saucer's lane.
+	double PassLane(int32 Team, const FVector2D& From, const FVector2D& To, double& OutAlong) const;
+	// Lane A207: a pass in flight seated on a team-mate's blade within pass.catch_m (true = seated; StepPuck's per-skater loop calls it first).
+	bool TryCatchPass(FJamSkaterState& S);
+	// Lane A207 (game.pass.clear_own_body): S's own body lets by the puck S just released (his cooldown runs, the puck fast relative to him).
+	bool OwnPuckClears(const FJamSkaterState& S) const;
+	// Lane A207: the powered pass's release (TryPass under game.pass.power): the receiver, the aim, the speed and the auto-saucer. HoldFrames < 0 = an edge pass.
+	// StickIn = this frame's stick input (the blade moves after the pass in the step): the human's aim when |StickIn| > 0.05, else last frame's blade.
+	void TryPassPowered(FJamSkaterState& S, int32 HoldFrames, bool bSaucer, const FVector2D& StickIn = FVector2D::ZeroVector);
 	void StepPuck();
 	// R-0035 (lane A52): the free puck's height. StepPuckVertical integrates gravity and the ice bounce for one substep and pins a carried puck to the ice;
 	// ApplyShotLift gives the shot that just left its VZ for LiftForCharge(Charge) over the goal line; TryGoalieSave is the crease skater's save by height

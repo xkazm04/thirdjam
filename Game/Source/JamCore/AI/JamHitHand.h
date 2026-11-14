@@ -43,8 +43,12 @@ namespace JamAI
 		HX_Elsewhere,
 		// lane A209 wave 1b: a cross-check with no reason at the press, read on the frame its shove was due: the man too far, outside the cone, his back, down
 		HC_LFar, HC_LCone, HC_LBack, HC_LDown, HC_Accepted,
-		Hand_Count
+		HB_Contact25, HC_Contact25,   // of the presses inside 2.5 m: any contact (a bump included)
+		HC25_Base,   // 12 slots: the cross-check misses of the presses inside 2.5 m by reason, HC_NoPuck..HC_Cooldown then HC_LFar..HC_LDown
+		HC25_End = HC25_Base + 12,
+		Hand_Count = HC25_End
 	};
+	inline int HC25Slot(int Reason) { return Reason >= HC_NoPuck && Reason <= HC_Cooldown ? HC25_Base + (Reason - HC_NoPuck) : Reason >= HC_LFar && Reason <= HC_LDown ? HC25_Base + 8 + (Reason - HC_LFar) : -1; }
 	inline const char* HandKeyName(int i)
 	{
 		static const char* Names[Hand_Count] = {
@@ -55,7 +59,8 @@ namespace JamAI
 			"c_nopuck", "c_reach", "c_cone", "c_arm", "c_back", "c_shield", "c_moved", "c_cooldown",
 			"c_press25", "c_landed25",
 			"h_holds", "h_landed", "h_bump", "h_none",
-			"n_press", "n_landed", "x_elsewhere", "c_l_far", "c_l_cone", "c_l_back", "c_l_down", "c_accepted" };
+			"n_press", "n_landed", "x_elsewhere", "c_l_far", "c_l_cone", "c_l_back", "c_l_down", "c_accepted", "b_contact25", "c_contact25",
+			"c25_nopuck", "c25_reach", "c25_cone", "c25_arm", "c25_back", "c25_shield", "c25_moved", "c25_cooldown", "c25_l_far", "c25_l_cone", "c25_l_back", "c25_l_down" };
 		return (i >= 0 && i < Hand_Count) ? Names[i] : "?";
 	}
 
@@ -134,6 +139,7 @@ namespace JamAI
 			{
 				if (BodyOn >= 0)
 				{
+					if (b25) ++H[HB_Contact25];
 					if (BodyOut >= UJamSim::ContactStumble)
 					{
 						++H[BodyOn == BT ? HB_Landed : HB_Other]; if (BodyOn == BT && BodyOut == UJamSim::ContactDown) ++H[HB_Down];
@@ -185,7 +191,7 @@ namespace JamAI
 						if (Me.bCheckRefused) BReason = HB_Carrier;
 						else if (!Me.bCheckThisFrame) BReason = HB_Cooling;
 						if (bBOpened) BMinWin = BDist;
-						if (BodyOn >= 0) { bB = false; ++H[BodyOut >= UJamSim::ContactStumble ? HB_Landed : HB_Bump]; if (BodyOut >= UJamSim::ContactStumble && b25) ++H[HB_Landed25]; }   // the late press: landed on its own frame
+						if (BodyOn >= 0) { bB = false; if (b25) ++H[HB_Contact25]; ++H[BodyOut >= UJamSim::ContactStumble ? HB_Landed : HB_Bump]; if (BodyOut >= UJamSim::ContactStumble && b25) ++H[HB_Landed25]; }   // the late press: landed on its own frame
 						else if (BReason >= 0) { ++H[BReason]; bB = false; }
 					}
 				}
@@ -195,6 +201,7 @@ namespace JamAI
 			{
 				if (CrossOn >= 0)
 				{
+					if (bC25) ++H[HC_Contact25];
 					if (CrossOut >= UJamSim::ContactStumble) { ++H[HC_Landed]; if (CrossOut == UJamSim::ContactDown) ++H[HC_Down]; if (bC25) ++H[HC_Landed25]; } else ++H[HC_Bump];
 					bC = false;
 				}
@@ -210,7 +217,7 @@ namespace JamAI
 						else if (Cf.Stick.LiftConeDeg < 180.0 && HandAngleOffFacing(Me, To) > Cf.Stick.LiftConeDeg) CReason = HC_LCone;
 						else if (FVector2D::DotProduct(To.GetSafeNormal(), O.Forward()) > 0.5) CReason = HC_LBack;
 					}
-					if (F - CFrame > CWu + 2) { ++H[CReason >= 0 ? CReason : HC_Moved]; bC = false; }
+					if (F - CFrame > CWu + 2) { const int Rs = CReason >= 0 ? CReason : HC_Moved; ++H[Rs]; if (bC25 && HC25Slot(Rs) >= 0) ++H[HC25Slot(Rs)]; bC = false; }
 				}
 			}
 			if (Sent.bLift && !bC)

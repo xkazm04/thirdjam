@@ -679,6 +679,12 @@
           "maximum": 30,
           "description": "R-0044 (lane A91): a hold of shoot of this many frames or fewer is a tap: charge 0, no speed bonus, the tap's height (lift.tap_m: on the ice by default). A human's click is 2 to 4 frames long. Default 4; 0 makes every held frame charge."
         },
+        "speed_scale": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 4,
+          "description": "Lane A207 (track P1): multiplies the shot's speed (speed and the charge bonus) and the puck's speed cap (puck.max_speed) alike. Default 2 (a tap 36, a full charge 52 m/s on the regular cut); 1 = the game before the lane."
+        },
         "deflect": {
           "type": "boolean",
           "description": "Whether a shot that hits a skater near its stick deflects (70 percent of its speed) instead of stopping dead."
@@ -758,6 +764,34 @@
               "description": "The saucer's apex height over the ice, in metres (a blade is cleared from 0.2 m); 0 = off."
             }
           }
+        },
+        "power": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A207 (track P1): the held pass is its power. A hold of shot.tap_frames or fewer is the tap at skater.pass_speed; longer, the speed grows evenly to the full speed at full_frames, the speed that carries reach_share of the rink's length and still moves arrive_mps there. A bot's edge pass gets the speed that arrives at arrive_mps at its man. Under power the saucer is the sim's (a blade in the flat lane), not the hold's. full_frames 0 = the pass before the lane.",
+          "properties": {
+            "full_frames": { "type": "integer", "minimum": 0, "maximum": 120, "description": "Frames of hold for the full pass. Default 30 (half a second); 0 = off." },
+            "reach_share": { "type": "number", "minimum": 0.05, "maximum": 1, "description": "The share of the rink's length a full pass covers. Default 0.3333 (30 m on the 90 m rink)." },
+            "arrive_mps": { "type": "number", "minimum": 1, "maximum": 20, "description": "The speed a full pass still has at that distance, and the speed a bot's pass arrives at. Default 8 m/s (the sim's substeps lose a little against the closed form: 8 keeps a full pass over 6 m/s at 30 m)." }
+          }
+        },
+        "aim": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A207 (track P1): the human's pass goes to the team-mate nearest the stick's line inside cone_deg, led to where his blade will be; nobody inside it: along the stick.",
+          "properties": {
+            "cone_deg": { "type": "number", "minimum": 0, "maximum": 90, "description": "The half-angle in degrees. Default 25; 0 = the sim's best open mate whatever the stick points at (the game before the lane)." }
+          }
+        },
+        "catch_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Lane A207 (track P1): a pass in flight is seated on a team-mate's blade passing within this many metres of it at more than 1 m/s. Default 1.2; 0 = the game before the lane (the 0.6 m blade disc over 6 m/s)."
+        },
+        "clear_own_body": {
+          "type": "boolean",
+          "description": "Lane A207 (track P1): the passer's or shooter's own body does not stop the puck he just released while his cooldown runs. Default true; false = the game before the lane."
         }
       }
     },

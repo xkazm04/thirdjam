@@ -4,6 +4,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamEventBus.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -71,6 +72,7 @@ bool FJamFeelDepth::RunTest(const FString& Parameters)
 {
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
+	JamBaseline::PassShotNeutral(C->Game);   // lane A207: this scene pins the pass and shot before game.pass.power / aim / catch_m / clear_own_body and game.shot.speed_scale: their neutral values
 	const FJamGameConfig& G = C->Game;
 	TestEqual(TEXT("pass_speed default 14"), G.Skater.PassSpeed, 14.0);
 	TestEqual(TEXT("pass_lead_frames default 20"), G.Skater.PassLeadFrames, 20);

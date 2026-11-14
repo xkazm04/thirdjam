@@ -1826,6 +1826,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Contact.BotCheckWindupFrames = C->Game.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own
 		C->Game.Contact.CheckPullM = 0.0; C->Game.Contact.bCrossAnyMan = false; C->Game.Contact.CheckReachM = 0.0;   // lane A209: and before the hit that finds its man
 		C->Game.Skater.bChargeDiesOnLoss = false;   // lane A203 (track K1): and before the charge that dies with the puck
+		JamBaseline::PassShotNeutral(C->Game);   // lane A207 (track P1): and before the pass by power, aimed and caught, and the doubled shot
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;

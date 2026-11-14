@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamEventBus.h"
 #include "JamAICore.h"
 #include "DifficultyProfile.h"
@@ -708,6 +709,7 @@ bool FJamCarrierReach::RunTest(const FString& Parameters)
 	using namespace JamStickHandlingTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
+	JamBaseline::PassShotNeutral(C->Game);   // lane A207: this scene pins the pass and shot before game.pass.power / aim / catch_m / clear_own_body and game.shot.speed_scale: their neutral values
 	const FJamGameConfig& G = C->Game;
 	const double Want = FMath::Max(G.Shot.ReachM, UJamSim::SkaterRadius + G.Stick.ReachM) + 0.05;
 	TestTrue(TEXT("the blade's full reach lies beyond shot.reach_m at the defaults (the seam)"), UJamSim::SkaterRadius + G.Stick.ReachM > G.Shot.ReachM);

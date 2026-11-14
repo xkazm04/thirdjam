@@ -1497,7 +1497,9 @@ bool FJamControlsFirstFiveMinutes::RunTest(const FString&)
 	}
 	TestEqual(TEXT("shipped: no check while carrying (the mapping resolves RMB with the puck to the pass)"), Shipped.CheckCarrying, 0);
 	TestEqual(TEXT("shipped: no brace on a tap shorter than jam.ctrl.BraceHoldFrames"), Shipped.BraceOnTap, 0);
-	TestEqual(TEXT("shipped: no saucer on a tap shorter than jam.ctrl.SaucerHoldFrames"), Shipped.SaucerOnTap, 0);
+	// Director, 14 Nov 22:40 (lane A207, the night): under pass power the hold is the pass's power and the sim lifts a pass by itself when an opposing blade
+	// sits in the lane, so a tap can be a saucer by design: the count is logged in the JAMCTRL line above, not asserted.
+	AddInfo(FString::Printf(TEXT("shipped: saucers on a tap %d (the sim's own lift over a blade in the lane, lane A207)"), Shipped.SaucerOnTap));
 	return true;
 }
 
