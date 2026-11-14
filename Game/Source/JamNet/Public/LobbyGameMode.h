@@ -60,6 +60,9 @@ public:
 	static bool LocalSeatNeutral(bool bPauseCardOpen, EJamSimPhase Phase) { return bPauseCardOpen && Phase != EJamSimPhase::Over; }
 	// Test hook (Jam.Net.PauseCardOnline): the lockstep flag as StartPlay sets it, without a lobby.
 	void SetLockstepForTest(bool bOn) { bLockstep = bOn; }
+	// Test hook (Jam.Net.EndCardStandsStill): the state EndMatch leaves a joined match in, without a lobby (the lockstep off, the online end set).
+	void EndOnlineForTest() { bEndedOnline = true; bLockstep = false; }
+	bool HasEndedOnline() const { return bEndedOnline; }
 	static bool LiveChangeRefused(bool bInLockstep, const TCHAR* What, FString& OutLine);
 	// Lane A129: the frame both seats' applied inputs ask for the rematch (JamNet::IsRematchReady) while the sim is Over.
 	static bool RematchAgreed(EJamSimPhase Phase, const FJamInput& L, const FJamInput& R) { return Phase == EJamSimPhase::Over && JamNet::IsRematchReady(L) && JamNet::IsRematchReady(R); }
@@ -133,6 +136,12 @@ private:
 	bool bLockstep = false;
 	bool bCardNeutral = false;   // lane A204: the pause card was open on the last local read (for the open / closed log lines)
 	bool bEnded = false;
+	// Lane A204 (track N1, evolution 3): a joined match ended (desync, the peer left or was lost): from that frame the sim stands still under the end card
+	// (before, Tick fell through to AHokejGameMode::Tick and the match played on as single player on each machine). EndFrame / EndHash: what it stands at.
+	bool bEndedOnline = false;
+	int64 EndFrame = -1;
+	uint64 EndHash = 0;
+	int32 EndStillTicks = 0;
 	bool bShotTaken = false;
 	bool bQuitRequested = false;
 	bool bExitSent = false;

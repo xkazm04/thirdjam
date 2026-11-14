@@ -71,3 +71,13 @@ Proof:
 - **The network cut and back**: `jam.net.testcut <ms>` (`FJamUdpLink::CutFor`). Test `Jam.Net.CutAndBack` (cuts of 1, 2, 2.5 s: nobody lost, equal
   hashes at f1200; 4 s: both lost 181 / 182 ticks after the cut). Two processes: 2 s, no connection lost, hashes equal; 4 s, both cards
   "connection lost" 3.03 / 3.07 s after the cut, then QUIT on each pause card loaded the menu on both.
+
+## Evolution 3 (lane A204, 17:04-18:05): the sim stands still under a joined match's end card
+Once a joined match ended (the peer left or was lost, a desync), `ALobbyGameMode::Tick` fell through to `AHokejGameMode::Tick` and each machine played
+the match on as single player under its card. Now `EndMatch` records the frame and hash (`JAMNET end card: the sim stands still at frame N hash=H`)
+and `Tick` runs only `AGameModeBase::Tick` after an online end (`JAMNET end card still after 300 ticks: ...`). The result card (the sim's Over
+phase) is unchanged and the same online and solo: the skaters glide to a stop, nothing scores, both machines step it in lockstep, the rematch is
+asked there. Test `Jam.Net.EndCardStandsStill` (a lobby game mode builds hockey.regular as single player, plays 120 ticks, ends online, 300 ticks:
+frame and hash unchanged). Two processes: the host leaves after the guest asked for the rematch: the guest's screen said "rematch asked: waiting for
+Ada" (HUD), then "Ada left", and its sim stood at frame 6835 with the end's hash 300 ticks later; a rematch after 5 s on the result card started on
+both at the same lockstep frame and hash and the second match agreed on every checkpoint. `jam.net.ProofRematchAskFrames` sets the card's wait.

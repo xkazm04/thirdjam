@@ -437,7 +437,11 @@ public:
 	UWidget* GetEndCardForTest() const;
 	// Tests: the card filled as a match end fills it (the word, the score, the key line), then GetEndCardForTest() is measured.
 	void ShowEndCardForTest(const FString& Word, const FString& Score, const FString& KeyLine);
-	void PaintEndCardKeys(const FString& KeyLine, bool bWin);
+	void PaintEndCardKeys(const FString& KeyLine, bool bWin, int32 HumanTeam = 0);
+	// Lane A195 (evolution 7): the headline in the player's colour: a win in his team's accent (team 0 the home blue, team 1 the away orange; in a
+	// joined match each side sees its own), a loss or a level end in the neutral white. Pure (tests call it).
+	static FLinearColor EndCardWordColour(bool bWin, int32 HumanTeam);
+	bool bEndNoted = false;   // lane A195: the last match noted once per end (UJamMenuFlow::NoteLastMatch)
 	float GetEndCardHintRowWidth() const;   // lane A195: the keys' row as laid out (after a prepass)
 	FString GetCardScoreText() const;
 	FString GetCardKeysText() const;

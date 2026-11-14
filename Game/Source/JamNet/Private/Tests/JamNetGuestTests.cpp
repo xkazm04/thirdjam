@@ -695,4 +695,40 @@ bool FJamNetLobbyLineOnHud::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A204 (track N1, evolution 3): a joined match that ended (the peer left or was lost, a desync) stands still under its end card. Before, the lobby's
+// Tick fell through to AHokejGameMode::Tick once the lockstep was off and the match played on as single player on each machine. A lobby game mode
+// builds hockey.regular in a world of its own (LoadCut, as single player), plays 120 ticks (the sim moves), ends online and is ticked 300 more
+// ticks: frame and hash must not move. (Both peers end the same way; the rematch from the result card is the lockstep one: Jam.Net.RestartIsFresh and
+// the two-process -Rematch run.)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetEndCardStandsStill, "Jam.Net.EndCardStandsStill", JamNetGuestTests::Flags)
+bool FJamNetEndCardStandsStill::RunTest(const FString& Parameters)
+{
+	if (!GEngine) return true;
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("JamNetEndCardWorld"));
+	if (!TestNotNull(TEXT("a test world"), World)) return false;
+	FWorldContext& Ctx = GEngine->CreateNewWorldContext(EWorldType::Game);
+	Ctx.SetCurrentWorld(World);
+	ALobbyGameMode* GM = World->SpawnActor<ALobbyGameMode>();
+	if (TestNotNull(TEXT("a lobby game mode"), GM) && TestTrue(TEXT("hockey.regular builds as single player"), GM->LoadCut(TEXT("hockey.regular"))) && TestNotNull(TEXT("its sim"), GM->GetSim()))
+	{
+		const float Dt = static_cast<float>(UJamSim::DT);
+		const int64 F0 = GM->GetSim()->GetFrame();
+		for (int32 T = 0; T < 120; ++T) GM->Tick(Dt);
+		const int64 F1 = GM->GetSim()->GetFrame();
+		TestTrue(FString::Printf(TEXT("single player plays (frame %lld -> %lld)"), F0, F1), F1 > F0);
+		GM->EndOnlineForTest();
+		const uint64 H1 = GM->GetSim()->StateHash();
+		for (int32 T = 0; T < 300; ++T) GM->Tick(Dt);
+		const int64 F2 = GM->GetSim()->GetFrame();
+		const uint64 H2 = GM->GetSim()->StateHash();
+		AddInfo(FString::Printf(TEXT("JAMNET end-card-still: frame %lld -> %lld after 300 ticks, hash %016llx -> %016llx"), F1, F2, static_cast<unsigned long long>(H1), static_cast<unsigned long long>(H2)));
+		TestEqual(TEXT("the sim's frame stands still under the end card"), F2, F1);
+		TestEqual(TEXT("the sim's hash stands still under the end card"), H2, H1);
+	}
+	if (GM) GM->Destroy();
+	GEngine->DestroyWorldContext(World);
+	World->DestroyWorld(false);
+	return true;
+}
+
 #endif

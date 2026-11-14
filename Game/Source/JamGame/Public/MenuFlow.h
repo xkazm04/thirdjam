@@ -143,6 +143,13 @@ public:
 	static TArray<FJamModeCard> AvailableModeCards();
 	// The mode's display name for a cartridge id ("hockey-mode-pond" -> "Pond"); empty when the cartridge is not a mode.
 	static FString ModeDisplayForId(const FString& CartridgeId);
+	// Lane A195 (evolution 7): the last match played in this process (the profile keeps no score): its score, its level label and its rink's
+	// name, for HOME's returning panel. The end card notes it once per match end.
+	static void NoteLastMatch(int32 Mine, int32 Theirs, const FString& LevelLabel, const FString& RinkNameIn);
+	static bool GetLastMatch(int32& OutMine, int32& OutTheirs, FString& OutLevel, FString& OutRink);
+	static void ClearLastMatchForTest();
+	// A shipped rink's name as the front end says it: "hockey.regular" -> "REGULAR", "hockey.arena.large" -> "LARGE RINK" (no "cut").
+	static FString RinkName(const FString& CutName);
 
 	// Current cartridge JSON for the Designer's diff: the Designer's current cut, else the shipped regular cut.
 	static FString BaseCartridgeJson(const UJamDesignerSubsystem* Designer);

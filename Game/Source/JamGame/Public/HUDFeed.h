@@ -72,6 +72,9 @@ struct JAMGAME_API FJamPresentationFrame
 	// Lane A188: the pickups on the ice (rink metres) and their kind's colour, for the radar. Empty in a match without pickups.
 	TArray<FVector2D> PickupsM;
 	TArray<FLinearColor> PickupColours;
+	// Lane A196 (evolution 10): every downed skater's body middle (rink metres) and team, for the radar's down marks (jam.hit.OffScreen). Empty: none.
+	TArray<FVector2D> DownsM;
+	TArray<int32> DownsTeam;
 
 	// Index into Skaters of the skater the camera follows (the human).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")

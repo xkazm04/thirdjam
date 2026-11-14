@@ -66,6 +66,8 @@ public:
 	static constexpr int32 PauseItemSize = 22;
 	static constexpr float PauseCardInnerWidth = 744.f;
 	static FString PauseControlsText();
+	// Lane A195 (evolution 7): what the pause card shows instead: the two mouse buttons with the puck and without it (live bindings), two lines.
+	static FString PauseStickText();
 	static UJamDirectorsCallWidget* CreateAndAdd(APlayerController* PC, UJamDirectorsCallController* InOwner);
 
 	// Shows the pause menu (the call card is rebuilt from the current cut).
@@ -79,7 +81,7 @@ public:
 	// The 3-5 tunables offered for a cartridge text, in order: skater speed, shot power, ice friction, pickup rate (when the
 	// cut has one), opponents' skill, then any other number tunable until Max. Current = values[key] or the default.
 	static TArray<FJamCallTunable> PickTunables(const FString& CartridgeJson, int32 Max = 5);
-	// "Director's Call: ice is now glass" -> "DIRECTOR'S CALL: ice is now glass".
+	// "Director's Call: ice is now glass" -> "RULE CHANGE: ice is now glass" (lane A195).
 	static FString AnnouncementLine(const FString& Announcement);
 	// Lane A15 (C-0005): a rule's announce text -> "RULE: <text>", the sibling of the Director's Call line on the same scoreboard slot.
 	static FString RuleLine(const FString& Text);
@@ -149,9 +151,22 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> ControlsButton;   // lane A191
 	UPROPERTY(Transient) TObjectPtr<class UJamControlsWidget> ControlsScreen;   // lane A191: screen 2 of the switcher
 	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> HintBox;   // lane A195
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PauseStick;   // lane A195 (evolution 7)
 public:
 	// Lane A191: the CONTROLS screen (rebind every verb) as the pause card's third screen; BACK or Esc returns to the pause menu.
 	void ShowControls();
+	// Lane A195 (F6): QUIT TO MENU throws the match away, so it asks once: "LEAVE THE MATCH?", NO focused, YES under it; Esc / B is NO.
+	// jam.pausemenu leave | no | yes.
+	void ShowLeaveConfirm();
+	void AnswerLeave(bool bYes);
+	bool IsOnLeaveConfirm() const;
+	UButton* GetLeaveNo() const { return LeaveNo; }
+	void BuildLeaveConfirm();
+	UFUNCTION() void OnLeaveNo();
+	UFUNCTION() void OnLeaveYes();
+	int32 LeaveIndex = -1;
+	UPROPERTY(Transient) TObjectPtr<UButton> LeaveNo;
+	UPROPERTY(Transient) TObjectPtr<UButton> LeaveYes;
 	bool IsOnControls() const;
 	class UJamControlsWidget* GetControlsScreen() const { return ControlsScreen; }
 	// Lane A195 (tests and QA): the key hints under the card as one line, the title and buttons as shown, the painted state of a button.

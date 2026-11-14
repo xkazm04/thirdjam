@@ -214,7 +214,7 @@
   "ai": {
    "difficulty": "pro",
    "sprint": 0.25,
-   "hold_radius_m": 1.5
+   "hold_radius_m": 1
   },
   "barks": {
    "enabled": true,

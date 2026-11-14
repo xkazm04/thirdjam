@@ -10,6 +10,12 @@
 #include "HAL/IConsoleManager.h"
 #include "UnrealClient.h"
 #include "Misc/AutomationTest.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Rendering/DrawElements.h"
+#include "RadarWidget.h"
+#include "HUDFeed.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamHit, Log, All);
 
@@ -25,6 +31,10 @@ static TAutoConsoleVariable<int32> CVarJamHitPuckFlash(TEXT("jam.hit.PuckFlash")
 	TEXT("The stripped puck's flash (lane A196): 1 (default) a gold ring out from the puck a stick lift took; 0 none (before). Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitScale(TEXT("jam.hit.Scale"), 1.f,
 	TEXT("Size factor of the hits' marks (lane A196, tuning in a window): 1 (default)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitBTakes(TEXT("jam.hit.BTakes"), 1,
+	TEXT("Device B's wind-up takes (PROPS READY): SetWindupTakes(true, 8) by name on 1 (default) the bots' figures (the human keeps A's lean: his 4-frame wind-up reads as a dip in B's take), 2 every figure, 0 none (B's default: off). A's lean stands down exactly on the figures told."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitOffScreen(TEXT("jam.hit.OffScreen"), 1,
+	TEXT("A man down outside the frame (lane A196, evolution 10): 1 (default) an arrow on the screen's edge pointing at him (the human's mates a hollow diamond, opponents a solid triangle) and his mark on the radar; 0 none (before). Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitCapture(TEXT("jam.hit.Capture"), 0,
 	TEXT("Proof (lane A196): N > 0 takes a still every sim frame from each of the human's presses (check, cross, brace) to 30 frames after it landed or missed, N strips a kind (run with a fixed 60 Hz step). 0 = off."), ECVF_Default);
 
@@ -35,6 +45,31 @@ double FJamHitReadModel::BurstRadiusM(double ClosingMps, bool bBraced)
 	const double C = FMath::Clamp(ClosingMps, 0.0, 14.0);
 	const double R = 1.2 + (3.0 - 1.2) * (C / 14.0);
 	return bBraced ? R * 1.2 : R;
+}
+
+bool FJamHitReadModel::ClearOfBody(const FVector2D& P, const FVector2D& C, const FVector2D& Fall, double Margin)
+{
+	if (Fall.IsNearlyZero()) return FVector2D::Distance(P, C) > Margin;
+	const FVector2D Head = C + Fall.GetSafeNormal() * DownBodyM;
+	return FVector2D::Distance(P, FMath::ClosestPointOnSegment2D(P, C, Head)) > Margin;
+}
+
+double FJamHitReadModel::TipRemainFrames(double GapM, double ClosingMps, float Since, int32 Windup)
+{
+	// The frames to the contact as they look now: the bodies' gap over the closing speed, never before the wind-up ends (the window opens then).
+	const double Bodies = FMath::Max(0.0, GapM - 2.0 * UJamSim::SkaterRadius);
+	const double ByGap = Bodies / FMath::Max(ClosingMps, 0.5) * 60.0;
+	return FMath::Clamp(FMath::Max(static_cast<double>(Windup) - Since, ByGap), 0.0, 30.0);
+}
+
+double FJamHitReadModel::TipDistM(double GapM, float Since, int32 Windup, double ClosingMps)
+{
+	if (GapM < 0.0) return TellNearM + (TellFarM - TellNearM) * FMath::Clamp((Since + 1.0) / FMath::Max(Windup, 1), 0.0, 1.0);
+	const double R = UJamSim::SkaterRadius;
+	const double Near = FMath::Max(GapM - R, R);   // the target's near side
+	const double Rem = TipRemainFrames(GapM, ClosingMps, Since, Windup);
+	const double Short = Rem / (Rem + FMath::Max(Since, 0.f) + 1.0);   // the share of the way still to go: 1 far off, 0 on him
+	return R + (Near - R) * (1.0 - Short);
 }
 
 bool FJamHitReadModel::ShardAllowed(const FVector2D& ShardDir, const FVector2D& FallDir)
@@ -79,13 +114,16 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 	FrameLogs.Reset();
 	if (TeamColours) { Colours[0] = TeamColours[0]; Colours[1] = TeamColours[1]; }
 	const int32 N = Skaters.Num();
-	Braced.SetNum(N); BracedSpeed.SetNum(N); Teams.SetNum(N); Down.SetNum(N);
+	Braced.SetNum(N); BracedSpeed.SetNum(N); Teams.SetNum(N); Down.SetNum(N); PosM.SetNum(N); FallM.SetNum(N); VelM.SetNum(N);
 	for (int32 i = 0; i < N; ++i)
 	{
 		const FJamSkaterState& S = Skaters[i];
 		Teams[i] = FMath::Clamp(S.Team, 0, 1);
 		Down[i] = S.IsDown();
 		Braced[i] = S.bCrossBraced;
+		PosM[i] = S.Pos;
+		VelM[i] = S.Vel;
+		FallM[i] = S.IsDown() ? S.KnockDir : FVector2D::ZeroVector;
 		BracedSpeed[i] = S.Vel.Size();
 	}
 	auto Running = [this](int32 Who, bool bCross) -> FPress*
@@ -106,8 +144,35 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 			P.Skater = i; P.Team = Teams[i]; P.bCross = bCross; P.bHuman = S.bHuman; P.PressFrame = Frame;
 			P.Windup = S.WindupFrames > 0 ? S.WindupFrames : (bCross ? S.LiftWindupLeft : S.CheckWindupLeft);
 			P.Window = bCross ? 0 : (S.bHuman ? UJamSim::HumanCheckWindowFrames : UJamSim::CheckWindowFrames);
+			// Evolution 10: the man the chevron points at: a cross-check's CrossTarget, else the nearest standing opponent within 7 m and 70 degrees of
+			// the way he faces (presentation's own guess: no rule reads it).
+			P.Target = bCross && Skaters.IsValidIndex(S.CrossTarget) ? S.CrossTarget : -1;
+			if (P.Target < 0)
+			{
+				double Best = 7.0;
+				const FVector2D Fw(FMath::Cos(S.Yaw), FMath::Sin(S.Yaw));
+				for (const FJamSkaterState& O : Skaters)
+				{
+					if (O.Team == S.Team || O.IsDown() || O.InBox()) continue;
+					const FVector2D D = O.Pos - S.Pos;
+					const double Dist = D.Size();
+					if (Dist < Best && Dist > 1e-3 && FVector2D::DotProduct(D / Dist, Fw) >= FMath::Cos(FMath::DegreesToRadians(70.0))) { Best = Dist; P.Target = O.Index; }
+				}
+			}
 			Presses.Add(P);
 		}
+	}
+	// Evolution 10: the tip's meeting with the target, judged on the sim's places each frame (the tip as Draw places it).
+	for (FPress& P : Presses)
+	{
+		if (P.EndFrame >= 0 || P.TipMetFrame >= 0 || !Skaters.IsValidIndex(P.Target) || !Skaters.IsValidIndex(P.Skater)) continue;
+		const FJamSkaterState& Cs = Skaters[P.Skater];
+		const FJamSkaterState& Ts = Skaters[P.Target];
+		const FVector2D D = Ts.Pos - Cs.Pos;
+		const double Gap = D.Size();
+		const double Closing = Gap > 1e-6 ? FVector2D::DotProduct(Cs.Vel - Ts.Vel, D / Gap) : 0.0;
+		// Met: the tip's run is done (at most a frame to go): it stands on his near side.
+		if (TipRemainFrames(Gap, Closing, static_cast<float>(Frame - P.PressFrame), P.Windup) <= 1.0) P.TipMetFrame = Frame;
 	}
 	// A stick lift that took the puck: the stripped puck's flash, and the lifter's press knows it stripped.
 	for (const FJamSimEvent& E : Events)
@@ -139,6 +204,8 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 		B.RadiusM = BurstRadiusM(R == EJamHitResult::Bump ? 0.0 : Closing, bBraced);
 		B.FallM = R == EJamHitResult::Down ? V.KnockDir : FVector2D::ZeroVector;
 		B.Colour = Colours[FMath::Clamp(A.Team, 0, 1)];
+		B.Weight = R == EJamHitResult::Bump ? 0.f : BurstWeight(Closing);
+		B.Checker = A.Index; B.Victim = v;
 		Bursts.Add(B);
 		CheckersSeen.Add(A.Index);
 		++Hits;
@@ -149,6 +216,7 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 		{
 			P->EndFrame = Frame; P->Result = R;
 			L.Windup = P->Windup; L.PressToContact = static_cast<int32>(Frame - P->PressFrame);
+			L.TipMet = P->TipMetFrame >= 0 ? static_cast<int32>(P->TipMetFrame - P->PressFrame) : -1;
 		}
 		FrameLogs.Add(L);
 	}
@@ -161,6 +229,8 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 		B.Frame = Frame; B.AtM = E.Where; B.DirM = E.Dir.IsNearlyZero() ? FVector2D(1, 0) : E.Dir.GetSafeNormal();
 		B.RadiusM = BurstRadiusM(static_cast<double>(E.Strength) * SkaterSpeed, false);
 		B.Colour = Colours[FMath::Clamp(Skaters[E.Who].Team, 0, 1)];
+		B.Weight = BurstWeight(static_cast<double>(E.Strength) * SkaterSpeed);
+		B.Checker = E.Who;
 		Bursts.Add(B);
 		++Hits;
 		FHitLog L;
@@ -174,18 +244,26 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 	{
 		if (P.EndFrame >= 0 || !Skaters.IsValidIndex(P.Skater)) continue;
 		const FJamSkaterState& S = Skaters[P.Skater];
-		if (S.IsDown() || S.InBox()) { P.EndFrame = Frame; P.Result = EJamHitResult::None; continue; }
+		// Evolution 10 item 4: a body check's miss is the sim's own (ChecksMissed grew: the HUD's MISSED reads the same counter), so the two agree on
+		// the frame; a window that closed with no miss counted (he took the puck, the press was spent) ends quietly. A man down keeps his press (the sim
+		// still counts its window), drawn nothing while he is down.
+		const bool bMissedNow = !P.bCross && PrevMissed.IsValidIndex(P.Skater) && S.ChecksMissed > PrevMissed[P.Skater];
+		if ((P.bCross || !bMissedNow) && S.InBox()) { P.EndFrame = Frame; P.Result = EJamHitResult::None; continue; }
+		if (P.bCross && S.IsDown()) { P.EndFrame = Frame; P.Result = EJamHitResult::None; continue; }
 		bool bOver = false;
-		if (!P.bCross) bOver = Frame > P.PressFrame && S.CheckWindupLeft == 0 && S.CheckWindow == 0;
+		if (!P.bCross) bOver = bMissedNow || (Frame > P.PressFrame && S.CheckWindupLeft == 0 && S.CheckWindow == 0);
 		else bOver = Frame >= P.PressFrame + P.Windup && S.LiftWindupLeft == 0;
 		if (!bOver) continue;
 		P.EndFrame = Frame;
+		if (!P.bCross && !bMissedNow) { P.Result = EJamHitResult::None; continue; }
 		P.Result = P.bStripped ? EJamHitResult::Strip : EJamHitResult::Miss;
 		if (P.Result == EJamHitResult::Miss) ++Misses;
 		FHitLog L;
 		L.Frame = Frame; L.Kind = P.bCross ? TEXT("cross") : TEXT("check"); L.Result = P.Result; L.Checker = P.Skater; L.bHuman = P.bHuman; L.Windup = P.Windup;
 		FrameLogs.Add(L);
 	}
+	PrevMissed.SetNum(N);
+	for (int32 i = 0; i < N; ++i) PrevMissed[i] = Skaters[i].ChecksMissed;
 	// The downs.
 	for (int32 i = 0; i < N; ++i)
 	{
@@ -266,8 +344,15 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 			const bool bMiss = bEnded && (P.Result == EJamHitResult::Miss || P.Result == EJamHitResult::Strip);
 			if (bEnded && !bLanded && !bMiss) continue;   // replaced, fell, boxed: nothing
 			const FLinearColor Team = Colours[P.Team];
-			const FVector2D F = YawDir(Yaw[P.Skater]);
+			FVector2D F = YawDir(Yaw[P.Skater]);
 			const FVector C = At[P.Skater];
+			double GapM = -1.0, ClosingMps = 0.0;
+			if (!P.bCross && At.IsValidIndex(P.Target) && !(Down.IsValidIndex(P.Target) && Down[P.Target]))
+			{
+				const FVector2D ToT((At[P.Target].X - C.X) / 100.0, (At[P.Target].Y - C.Y) / 100.0);
+				if (ToT.Size() > 0.05) { GapM = ToT.Size(); F = ToT / GapM; }
+				if (GapM > 0.0 && VelM.IsValidIndex(P.Skater) && VelM.IsValidIndex(P.Target)) ClosingMps = FVector2D::DotProduct(VelM[P.Skater] - VelM[P.Target], F);
+			}
 			if (!P.bCross)
 			{
 				if (bLanded) continue;   // the burst takes over on the contact frame
@@ -285,8 +370,11 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 				// colour; it slides out from the body over the wind-up and stands at full length through the window.
 				const FLinearColor Hot = bMiss ? Col : FMath::Lerp(Col, FLinearColor::White, 0.45f);
 				const FVector2D Side(-F.Y, F.X);
-				const double Tip = (TellNearM + (TellFarM - TellNearM) * Scale + Slide) * 100.0 * Sc;
-				const double ArmLen = 95.0 * Scale * Sc, ArmDeg = 28.0;
+				// Evolution 10: the tip runs from his body's edge to the target's near side over the wind-up the call carried (TipDistM); no target:
+				// TellNearM to TellFarM ahead as before. The arms shorten when the tip is close to him (never back over his own body).
+				const double TipM = (bMiss ? TipDistM(GapM, static_cast<float>(P.EndFrame - P.PressFrame), P.Windup, ClosingMps) : TipDistM(GapM, Since, P.Windup, ClosingMps)) + Slide;
+				const double Tip = TipM * 100.0 * Sc;
+				const double ArmLen = FMath::Min(95.0 * Scale, FMath::Max(25.0, (TipM - UJamSim::SkaterRadius) * 100.0 * 0.9)) * Sc, ArmDeg = 28.0;
 				for (int32 k = -1; k <= 1; k += 2)
 				{
 					const double A = FMath::DegreesToRadians(180.0 - k * ArmDeg);   // from the tip back and out to each side
@@ -347,11 +435,26 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 			if (A < 0.f || A >= 1.f) continue;
 			const FVector C(B.AtM.X * 100.0, B.AtM.Y * 100.0, 0.0);
 			const FLinearColor Col = FMath::Lerp(FLinearColor::White, B.Colour, FMath::Min(1.f, A * 2.f));
-			const float Em = FMath::Lerp(10.f, 1.f, A);
+			// Evolution 10: width, brightness and count by the hit's weight, all falling from the first frame; nothing within BodyClearM of either body.
+			const float Em = BurstEmissive(B.Weight, A);
 			const double R = B.RadiusM * 100.0 * Sc * (0.45 + 0.55 * EaseOut(A));
-			Ring(Out, C, R, 16, 16, (26.0 * (1.0 - A) + 5.0) * Sc, 4.0, GroundZ, Col, Em * 1.5f, EJamHitLayer::Burst, 0.7);
-			if (B.bBraced && A > 0.15f) Ring(Out, C, R * 0.62, 12, 12, (18.0 * (1.0 - A) + 4.0) * Sc, 4.0, GroundZ, Col, Em * 1.5f, EJamHitLayer::Burst, 0.7);
-			if (B.RadiusM <= BurstRadiusM(0.0, B.bBraced) + 1e-6) continue;   // a bump: the soft ring only
+			const int32 Segs = 10 + FMath::RoundToInt(6.f * B.Weight);
+			const int32 First = Out.Num();
+			Ring(Out, C, R, Segs, Segs, BurstBarWidthCm(B.Weight, A) * Sc, 4.0, GroundZ, Col, Em, EJamHitLayer::Burst, 0.6);
+			if (B.bBraced && A > 0.15f) Ring(Out, C, R * 0.62, 12, 12, BurstBarWidthCm(B.Weight, A) * 0.7f * Sc, 4.0, GroundZ, Col, Em, EJamHitLayer::Burst, 0.6);
+			const auto ClearOfBoth = [&](const FVector& Pc)
+			{
+				const FVector2D P(Pc.X / 100.0, Pc.Y / 100.0);
+				for (const int32 Who : { B.Checker, B.Victim })
+				{
+					if (!At.IsValidIndex(Who)) continue;
+					const FVector2D Body(At[Who].X / 100.0, At[Who].Y / 100.0);
+					if (!ClearOfBody(P, Body, FallM.IsValidIndex(Who) ? FallM[Who] : FVector2D::ZeroVector, BodyClearM)) return false;
+				}
+				return true;
+			};
+			for (int32 k = Out.Num() - 1; k >= First; --k) if (!ClearOfBoth(Out[k].CentreCm)) Out.RemoveAt(k);
+			if (B.Weight < 0.25f) continue;   // a bump or a light hit: the ring only
 			const int32 Count = ShardCount(B.bBraced);
 			const double Base = FMath::Atan2(-B.DirM.Y, -B.DirM.X);
 			for (int32 i = 0; i < Count; ++i)
@@ -368,7 +471,7 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 				S.PitchDeg = bLow ? 0.f : 25.f;
 				S.SizeCm = FVector((60.0 * (1.0 - A) + 15.0) * Sc, bLow ? 14.0 : 10.0, bLow ? 4.0 : 10.0);
 				S.Colour = Col; S.Emissive = Em; S.Layer = static_cast<uint8>(EJamHitLayer::Shard);
-				Out.Add(S);
+				if (ClearOfBoth(S.CentreCm)) Out.Add(S);
 			}
 		}
 	}
@@ -439,6 +542,33 @@ AJamHitRead::AJamHitRead()
 	Root->SetMobility(EComponentMobility::Movable);
 }
 
+void AJamHitRead::TellTakes(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters)
+{
+	// PROPS READY (device B, dev-b 1da715c1): B's wind-up takes are behind its own switch, SetWindupTakes(bool bOn, int32 N) (N 0 = 8): told by name to each
+	// figure on spawn and again when the figure or the cvar changes. jam.hit.BTakes: 1 (default) the bots' figures only (the human's 4-frame wind-up
+	// starts B's take inside its coil: B and the strips read it as a dip, so the human keeps A's lean), 2 every figure, 0 none.
+	const int32 Mode = FMath::Clamp(CVarJamHitBTakes.GetValueOnGameThread(), 0, 2);
+	static const FName NameTakes(TEXT("SetWindupTakes"));
+	for (AJamSkater* Sk : Skaters)
+	{
+		if (!Sk || !Sim->GetSkaters().IsValidIndex(Sk->GetSimIndex())) continue;
+		const int32 I = Sk->GetSimIndex();
+		if (TakesOn.Num() <= I) { TakesOn.SetNum(I + 1); TakesFig.SetNum(I + 1); TakesWant.SetNum(I + 1); }
+		UObject* V = Sk->GetVisualObject();
+		const bool bWant = Mode == 2 || (Mode == 1 && !Sim->GetSkaters()[I].bHuman);
+		if (TakesFig[I].Get() == V && TakesWant[I] == bWant) continue;
+		TakesFig[I] = V;
+		TakesWant[I] = bWant;
+		const bool bHas = FigureHas(V, TEXT("SetWindupTakes"));
+		const bool bSent = bHas && AJamSkater::CallFigure(V, NameTakes, { bWant ? 1.0 : 0.0, 8.0 });
+		TakesOn[I] = bSent && bWant;
+		UE_LOG(LogJamHit, Log, TEXT("JAMHIT btakes frame=%lld skater=%d human=%d on=%d call=%s"), Sim->GetFrame(), I, Sim->GetSkaters()[I].bHuman ? 1 : 0, TakesOn[I] ? 1 : 0,
+			bSent ? TEXT("SetWindupTakes") : TEXT("none"));
+	}
+}
+
+bool AJamHitRead::OffScreenOn() { return CVarJamHitOffScreen.GetValueOnGameThread() != 0; }
+
 int32 AJamHitRead::LeanMode() { return FMath::Clamp(CVarJamHitLean.GetValueOnGameThread(), 0, 2); }
 
 bool AJamHitRead::FigureHas(UObject* Figure, const TCHAR* Function)
@@ -477,11 +607,26 @@ void AJamHitRead::StepSim(UWorld* World, const UJamSim* Sim, const TArray<TObjec
 	FLinearColor Cols[2] = { FLinearColor(1.f, 0.4f, 0.05f), FLinearColor(0.05f, 0.3f, 1.f) };
 	for (int32 t = 0; t < 2; ++t) if (Sim->GetConfig().Teams.IsValidIndex(t)) Cols[t] = Sim->GetConfig().Teams[t].Colour;
 	Slot->Model.Step(Sim->GetFrame(), Sim->GetSkaters(), Sim->GetFrameEvents(), Sim->GetConfig().Skater.Speed, Cols);
+	Slot->HumanTeam = Sim->GetHumanTeam();
+	Slot->SimFrame = Sim->GetFrame();
+	// Evolution 10: the edge arrows' widget, over the HUD, on the local player's screen (none in a headless run).
+	if (!Slot->Edge)
+	{
+		if (APlayerController* PC = World->GetFirstPlayerController())
+		{
+			if (PC->IsLocalController() && !IsRunningCommandlet() && World->GetGameViewport())
+			{
+				Slot->Edge = CreateWidget<UJamHitEdgeWidget>(PC, UJamHitEdgeWidget::StaticClass());
+				if (Slot->Edge) { Slot->Edge->Source = Slot; Slot->Edge->SetVisibility(ESlateVisibility::HitTestInvisible); Slot->Edge->AddToViewport(40); }
+			}
+		}
+	}
 	for (const FJamHitReadModel::FHitLog& L : Slot->Model.GetFrameLogs())
 	{
-		UE_LOG(LogJamHit, Log, TEXT("JAMHIT frame=%lld kind=%s result=%s checker=%d victim=%d human=%d closing=%.1f burst_m=%.2f windup=%d press_to_contact=%d"),
-			L.Frame, *L.Kind, HitResultName(L.Result), L.Checker, L.Victim, L.bHuman ? 1 : 0, L.ClosingMps, L.BurstM, L.Windup, L.PressToContact);
+		UE_LOG(LogJamHit, Log, TEXT("JAMHIT frame=%lld kind=%s result=%s checker=%d victim=%d human=%d closing=%.1f burst_m=%.2f windup=%d press_to_contact=%d tip_met=%d"),
+			L.Frame, *L.Kind, HitResultName(L.Result), L.Checker, L.Victim, L.bHuman ? 1 : 0, L.ClosingMps, L.BurstM, L.Windup, L.PressToContact, L.TipMet);
 	}
+	Slot->TellTakes(Sim, Skaters);
 	Slot->Capture(Sim);
 }
 
@@ -534,6 +679,7 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 		At[Sk->GetSimIndex()] = FVector(L.X, L.Y, 0.0);
 		Yaw[Sk->GetSimIndex()] = static_cast<float>(Sk->GetActorRotation().Yaw);
 	}
+	DrawnAtCm = At;
 	FJamHitReadModel::FDrawSwitches Sw;
 	Sw.bTell = CVarJamHitTell.GetValueOnGameThread() != 0;
 	Sw.bBurst = CVarJamHitBurst.GetValueOnGameThread() != 0;
@@ -562,7 +708,10 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 			bool bCrossLean = false;
 			for (const FJamHitReadModel::FPress& P : Model.GetPresses()) if (P.Skater == I) bCrossLean = P.bCross;
 			const TCHAR* Take = bBraceLean ? TEXT("SetCrossCheckHold") : bCrossLean ? TEXT("PlayCrossCheck") : TEXT("PlayCheckWindup");
-			if (FigureHas(Fig, Take)) continue;
+			// B's wind-up takes play only on a figure told SetWindupTakes(true) (jam.hit.BTakes): the lean stands down there and nowhere else; the brace's
+			// take (SetCrossCheckHold) plays on any figure that declares it.
+			const bool bBTake = bBraceLean ? FigureHas(Fig, Take) : (TakesOn.IsValidIndex(I) && TakesOn[I] && FigureHas(Fig, Take));
+			if (bBTake) continue;
 		}
 		Sk->AddActorLocalRotation(FRotator(Lean, 0.0, 0.0));
 	}
@@ -612,6 +761,98 @@ void AJamHitRead::ApplyBars(const TArray<FJamHitBar>& Bars)
 		}
 	}
 	BarsDrawn = Bars.Num();
+}
+
+// ---------------------------------------------------------------- evolution 10: a man down off screen
+
+bool JamHitEdge::IsOffScreen(const FVector2D& P, bool bInFront, const FVector2D& Size)
+{
+	return !bInFront || P.X < 0.0 || P.Y < 0.0 || P.X > Size.X || P.Y > Size.Y;
+}
+
+FVector2D JamHitEdge::EdgePlace(const FVector2D& Size, const FVector2D& Dir, float Inset)
+{
+	const FVector2D C = Size * 0.5;
+	FVector2D D = Dir.IsNearlyZero() ? FVector2D(0, 1) : Dir.GetSafeNormal();
+	const double Hx = FMath::Max(1.0, C.X - Inset), Hy = FMath::Max(1.0, C.Y - Inset);
+	const double Tx = FMath::Abs(D.X) > 1e-6 ? Hx / FMath::Abs(D.X) : 1e9;
+	const double Ty = FMath::Abs(D.Y) > 1e-6 ? Hy / FMath::Abs(D.Y) : 1e9;
+	return C + D * FMath::Min(Tx, Ty);
+}
+
+void JamHitEdge::Outline(const FJamEdgeArrow& A, TArray<FVector2f>& Out)
+{
+	Out.Reset();
+	const FVector2D F(FMath::Cos(A.AngleRad), FMath::Sin(A.AngleRad)), S(-F.Y, F.X);
+	const double L = ArrowPx;
+	auto P = [&](double f, double s) { const FVector2D V = A.PosPx + F * f + S * s; Out.Add(FVector2f(V)); };
+	if (A.bMate)
+	{
+		// A hollow diamond with its tip pulled out towards him.
+		P(L * 0.75, 0); P(0, L * 0.4); P(-L * 0.45, 0); P(0, -L * 0.4); P(L * 0.75, 0);
+	}
+	else
+	{
+		// A solid triangle (drawn as nested outlines).
+		for (double k = 1.0; k > 0.15; k -= 0.2) { P(L * 0.6 * k, 0); P(-L * 0.4 * k, L * 0.45 * k); P(-L * 0.4 * k, -L * 0.45 * k); P(L * 0.6 * k, 0); }
+	}
+}
+
+void UJamHitEdgeWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	Arrows.Reset();
+	AJamHitRead* H = Source.Get();
+	APlayerController* PC = GetOwningPlayer();
+	if (!H || !PC || !AJamHitRead::OffScreenOn() || !PC->PlayerCameraManager) return;
+	const FVector2D Size = MyGeometry.GetLocalSize();
+	if (Size.X < 10.0 || Size.Y < 10.0) return;
+	const FVector CamLoc = PC->PlayerCameraManager->GetCameraLocation();
+	const FRotationMatrix CamM(PC->PlayerCameraManager->GetCameraRotation());
+	const FVector Fw = CamM.GetUnitAxis(EAxis::X), Rt = CamM.GetUnitAxis(EAxis::Y), Up = CamM.GetUnitAxis(EAxis::Z);
+	const FJamHitReadModel& M = H->GetModel();
+	for (const FJamHitReadModel::FDown& D : M.GetDowns())
+	{
+		if (!H->DrawnAtCm.IsValidIndex(D.Skater)) continue;
+		// His body's middle (the oval's centre), 30 cm up.
+		const FVector2D Dir2 = D.DirM.IsNearlyZero() ? FVector2D(1, 0) : D.DirM.GetSafeNormal();
+		const FVector W = H->DrawnAtCm[D.Skater] + FVector(Dir2.X, Dir2.Y, 0.0) * (FJamHitReadModel::DownBodyM * 50.0) + FVector(0, 0, 30.0);
+		FVector2D P;
+		const FVector V = W - CamLoc;
+		const bool bInFront = FVector::DotProduct(V, Fw) > 1.0 && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, W, P, false);
+		if (!JamHitEdge::IsOffScreen(P, bInFront, Size)) continue;
+		// The way to him on the screen: from the camera's right and up (works behind the camera too).
+		const FVector2D Way(FVector::DotProduct(V, Rt), -FVector::DotProduct(V, Up));
+		FJamEdgeArrow A;
+		A.PosPx = JamHitEdge::EdgePlace(Size, bInFront ? (P - Size * 0.5) : Way, JamHitEdge::EdgeInsetPx);
+		const FVector2D Pt = bInFront ? (P - A.PosPx) : Way;
+		A.AngleRad = static_cast<float>(FMath::Atan2(Pt.Y, Pt.X));
+		const int32 Team = M.TeamOf(D.Skater);
+		A.bMate = Team == H->HumanTeam;
+		A.Colour = M.ColourOf(Team);
+		Arrows.Add(A);
+		const int64 DownAt = H->SimFrame - FMath::Max(0, D.Total - D.Left);
+		if (const int64* Was = Logged.Find(D.Skater); !Was || *Was != DownAt)
+		{
+			Logged.Add(D.Skater, DownAt);
+			UE_LOG(LogJamHit, Log, TEXT("JAMHIT offscreen frame=%lld skater=%d down_at=%lld delay=%lld mate=%d"), H->SimFrame, D.Skater, DownAt, H->SimFrame - DownAt, A.bMate ? 1 : 0);
+		}
+	}
+}
+
+int32 UJamHitEdgeWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Geo, const FSlateRect& Cull, FSlateWindowElementList& Out, int32 Layer,
+	const FWidgetStyle& Style, bool bParentEnabled) const
+{
+	const int32 L = Super::NativePaint(Args, Geo, Cull, Out, Layer, Style, bParentEnabled);
+	TArray<FVector2f> Pts;
+	for (const FJamEdgeArrow& A : Arrows)
+	{
+		JamHitEdge::Outline(A, Pts);
+		// A dark under-stroke so the arrow reads on pale ice and on the crowd alike.
+		FSlateDrawElement::MakeLines(Out, L + 1, Geo.ToPaintGeometry(), Pts, ESlateDrawEffect::None, FLinearColor(0, 0, 0, 0.7f), true, 7.f);
+		FSlateDrawElement::MakeLines(Out, L + 2, Geo.ToPaintGeometry(), Pts, ESlateDrawEffect::None, A.Colour, true, 4.f);
+	}
+	return L + 2;
 }
 
 // ---------------------------------------------------------------- tests
@@ -682,8 +923,21 @@ bool FJamHitBurstSize::RunTest(const FString&)
 	if (M.GetBursts().Num() == 1) TestEqual(TEXT("its ring by the closing speed (6 m/s)"), M.GetBursts()[0].RadiusM, FJamHitReadModel::BurstRadiusM(6.0, false), 1e-6);
 	TArray<FJamHitBar> Bars;
 	Draw(M, 105.5, S, Bars);
-	TestEqual(TEXT("the burst's ring is drawn"), Count(Bars, EJamHitLayer::Burst), 16);
+	TestTrue(TEXT("the burst's ring is drawn"), Count(Bars, EJamHitLayer::Burst) > 0);
 	TestTrue(TEXT("shards are drawn"), Count(Bars, EJamHitLayer::Shard) > 0);
+	// Evolution 10: nothing of the burst within BodyClearM of either body (the checker at 0 m, the victim at 3 m lying along +x).
+	for (const FJamHitBar& B : Bars)
+	{
+		if (B.Layer != static_cast<uint8>(EJamHitLayer::Burst) && B.Layer != static_cast<uint8>(EJamHitLayer::Shard)) continue;
+		const FVector2D P(B.CentreCm.X / 100.0, B.CentreCm.Y / 100.0);
+		TestTrue(TEXT("the burst keeps clear of the checker"), FJamHitReadModel::ClearOfBody(P, S[0].Pos, FVector2D::ZeroVector, FJamHitReadModel::BodyClearM - 1e-6));
+		TestTrue(TEXT("the burst keeps clear of the victim"), FJamHitReadModel::ClearOfBody(P, S[1].Pos, S[1].KnockDir, FJamHitReadModel::BodyClearM - 1e-6));
+	}
+	// Evolution 10: a light hit is a third of evolution 9's (width 8 cm against 31 at its first frame), and the weight falls from the first frame.
+	TestTrue(TEXT("a light hit's bars a third of before"), FJamHitReadModel::BurstBarWidthCm(FJamHitReadModel::BurstWeight(1.4), 0.f) <= 31.f / 3.f + 0.5f);
+	TestTrue(TEXT("a hard hit's bars wider than a light one's"), FJamHitReadModel::BurstBarWidthCm(1.f, 0.f) > 2.5f * FJamHitReadModel::BurstBarWidthCm(0.1f, 0.f));
+	TestTrue(TEXT("dimmer from the first frame"), FJamHitReadModel::BurstEmissive(0.5f, 0.1f) < FJamHitReadModel::BurstEmissive(0.5f, 0.f));
+	TestTrue(TEXT("narrower from the first frame"), FJamHitReadModel::BurstBarWidthCm(0.5f, 0.1f) < FJamHitReadModel::BurstBarWidthCm(0.5f, 0.f));
 	TestEqual(TEXT("no tell once it landed"), Count(Bars, EJamHitLayer::Tell), 0);
 	Draw(M, 105.0 + FJamHitReadModel::BurstFrames + 0.5, S, Bars);
 	TestEqual(TEXT("the burst is over after its frames"), Count(Bars, EJamHitLayer::Burst), 0);
@@ -710,10 +964,27 @@ bool FJamHitMissNoBurst::RunTest(const FString&)
 		const int32 Wu = FMath::Max(0, 14 - static_cast<int32>(F));
 		S[0].CheckWindupLeft = Wu;
 		S[0].CheckWindow = Wu > 0 ? 0 : FMath::Max(0, 26 - static_cast<int32>(F));   // the window: frames 14..25
+		if (F >= 26) S[0].ChecksMissed = 1;   // the sim counts the miss on the frame the window runs out (evolution 10: the model follows it)
 		M.Step(F, S, None, 8.0, Cols);
 		if (MissAt < 0 && M.Misses > 0) MissAt = F;
 	}
 	TestEqual(TEXT("one miss"), M.Misses, 1);
+	{
+		// Evolution 10 item 4: a window that closes with no miss counted by the sim (he took the puck) ends quietly: no miss, no grey.
+		FJamHitReadModel Q;
+		TArray<FJamSkaterState> T2 = Two();
+		T2[0].bCheckThisFrame = true; T2[0].WindupFrames = 4; T2[0].CheckWindupLeft = 4;
+		Q.Step(10, T2, None, 8.0, Cols);
+		for (int64 F = 11; F <= 30; ++F)
+		{
+			ClearFrame(T2);
+			const int32 Wu = FMath::Max(0, 14 - static_cast<int32>(F));
+			T2[0].CheckWindupLeft = Wu;
+			T2[0].CheckWindow = Wu > 0 ? 0 : FMath::Max(0, 26 - static_cast<int32>(F));
+			Q.Step(F, T2, None, 8.0, Cols);
+		}
+		TestEqual(TEXT("no miss the sim did not count"), Q.Misses, 0);
+	}
 	TestEqual(TEXT("the miss when the window ran out"), MissAt, static_cast<int64>(26));
 	TestEqual(TEXT("a miss gives no burst"), M.GetBursts().Num(), 0);
 	TestEqual(TEXT("no hit"), M.Hits, 0);
@@ -786,6 +1057,60 @@ bool FJamHitDownClear::RunTest(const FString&)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHitOffScreen, "Jam.Hit.OffScreen", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHitOffScreen::RunTest(const FString&)
+{
+	const FVector2D Size(1920, 1080);
+	TestFalse(TEXT("a man on screen: no arrow"), JamHitEdge::IsOffScreen(FVector2D(900, 500), true, Size));
+	TestTrue(TEXT("a man past the right edge: an arrow"), JamHitEdge::IsOffScreen(FVector2D(2100, 500), true, Size));
+	TestTrue(TEXT("a man behind the camera: an arrow"), JamHitEdge::IsOffScreen(FVector2D(900, 500), false, Size));
+	TestEqual(TEXT("the switch is on by default"), AJamHitRead::OffScreenOn(), true);
+	// Every direction: the arrow on the inset edge, inside the screen, pointing out at him, never over him (his point is off screen, the arrow's box on it).
+	for (int32 Deg = 0; Deg < 360; Deg += 15)
+	{
+		const FVector2D D(FMath::Cos(FMath::DegreesToRadians(Deg)), FMath::Sin(FMath::DegreesToRadians(Deg)));
+		const FVector2D Him = Size * 0.5 + D * 1400.0;   // off screen that way
+		FJamEdgeArrow A;
+		A.PosPx = JamHitEdge::EdgePlace(Size, Him - Size * 0.5, JamHitEdge::EdgeInsetPx);
+		A.AngleRad = static_cast<float>(FMath::Atan2((Him - A.PosPx).Y, (Him - A.PosPx).X));
+		const bool bOnInset = FMath::IsNearlyEqual(A.PosPx.X, JamHitEdge::EdgeInsetPx, 0.5) || FMath::IsNearlyEqual(A.PosPx.X, Size.X - JamHitEdge::EdgeInsetPx, 0.5)
+			|| FMath::IsNearlyEqual(A.PosPx.Y, JamHitEdge::EdgeInsetPx, 0.5) || FMath::IsNearlyEqual(A.PosPx.Y, Size.Y - JamHitEdge::EdgeInsetPx, 0.5);
+		TestTrue(FString::Printf(TEXT("%d deg: on the inset edge"), Deg), bOnInset);
+		for (const bool bMate : { true, false })
+		{
+			A.bMate = bMate;
+			TArray<FVector2f> Pts;
+			JamHitEdge::Outline(A, Pts);
+			FBox2D Box(ForceInit);
+			for (const FVector2f& P : Pts) Box += FVector2D(P);
+			TestTrue(FString::Printf(TEXT("%d deg: the arrow inside the screen"), Deg), Box.Min.X >= 0 && Box.Min.Y >= 0 && Box.Max.X <= Size.X && Box.Max.Y <= Size.Y);
+			TestFalse(FString::Printf(TEXT("%d deg: the arrow not over him"), Deg), Box.IsInside(Him));
+			// The arrow's tip is its farthest point towards him.
+			const FVector2D Tip(Pts[0]);
+			TestTrue(FString::Printf(TEXT("%d deg: it points at him"), Deg), FVector2D::Distance(Tip, Him) < FVector2D::Distance(A.PosPx, Him));
+		}
+	}
+	// The two sides by shape: a mate's outline is one closed diamond (5 points), an opponent's nested triangles (more).
+	FJamEdgeArrow M; M.bMate = true; FJamEdgeArrow O; O.bMate = false;
+	TArray<FVector2f> Pm, Po;
+	JamHitEdge::Outline(M, Pm); JamHitEdge::Outline(O, Po);
+	TestEqual(TEXT("a mate: the hollow diamond"), Pm.Num(), 5);
+	TestTrue(TEXT("an opponent: the solid triangle"), Po.Num() > 5);
+	// The radar marks every downed man by side.
+	FJamPresentationFrame F;
+	F.RinkLengthM = 60.f; F.RinkWidthM = 30.f; F.HumanIndex = 0;
+	FJamPresentationSkater Hs; Hs.TeamId = 0; Hs.bHuman = true; F.Skaters.Add(Hs);
+	F.DownsM = { FVector2D(10, 5), FVector2D(-10, -5) };
+	F.DownsTeam = { 0, 1 };
+	TArray<FJamRadarEntry> E;
+	UJamRadarWidget::BuildEntries(F, E);
+	int32 Mates = 0, Opps = 0;
+	for (const FJamRadarEntry& X : E) { Mates += X.DownMark == 1; Opps += X.DownMark == 2; }
+	TestEqual(TEXT("the radar: one mate down"), Mates, 1);
+	TestEqual(TEXT("the radar: one opponent down"), Opps, 1);
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHitLean, "Jam.Hit.Lean", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 bool FJamHitLean::RunTest(const FString&)
 {
@@ -798,6 +1123,27 @@ bool FJamHitLean::RunTest(const FString&)
 	TestEqual(TEXT("no wind-up: nothing before the press"), FJamHitReadModel::CheckLeanDeg(-1, 0, 6, -1), 0.f, 1e-4f);
 	TestTrue(TEXT("the lean stays small (a stand-in, not a take)"), FMath::Abs(FJamHitReadModel::CheckLeanDeg(5, 4, 12, -1)) <= 12.f);
 	TestEqual(TEXT("the lean is on by default"), AJamHitRead::LeanMode(), 1);
+	// Evolution 10 item 3: the wind-up's length scales the lean and the chevron. At 4, 8 and 12 frames: fully back on the wind-up's last frame,
+	// and the tip leaves his body at the press and reaches the target's near side (gap 3 m) exactly when the wind-up ends.
+	for (const int32 W : { 4, 8, 12 })
+	{
+		TestEqual(FString::Printf(TEXT("back on frame %d of %d"), W - 1, W), FJamHitReadModel::CheckLeanDeg(W - 1, W, 12, -1), 6.f, 1e-4f);
+		TestTrue(FString::Printf(TEXT("forward after a wind-up of %d"), W), FJamHitReadModel::CheckLeanDeg(W + 4, W, 12, -1) < -10.f);
+		// Two men 3 m apart closing so the bodies meet W frames after the press (the bots press on that lead): the tip meets him within 2 frames of it.
+		const double Closing = (3.0 - 2.0 * UJamSim::SkaterRadius) / (W / 60.0);
+		int32 Met = -1;
+		for (int32 Sn = 0; Sn <= W + 4 && Met < 0; ++Sn)
+		{
+			const double Gap = FMath::Max(2.0 * UJamSim::SkaterRadius, 3.0 - Closing * Sn / 60.0);
+			if (FJamHitReadModel::TipRemainFrames(Gap, Closing, static_cast<float>(Sn), W) <= 1.0) Met = Sn;
+			const double Near = FMath::Max(Gap - UJamSim::SkaterRadius, UJamSim::SkaterRadius);
+			TestTrue(FString::Printf(TEXT("the tip never past him (%d, frame %d)"), W, Sn), FJamHitReadModel::TipDistM(Gap, static_cast<float>(Sn), W, Closing) <= Near + 1e-6);
+		}
+		TestTrue(FString::Printf(TEXT("a wind-up of %d: the tip meets him within 2 frames of the contact (met %d)"), W, Met), Met >= 0 && FMath::Abs(Met - W) <= 2);
+		TestTrue(FString::Printf(TEXT("a wind-up of %d: the tip well short of him at the press"), W),
+			(3.0 - UJamSim::SkaterRadius) - FJamHitReadModel::TipDistM(3.0, 0.f, W, Closing) > FJamHitReadModel::TipMeetM);
+	}
+	TestEqual(TEXT("no target: the tip at TellFarM"), FJamHitReadModel::TipDistM(-1.0, 20.f, 4, 0.0), FJamHitReadModel::TellFarM, 1e-6);
 	UObject* Plain = GetTransientPackage();
 	TestFalse(TEXT("an object without device B's takes has none"), AJamHitRead::FigureHas(Plain, TEXT("PlayCheckWindup")));
 	return true;

@@ -112,6 +112,7 @@ namespace JamAI
 		// contested-puck mark (JamCarrierMarks::Contested, set by RunPlaytestMatch each frame): without the puck he brakes instead of racing an opponent to it.
 		bool bContestBrake = false;
 		bool bContestedNow = false;
+		int ContestOnlyNth = 0;          // lane A201: JAM_PLAYTESTER_CONTEST=brake:N obeys only the N-th showing of the ring (0 = every showing)
 		int ContestBrakeFrames = 0;      // frames the decision braked for it (the stats read it)
 		// Lane A178 (track F2 evolution 8; env JAM_PLAYTESTER_STOPMARK=brake | stop, off by default): the player obeys the stop's line (JamCarrierMarks::StopMark
 		// lit, set by RunPlaytestMatch each frame with the opponent's place). brake = law 3's whole move as drill 21 plays it (FJamCarryDrill, the first move):

@@ -203,7 +203,19 @@ bool FJamBindings::Rebind(EJamVerb V, const FKey& Key, EJamVerb* OutSwapped)
 		if (bOldFits) Theirs[At] = Old; else Theirs.RemoveAt(At);
 		if (OutSwapped && *OutSwapped == EJamVerb::Count) *OutSwapped = U;
 	}
-	if (!IsValid() || !IsPlayable())
+	// Lane A203 (track K1 evolution 4): and a move never leaves another control with no key of the kind moved: a keys-cell move that took a verb's last key
+	// (restart's R under the cross-check: it kept only its pad button, A199's rule let it) is refused like the move that leaves it nothing at all; the
+	// pads cell alike for its last pad button. A mouse-and-keyboard player never loses a control to a rebinding.
+	bool bStrips = false;
+	for (int32 I = 0; I < NumVerbs && !bStrips; ++I)
+	{
+		const EJamVerb U = VerbAt(I);
+		if (U == V) continue;
+		const TArray<FKey>& Before = bPad ? Was[U].Pads : Was[U].Keys;
+		const TArray<FKey>& Now = bPad ? (*this)[U].Pads : (*this)[U].Keys;
+		bStrips = Before.Num() > 0 && Now.Num() == 0;
+	}
+	if (bStrips || !IsValid() || !IsPlayable())
 	{
 		*this = Was;
 		if (OutSwapped) *OutSwapped = EJamVerb::Count;
@@ -768,7 +780,7 @@ TArray<FJamControlRow> UJamInputMap::ControlRowsFromBindings()
 	Rows.Add(Row(TEXT("CROSS-CHECK (WITHOUT)"), EJamVerb::CrossCheck, TEXT("hold it and skate into a man: your speed is the hit")));
 	Rows.Add(Row(TEXT("PASS (WITH THE PUCK)"), EJamVerb::Pass, TEXT("a tap is a flat pass; held, it is a saucer over the sticks")));
 	Rows.Add(Row(TEXT("CHECK (WITHOUT)"), EJamVerb::Check, TEXT("the body check: come in fast or it is a bump")));
-	Rows.Add(Row(TEXT("ABILITY"), EJamVerb::Ability, TEXT("the cut's trick or a pickup's, when the slot is lit")));
+	Rows.Add(Row(TEXT("ABILITY"), EJamVerb::Ability, TEXT("the mode's trick or a pickup's, when the slot is lit")));
 	Rows.Add(Row(TEXT("SPIN"), EJamVerb::Spin, TEXT("spin off a man who is on you")));
 	Rows.Add(Row(TEXT("DEKE"), EJamVerb::Deke, TEXT("the carrier's fake")));
 	Rows.Add(Row(TEXT("SPRINT"), EJamVerb::Sprint, TEXT("while the legs last")));
@@ -781,7 +793,7 @@ TArray<FJamControlRow> UJamInputMap::ControlRowsFromBindings()
 	Rows.Add(Row(TEXT("POKE"), EJamVerb::Poke, TEXT("jab the puck loose")));
 	Rows.Add({ TEXT("SIGNALS"), TEXT("1 2 3 4"), TEXT("D-pad"), TEXT("a call to your mates"), {} });
 	Rows.Add(Row(TEXT("RESTART"), EJamVerb::Restart, TEXT("the match again")));
-	Rows.Add({ TEXT("PAUSE"), TEXT("Esc"), TEXT("Start"), TEXT("the pause card and the Director's Call"), { EKeys::Escape, EKeys::Gamepad_Special_Right } });
+	Rows.Add({ TEXT("PAUSE"), TEXT("Esc"), TEXT("Start"), TEXT("the pause card: resume, a rule change, controls"), { EKeys::Escape, EKeys::Gamepad_Special_Right } });
 	return Rows;
 }
 

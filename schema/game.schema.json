@@ -278,6 +278,10 @@
           "maximum": 1,
           "description": "Lane A82 (R-0041 point 6): the puck carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier's sprint is skater.sprint.carry_bonus (lane A93). Leave the key out for 0.92; 1 = the carrier skates as freely as before."
         },
+        "charge_dies_on_loss": {
+          "type": "boolean",
+          "description": "Lane A203 (track K1, the Director's ruling on lane A199's ASK): the charge dies with the puck. true = a skater who stops being the carrier (somebody else touched the puck he carried) loses his held shot's and pass's charges, and a button held then charges nothing until it is let go and pressed again, so a puck stripped but still in his reach is not shot or passed by the release of a press made before the strip; bots and the human alike. Leave the key out for true (the Director, 14 Nov 17:01); false = the neutral value (the game before the lane: the release fires whenever the puck is in reach)."
+        },
         "free_speed_mult": {
           "type": "number",
           "minimum": 1,

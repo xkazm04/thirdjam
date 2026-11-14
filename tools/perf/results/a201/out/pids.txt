@@ -31,3 +31,17 @@ hash-fin 39628
 39004 fin-pro 51-100
 32880 fin-all_star 1-50
 55432 fin-all_star 51-100
+r1-pro 55403
+r1-rookie 55406
+l3late 55410
+r2-pro 61140
+r2-rookie 61143
+final2-pro 6907
+final2-rookie 6913
+hash-fin2 15809
+38116 fin2-rookie 1-50
+13420 fin2-rookie 51-100
+39264 fin2-pro 1-50
+51080 fin2-pro 51-100
+8464 fin2-all_star 1-50
+51772 fin2-all_star 51-100

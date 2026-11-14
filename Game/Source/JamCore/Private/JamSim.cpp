@@ -1214,6 +1214,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	if (TakeOwner >= 0 && Puck.LastTouch != TakeOwner) TakeOwner = -1;
 	for (FJamSkaterState& S : Skaters)
 	{
+		ClearChargeOnLoss(S, Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput());   // lane A203 (game.skater.charge_dies_on_loss): before bHasPuck moves on
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
 		if (S.bHasPuck) S.LastCarryFrame = Frame;
 		if (S.TakeGraceLeft > 0 && (Puck.LastTouch != S.Index || --S.TakeGraceLeft < 0)) S.TakeGraceLeft = 0;
@@ -2532,11 +2533,13 @@ void UJamSim::StepCharge(FJamSkaterState& S, const FJamInput& In)
 	const int32 Max = Config.Shot.ChargeFramesMax;
 	if (In.bShootHeld)
 	{
+		if (S.ChargeFrames < 0) return;   // lane A203: a charge the loss of the puck cleared: a held button charges nothing until it is pressed again
 		if (Max <= 0) { if (S.ChargeFrames == 0) { TryShoot(S, 0.f); S.ChargeFrames = 1; } return; }   // charging off: a hold is one tap
 		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85): the carrier's reach, the blade's full length included
 		if (bInReach && Frame >= S.ShotReadyFrame) S.ChargeFrames = FMath::Min(S.ChargeFrames + 1, Max);
 		return;
 	}
+	if (S.ChargeFrames < 0) { S.ChargeFrames = 0; return; }   // lane A203: the release of a dead press fires nothing
 	if (S.ChargeFrames > 0)
 	{
 		// R-0044 (lane A91): a hold of shot.tap_frames or fewer is a tap: charge 0, so no speed bonus and the tap's height (on the ice at tap_m 0). A human's
@@ -2803,16 +2806,29 @@ void UJamSim::StepPassCharge(FJamSkaterState& S, const FJamInput& In)
 	const int32 Half = FMath::Max(0, Config.Pass.SaucerHalfFrames);
 	if (In.bPassHeld)
 	{
+		if (S.PassChargeFrames < 0) return;   // lane A203: as the shot's
 		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85)
 		if (bInReach && Frame >= S.ShotReadyFrame) S.PassChargeFrames = FMath::Min(S.PassChargeFrames + 1, FMath::Max(Half, 1));
 		return;
 	}
+	if (S.PassChargeFrames < 0) { S.PassChargeFrames = 0; return; }   // lane A203
 	if (S.PassChargeFrames > 0)
 	{
 		const bool bSaucer = Half > 0 && S.PassChargeFrames >= Half;
 		S.PassChargeFrames = 0;
 		TryPass(S, bSaucer);
 	}
+}
+
+// Lane A203 (track K1, game.skater.charge_dies_on_loss; the Director's ruling on A199's ASK): a skater that stops being the carrier (he carried at the end
+// of the last frame and somebody else has touched the puck since) loses his shot's and pass's charges: a button held then is dead (-1, the charge fields'
+// own memory, hashed as they always were) and charges nothing until it is let go and pressed again, so a strip that leaves the puck in his reach is not
+// shot or passed by the release of a press made before it. Bots, the human, host and guest alike. false = the neutral value (never -1: the game before).
+void UJamSim::ClearChargeOnLoss(FJamSkaterState& S, const FJamInput& In)
+{
+	if (!Config.Skater.bChargeDiesOnLoss || !S.bHasPuck || Puck.LastTouch == S.Index) return;
+	if (In.bShootHeld || S.ChargeFrames > 0) S.ChargeFrames = -1;
+	if (In.bPassHeld || S.PassChargeFrames > 0) S.PassChargeFrames = -1;
 }
 
 void UJamSim::TryPass(FJamSkaterState& S, bool bSaucer)

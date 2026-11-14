@@ -123,3 +123,104 @@ Frames from call to contact, as shipped (A192's keys `contact.check_windup_frame
    drive frames; proving number: in the strips the chevron's tip meets the victim within 2 frames of the contact in 8 of 10 landed checks.
 3. **A hit seen from the bench** (bots' hits off the human's screen): a radar blip and an edge arrow for a knockdown off screen; proving number: of the
    knockdowns in a pro match (about 10), every one off screen gets the blip within 1 frame, none drawn over a downed figure (`Jam.Hit.DownClear`'s rule).
+
+# Evolution 10 (14 Nov, 15:50 to 17:20): the ring quieter, the men down off screen, the tell as long as the wind-up, one miss
+
+The Director on the strips of evolution 9: the chevron, the ring and the oval read; keep them. Four things.
+
+## E1. The ring is no longer the loudest thing on the sheet
+
+Evolution 9's ring at a landed check (`check-002958` +9 to +18) was white blocks all round both figures, wider than the two bodies. Now
+(`FJamHitReadModel::BurstWeight`, `BurstBarWidthCm`, `BurstEmissive`, `ClearOfBody`):
+- **its radius stays by speed** (1.2 to 3.0 m); its **weight** is the closing speed over 14 m/s (a bump 0);
+- the bars' **width** is (6 + 20 x weight) cm x (1 - age) + 2 and their **brightness** (3 + 12 x weight) x (1 - age)^2 + 0.5: both fall from the first
+  frame (the material is opaque: width and light are its opacity); a light hit (1.4 m/s) starts at 8 cm against evolution 9's 31: **a quarter**;
+  10 + 6 x weight bars; shards only from weight 0.25;
+- **nothing of it within 0.75 m of either body** (the checker standing, the victim standing or lying along his fall: `ClearOfBody`), so from the low
+  camera at the boards no bar stands in front of a figure's legs.
+`Jam.Hit.BurstSize` holds the clearance on every bar, the light hit's third and the fall from the first frame.
+
+Stills (`img/a196/`, evolution 9 above, 10 below, **the same sim frames**: drill 1 from frame 0, `-StartDrill 1`; the `JAMSIM` hashes at
+600 to 3600 are identical in the two runs): `e10-ring-boards-before-after.jpg` (the boards camera, sim frame 1085: the human felled at 11 m/s against
+the boards) and `e10-ring-open-before-after.jpg` (sim frame 2958: his check that fells a man in open ice). Evolution 9's white blocks round both bodies
+are gone; the ring reads round them, thin and fading from its first frame.
+
+## E2. A man down off screen
+
+- **The edge arrow** (`UJamHitEdgeWidget`, over the HUD, `jam.hit.OffScreen 1`): for every downed man whose body is outside the frame (or behind the
+  camera), an arrow on the screen's edge 56 px in, on the line from the screen's centre towards him, pointing at him, in his team colour over a dark
+  stroke: **the human's mates a hollow diamond**, **opponents a solid triangle**. It is on the edge only while he is off screen, so it is never over him.
+- **The radar** marks every downed man (`HUDFeed` `DownsM` / `DownsTeam`, `UJamRadarWidget` `DownMark`): mates a hollow square, opponents an X, 15 px,
+  in the team colour, over the dots.
+- One `JAMHIT offscreen frame=F skater=S down_at=D delay=F-D mate=M` line a knockdown marked.
+`Jam.Hit.OffScreen`: on / off screen, the arrow on the inset edge for 24 directions, inside the screen, never over him, pointing at him; the two shapes;
+the radar's two marks.
+
+Measured: drill 1 from frame 0 (pro, clay, 4 / 4): 1 knockdown off screen, marked on its own frame (`delay=0`); the staged run (8 / 12): 3
+knockdowns off screen, marked on the frame each left the picture (3, 4 and 104 frames after the fall: until then he lay on screen with his oval). The
+arrow is decided on the render frame that finds him off screen and drawn on that frame: within 1 frame. Seen on `e10-tell-windup-4-8-12.jpg` row 2
++12 onwards (the orange triangle at the bottom right while the felled opponent lies off screen; in `tools/qa/screen/out/a196-e10-w812/shots`).
+
+## E3. The tell as long as the wind-up
+
+The Director's lengths (16:0x): the bots' body check winds up 8 frames and their cross-check 12, the human 4 and 4 (`contact.bot_*_windup_frames`,
+on main about 16:30, not in this tree: staged here by `tools/qa/screen/a196/cut-clay-windup-8-12.json`, every press at 8 / 12). Both the chevron and the
+lean read the frames the call carries (`WindupFrames`): the lean loads over them (`CheckLeanDeg`), the streak brightens over them.
+**The chevron now points at the man** (the nearest standing opponent within 7 m and 70 degrees of his facing at the press; a cross-check's own target)
+and its tip covers the way in proportion to the frames left to the contact as they look now (`TipRemainFrames`: the bodies' gap over the closing speed,
+never before the wind-up ends), so it stands on him when the bodies meet. (The first try ran the tip over the wind-up alone: on a man already close at
+the press it met him on the press's frame, 4 frames before the contact: 3 of 9 bots' checks within 2 frames.)
+
+| wind-up (where) | landed checks with the chevron on a man | its tip met him within 2 frames of the contact | contact minus meeting (frames) |
+|---|---|---|---|
+| 4, bots (drill 1 match, build 10) | 10 of 11 | **10 of 10** | 1 (8 times), 2 (2) |
+| 4, the human (drill 1) | 5 of 5 | **5 of 5** | 1 (5) |
+| 8, bots (staged cut, build 9) | 4 of 6 | **4 of 4** | 1 (4) |
+| 8, the human (staged cut) | 4 of 6 | **4 of 4** | 1, 1, 2, 2 |
+| 12, cross-check (staged, drill 2) | the streak loads over +0 to +11, the shove lands at **+12 exactly** (a stumble, a bump; 8 misses) | | |
+
+The landed checks without a meeting (2 at 8 frames each side, 1 at 4) hit a man other than the one the chevron pointed at (contacts at 13 and 16
+frames: a second opponent came in). Driver: `tools/qa/screen/a196/tipmeet.py <game.log>` (reads `JAMHIT ... press_to_contact tip_met`).
+`Jam.Hit.Lean` holds the lean and the meeting at 4, 8 and 12 (men closing to meet on the wind-up's last frame: met within 2). Still:
+`e10-tell-windup-4-8-12.jpg` (rows: 4 human check, 8 human check, 12 human cross-check). Rows 2 and 3 were taken before the banner fix below: the faint
+GOAL plate on them is that fault.
+
+## E4. One miss
+
+A body check's miss is now the sim's own (`ChecksMissed` grew: the HUD's MISSED reads the same counter), for the bots as for the human: the chevron goes
+grey on that frame. Before: of the human's misses 4 of 5, 2 of 3 and 7 of 8 were on the HUD's frame; the others were a window that closed while he
+carried (no sim miss: A said miss) and a window the sim counted while he lay down (A had dropped the press). `Jam.Hit.MissNoBurst` holds both.
+
+After (build 10, drill 1 from frame 0): the human's misses 3, the HUD's MISSED 3, **3 on the same frame**; the bots' misses grey the same way (5 in
+the run). Found on the way and fixed (A188's banner, this family): **GOAL 0:0** showed on 3 to 4 of the human's hits a match: the sim's `GoalPause` also
+holds the play after a foul's whistle (the drills' checks on a man without the puck: "Hit away from the play. Called."). The banner now shows only
+when a side's number grew (`GoalBannerScoreGrew`, `Jam.Hud.GoalBanner`); in the build-10 run 4 banners for 4 goals.
+
+## E5. The proof of evolution 10
+
+- Full `Jam` filter on the final source (build 10, `Game/logs/a196/auto-9.log`): **297 tests, 297 Success, 0 Fail**; test-guards PASS (0 faults, 202 files).
+- Shipping compile on the final source: **PASS** (418 s, the shared build slots).
+- The sim untouched: no JamCore file changed; `JAMSIM` hashes identical with evolution 9's look and evolution 10's at 600 to 4800 (`dca05cbee139842d`,
+  `513c22db22f23983`, `d7ceb5bf3fdc7bd2`, ...).
+- Neutral values: `jam.hit.OffScreen 0` (no arrow, no radar mark); the ring's quieter look and the predictive tip have no switch of their own
+  (`jam.hit.Burst 0` / `jam.hit.Tell 0` take them off).
+- The staged lengths: `tools/qa/screen/a196/cut-clay-windup-8-12.json` (every press 8 / 12) until `contact.bot_*_windup_frames` are on this tree.
+
+# PROPS READY (device B's dev-b 1da715c1 in this tree from 16:55)
+
+| B's piece | how A calls it | seen |
+|---|---|---|
+| `SM_Boost_<kind>` (6 props) | A188's beacon loads it by name | Arsenal, clay: `JAMBOOST beacon ... prop_from_b=1` for every pickup (22); the winged bolt (speed) on A's pedestal and ring (`tools/qa/screen/out/a196-props/shots`, f960) |
+| `SetBoostEquipped(FName, bool)` | A188's aura, by name (`figure_call=SetBoost`; A's waist ring then stands down) | the keg on the back (shotgun, `img/a196/props-goal-banner-art.jpg`), the hip bumper (f240 / f480), the round shield (f960); the crest (slow puck) not caught from behind at f1440 |
+| `T_UI_Banner_Goal` | `GoalBannerArtBrush` by name (`JAMHUD goal_banner_art=T_UI_Banner_Goal`) | `img/a196/props-goal-banner-art.jpg`. B's art carries the word GOAL: the first still showed it twice (A's word over B's); A's word is no longer drawn over the art, the score stays under it |
+| `PlayCelebrate(int32 0-3)` | A188's `CelebrateGoal` by name on the scorer and his nearest mate | both goals of the drill run (frames 1811, 4628): `scorer=7:stick_raise:PlayCelebrate mate=5:knee_glide:PlayCelebrate`. The takes run 58 to 110 frames; the goal's pause is 120: **none is cut by the faceoff** (10 frames to spare at the longest). The camera stays on the human (untouched) |
+| `SetCrossCheckHold(bool)` | the pawn, by name (lane A184) | on both figures; A's lean stands down for the brace on any figure that declares it |
+| `SetWindupTakes(bool, int32)` | **new: `jam.hit.BTakes`** (`AJamHitRead::TellTakes`), by name on each figure at spawn and when the figure or the cvar changes: `SetWindupTakes(true, 8)` | `JAMHIT btakes ... on=1 call=SetWindupTakes` for the 9 bots, `on=0` for the human |
+
+**Which wind-ups ship on B's takes: the bots' (`jam.hit.BTakes 1`, default).** The human's 4-frame wind-up starts B's take inside its coil (B: "reads as
+a dip"); in the strips (`img/a196/props-human-windup-lean-vs-btake.jpg`: the same sim frames, A's lean above, B's 4-frame take below) B's take turns the
+figure and swings the stick from +4; at 960 px neither reads as a dip, and B advises 6 as its floor: the human keeps A's lean. `jam.hit.BTakes 2` gives
+every figure B's take, 0 none. **A's lean stands down exactly on the figures told** (`TakesOn`): the bots' checks and cross-checks, and every brace.
+**The bots' cross-check at 12 frames** calls `PlayCrossCheck(12)`: B plays from frame `10 - 12 = -2`. Asked of B: clamp to frame 0 and hold the first
+pose 2 frames (or say what it does), so its contact (frame 10) lands on the sim's (frame 12).
+Not filmed: a bot's wind-up take (the capture follows the human's presses); the bots' takes are on by the log lines.

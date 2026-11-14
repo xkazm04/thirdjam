@@ -27,6 +27,10 @@ namespace JamCarrierMarks
 		                               // sweep by JAM_MARK_RULE (closing=12;stopclosing=8): it was 8, and the ring showed 18.6 / 19.3 / 29.4 times a match
 		                               // (rookie / pro / all_star) for 2.85 knockdowns at rookie, right 15.6 % of the time there; at 12: 11.4 / 13.4 / 22.6,
 		                               // recall down 6 to 8 points.
+		// Lane A201 (track F2 evolution 12, MOVEMENT-12 section 7): the ring shows only where what it says is true. 0 = off (today's ring).
+		double OppTowardMps = 0.0;     // the opponent himself skates at the human (not only at the puck) at this pace or more
+		double OthersSec = 0.3;        // another opponent (not the one the ring is for) reaches the puck within this long after the human: no ring (0 = off, the ring of
+		                               // lanes A166 to A194). Shipped 0.3 s: obeying every ring costs a pro 0.7 points (6 before) and the ring shows 12 times a match (21)
 		int32 AfterDropFrames = 0;     // 0 = off (the Director, 06:45: lane A171 measured the quiet second: at rookie it takes 0.3 rings a match, at pro it takes 206 of the 316
 		                               // knockdowns the ring precedes: he is flattened as he wins the draw. The rule stays, off.) Was 60: REVIEW-3 item 1: no ring for this long after a faceoff's drop: it lit in the second after
 		                               // most draws the human won (two centres head-on at the puck is every draw, not a warning). 0 = as before.
@@ -72,9 +76,41 @@ namespace JamCarrierMarks
 			const double D = Between.Size();
 			const double Closing = D > 1e-6 ? FVector2D::DotProduct(H.Vel - O.Vel, Between / D) : 0.0;
 			if (Closing < K.ClosingMps) continue;
+			if (K.OppTowardMps > 0.0 && D > 1e-6 && -FVector2D::DotProduct(O.Vel, Between / D) < K.OppTowardMps) continue;   // lane A201
 			if (!R.bOn || To < R.OppSec) { R.bOn = true; R.Opp = O.Index; R.HumanSec = Th; R.OppSec = To; R.ClosingMps = Closing; }
 		}
+		if (R.bOn && K.OthersSec > 0.0)   // lane A201: a second opponent at the puck within OthersSec after the human (the ring is about one man)
+		{
+			for (const FJamSkaterState& O : Sk)
+			{
+				if (O.Team == H.Team || !O.CanAct() || O.Index == R.Opp) continue;
+				double OT = 0.0;
+				const double To = SecondsTo(O, P, PV, OT);
+				if (To < Th + K.OthersSec) { R.bOn = false; break; }
+			}
+		}
 		return R;
+	}
+	// Lane A201: the ring's numbers by name ("early=;late=;closing=;toward=;hsec=;opptoward=;others="), the one parse the trace and the scripted player share.
+	inline void ApplyContestRuleSpec(FContestRule& K, const FString& Spec)
+	{
+		TArray<FString> Parts;
+		Spec.ParseIntoArray(Parts, TEXT(";"));
+		for (const FString& Part : Parts)
+		{
+			FString Key, Vs;
+			if (!Part.Split(TEXT("="), &Key, &Vs)) continue;
+			const double V = FCString::Atod(*Vs);
+			if (Key == TEXT("early")) K.OppEarlySec = V; else if (Key == TEXT("late")) K.OppLateSec = V; else if (Key == TEXT("closing")) K.ClosingMps = V;
+			else if (Key == TEXT("toward")) K.TowardMps = V; else if (Key == TEXT("hsec")) K.HumanSecMax = V;
+			else if (Key == TEXT("opptoward")) K.OppTowardMps = V; else if (Key == TEXT("others")) K.OthersSec = V;
+		}
+	}
+	inline FContestRule ContestRuleFromEnv()
+	{
+		FContestRule K;
+		ApplyContestRuleSpec(K, FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_MARK_RULE")));
+		return K;
 	}
 
 	// Lane A178 (track F2, evolution 8, docs/experiments/MOVEMENT-9.md): what is SHOWN is not the rule frame by frame. A real window (package H30) read the
@@ -110,7 +146,8 @@ namespace JamCarrierMarks
 	{
 		double AheadM = 8.5;           // where the mark stands: five stick lengths from the human, towards the opponent. Lane A194: 8 -> 8.5 m, the stop window's centre
 		                               // since the free skaters are 15 % faster (pro: 8 m 94 %, 8.5 m 99.5 %, 9 m 94.5 %) and drill 21's stop distance; a drawing only
-		double LitNearM = 7.0;         // lit while the opponent is this far off or more ...
+		double LitNearM = 7.5;         // lit while the opponent is this far off or more ... Lane A201 (evolution 12, the late hand): 7 -> 7.5 m: the bar goes out when a
+		                               // press would begin too late (law 3 at pro: 7.5 m 69 %, 7 m 38 %); of the presses a 12- to 24-frame hand makes while it is lit, 90.5 % or more pass
 		double LitFarM = 9.0;          // ... and this far off or less, plus the hand's lead. Lane A185 (track F2 evolution 9, MOVEMENT-10.md): 9.5 -> 9 m. With the free skaters
 		                               // 15 % faster (skater.free_speed_mult) the defender closes sooner: the stop begun at 9.5 m passes a pro 78 % (97 before), at 9 m 94.5 %,
 		                               // at 8.5 m 99.5 %, at 8 m 94 %, at 7 m 38 % (Bar.Curve.Law3, 200 seeds); all_star 96 / 99.5 / 100 / 99.5 % at 9.5 / 9 / 8.5 / 8 m.

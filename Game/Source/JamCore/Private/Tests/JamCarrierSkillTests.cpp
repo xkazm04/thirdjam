@@ -1162,6 +1162,18 @@ bool FJamMovementSecondMove::RunTest(const FString& Parameters)
 		const FShare W = Share(*C, L, 200, TEXT("pro"));
 		AddInfo(FString::Printf(TEXT("LIGHT pro, the stop begun 15 frames after the line lit: %s"), *W.Line()));
 		TestTrue(FString::Printf(TEXT("pro: the stop begun on the light passes 90 %% or more (%.1f %%)"), 100.0 * W.PastShare()), W.PastShare() >= 0.90);
+		// Lane A201 (evolution 12, the late hand): a press made while the bar is still lit passes 90 % or more for hands of 12 to 24 frames.
+		for (const int32 React : { 12, 18, 24 })
+		{
+			FScript Lh;
+			Lh.LightReactFrames = React; Lh.bOnlyWhileLit = true;
+			const FShare Wl = Share(*C, Lh, 200, TEXT("pro"));
+			const int32 Invited = Wl.N - Wl.Ends[FJamCarryDrill::Setup];
+			const double Pass = Invited > 0 ? static_cast<double>(Wl.Ends[FJamCarryDrill::Past]) / Invited : 0.0;
+			AddInfo(FString::Printf(TEXT("LATE pro, a press %d frames after the light, made only while lit: invited %d of %d, past %.1f %% of those"), React, Invited, Wl.N, 100.0 * Pass));
+			TestTrue(FString::Printf(TEXT("A201: pro, a %d-frame hand pressing while the bar is lit passes 90 %% or more (%.1f %% of %d; none invited = no late press made)"), React, 100.0 * Pass, Invited), Invited == 0 || Pass >= 0.90);
+			if (React <= 18) TestTrue(FString::Printf(TEXT("A201: ... and the bar still invites a %d-frame hand (%d of %d)"), React, Invited, Wl.N), Invited >= Wl.N * 3 / 4);
+		}
 	}
 	// Lane A194: the window's centre since the free skaters are 15 % faster (lane A185): 8.5 m at every level, still five stick lengths.
 	TestEqual(TEXT("pro stops at 8.5 m"), FJamCarryDrill::StopAtForLevel(FName(TEXT("pro"))), 8.5);
@@ -1170,7 +1182,8 @@ bool FJamMovementSecondMove::RunTest(const FString& Parameters)
 	TestEqual(TEXT("8.5 m in a player's words: five stick lengths"), FString(FJamCarryDrill::StickLengthsWord(8.5, 1.6)), FString(TEXT("FIVE")));
 	TestEqual(TEXT("8 m in a player's words: five stick lengths"), FString(FJamCarryDrill::StickLengthsWord(8.0, 1.6)), FString(TEXT("FIVE")));
 	TestEqual(TEXT("12 m in a player's words: eight stick lengths"), FString(FJamCarryDrill::StickLengthsWord(12.0, 1.6)), FString(TEXT("EIGHT")));
-	TestTrue(TEXT("the drill's line says the distance"), FJamCarryDrill::CoachLine(1, 8.0, 1.6).Contains(TEXT("FIVE STICK LENGTHS")));
+	// Lane A201 (evolution 12): the drill's words are what the line teaches now: stop when it turns his colour. One line at 1280 (28 characters or fewer: one line in the caption box).
+	TestTrue(TEXT("A201: the drill's line says to stop on the line's colour"), FJamCarryDrill::CoachLine(1, 8.5, 1.6).Contains(TEXT("LINE LIT: STOP")) && FJamCarryDrill::CoachLine(1, 8.5, 1.6).Len() <= 28);
 	return true;
 }
 
@@ -1472,6 +1485,15 @@ bool FJamCurveLaw3::RunTest(const FString& Parameters)
 			FScript L;
 			L.LightReactFrames = React;
 			AddInfo(FString::Printf(TEXT("LAW3T %s | %s | stop on the light + %d frames: %s"), *Level, *Tune, React, *CarryHow(*C, L, 200, *Level, T).Line()));
+		}
+		// Lane A201 (evolution 12, the late hand): the press made only while the bar is still lit (JAM_MARK_RULE moves the line's rule: near=, ...).
+		for (const int32 React : { 12, 15, 18, 21, 24, 27, 30 })
+		{
+			FScript L;
+			L.LightReactFrames = React; L.bOnlyWhileLit = true; L.LightRule = JamCarrierMarks::StopRuleFromEnv();
+			const FShare W = Share(*C, L, 200, *Level, T);
+			const int32 Invited = W.N - W.Ends[FJamCarryDrill::Setup];
+			AddInfo(FString::Printf(TEXT("LAW3T %s | %s | late hand + %d frames, only while lit: invited %d of %d, past %d of those (%.1f %%)"), *Level, *Tune, React, Invited, W.N, W.Ends[FJamCarryDrill::Past], Invited > 0 ? 100.0 * W.Ends[FJamCarryDrill::Past] / Invited : 0.0));
 		}
 	}
 	return true;

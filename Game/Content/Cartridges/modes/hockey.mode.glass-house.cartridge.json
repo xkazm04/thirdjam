@@ -1,14 +1,14 @@
 {
   "schema": "tj.cartridge/1",
   "id": "hockey-mode-glass-house",
-  "title": "Glass House",
+  "title": "Glow Ice",
   "seed": 1,
   "theme": {
-    "name": "Glass House",
+    "name": "Glow Ice",
     "mood_words": [
-      "hard",
-      "strict",
-      "loud"
+      "dark",
+      "bright",
+      "fast"
     ],
     "palette": [
       {
@@ -146,7 +146,7 @@
     },
     "rules": {
       "mode": "first_to",
-      "score_to_win": 3,
+      "score_to_win": 4,
       "goal_pause_frames": 120,
       "offside": false,
       "penalties": true,
@@ -263,12 +263,21 @@
       "foul_grace_frames": 0
     },
     "meta": {
-      "pitch": "The only whistle left. Foul and sit 10 s.",
+      "pitch": "Dark ice drawn in light. Boost, but skate clean.",
       "facts": [
-        "no hits from behind",
-        "hit the carrier only",
-        "hits 1.7x harder"
+        "first to 4, whistles",
+        "speed boosts on ice",
+        "foul: sit 10 s"
       ]
-    }
+    },
+    "pickups": [
+      {
+        "kind": "speed",
+        "spawn_every_frames": 240,
+        "duration_frames": 300,
+        "magnitude": 1.4,
+        "max_on_ice": 2
+      }
+    ]
   }
 }

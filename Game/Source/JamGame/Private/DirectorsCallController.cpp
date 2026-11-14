@@ -19,7 +19,7 @@ DEFINE_LOG_CATEGORY(LogJamDirectorsCall);
 
 // QA: jam.pausemenu open|close|call|apply <key> <value>|restart|quit (R-0003 4: name grepped across Game/Source first).
 static FAutoConsoleCommandWithWorldAndArgs CmdJamPauseMenu(TEXT("jam.pausemenu"),
-	TEXT("Pause menu QA: jam.pausemenu open | close | call|rule | controls | apply <key> <value> | restart | quit"),
+	TEXT("Pause menu QA: jam.pausemenu open | close | call|rule | controls | leave | no | yes | apply <key> <value> | restart | quit"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		UJamDirectorsCallController* C = World ? World->GetSubsystem<UJamDirectorsCallController>() : nullptr;
@@ -29,6 +29,8 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamPauseMenu(TEXT("jam.pausemenu")
 		else if (A == TEXT("close")) C->Resume();
 		else if (A == TEXT("call") || A == TEXT("rule")) { C->Pause(); if (C->GetMenu()) C->GetMenu()->ShowCall(); }   // lane A195: "rule", the item's name now (CHANGE A RULE)
 		else if (A == TEXT("controls")) { C->Pause(); if (C->GetMenu()) C->GetMenu()->ShowControls(); }   // lane A195: the pause card's CONTROLS
+		else if (A == TEXT("leave")) { C->Pause(); if (C->GetMenu()) C->GetMenu()->ShowLeaveConfirm(); }   // lane A195 (F6): QUIT TO MENU's question
+		else if (A == TEXT("no") || A == TEXT("yes")) { if (C->GetMenu() && C->GetMenu()->IsOnLeaveConfirm()) C->GetMenu()->AnswerLeave(A == TEXT("yes")); }
 		else if (A == TEXT("apply") && Args.Num() > 2) { C->Pause(); if (C->GetMenu()) { C->GetMenu()->ShowCall(); C->GetMenu()->ApplyValue(FName(*Args[1]), FCString::Atod(*Args[2])); } }
 		else if (A == TEXT("restart")) C->RestartMatch();
 		else if (A == TEXT("quit")) C->QuitToMenu();

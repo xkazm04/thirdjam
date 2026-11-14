@@ -24,6 +24,8 @@
 #include "Misc/Parse.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Framework/Application/IInputProcessor.h"   // lane A203 (item 3)
+#include "Framework/Application/SlateApplication.h"
 
 using namespace JamMenuStyle;
 using S = FJamUiStyle;
@@ -255,6 +257,7 @@ void UJamSettingsWidget::BuildTree()
 	KeyBox->WidgetStyle.SetForegroundColor(L::Text());
 	KeyBox->WidgetStyle.SetFocusedForegroundColor(L::Text());
 	KeyBox->OnTextCommitted.AddDynamic(this, &UJamSettingsWidget::OnKeyCommitted);
+	KeyBox->SetClearKeyboardFocusOnCommit(false);   // lane A195 (FAULT 7): Slate cleared the focus on commit and nothing had it after; OnKeyCommitted hands it on
 	AddH(KeyRow, KeyBox, FMargin(0, 0, L::Gap, 0), true);
 	ClearKeyButton = Item(TEXT("CLEAR"), Tmp);
 	ClearKeyText = Tmp;
@@ -389,12 +392,27 @@ void UJamSettingsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 
 void UJamSettingsWidget::OnKeyCommitted(const FText& InText, ETextCommit::Type Commit)
 {
-	if (Commit != ETextCommit::OnEnter) return;
-	const FString Key = InText.ToString().TrimStartAndEnd();
-	if (Key.IsEmpty()) return;
-	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetApiKey(Key);
+	// Lane A195 (FAULT 7, the hardening lane): every way out of the box gives the focus to a place a pad and a keyboard can leave (Enter, empty or not;
+	// Esc, which Slate reports as a cleared commit). A focus moved by the mouse or the pad stays where it went.
+	if (Commit == ETextCommit::OnUserMovedFocus || Commit == ETextCommit::Default) return;
+	if (Commit == ETextCommit::OnEnter)
+	{
+		const FString Key = InText.ToString().TrimStartAndEnd();
+		if (!Key.IsEmpty())
+		{
+			if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetApiKey(Key);
+		}
+	}
 	KeyBox->SetText(FText::GetEmpty());   // never shown back
 	RefreshLabels();
+	if (UWidget* W = FocusAfterKeyBox()) W->SetFocus();
+}
+
+UWidget* UJamSettingsWidget::FocusAfterKeyBox() const
+{
+	// The key row's own button when it takes the focus (CLEAR, with a key set), else the button over the box (LOOK).
+	if (ClearKeyButton && ClearKeyButton->GetIsEnabled()) return ClearKeyButton;
+	return TierButton;
 }
 
 void UJamSettingsWidget::OnClearKey()
@@ -616,6 +634,62 @@ TArray<UWidget*> UJamControlsWidget::GetFocusables() const
 	return Out;
 }
 
+// Lane A203 (item 3): while a cell listens, every mouse press on the screen is offered to it before any widget sees it (inside the panel or
+// 200 px outside it alike), so a press beside the panel binds and never clicks the menu behind; its release is swallowed too. Not listening: the
+// events pass untouched.
+class FJamListenCapture : public IInputProcessor
+{
+public:
+	explicit FJamListenCapture(UJamControlsWidget* InOwner) : Owner(InOwner) {}
+	virtual void Tick(const float, FSlateApplication&, TSharedRef<ICursor>) override {}
+	virtual bool HandleMouseButtonDownEvent(FSlateApplication&, const FPointerEvent& E) override { return Take(E.GetEffectingButton()); }
+	virtual bool HandleMouseButtonDoubleClickEvent(FSlateApplication&, const FPointerEvent& E) override { return Take(E.GetEffectingButton()); }
+	virtual bool HandleMouseButtonUpEvent(FSlateApplication&, const FPointerEvent& E) override
+	{
+		UJamControlsWidget* W = Owner.Get();
+		if (!W || !W->SwallowUp.IsValid() || E.GetEffectingButton() != W->SwallowUp) return false;
+		W->SwallowUp = EKeys::Invalid;
+		return true;
+	}
+	virtual bool HandleMouseWheelOrGestureEvent(FSlateApplication&, const FPointerEvent& E, const FPointerEvent* Gesture) override
+	{
+		UJamControlsWidget* W = Owner.Get();
+		if (Gesture || !W || !W->IsListening() || E.GetWheelDelta() == 0.f) return false;
+		W->HandleListenedKey(E.GetWheelDelta() > 0.f ? EKeys::MouseScrollUp : EKeys::MouseScrollDown);
+		return true;
+	}
+	virtual const TCHAR* GetDebugName() const override { return TEXT("JamListenCapture"); }
+private:
+	bool Take(const FKey& Button)
+	{
+		UJamControlsWidget* W = Owner.Get();
+		if (!W || !W->IsListening()) return false;
+		W->SwallowUp = Button;
+		W->TakeListenPress(Button, false);
+		return true;
+	}
+	TWeakObjectPtr<UJamControlsWidget> Owner;
+};
+
+void UJamControlsWidget::StopListenCapture()
+{
+	if (ListenCapture.IsValid() && FSlateApplication::IsInitialized()) FSlateApplication::Get().UnregisterInputPreProcessor(ListenCapture);
+	ListenCapture.Reset();
+	SwallowUp = EKeys::Invalid;
+}
+
+void UJamControlsWidget::ReleaseSlateResources(bool bReleaseChildren)
+{
+	StopListenCapture();   // lane A203
+	Super::ReleaseSlateResources(bReleaseChildren);
+}
+
+void UJamControlsWidget::BeginDestroy()
+{
+	StopListenCapture();   // lane A203
+	Super::BeginDestroy();
+}
+
 void UJamControlsWidget::BeginListen(EJamVerb Verb, bool bPad)
 {
 	if (Verb >= EJamVerb::Count || (bPad && IsSkate(Verb))) return;
@@ -627,6 +701,12 @@ void UJamControlsWidget::BeginListen(EJamVerb Verb, bool bPad)
 	if (bResetArmed) { bResetArmed = false; if (ResetText) ResetText->SetText(FText::FromString(TEXT("RESET TO DEFAULTS"))); }
 	StatusLine = FString::Printf(TEXT("%s: press the new %s (Esc cancels)"), *RowLabel(Verb), bPad ? TEXT("pad button") : TEXT("key or mouse button"));
 	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Visible);
+	// Lane A203 (item 3): the whole screen listens, not the panel (registered once; it passes everything through while no cell listens).
+	if (!ListenCapture.IsValid() && FSlateApplication::IsInitialized())
+	{
+		ListenCapture = MakeShared<FJamListenCapture>(this);
+		FSlateApplication::Get().RegisterInputPreProcessor(ListenCapture, 0);
+	}
 	SetKeyboardFocus();
 	RefreshCells();
 }

@@ -1823,6 +1823,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Stick.PokeAssistDeg = 0.0; C->Game.Stick.MissRecoveryFrames = 0;   // lane A152 (track F2): and before the poke that reaches and the miss's recovery
 		C->Game.Contact.bCrossHold = false; C->Game.Contact.CheckWindupFrames = 0; C->Game.Contact.CrossWindupFrames = 0;   // lane A184: and before the held cross-check and the wind-ups
 		C->Game.Contact.BotCheckWindupFrames = C->Game.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own
+		C->Game.Skater.bChargeDiesOnLoss = false;   // lane A203 (track K1): and before the charge that dies with the puck
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;

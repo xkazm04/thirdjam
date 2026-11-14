@@ -225,6 +225,27 @@ namespace JamAI
 		// braking (FJamAISkater::bBraking): against a stop the lead overshoots and its presses are whiffs or late hits (law 3's late-stop lines). Off = evolution
 		// 10's lead on every carrier. Tune key hk_windup_brake.
 		bool bWindupLeadNoBrake = false;
+		// Lane A202 (track Q2, evolution 8; docs/experiments/BRAIN-8.md): the bots do nothing a watcher calls broken. Each rule at its neutral value is
+		// evolution 7, bit for bit (brain8=0; every rule ships off: ShipEvolution8). Each is one function in JamAICore.cpp with one call line in Think.
+		// DownedLeaveFrames: a bot without the puck that has stood inside 1.2 m of a skater lying on the ice for this many frames leaves him: its move goes
+		// out from his body (half its own move across that line kept) until it is 2 m from him (LeaveDowned). 0 = it stays (and pushes him along).
+		int DownedLeaveFrames = 0;
+		// LongPassM: a bot carrier about to shoot from further than this from the net while a team-mate stands open 5 m nearer the net (no standing
+		// opponent within 3 m of him) does not shoot: it passes when the sim's pass goes to such a mate, else it carries on (LongShotToPass). 0 = it
+		// shoots from wherever its skill's reach lets it.
+		double LongPassM = 0.0;
+		// bOwnZoneTurn: a bot carrier in its own zone whose move leads back towards its own net while the ice up the rink is open (no standing opponent
+		// within 8 m ahead of it) turns its move up the ice (OwnZoneTurn). Off = it skates back with the puck.
+		bool bOwnZoneTurn = false;
+		// ClumpFrames: a bot without the puck that has stood inside 1.5 m of a team-mate for this many frames gives way (the carrier, the human and the
+		// lower index keep their line): its move takes a push away from him until 3 m apart (SplitClump). 0 = the plain Separate only.
+		int ClumpFrames = 0;
+		// Lane A202 (item 4: evolution 7's open findings; off, for after the freeze; not part of brain8). bTrueLead: the plain lead to a moving puck
+		// (Attack: D / 8 m/s, Godot's speed, and the intercept's fallback) reads the chaser's free top speed (FreeSpeed x SpeedScale). Off = 8 m/s.
+		bool bTrueLead = false;
+		// bMateTrueScale: the yield's arrival race (YieldArriveS >= 0 only) plans the human's mate at MateSpeedScale when it is set, the scale it skates
+		// at (lane A112), not SpeedScale. Off = SpeedScale (all_star: the mate thinks it is 45 % faster than it is).
+		bool bMateTrueScale = false;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -310,6 +331,35 @@ namespace JamAI
 	{
 		H.bTrueSpeed = bOn && kEvo7TrueSpeed;
 		H.bTrueGap = bOn && kEvo7TrueGap;
+	}
+	// Lane A202 (evolution 8, BRAIN-8.md): the rules of evolution 8 on (the measured values) or off (evolution 7). ShipEvolution8 is what the profile
+	// plays on both sides: each rule its own ship flag (the Director, 14 Nov 16:52: all four on; brain8=0 is evolution 7, the old game to the hash).
+	constexpr int kEvo8DownedLeaveFrames = 6;   // measured (BRAIN-8.md): 15 frames is too late (the reaction delay and the push out add 10 to 15)
+	constexpr double kEvo8AvoidDownedM = 1.3;  // the downed fix also steers round him (evolution 5's SteerRoundDowned, BRAIN-5.md's values)
+	constexpr double kEvo8AvoidDownedOut = 0.7;
+	constexpr double kEvo8LongPassM = 30.0;
+	constexpr bool kEvo8OwnZoneTurn = true;
+	constexpr int kEvo8ClumpFrames = 45;
+	constexpr bool kEvo8ShipDownedLeave = true;
+	constexpr bool kEvo8ShipLongPass = true;
+	constexpr bool kEvo8ShipOwnZoneTurn = true;
+	constexpr bool kEvo8ShipClump = true;
+	inline void SetEvolution8(FJamHockeySense& H, bool bOn)
+	{
+		H.DownedLeaveFrames = bOn ? kEvo8DownedLeaveFrames : 0;
+		H.AvoidDownedM = bOn ? kEvo8AvoidDownedM : kEvo5AvoidDownedM;
+		H.AvoidDownedOut = bOn ? kEvo8AvoidDownedOut : kEvo5AvoidDownedOut;
+		H.LongPassM = bOn ? kEvo8LongPassM : 0.0;
+		H.bOwnZoneTurn = bOn && kEvo8OwnZoneTurn;
+		H.ClumpFrames = bOn ? kEvo8ClumpFrames : 0;
+	}
+	inline void ShipEvolution8(FJamHockeySense& H)
+	{
+		SetEvolution8(H, false);
+		if (kEvo8ShipDownedLeave) { H.DownedLeaveFrames = kEvo8DownedLeaveFrames; H.AvoidDownedM = kEvo8AvoidDownedM; H.AvoidDownedOut = kEvo8AvoidDownedOut; }
+		if (kEvo8ShipLongPass) { H.LongPassM = kEvo8LongPassM; }
+		if (kEvo8ShipOwnZoneTurn) { H.bOwnZoneTurn = kEvo8OwnZoneTurn; }
+		if (kEvo8ShipClump) { H.ClumpFrames = kEvo8ClumpFrames; }
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -425,7 +475,7 @@ namespace JamAI
 		// Lane A133 (CURVE-7.md): the pro carrier carries through the forecheck as all_star's does: it moves the puck under pressure only when the first
 		// opponent arrives inside 0.3 s (1.4) and passes only to a mate 12 m nearer the net (3). The regular player 74.0 -> 51.0 (600; hunt 8); law 3's drill
 		// does not see it (100 % at 8 m). The human's mates keep ProHockeySense's 1.4 / 3 (ApplyDifficultyProfile).
-		K.Hk.PressureSec = 0.3;
+		K.Hk.PressureSec = 0.6;   // lane A189 (CURVE-12.md): 0.3 -> 0.6 with the bots' wind-ups 8 / 12 and evolution 8 (the regular player 41.7 -> 47.2, 600; drill-neutral)
 		K.Hk.BetterByM = 12.0;
 		K.SprintShare = 0.35;   // lane A95 (R-0045 law 4): a pro bot sprints in a third of its chases (rookie 0.1, all_star 0.7)
 		K.LiftCooldownFrames = 90;   // lane A95 (B-to-A-0037 point 3): a pro bot lifts at most every 1.5 s
@@ -771,6 +821,20 @@ namespace JamAI
 		int PuckHistCount = 0;
 		void RecordPuck(const FJamAIWorld& W);
 		FVec2 PuckSeen(const FJamAIWorld& W, int Id) const;
+		// Lane A202 (evolution 8): the rules' own functions (one call line each in Think; public for the staged tests) and their per-bot runs
+		// (frame-continuous; brain state only).
+	public:
+		FVec2 LeaveDowned(const FJamAIWorld& W, int Id, const FVec2& Dir);
+		FVec2 OwnZoneTurn(const FJamAIWorld& W, int Id, const FVec2& Dir) const;
+		FVec2 SplitClump(const FJamAIWorld& W, int Id, const FVec2& Dir);
+		void LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const;
+	private:
+		int DownNear[kMaxSkaters] = {};
+		int64_t DownNearFrame[kMaxSkaters] = {};
+		bool bDownLeaving[kMaxSkaters] = {};
+		int ClumpRun[kMaxSkaters] = {};
+		int64_t ClumpFrame[kMaxSkaters] = {};
+		bool bClumpSplit[kMaxSkaters] = {};
 
 		// lane A3: reaction delay ring (input of the last kMaxReactionFrames + 1 thinks per skater)
 		FJamAIInput Hist[kMaxSkaters][kMaxReactionFrames + 1] = {};

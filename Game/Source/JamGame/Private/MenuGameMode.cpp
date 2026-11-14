@@ -10,7 +10,7 @@
 // press; back = Esc / B; jam.menuscreen choose <cut name> picks a cut;
 // jam.menuscreen say <sentence...> directs one; jam.menuscreen play presses PLAY NOW (lane A144). (R-0003 4: names grepped across Game/Source first.)
 static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen"),
-	TEXT("Menu QA: jam.menuscreen landing|main|season|modes|cuts|rinks|direct|make|settings|credits|controls | start | back | play | continue | walk | where | click <rookie|pro|all_star|play|start|modes|season|continue|make|rinks|back|settingslevel> | level <rookie|pro|all_star|left|right> | key <left|right|up|down|arrowleft|arrowright|enter|a|b|esc> | choose <cut> | say <sentence>"),
+	TEXT("Menu QA: jam.menuscreen landing|main|season|modes|cuts|rinks|direct|make|settings|credits|controls | start | back | play | continue | walk | where | click <rookie|pro|all_star|play|start|modes|season|continue|make|rinks|back|settingslevel|quit|no|yes|friend> | level <rookie|pro|all_star|left|right> | key <left|right|up|down|arrowleft|arrowright|enter|a|b|esc> | choose <cut> | say <sentence>"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		AJamMenuGameMode* GM = World ? Cast<AJamMenuGameMode>(World->GetAuthGameMode()) : nullptr;
@@ -22,6 +22,7 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen
 		else if (A == TEXT("start")) Menu->PressStart();   // the landing's press: MAIN, PLAY NOW focused
 		else if (A == TEXT("back")) Menu->GoBack();
 		else if (A == TEXT("play")) Menu->PlayNow();   // PLAY NOW from any screen
+		else if (A == TEXT("quit")) Menu->OpenQuitConfirm();   // lane A195 (F6): QUIT's question (answer: click no | yes)
 		else if (A == TEXT("continue")) Menu->PlaySeason();   // lane A195: SEASON's CONTINUE from any screen (the between-takes card's stills)
 		else if (A == TEXT("walk")) Menu->StartPadWalk();   // lane A144: the pad walk (JAMMENU walk lines)
 		else if (A == TEXT("where")) Menu->PrintPlacesForQa();

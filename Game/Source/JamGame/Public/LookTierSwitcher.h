@@ -46,6 +46,10 @@ public:
 	// Rig map for a tier ("/JamAssets/Rigs/LR_L2_Night.LR_L2_Night" for "l2_night"); empty for an unknown tier.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	static FString GetRigMapPath(const FString& Tier);
+	// Lane A197: the map SetTier streams for a tier: GetRigMapPath, except l3_neon, which takes device B's /JamAssets/Rigs/LR_N1_Neon when that package
+	// exists (`jam.neon.rig` 1, default) and falls back to LR_L3_Neon.
+	UFUNCTION(BlueprintPure, Category = "Jam|Look")
+	static FString ResolveRigMapPath(const FString& Tier);
 
 	// The uniform scale a rig is streamed at for a rink length: length / 90, clamped to 0.25..4.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")

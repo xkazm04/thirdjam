@@ -15,6 +15,8 @@
 #                       PASS = the play checks (no connection lost, hashes equal). With -QuitBoth (a cut of 3 s or more, -HostRcPort too): PASS = both
 #                       cards say the connection was lost within 3.5 s of the cut, then QUIT on each pause card takes each machine back to the menu.
 #   -GuestQuitOnResult (with -GuestRcPort, -ToEnd)   on the result card the GUEST presses QUIT on its pause card: PASS = the host's card says the guest left.
+#   -AskThenHostLeaves (with -HostRcPort, -ToEnd)   on the result card only the GUEST asks for the rematch (jam.net.ProofRematch on the guest); 3 s later the
+#                       HOST presses QUIT on its pause card: PASS = the guest's screen said 'rematch asked' and then its card says the host left.
 #   -GuestQuitInLoad (with -GuestRcPort and -Cvars jam.net.TestRinkDelayMs=8000)   the guest's game quits while its rink is still to load:
 #                       PASS = the host's card says the guest left within 1 s of the guest's quit.
 # Everything else as twoproc.ps1; loopback only when -HostPort/-GuestPort are given (jam.net.Loopback=1).
@@ -69,6 +71,7 @@ param(
     [switch]$QuitBoth,
     [switch]$GuestQuitInLoad,
     [switch]$GuestQuitOnResult,
+    [switch]$AskThenHostLeaves,
     [int]$LateDelaySec = 20,
     [int]$TestVersion = 7,
     [int]$LeaveAt = 1200,
@@ -103,6 +106,7 @@ $hostDp = "$dp,jam.net.QuitAtFrame=$quit"
 $guestDp = "$dp,jam.net.QuitAtFrame=$quit"
 if ($Mode -eq 'hostleaves') { $hostDp = "$dp,jam.net.QuitAtFrame=$LeaveAt"; $guestDp = "$dp,jam.net.QuitAtFrame=$([math]::Max($quit, $LeaveAt * 10))" }
 if ($Mode -eq 'guestleaves') { $guestDp = "$dp,jam.net.QuitAtFrame=$LeaveAt"; $hostDp = "$dp,jam.net.QuitAtFrame=$([math]::Max($quit, $LeaveAt * 10))" }
+if ($AskThenHostLeaves) { $hostDp = "$dp,jam.net.QuitAtFrame=0"; $guestDp = "$dp,jam.net.QuitAtFrame=0,jam.net.ProofRematch=1,jam.net.ProofRematchAskFrames=60" }
 if ($QuitBoth -or $GuestQuitOnResult) { $hostDp = "$dp,jam.net.QuitAtFrame=0"; $guestDp = "$dp,jam.net.QuitAtFrame=0" }   # lane A204: the cards stay up for the QUIT presses; the script stops its two pids after
 if ($LiveCutAt -gt 0) { $guestDp = "$guestDp,jam.net.TestLiveCutAt=$LiveCutAt" }
 if ($Mode -eq 'refuse') { $guestDp = "$guestDp,jam.net.TestVersion=$TestVersion" }
@@ -158,7 +162,7 @@ function Rc([int]$port, [string]$cmd) {
         $c.Close(); return ($ans -and $ans.Contains('"ok":true'))
     } catch { return $false }
 }
-$pauseFirst = $null; $pausedAt = $null; $resumedAt = $null; $hPausedAt = $null; $hResumedAt = $null; $cardQuitAt = $null; $cutAtS = $null; $resultQuitAt = $null; $quitBothAt = $null; $loadQuitAt = $null
+$pauseFirst = $null; $pausedAt = $null; $resumedAt = $null; $hPausedAt = $null; $hResumedAt = $null; $cardQuitAt = $null; $cutAtS = $null; $askLeaveAt = $null; $resultQuitAt = $null; $quitBothAt = $null; $loadQuitAt = $null
 $g = Start-Process -FilePath $Exe -ArgumentList $guestArgs -PassThru
 $late = $null
 $lateLog = Join-Path $OutDir 'late.log'
@@ -206,6 +210,11 @@ while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
         Write-Host ("INFO twoproc5: the guest pressed QUIT on its pause card on the result card at {0:N1}s ({1}/{2})" -f $resultQuitAt, $a1, $a2)
     }
     if ($resultQuitAt -and $sw.Elapsed.TotalSeconds -ge $resultQuitAt + 8) { break }
+    if ($AskThenHostLeaves -and $HostRcPort -gt 0 -and -not $askLeaveAt -and (Test-Path $guestLog) -and (Select-String -Path $guestLog -Pattern 'JAMNET rematch asked by seat' -Quiet)) {
+        Start-Sleep -Seconds 3; $a1 = Rc $HostRcPort 'jam.pausemenu open'; $a2 = Rc $HostRcPort 'jam.pausemenu quit'; $askLeaveAt = $sw.Elapsed.TotalSeconds
+        Write-Host ("INFO twoproc5: the guest asked for the rematch; the host pressed QUIT at {0:N1}s ({1}/{2})" -f $askLeaveAt, $a1, $a2)
+    }
+    if ($askLeaveAt -and $sw.Elapsed.TotalSeconds -ge $askLeaveAt + 8) { break }
     if ($Mode -eq 'guestleaves' -and $g.HasExited -and (Test-Path $hostLog) -and (Select-String -Path $hostLog -Pattern 'JAMNET card:' -Quiet)) { Start-Sleep -Seconds 3; break }
     if ($Mode -eq 'latejoin' -and -not $late -and $sw.Elapsed.TotalSeconds -ge $LateDelaySec) {
         $lateDp = "$dp,jam.net.QuitAtFrame=$quit"; if ($LatePort -gt 0) { $lateDp = "$lateDp,jam.net.Port=$LatePort" }
@@ -351,6 +360,10 @@ if ($CutAt -gt 0 -and $QuitBoth) {
 if ($GuestQuitOnResult) {
     $over = Last-Match $hostLog 'JAMNET card: (WIN|LOSE)'; $left = Last-Match $hostLog 'JAMNET card: .* left'; $gl = Last-Match $guestLog 'JAMNET leaving the rink'
     if (-not $over -or -not $left -or -not $gl) { Write-Host "FAIL QUIT on the result card: host result '$over', host left card '$left', guest '$gl'"; $fail = $true } else { Write-Host "PASS QUIT on the result card: host '$over' then '$left'; guest '$gl'" }
+}
+if ($AskThenHostLeaves) {
+    $ask = Last-Match $guestLog 'JAMNET screen: rematch asked'; $left = Last-Match $guestLog 'JAMNET card: .* left'; $still = Last-Match $guestLog 'JAMNET end card still'; $hl = Last-Match $hostLog 'JAMNET leaving the rink'
+    if (-not $ask -or -not $left -or -not $hl) { Write-Host "FAIL ask then leave: guest ask '$ask', guest card '$left', host '$hl'"; $fail = $true } else { Write-Host "PASS ask then leave: guest '$ask' then '$left'; host '$hl'; $still" }
 }
 if ($GuestQuitInLoad) {
     $cardLine = Last-Match $hostLog 'JAMNET card:'; $cardStamp = Stamp $hostLog 'JAMNET card:'; $byeLine = Last-Match $guestLog 'BYE sent'; $byeStamp = Stamp $guestLog 'BYE sent'

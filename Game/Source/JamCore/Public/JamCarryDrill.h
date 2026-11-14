@@ -72,6 +72,10 @@ struct FJamCarryDrill
 	// (JamCarrierMarks::StopMark, the rule the screen draws), wherever the defender then is, instead of at BrakeAtM; -1 = at BrakeAtM (every script before).
 	int32 LightReactFrames = -1;
 	int32 LitAt = -1;           // the frame the line first lit (-1: not yet)
+	// Lane A201 (evolution 12, the late hand): true = the hand presses only if the line is still lit on the frame it presses; a press the line no longer
+	// invites is not made and the carry ends Setup at once ("not invited": the share counts the stops begun while it was lit). LightRule = the line's rule.
+	bool bOnlyWhileLit = false;
+	JamCarrierMarks::FStopRule LightRule;
 	double LightGapM = -1.0;    // the gap at which the stop on the light began
 
 	// The scene and the run.
@@ -161,7 +165,9 @@ struct FJamCarryDrill
 		if (Script == 0) return TEXT("STRAIGHT AT HIM: THIS IS WHAT DOES NOT WORK");
 		if (Script == 3) return FString::Printf(TEXT("%s STICK LENGTHS AWAY: CUT AND SPIN, YOUR BACK TO HIS STICK"), N);
 		if (Script == 4) return FString::Printf(TEXT("%s STICK LENGTHS AWAY: CUT AND DEKE TO THE FAR SIDE"), N);
-		return FString::Printf(TEXT("STOP WHEN HE IS %s STICK LENGTHS AWAY. CUT. GO. STILL ON YOUR SHOULDER? CUT BACK"), N);
+		// Lane A201 (evolution 12): the line now lights where the stop pays; the caption says to read it. One line at 1280.
+		(void)N;
+		return FString(TEXT("LINE LIT: STOP. CUT. GO."));   // the box holds about 30 characters on a line at 1280 (34 wrapped: still a201-e12-clay)
 	}
 
 	bool IsLive() const { return End == Running && Me >= 0 && Def >= 0; }
@@ -183,8 +189,12 @@ struct FJamCarryDrill
 			bool bBegin = Phase == 0 && LightReactFrames < 0 && Gap <= LiveBrakeAtM;
 			if (Phase == 0 && LightReactFrames >= 0)   // lane A201: on the light, after the hand's lag
 			{
-				if (LitAt < 0 && JamCarrierMarks::StopMark(Sim, Me).bLit) LitAt = Frames;
-				if (LitAt >= 0 && Frames - LitAt >= LightReactFrames) { bBegin = true; LightGapM = Gap; }
+				if (LitAt < 0 && JamCarrierMarks::StopMark(Sim, Me, LightRule).bLit) LitAt = Frames;
+				if (LitAt >= 0 && Frames - LitAt >= LightReactFrames)
+				{
+					if (bOnlyWhileLit && !JamCarrierMarks::StopMark(Sim, Me, LightRule).bLit) { End = Setup; return In; }   // lane A201: not invited
+					bBegin = true; LightGapM = Gap;
+				}
 			}
 			if (bBegin) { Phase = bBrake ? 1 : 2; PhaseFrames = 0; Side = D.Pos.Y - S.Pos.Y >= 0.0 ? -1.0 : 1.0; }
 			if (Phase == 1 && (S.Vel.Size() <= GoBelowMps || PhaseFrames >= 45))

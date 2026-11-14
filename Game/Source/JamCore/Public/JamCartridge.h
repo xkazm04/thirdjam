@@ -68,6 +68,9 @@ struct JAMCORE_API FJamSkaterConfig
 	// game.skater.free_speed_mult (lane A185, track F2 evolution 9, R-0064 point 2): a skater without the puck has this much more top speed and thrust, in a
 	// glide and in a sprint, bots and the human alike; the carrier is untouched (so it is slower against everyone by that much). 1 = the neutral value.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FreeSpeedMult = 1.15;
+	// game.skater.charge_dies_on_loss (lane A203, track K1 evolution 4; the Director's ruling on A199's ASK): a skater who stops being the carrier loses his held
+	// shot's and pass's charges, and a held button charges nothing until pressed again (UJamSim::ClearChargeOnLoss). Absent = true; false = the neutral value (the game before).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bChargeDiesOnLoss = true;   // the Director, 17:01: ships on (JamBaseline::MakeNeutral sets false)
 	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.3;   // lane A194 (track F2 evolution 10): 0.2 -> 0.3 (0.92 x 1.3 = 1.196 > a free skater's 1.15); 0.2 = the neutral value

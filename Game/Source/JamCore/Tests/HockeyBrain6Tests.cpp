@@ -286,7 +286,8 @@ bool FJamHockey6Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off = Match("brain6=0;brain7=1"), On = Match("opp.hk_fresh_take_frames=15");
+	const FString A1 = Match("brain8=0"), A2 = Match("brain8=0"), Off = Match("brain6=0;brain7=1;brain8=0"),   // lane A202: evolution 8 ships on: the pair is read with it off
+		 On = Match("opp.hk_fresh_take_frames=15");
 	AddInfo(FString::Printf(TEXT("hockey.regular at pro, the regular player, seed 1: as shipped %s; with brain6=0 %s; with opp.hk_fresh_take_frames=15 %s"), *A1, *Off, *On));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
 	if (kEvo6FreshTakeFrames == 0)

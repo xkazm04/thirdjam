@@ -1065,6 +1065,7 @@ namespace
 		ReadInteger(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
 		ReadNumber(Sk, TEXT("carry_speed_mult"), C.Skater.CarrySpeedMult);   // lane A82 (R-0041 point 6)
 		ReadNumber(Sk, TEXT("free_speed_mult"), C.Skater.FreeSpeedMult);   // lane A185 (track F2 evolution 9, R-0064 point 2)
+		ReadBool(Sk, TEXT("charge_dies_on_loss"), C.Skater.bChargeDiesOnLoss);   // lane A203 (track K1 evolution 4): false = the neutral value
 		ReadNumber(Sk, TEXT("reverse_brake_decel"), C.Skater.ReverseBrakeDecel);   // lane A93 (R-0045 law 3)
 		// Lane A93 (R-0045 law 3): game.skater.burst { frames, accel_mult }
 		if (const FJPtr Bu = Obj(Sk, TEXT("burst")))

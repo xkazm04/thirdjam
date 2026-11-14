@@ -75,6 +75,7 @@ struct JAMGAME_API FJamBindings
 	// gets V's old first key in its place when it fits (a swap), else gives Key up; OutSwapped names that verb (EJamVerb::Count = no swap). The partner
 	// of a shared pair keeps the old key (the pair splits); nothing else moves (lane A199). False: a reserved key, no change, or a verb would be left
 	// with no key and no pad button (the table is unchanged).
+	// Lane A203: also false when the move would leave another verb with no key (a key move) or no pad button (a pad move) where it had one.
 	bool Rebind(EJamVerb V, const FKey& Key, EJamVerb* OutSwapped = nullptr);
 	// No key on two verbs that may not share it. OutWhy names the first clash.
 	bool IsValid(FString* OutWhy = nullptr) const;

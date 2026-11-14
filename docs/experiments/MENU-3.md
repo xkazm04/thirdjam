@@ -89,3 +89,66 @@ against the real assets when they are on main (KIT READY).
 - `Game/Source/JamGame/Private/Progression.cpp` lines 452-454 (`EndHint`): a fixed "R" in the season's key lines; the end card now shows the bound
   key in its place (`UJamHudWidget::EndCardHints`), the text itself is still fixed.
 - The off-screen GPU fault of section 6 (`ComputeSingleAverageBrightnessFromCubemap`), three lanes so far.
+
+# Evolution 7 (the Director's list of 16:05)
+
+## 10. PLAY WITH A FRIEND in the table (`Game/Source/JamNet/Private/LobbyWidget.cpp`)
+Edited functions (look and words only; every row, every button and every OnClicked binding is the one it was; lane A204 owns what they do):
+`ULobbyWidget::MakeButton` (the item look: `FJamMenuLook::MakeItem`, painted by an `FJamMenuPainter`), `ULobbyWidget::BuildTree` (the style table's
+panel with the team rule, the title in the menu's face, white and dim type, the code box as the settings' key box, the two names on the team fills;
+"pick the rink", "the rink's own level"), `ULobbyWidget::NativeTick` (three lines: the rink by its name ("REGULAR", not `hockey.regular`), the status's
+"cut: <id>" shown as "rink: <NAME>", the painter), `ULobbyCardWidget::RebuildWidget` (the joined match's end card on the panel, the display face).
+New: `ULobbyWidget::RinkFor`, `GetWordsForTest`, `GetPanelForTest`, `ColumnW`. Tests: `Jam.Menu.LobbyOneLook`, `Jam.Menu.LobbyFitsTheScreen`
+(`JamNet/Private/Tests/LobbyLookTests.cpp`; named beside the menu's: a test named under another's name hides that test in the automation tree).
+The lobby panel, every row shown, measures 812 x 656 of 1920 x 1080 units.
+
+## 11. The words left in play
+"RULE CHANGE: <text>" on the scoreboard (was "DIRECTOR'S CALL:"), "ESC / START   RULE CHANGE READY" (the pill) and "RULE CHANGE READY" (the HUD's
+line), the season's key lines with the bound restart key, the rejected-game toast ("GAME NOT LOADED ... Playing the regular rink"), the CONTROLS rows
+"the mode's trick" and "the pause card: resume, a rule change, controls", HOME's "no rink". The full list with the kept and the left lines is in
+`status/A195.md` (Evolution 7, item 2): four one-line strings in JamNet's subsystem and lobby game mode are left for lane A204, who edits those files today.
+
+## 12. The end card in the player's colour
+`UJamHudWidget::EndCardWordColour(bWin, HumanTeam)`: a win in the player's own team colour (team 0 the home blue, team 1 the away orange, read from the
+frame's human skater, so in a joined match each side sees its own), a loss or a level end in the neutral white.
+
+## 13. HOME's right half
+Under the description panel, a second panel from what the game holds: the season (Saved/Progress.json: takes won, the next take by name), the last
+match of this process (score, level, rink; the profile keeps no score, so a fresh start of the game shows the season only), and the lit level's line.
+A first run (no take played, no match yet) shows "YOUR STICK" and the two mouse buttons by possession from the live bindings.
+`UJamMenuWidget::ReturningText` (pure), `RefreshReturning`; the end card notes the match once (`UJamMenuFlow::NoteLastMatch`).
+
+## 14. The pause card's controls
+The five dense caption lines went; two lines in the body face: "WITH THE PUCK  LMB SHOOT  RMB PASS" and "WITHOUT IT  LMB CROSS-CHECK  RMB CHECK"
+(`UJamDirectorsCallWidget::PauseStickText`, from `UJamHudWidget::ButtonsBadgeLine`), and "EVERY KEY, AND TO REBIND IT: CONTROLS". The old table
+(`PauseControlsText`) stays for the HUD's and the controls lane's tests.
+
+## 15. QUIT asks once (the hardening lane's F6)
+HOME's QUIT opens "QUIT THE GAME?" (NO focused, YES, QUIT beside it; Esc / B and a screen change answer NO; a press that reaches the menu itself
+starts nothing behind the question). The pause card's QUIT TO MENU opens "LEAVE THE MATCH?" (NO, KEEP PLAYING focused; Esc / B is NO). Names:
+`jam.menuscreen quit`, `jam.menuscreen click quit | no | yes`; `jam.pausemenu leave | no | yes` (`jam.pausemenu quit` stays the tools' direct way).
+Held in `Jam.Menu.EveryScreenOneLook`.
+
+## 16. Device B's kit (KIT READY)
+Arrived 16:55 (dev-b 1da715c1). Every name of A-to-B-0028 is found (`Jam.Menu.KitFound`; four mode pictures carry B's dashed names: power-play,
+sudden-death, glass-house, fog-of-war, which `FJamMenuLook::KitFound` asks after the underscored one). The plates are drawn at half their pixels
+(B's note; `KitOr` did so from evolution 5). One switch per element, read when a widget is built:
+| element | switch | default | verdict from the stills |
+|---|---|---|---|
+| the barn behind the menu (`T_UI_MenuBackdrop`) | `jam.menu.KitBackdrop` | 1 | better: the arena under the scrim reads as a sports game's front end; the type stays legible on it |
+| plates (panel, buttons, segments, mode card, header bar) | `jam.menu.KitPlates` | 1 | better, slightly: the cut corner gives the items a shape; the see-through panel is fine over the scrim |
+| mode pictures (`Modes/T_UI_Mode_*`, 14) | `jam.menu.KitPictures` | 1 | better: MODES shows the game instead of colour bands |
+| display font (`Fonts/F_Hokej_Display`) | `jam.menu.KitFont` | 1 | as good: Bold is Roboto Bold Condensed: the widest mode fact went 845 -> 733 units; nothing clips (`FitsTheScreen` green) |
+| the frosted logo (`T_UI_Logo_Hokej`) | `jam.menu.KitLogo` | **0** | worse: in the header its pale frost has no contrast; on the landing it took 900 units and pushed PRESS ENTER under the footer. The menu's own HOKEJ type stays |
+
+## 17. No box keeps the focus nowhere (the hardening lane's FAULT 7)
+SETTINGS' key box cleared the keyboard focus on Enter (Slate's clear-focus-on-commit) and an empty key returned with nothing focused: Esc, B and the
+pad then reached nothing. Now every editable box of the front end keeps the focus on commit and hands it on: the key box to CLEAR (with a key) or
+LOOK, on Enter (empty or not) and Esc (`UJamSettingsWidget::OnKeyCommitted`, `FocusAfterKeyBox`); MAKE YOUR OWN's sentence box to ROLL (an empty
+Enter rolls nothing); the lobby's code box to JOIN (`ULobbyWidget::OnCodeCommitted`). Held in `Jam.Menu.EveryScreenOneLook`; off screen the D-pad's
+Up is blind, so the windowed walk (Up, Enter, Esc to HOME) is the hardening lane's to repeat.
+
+## 18. The lobby is no dead end for a pad (the hardening lane's FAULT 6)
+It opened with the focus on the viewport: pad keys and Esc reached nothing. Now it opens on HOST, keeps the focus on a button while it is up, and
+Esc or pad B take BACK's road to HOME with the focus back on PLAY WITH A FRIEND. Held in `Jam.Menu.LobbyFocus`; off screen: "JAMLOBBY open
+focus=HostButton", Down moves the focus, Esc and B go back.

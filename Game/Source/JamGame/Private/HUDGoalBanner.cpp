@@ -30,7 +30,7 @@
 // Lane A196 (track F3, evolution 9, item 3): device B's GOAL banner art (A-to-B-0027 points 3b and 6), /JamAssets/UI/T_UI_Banner_Goal, by name: when the
 // texture exists the plate draws it (B's art as drawn, a quarter of the scoring side's colour in the tint so the two sides still differ); else A's rounded
 // plate stays. Looked up once a process (quiet). One JAMHUD goal_banner_art line the first time.
-static void GoalBannerArtBrush(UBorder* Plate, const FLinearColor& Team)
+static bool GoalBannerArtBrush(UBorder* Plate, const FLinearColor& Team)
 {
 	static bool bLooked = false;
 	static TWeakObjectPtr<UTexture2D> Art;
@@ -40,14 +40,18 @@ static void GoalBannerArtBrush(UBorder* Plate, const FLinearColor& Team)
 		Art = LoadObject<UTexture2D>(nullptr, TEXT("/JamAssets/UI/T_UI_Banner_Goal.T_UI_Banner_Goal"), nullptr, LOAD_NoWarn | LOAD_Quiet);
 		UE_LOG(LogTemp, Log, TEXT("JAMHUD goal_banner_art=%s"), Art.IsValid() ? TEXT("T_UI_Banner_Goal") : TEXT("none (A's plate)"));
 	}
-	if (!Plate || !Art.IsValid()) return;
+	if (!Plate || !Art.IsValid()) return false;
 	FSlateBrush B;
 	B.SetResourceObject(Art.Get());
 	B.DrawAs = ESlateBrushDrawType::Image;
 	B.ImageSize = FVector2D(Art->GetSizeX(), Art->GetSizeY());
 	B.TintColor = FSlateColor(FMath::Lerp(FLinearColor::White, FLinearColor(Team.R, Team.G, Team.B, 1.f), 0.25f));
 	Plate->SetBrush(B);
+	return true;
 }
+
+// Lane A196: a goal is a number that grew (the pause after a foul's whistle is the same phase).
+static bool GoalBannerScoreGrew(int32 LastHome, int32 LastAway, int32 Home, int32 Away) { return Home > LastHome || Away > LastAway; }
 
 static TAutoConsoleVariable<int32> CVarJamHudGoalBanner(TEXT("jam.hud.GoalBanner"), 1,
 	TEXT("Lane A188: 1 (default) the GOAL banner across the middle band on a goal; 0 none (the screen of before)."), ECVF_Default);
@@ -178,6 +182,13 @@ void UJamHudWidget::UpdateGoalBanner(const FJamPresentationFrame& F)
 	}
 	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 	const int32 Pause = GM && GM->GetSim() ? GM->GetSim()->GetConfig().Rules.GoalPauseFrames : 120;
+	// Lane A196 (evolution 10, found in the strips): the sim's GoalPause also holds the play after a foul's whistle (the drills' checks on a man without
+	// the puck): GOAL 0:0 showed on three hits a match. A banner only when a side's number grew.
+	if (GoalBannerStart < 0 && !GoalBannerScoreGrew(GoalBannerLastHome, GoalBannerLastAway, F.ScoreHome, F.ScoreAway))
+	{
+		if (GoalBannerPlate->GetVisibility() != ESlateVisibility::Collapsed) GoalBannerPlate->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
 	if (GoalBannerStart < 0)
 	{
 		// The goal: who scored (the side whose number grew; home = the human's side), the band clear of the scorer, one line.
@@ -215,7 +226,10 @@ void UJamHudWidget::UpdateGoalBanner(const FJamPresentationFrame& F)
 		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(GoalBannerPlate->Slot)) CS->SetAnchors(FAnchors(0.5f, GoalBannerY));
 		const FLinearColor Team = F.GetTeamColour(ScoringTeamId);
 		GoalBannerPlate->SetBrush(FJamUiStyle::Rounded(FLinearColor(Team.R, Team.G, Team.B, 0.94f), 14.f, FJamUiStyle::Paper(), 4.f));
-		GoalBannerArtBrush(GoalBannerPlate, Team);   // lane A196 (R-0064 point 9): device B's banner art by name when it exists
+		// Lane A196 (R-0064 point 9): device B's banner art by name when it exists. B's art carries the word GOAL itself: A's word stays in the layout
+		// (the score keeps its place under it) but is not drawn over B's (the first still showed GOAL twice).
+		const bool bArt = GoalBannerArtBrush(GoalBannerPlate, Team);
+		GoalBannerWord->SetRenderOpacity(bArt ? 0.f : 1.f);
 		GoalBannerScoreText->SetText(FText::FromString(GoalBannerScore(F.ScoreHome, F.ScoreAway)));
 		UE_LOG(LogTemp, Log, TEXT("JAMHUD goal_banner frame=%lld side=%s team=%d score=%d:%d band_y=%.2f scorer=%d scorer_y=%.2f..%.2f pause=%d in=%d out_by=%d"),
 			F.SimFrame, GoalBannerTeam == 0 ? TEXT("home") : TEXT("away"), ScoringTeamId, F.ScoreHome, F.ScoreAway, GoalBannerY, Scorer, TopY, FootY, Pause,
@@ -268,6 +282,9 @@ bool FJamHudGoalBanner::RunTest(const FString&)
 	TestEqual(TEXT("an armed hip check waits for the hit"), UJamHudWidget::AbilityArmedWord(TEXT("hip_check")), FString(TEXT("NEXT HIT")));
 	TestEqual(TEXT("an armed slow puck waits for the pass"), UJamHudWidget::AbilityArmedWord(TEXT("slow_puck")), FString(TEXT("NEXT PASS")));
 	TestEqual(TEXT("the banner is on by default"), IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.GoalBanner"))->GetInt(), 1);
+	// Lane A196: no banner for a pause whose score did not grow (a foul's whistle).
+	TestFalse(TEXT("a foul's pause: no GOAL"), GoalBannerScoreGrew(0, 0, 0, 0));
+	TestTrue(TEXT("a goal: the banner"), GoalBannerScoreGrew(0, 1, 0, 2));
 	return true;
 }
 #endif

@@ -146,6 +146,7 @@ namespace JamAI
 		PressCarrier[0] = PressCarrier[1] = PressFirst[0] = PressFirst[1] = -1;
 		MeantBrakes = 0;
 		Carves = 0;
+		for (int i = 0; i < kMaxSkaters; ++i) { DownNear[i] = 0; DownNearFrame[i] = -10; bDownLeaving[i] = false; ClumpRun[i] = 0; ClumpFrame[i] = -10; bClumpSplit[i] = false; }   // lane A202
 	}
 
 	// Lane A51 (R-0034): one entry per frame: the puck's offset from the carrier's body (the carrier's index, -1 loose).
@@ -371,6 +372,9 @@ namespace JamAI
 				const FJamHockeySense& Hd = SkillOf(W, i).Hk;
 				if (Hd.AvoidDownedM > 0.0 && Dir.Length() > 0.05) { Dir = SteerRoundDowned(W, i, Dir, Hd.AvoidDownedM, Hd.AvoidDownedOut); }
 			}
+			if (SkillOf(W, i).Hk.DownedLeaveFrames > 0) { Dir = LeaveDowned(W, i, Dir); }   // lane A202 (evolution 8): a bot does not stand at a downed body
+			if (SkillOf(W, i).Hk.bOwnZoneTurn) { Dir = OwnZoneTurn(W, i, Dir); }   // lane A202: a carrier does not skate back into its own zone with open ice ahead
+			if (SkillOf(W, i).Hk.ClumpFrames > 0) { Dir = SplitClump(W, i, Dir); }   // lane A202: two mates do not stand in one spot
 			// Lane A85 (found by Jam.Core.NetTrap once R-0042's flat tap re-rolled its match): a bot behind a net (between its back and the end boards, inside
 			// the net's width + 1.2 m) whose way leads back to the middle goes round the side of the net, not into its back: FJamPlayerBot's rule (lane A3,
 			// 16:12) for the bots. Before, a back whose guard spot lay through its own net pressed into the hull until the puck moved (47 frames, hockey.regular
@@ -389,6 +393,7 @@ namespace JamAI
 			In.bDeke = bDeke;   // R-0029 point 4 (lane A39)
 			In.bPass = bPass;   // lane A46: the pass to the human
 			StickPlay(W, i, In);
+			if (SkillOf(W, i).Hk.LongPassM > 0.0) { LongShotToPass(W, i, In); }   // lane A202 (evolution 8): no shot from far with a mate open nearer
 			// Lane A77 (R-0036): the saucer. A carrier that charges its shots (pro, all_star; rookie's window is 0) whose pass has no flat lane but a saucer lane
 			// (W.CarrierBestPass < 0, W.CarrierBestSaucer >= 0) holds pass for W.SaucerHalfFrames and releases it: the sim lifts the puck over the blade in the lane.
 			// While it holds, StickPlay keeps the puck inside shot reach (A66's cap). The puck gone, the hold is dropped (the sim fires nothing out of reach).
@@ -542,6 +547,104 @@ namespace JamAI
 		}
 	}
 
+	// Lane A202 (track Q2, evolution 8; BRAIN-8.md): the four rules. Each reads only the world and its own per-bot run; off (its FJamHockeySense value
+	// neutral) it is never called.
+	// LeaveDowned (DownedLeaveFrames): inside 1.2 m of a downed skater for that many frames (the bot not carrying), the move goes out from his body, half
+	// the bot's own move across that line kept, until 2 m from him; then the run starts again.
+	FVec2 FJamBrain::LeaveDowned(const FJamAIWorld& W, int Id, const FVec2& Dir)
+	{
+		const FJamAISkater& S = W.Skaters[Id];
+		if (DownNearFrame[Id] != W.Frame - 1) { DownNear[Id] = 0; bDownLeaving[Id] = false; }
+		DownNearFrame[Id] = W.Frame;
+		int Near = -1;
+		double Nd = 1e9;
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			if (o == Id || !W.Skaters[o].bDown) { continue; }
+			const double Dd = W.Skaters[o].Pos.DistTo(S.Pos);
+			if (Dd < Nd) { Nd = Dd; Near = o; }
+		}
+		if (Near < 0 || W.CarrierOrHolder() == Id || Nd > (bDownLeaving[Id] ? 2.0 : 1.2)) { DownNear[Id] = 0; bDownLeaving[Id] = false; return Dir; }
+		if (!bDownLeaving[Id] && ++DownNear[Id] < SkillOf(W, Id).Hk.DownedLeaveFrames) { return Dir; }
+		bDownLeaving[Id] = true;
+		FVec2 Away = S.Pos - W.Skaters[Near].Pos;
+		Away = Away.Length() > 1e-3 ? Away.Normalized() : (Dir.Length() > 1e-3 ? Dir.Normalized() * -1.0 : FVec2(1.0, 0.0));
+		const FVec2 Across = Dir - Away * Dir.Dot(Away);
+		return (Away + Across * 0.5).Normalized();
+	}
+	// OwnZoneTurn (bOwnZoneTurn): the carrier in its own zone (behind its blue line, a quarter of the half length from the centre) whose move leads back
+	// towards its own end while no standing opponent is within 8 m ahead of it up the ice turns its move up the ice (the side it leans to kept).
+	FVec2 FJamBrain::OwnZoneTurn(const FJamAIWorld& W, int Id, const FVec2& Dir) const
+	{
+		const FJamAISkater& S = W.Skaters[Id];
+		const double As = W.OppGoal(S.Team).X >= 0.0 ? 1.0 : -1.0;
+		const double Len = Dir.Length();
+		if (W.CarrierOrHolder() != Id || Len < 0.05 || S.Pos.X * As > -W.HalfLength * 0.25 || Dir.X * As > -0.2 * Len) { return Dir; }
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			const FJamAISkater& O = W.Skaters[o];
+			if (O.Team == S.Team || O.bDown) { continue; }
+			const FVec2 Rel = O.Pos - S.Pos;
+			const double Rl = Rel.Length();
+			if (Rl < 8.0 && Rel.X * As > 0.7 * Rl) { return Dir; }
+		}
+		const double Side = std::fabs(Dir.Y) > 0.05 * Len ? Sign(Dir.Y) : (S.Pos.Y > 0.0 ? -1.0 : 1.0);
+		return FVec2(As, 0.5 * Side).Normalized() * Len;
+	}
+	// SplitClump (ClumpFrames): a bot without the puck inside 1.5 m of a standing team-mate for that many frames gives way, unless it is the one that keeps
+	// its line (the carrier, the human, else the lower index): its move takes a push straight away from him until 3 m apart.
+	FVec2 FJamBrain::SplitClump(const FJamAIWorld& W, int Id, const FVec2& Dir)
+	{
+		const FJamAISkater& S = W.Skaters[Id];
+		if (ClumpFrame[Id] != W.Frame - 1) { ClumpRun[Id] = 0; bClumpSplit[Id] = false; }
+		ClumpFrame[Id] = W.Frame;
+		const int Ch = W.CarrierOrHolder();
+		int Mate = -1;
+		double Md = 1e9;
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			const FJamAISkater& O = W.Skaters[o];
+			if (o == Id || O.Team != S.Team || O.bDown) { continue; }
+			const double Dd = O.Pos.DistTo(S.Pos);
+			if (Dd < Md) { Md = Dd; Mate = o; }
+		}
+		const bool bIKeep = Ch == Id || (Mate >= 0 && !W.IsHumanSeat(Mate) && Mate != Ch && Id < Mate);
+		if (Mate < 0 || bIKeep || Md > (bClumpSplit[Id] ? 3.0 : 1.5)) { ClumpRun[Id] = 0; bClumpSplit[Id] = false; return Dir; }
+		if (!bClumpSplit[Id] && ++ClumpRun[Id] < SkillOf(W, Id).Hk.ClumpFrames) { return Dir; }
+		bClumpSplit[Id] = true;
+		FVec2 Away = S.Pos - W.Skaters[Mate].Pos;
+		Away = Away.Length() > 1e-3 ? Away.Normalized() : FVec2(0.0, S.Pos.Y > 0.0 ? -1.0 : 1.0);
+		const FVec2 Out = Dir + Away;
+		const double L = Dir.Length() > 0.6 ? Dir.Length() : 0.6;
+		return Out.Length() > 1e-3 ? Out.Normalized() * L : Away * L;
+	}
+	// LongShotToPass (LongPassM): the shot decided this frame by the carrier (or holder) further than LongPassM from the net, while a team-mate stands
+	// open 5 m nearer the net (no standing opponent within 3 m of him), is not taken: the sim's pass goes instead when its receiver is such a mate,
+	// else the carrier carries on (the carry-or-pass reads move the puck when a lane opens).
+	void FJamBrain::LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const
+	{
+		if (!In.bShoot || W.CarrierOrHolder() != Id) { return; }
+		const int Team = W.Skaters[Id].Team;
+		const FVec2 G = W.OppGoal(Team);
+		const double Dg = W.PuckPos.DistTo(G);
+		if (Dg <= SkillOf(W, Id).Hk.LongPassM) { return; }
+		auto OpenNearer = [&W, Team, &G, Dg](int m)
+		{
+			if (m < 0 || m >= W.NumSkaters || W.Skaters[m].Team != Team || W.Skaters[m].bDown || W.Skaters[m].Pos.DistTo(G) > Dg - 5.0) { return false; }
+			for (int o = 0; o < W.NumSkaters; ++o)
+			{
+				if (W.Skaters[o].Team != Team && !W.Skaters[o].bDown && W.Skaters[o].Pos.DistTo(W.Skaters[m].Pos) < 3.0) { return false; }
+			}
+			return true;
+		};
+		bool bAny = false;
+		for (int m = 0; m < W.NumSkaters && !bAny; ++m) { bAny = m != Id && OpenNearer(m); }
+		if (!bAny) { return; }
+		In.bShoot = false;
+		const int To = W.Carrier == Id ? W.CarrierBestPass : W.HolderBestPass;
+		if (OpenNearer(To)) { In.bPass = true; }
+	}
+
 	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke, bool& bPass)
 	{
 		const FJamAISkater& S = W.Skaters[Id];
@@ -605,7 +708,7 @@ namespace JamAI
 				// for while an opponent took it).
 				if (Hy.YieldArriveS >= 0.0 && Ch < 0 && !P.bDown && Db < Params.YieldRadiusM)
 				{
-					bYield = ArriveSec(W, W.PlayerIndex, FreeSpeed(Hy)) <= ArriveSec(W, Id, FreeSpeed(Hy) * Params.SpeedScale) + Hy.YieldArriveS;   // lane A193: both free skaters
+					bYield = ArriveSec(W, W.PlayerIndex, FreeSpeed(Hy)) <= ArriveSec(W, Id, FreeSpeed(Hy) * ((Hy.bMateTrueScale && Params.MateSpeedScale > 0.0) ? Params.MateSpeedScale : Params.SpeedScale)) + Hy.YieldArriveS;   // lane A193: both free skaters
 				}
 			}
 			else if (Role != ERole::Back)
@@ -1511,7 +1614,8 @@ namespace JamAI
 		{
 			return (Pp + Push * 3.0 - Me).Normalized();
 		}
-		double Lead = Clamp(D / 8.0, 0.0, K.LeadFrames / 60.0);
+		const double LeadMps = K.Hk.bTrueLead ? FreeSpeed(K.Hk) * Params.SpeedScale : 8.0;   // lane A202 (item 4): off = Godot's 8 m/s
+		double Lead = Clamp(D / LeadMps, 0.0, K.LeadFrames / 60.0);
 		if (K.bIntercept)
 		{
 			// lane A3: earliest t with |Pp + V t - Me| = speed * t (speed = own top speed), capped like the plain lead
@@ -1535,7 +1639,7 @@ namespace JamAI
 					T = Lo > 0.0 ? Lo : Hi;
 				}
 			}
-			Lead = Clamp(T > 0.0 ? T : D / 8.0, 0.0, K.LeadFrames / 60.0);
+			Lead = Clamp(T > 0.0 ? T : D / LeadMps, 0.0, K.LeadFrames / 60.0);
 		}
 		const FVec2 Tgt = Pp + W.PuckVel.LimitLength(25.0) * Lead;
 		FVec2 Behind = Tgt - Push * 1.2;

@@ -885,8 +885,11 @@ namespace JamAI
 			if (BraceEnv && std::strcmp(BraceEnv, "off") == 0) { Tester.BraceMode = 0; }
 			if (BraceEnv && std::strcmp(BraceEnv, "always") == 0) { Tester.BraceMode = 2; }
 			if (const char* BcEnv = std::getenv("JAM_PLAYTESTER_BRACE_CLOSING")) { Tester.BraceClosingMps = std::atof(BcEnv); }   // lane A192: a measurement's arm
-			const char* ContestEnv = std::getenv("JAM_PLAYTESTER_CONTEST");   // lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped
-			Tester.bContestBrake = ContestEnv && std::strcmp(ContestEnv, "brake") == 0;
+			// Lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped. Lane A201: brake:N obeys only the N-th
+			// showing (the paired instrument); read through FPlatformMisc so CarryTrace's arms reach it.
+			const FString ContestStr = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_PLAYTESTER_CONTEST"));
+			Tester.bContestBrake = ContestStr.StartsWith(TEXT("brake"));
+			Tester.ContestOnlyNth = ContestStr.StartsWith(TEXT("brake:")) ? FCString::Atoi(*ContestStr.Mid(6)) : 0;
 			// Lane A178: brake = the player obeys the stop's line (a measurement's arm); absent = as shipped. Lane A201: read through FPlatformMisc (as the
 			// rule's arm JAM_MARK_RULE is), so one process can play several arms in a row (Bar.Movement.CarryTrace's JAM_TRACE_ARMS sets both per arm).
 			const FString StopMarkStr = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_PLAYTESTER_STOPMARK"));
@@ -912,6 +915,10 @@ namespace JamAI
 			Tester.StickVariant = !StickEnv ? 0 : (std::strcmp(StickEnv, "carry") == 0 ? 2 : (std::strcmp(StickEnv, "front") == 0 ? 3 : (std::strcmp(StickEnv, "short") == 0 ? 4 : 0)));
 		}
 		JamCarrierMarks::FStopRule StopMarkRule = JamCarrierMarks::StopRuleFromEnv();   // lane A201: read once a match
+		const JamCarrierMarks::FContestRule ConMarkRule = JamCarrierMarks::ContestRuleFromEnv();
+		JamCarrierMarks::FMarkShow ConMarkShow;
+		int64 ConShownSince = -1;
+		int ConShowings = 0;
 		if (Tester.StopDefTowardMps > 0.0) StopMarkRule.DefTowardMps = Tester.StopDefTowardMps;
 		FJamAIWorld W;
 		FJamAIInput In[kMaxSkaters];
@@ -947,7 +954,16 @@ namespace JamAI
 			const int PreLastTouch = W.PuckLastTouch;
 			for (int i = 0; i < kMaxSkaters; ++i) { In[i] = FJamAIInput(); }
 			Brain.Think(W, In);
-			if (Pi >= 0 && Tester.bContestBrake) { const UJamSim* MarkSim = Sim.GetSim(); Tester.bContestedNow = MarkSim && JamCarrierMarks::Contested(*MarkSim, Pi).bOn; }   // lane A166
+			if (Pi >= 0 && Tester.bContestBrake)   // lane A166; lane A201: the ring as SHOWN (StepShow, the HUD's hold), the rule by JAM_MARK_RULE (the one parse)
+			{
+				const UJamSim* MarkSim = Sim.GetSim();
+				const bool bPlayNow = MarkSim && MarkSim->GetPhase() == EJamSimPhase::Playing && !MarkSim->IsDrawOpen();
+				if (!bPlayNow) ConMarkShow = JamCarrierMarks::FMarkShow();
+				const JamCarrierMarks::FContested Cn = bPlayNow ? JamCarrierMarks::Contested(*MarkSim, Pi, ConMarkRule) : JamCarrierMarks::FContested();
+				const bool bShownNow = bPlayNow && JamCarrierMarks::StepShow(ConMarkShow, Cn.bOn, Cn.Opp, MarkSim->GetFrame());
+				if (bShownNow && ConMarkShow.Since != ConShownSince) { ConShownSince = ConMarkShow.Since; ++ConShowings; }
+				Tester.bContestedNow = bShownNow && (Tester.ContestOnlyNth <= 0 || ConShowings == Tester.ContestOnlyNth);
+			}
 			if (Pi >= 0 && Tester.bStopMarkBrake)   // lane A178
 			{
 				const UJamSim* MarkSim = Sim.GetSim();

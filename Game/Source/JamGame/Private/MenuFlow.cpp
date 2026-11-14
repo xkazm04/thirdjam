@@ -441,3 +441,41 @@ const TArray<FJamControlRow>& UJamMenuFlow::ControlRows()
 	Rows = UJamInputMap::ControlRowsFromBindings();
 	return Rows;
 }
+
+// ---------------------------------------------------------------- lane A195 (U2 evolution 7): the last match, a rink's name
+
+namespace
+{
+	struct FJamLastMatchNote { bool bSet = false; int32 Mine = 0, Theirs = 0; FString Level, Rink; };
+	FJamLastMatchNote GJamLastMatch;   // game thread only; the process's last match (Progress.json keeps takes, not scores)
+}
+
+void UJamMenuFlow::NoteLastMatch(int32 Mine, int32 Theirs, const FString& LevelLabel, const FString& RinkNameIn)
+{
+	GJamLastMatch.bSet = true;
+	GJamLastMatch.Mine = Mine;
+	GJamLastMatch.Theirs = Theirs;
+	GJamLastMatch.Level = LevelLabel;
+	GJamLastMatch.Rink = RinkNameIn;
+}
+
+bool UJamMenuFlow::GetLastMatch(int32& OutMine, int32& OutTheirs, FString& OutLevel, FString& OutRink)
+{
+	if (!GJamLastMatch.bSet) return false;
+	OutMine = GJamLastMatch.Mine;
+	OutTheirs = GJamLastMatch.Theirs;
+	OutLevel = GJamLastMatch.Level;
+	OutRink = GJamLastMatch.Rink;
+	return true;
+}
+
+void UJamMenuFlow::ClearLastMatchForTest() { GJamLastMatch = FJamLastMatchNote(); }
+
+FString UJamMenuFlow::RinkName(const FString& CutName)
+{
+	FJamCutInfo I;
+	I.Name = CutName;
+	FString Shown = DisplayNameFor(I).ToUpper();
+	if (Shown.EndsWith(TEXT(" CUT"))) Shown.LeftChopInline(4);
+	return Shown;
+}

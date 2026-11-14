@@ -1,6 +1,7 @@
 #include "Progression.h"
 #include "UObject/Package.h"   // GetTransientPackage() outside the unity blob (lane A18, R-0021 pass)
 #include "MenuFlow.h"
+#include "InputMapping.h"   // lane A195: the restart key in the season's key lines
 #include "JamJson.h"
 #include "JamCartridge.h"
 #include "Misc/FileHelper.h"
@@ -449,9 +450,12 @@ bool UJamProgression::HandleRestart(UObject* WorldContext)
 FString UJamProgression::EndHint(const FString& CartridgePath) const
 {
 	if (!IsSeasonMatch(CartridgePath) || LastResult == EJamTakeResult::None) return FString();
-	if (LastResult == EJamTakeResult::Lost) return TEXT("R  REMATCH      ESC  MENU");
-	if (!Ladder.Takes.IsValidIndex(ActiveTake + 1)) return TEXT("SEASON COMPLETE      R  MENU");
-	return FString::Printf(TEXT("R  NEXT MATCH: %s      ESC  MENU"), *Ladder.Takes[ActiveTake + 1].Title.ToUpper());
+	// Lane A195 (evolution 7, the Director's word): the restart key as the player has it bound (A183), not a fixed R.
+	const FJamVerbBinding& Bi = UJamInputMap::Get()->GetBindings()[EJamVerb::Restart];
+	const FString R = Bi.Keys.Num() ? UJamInputMap::KeyName(Bi.Keys[0]) : FString(TEXT("R"));
+	if (LastResult == EJamTakeResult::Lost) return FString::Printf(TEXT("%s  REMATCH      ESC  MENU"), *R);
+	if (!Ladder.Takes.IsValidIndex(ActiveTake + 1)) return FString::Printf(TEXT("SEASON COMPLETE      %s  MENU"), *R);
+	return FString::Printf(TEXT("%s  NEXT MATCH: %s      ESC  MENU"), *R, *Ladder.Takes[ActiveTake + 1].Title.ToUpper());
 }
 
 FString UJamProgression::ActiveNote(const FString& CartridgePath) const
