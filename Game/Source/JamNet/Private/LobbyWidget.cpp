@@ -1,6 +1,8 @@
 #include "LobbyWidget.h"
 #include "JamLobbySubsystem.h"
 #include "JamCartridge.h"
+#include "MenuGameMode.h"
+#include "MenuWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -10,6 +12,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
+#include "Components/SizeBox.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Styling/CoreStyle.h"
@@ -97,18 +100,27 @@ void ULobbyWidget::BuildTree()
 	if (Cuts.Num() == 0) Cuts.Add(TEXT("hockey.regular"));
 	CutIndex = FMath::Max(0, Cuts.IndexOfByKey(TEXT("hockey.regular")));
 
+	// Lane A144 (track U2): the screen under the lobby goes dark (the menu's CREDITS and QUIT showed under the box and took a click).
+	UBorder* Backdrop = T->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Backdrop"));
+	Backdrop->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.94f));
+	UCanvasPanelSlot* BackdropSlot = Root->AddChildToCanvas(Backdrop);
+	BackdropSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+	BackdropSlot->SetOffsets(FMargin(0.f));
+
 	UBorder* Slate = T->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Slate"));
 	Slate->SetBrushColor(Ink);
 	Slate->SetPadding(FMargin(36, 28));
 	UCanvasPanelSlot* SlateSlot = Root->AddChildToCanvas(Slate);
 	SlateSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
 	SlateSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-	SlateSlot->SetAutoSize(false);
-	SlateSlot->SetSize(FVector2D(760, 560));
+	SlateSlot->SetAutoSize(true);   // lane A144: as high as its rows (a fixed 760 x 560 left a third of the box empty); the width is the column's box
 	SlateSlot->SetPosition(FVector2D::ZeroVector);
 
 	Column = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("Column"));
-	Slate->SetContent(Column);
+	USizeBox* ColumnBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("ColumnBox"));
+	ColumnBox->SetWidthOverride(748.f);
+	ColumnBox->AddChild(Column);
+	Slate->SetContent(ColumnBox);
 	auto Row = [&](UWidget* W, float Top = 8.f) { UVerticalBoxSlot* S = Column->AddChildToVerticalBox(W); S->SetPadding(FMargin(0, Top, 0, 0)); S->SetHorizontalAlignment(HAlign_Fill); return S; };
 
 	Title = MakeText(T, TEXT("Title"), 34, Chalk);
@@ -116,6 +128,11 @@ void ULobbyWidget::BuildTree()
 	Row(Title, 0);
 	Status = MakeText(T, TEXT("Status"), 16, Dim, false);
 	Row(Status, 6);
+
+	// Lane A144: the words of JOIN-GUIDE.md sections 2 and 3, where the player needs them.
+	HostHelp = MakeText(T, TEXT("HostHelp"), 15, Chalk, false);
+	HostHelp->SetText(FText::FromString(TEXT("HOST: pick the cut with < > and press HOST. Both machines: the same network, the same build.")));
+	Row(HostHelp, 16);
 
 	// Host row: < cut > [Host]
 	HostRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HostRow"));
@@ -133,22 +150,36 @@ void ULobbyWidget::BuildTree()
 	HostButton = MakeButton(TEXT("HostButton"), TEXT("HOST"), Tmp);
 	HostButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnHost);
 	HostRow->AddChildToHorizontalBox(HostButton)->SetPadding(FMargin(14, 0, 0, 0));
-	Row(HostRow, 18);
+	Row(HostRow, 6);
+
+	JoinHelp = MakeText(T, TEXT("JoinHelp"), 15, Chalk, false);
+	JoinHelp->SetText(FText::FromString(TEXT("GUEST: type the host's code in the box, press JOIN.")));
+	Row(JoinHelp, 16);
 
 	// Join row: [code box] [Join]
 	JoinRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("JoinRow"));
 	CodeBox = T->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("CodeBox"));
 	CodeBox->SetHintText(FText::FromString(TEXT("friend's code: ABCD-EFGH")));
+	// Lane A144: chalk on dark (the default light box hid its grey hint).
+	CodeBox->WidgetStyle.SetBackgroundColor(FLinearColor(0.10f, 0.10f, 0.12f, 1.f));
+	CodeBox->WidgetStyle.SetForegroundColor(Chalk);
+	CodeBox->WidgetStyle.SetFocusedForegroundColor(Chalk);
+	CodeBox->WidgetStyle.SetFont(RegularFont(18));
+	CodeBox->WidgetStyle.SetPadding(FMargin(10, 7));
 	UHorizontalBoxSlot* CodeSlot = JoinRow->AddChildToHorizontalBox(CodeBox);
 	CodeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	JoinButton = MakeButton(TEXT("JoinButton"), TEXT("JOIN"), Tmp);
 	JoinButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnJoin);
 	JoinRow->AddChildToHorizontalBox(JoinButton)->SetPadding(FMargin(14, 0, 0, 0));
-	Row(JoinRow, 10);
+	Row(JoinRow, 6);
 
 	CodesText = MakeText(T, TEXT("CodesText"), 30, Chalk);
 	CodesText->SetJustification(ETextJustify::Center);
 	Row(CodesText, 18);
+	CodesHelp = MakeText(T, TEXT("CodesHelp"), 15, Chalk, false);
+	CodesHelp->SetText(FText::FromString(TEXT("Read your friend the code whose address starts like theirs (usually 192.168.). The 127.0.0.1 code is for two copies on one machine.")));
+	CodesHelp->SetJustification(ETextJustify::Center);
+	Row(CodesHelp, 6);
 	WarningText = MakeText(T, TEXT("WarningText"), 14, Dim, false);
 	Row(WarningText, 8);
 
@@ -209,6 +240,9 @@ void ULobbyWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	JoinButton->SetIsEnabled(bIdle);
 	CodesText->SetText(FText::FromString(bHosting ? L->GetCodesText() : FString()));
 	CodesText->SetVisibility(bHosting ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	if (HostHelp) HostHelp->SetVisibility(bIdle ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (JoinHelp) JoinHelp->SetVisibility(bIdle ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (CodesHelp) CodesHelp->SetVisibility(bHosting && S != EJamLobbyState::Ready && S != EJamLobbyState::Starting ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	WarningText->SetText(FText::FromString(L->GetWarningText()));
 	WarningText->SetVisibility(bIdle || bHosting ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);  // the port is the host's
 	const bool bPeers = S == EJamLobbyState::Ready || S == EJamLobbyState::Starting || S == EJamLobbyState::InMatch;
@@ -256,8 +290,24 @@ void ULobbyWidget::OnBack()
 	if (UJamLobbySubsystem* L = Lobby()) L->Leave();
 	if (APlayerController* PC = GetOwningPlayer())
 	{
-		PC->SetShowMouseCursor(false);
-		PC->SetInputMode(FInputModeGameOnly());
+		// Lane A144 (track U2): BACK over the menu gives the menu its cursor and its focus back (game-only input with the cursor hidden left the
+		// first screen dead to the mouse and the keys); over a match it is the game's input, as before.
+		AJamMenuGameMode* MenuGM = GetWorld() ? GetWorld()->GetAuthGameMode<AJamMenuGameMode>() : nullptr;
+		if (UJamMenuWidget* Menu = MenuGM ? MenuGM->GetMenu() : nullptr)
+		{
+			PC->SetShowMouseCursor(true);
+			FInputModeGameAndUI Mode;
+			Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			Mode.SetHideCursorDuringCapture(false);
+			Mode.SetWidgetToFocus(Menu->TakeWidget());
+			PC->SetInputMode(Mode);
+			Menu->ShowScreen(EJamMenuScreen::Main);
+		}
+		else
+		{
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+		}
 	}
 	RemoveFromParent();
 }

@@ -116,6 +116,9 @@ void UJamSettingsWidget::BuildTree()
 	UWidgetTree* T = WidgetTree;
 	Settings = FJamSettings::Load();
 
+	// The panel sits on the 880 card inside 32 units of padding a side: two columns of 394 with 28 between them.
+	const float ColumnTextW = 386.f;
+
 	Root = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SettingsRoot"));
 	T->RootWidget = Root;
 
@@ -127,7 +130,7 @@ void UJamSettingsWidget::BuildTree()
 		AddH(H, S::Text(T, Title, S::Font(S::Body, FName("Bold"), S::TrackLabel), S::Yellow()), FMargin(0));
 		AddV(Col, H, FMargin(0, 10, 0, 0));
 		UTextBlock* C = S::Text(T, Caption, S::CaptionFont(), S::Muted());
-		C->SetAutoWrapText(true);
+		C->SetWrapTextAt(ColumnTextW);   // lane A144: a fixed wrap width, so the screen's measure does not wait for a layout pass
 		AddV(Col, C, FMargin(0, 0, 0, 4));
 	};
 
@@ -144,10 +147,14 @@ void UJamSettingsWidget::BuildTree()
 	UHorizontalBox* KeyRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	KeyBox = T->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("KeyBox"));
 	KeyBox->SetIsPassword(true);
-	KeyBox->SetHintText(FText::FromString(TEXT("paste a key and press Enter")));
+	KeyBox->SetHintText(FText::FromString(TEXT("paste key, Enter")));
 	KeyBox->SetMinDesiredWidth(220.f);
 	KeyBox->WidgetStyle.SetFont(S::BodyFont());
 	KeyBox->WidgetStyle.SetPadding(FMargin(10, 7));
+	// Lane A144: chalk on dark (the default light box hid its grey hint).
+	KeyBox->WidgetStyle.SetBackgroundColor(FLinearColor(0.16f, 0.17f, 0.20f, 1.f));
+	KeyBox->WidgetStyle.SetForegroundColor(S::Chalk());
+	KeyBox->WidgetStyle.SetFocusedForegroundColor(S::Chalk());
 	KeyBox->OnTextCommitted.AddDynamic(this, &UJamSettingsWidget::OnKeyCommitted);
 	AddH(KeyRow, KeyBox, FMargin(0, 0, 8, 0), true);
 	ClearKeyButton = Button(T, TEXT("CLEAR"), S::Caption + 1, Tmp);
@@ -164,7 +171,7 @@ void UJamSettingsWidget::BuildTree()
 	DifficultyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnDifficultyClicked);
 	AddV(Left, DifficultyButton, FMargin(0, 0, 0, 6), HAlign_Left);
 
-	Heading(Left, TEXT("upscale"), TEXT("LOOK"), TEXT("The cut's own tier, or force one light rig."));
+	Heading(Left, TEXT("upscale"), TEXT("LOOK"), TEXT("The cut's own look, or one look for every cut."));
 	TierButton = Button(T, TEXT(""), S::Body + 2, Tmp);
 	TierText = Tmp;
 	TierButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnTierClicked);
@@ -195,7 +202,7 @@ void UJamSettingsWidget::BuildTree()
 	VoiceButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnVoiceClicked);
 	AddH(VoiceRow, VoiceButton, FMargin(0, 0, 12, 0));
 	VoiceStatusText = S::Text(T, TEXT(""), S::CaptionFont(), S::Muted());
-	VoiceStatusText->SetAutoWrapText(true);
+	VoiceStatusText->SetWrapTextAt(200.f);
 	AddH(VoiceRow, VoiceStatusText, FMargin(0), true);
 	AddV(Right, VoiceRow, FMargin(0, 0, 0, 6));
 
@@ -206,15 +213,9 @@ void UJamSettingsWidget::BuildTree()
 	BarksButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnBarksClicked);
 	AddV(Right, BarksButton, FMargin(0, 0, 0, 6), HAlign_Left);
 
-	// Controls summary (lane A5's mapping) under both columns.
-	Heading(Root, TEXT("settings"), TEXT("CONTROLS"), TEXT(""));
-	UTextBlock* Controls = S::Text(T,
-		TEXT("Skate   WASD / left stick        Aim the stick   mouse / right stick        Shoot   hold left mouse / RT        Check   right mouse / RB\n")
-		TEXT("Cross-check   middle mouse, mouse 4 / LB        Deke   wheel / Y        Spin   E / B        Sprint   Shift / LT        Poke   Space / A        Pass   Q / X        Ability   F / R3\n")
-		TEXT("Signals   1-4 / D-pad        Brake   pull back against your motion (W then S), or Ctrl / left stick click        Restart   R / View        Pause and Director's Call   Esc / Start        Menus   arrows, Enter, Esc back"),   // lane A49; lane A51 (R-0034): spin E / B; lane A84 (R-0041 point 3): pass Q, ability F / R3; lane A93 (R-0045 law 3): braking by reversing
-		S::BodyFont(), S::Chalk());
-	Controls->SetAutoWrapText(true);
-	AddV(Root, Controls, FMargin(0, -2, 0, 6));
+	// Lane A144 (track U2): the controls have a screen of their own, one press from the first screen (UJamMenuFlow::ControlRows, held against the
+	// bindings by Jam.Menu.ControlsComplete); the run-on paragraph that stood here split verb from key at every line end.
+	Heading(Root, TEXT("settings"), TEXT("CONTROLS"), TEXT("The full list: BACK, then CONTROLS on the first screen. In a match: Esc."));
 
 	RefreshLabels();
 }
