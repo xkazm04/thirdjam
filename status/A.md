@@ -457,3 +457,5 @@
 - link green 08:11: main 9e452219 (Pro's dial measured for both players and kept as two patches; the price of everything that) pushed.
 - link green 08:34: main 9163e300 (The submission's words are true of the game as it is this morning (A180, track D1): the tr) pushed.
 - link green 09:12: main de80fb5f (What waits for the operator's word, measured: the "everything on" ladder (A182), the brain) pushed.
+- link green 11:24: main 7f55b48f (Merge device B's progress (dev-b 46bdb717: B-to-A-0043) into main for the package the oper) pushed.
+- package 11:31: `Hokej_Hokej_H31.zip` from main 7f55b48f, acceptance run green (18 verbs through the cursor and the buttons).
