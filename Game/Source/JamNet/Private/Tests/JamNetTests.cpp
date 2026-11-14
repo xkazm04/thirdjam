@@ -323,7 +323,16 @@ bool FJamNetInputCoverage::RunTest(const FString& Parameters)
 		TestEqual(TEXT("spin flag bit 512 alone"), static_cast<int32>(Qo.Flags), 512);
 		const FJamInput Back = Qo.ToInput();
 		TestTrue(TEXT("spin comes back alone"), Back.bSpin && !Back.bShoot && !Back.bCheck && !Back.bBrake && !Back.bShootHeld && !Back.bPass && !Back.bPoke && !Back.bLift && !Back.bDeke && !Back.bSprint);
-		TestEqual(TEXT("protocol 8: the checkpoint is JamNetLockstepHash (lane A104); 7 the ability, 6 the held pass, 5 the spin"), static_cast<int32>(JamNet::Version), 8);
+		TestEqual(TEXT("protocol 9: the held cross-check (lane A184); 8 the checkpoint is JamNetLockstepHash (lane A104); 7 the ability, 6 the held pass, 5 the spin"), static_cast<int32>(JamNet::Version), 9);
+	}
+	// Lane A184 (R-0064 point 1): the held cross-check is flag bit 4096 (bit 12), a held level (not an edge), alone, and comes back alone.
+	{
+		FJamInput One; One.bCrossHold = true;
+		const FJamNetQuantInput Qo = FJamNetQuantInput::From(One);
+		TestEqual(TEXT("cross-hold flag bit 4096 alone"), static_cast<int32>(Qo.Flags), 4096);
+		TestTrue(TEXT("cross-hold is a level, not an edge"), (FJamNetQuantInput::EdgeFlags & FJamNetQuantInput::CrossHold) == 0);
+		const FJamInput Back = Qo.ToInput();
+		TestTrue(TEXT("cross-hold comes back alone"), Back.bCrossHold && !Back.bAbility && !Back.bSpin && !Back.bPassHeld && !Back.bShoot && !Back.bCheck && !Back.bPass && !Back.bLift && !Back.bDeke && !Back.bSprint);
 	}
 	// Lane A84 (R-0041 point 3): the ability is flag bit 2048 (bit 11), an edge, alone, and comes back alone.
 	{

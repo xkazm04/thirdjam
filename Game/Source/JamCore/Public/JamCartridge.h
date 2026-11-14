@@ -371,6 +371,20 @@ struct JAMCORE_API FJamContactConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeShieldFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bTakeShieldHumanSide = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeShieldStaggerMax = 0;
+	// Lane A184 (track F1, evolution 9; R-0064 points 1 and 5; docs/experiments/CONTACT-10.md): the held cross-check and the wind-ups.
+	// cross_hold: FJamInput::bCrossHold held UJamSim::CrossHoldTapFrames or more braces the skater (stick across the body): the first opponent his body meets
+	// while braced takes the cross-check by the momentum he brings (law 1's line by closing speed, the cross-check's thrust_mps on top, as a pressed
+	// cross-check); then the brace is spent until the button is released. Its prices are UJamSim::CrossHold*: no poke, lift, reception or sprint, a little
+	// top speed and turning, and a braced skater hit by a faster man is easier to fell. false = the neutral value: bCrossHold does nothing (same state hash).
+	// check_windup_frames, cross_windup_frames: the hit has a beat the eye catches. A pressed body check opens its window this many frames after the press
+	// (the cooldown and the figure's call stay on the press); a pressed cross-check (the lift's swing: its shove and its strip) resolves this many frames
+	// after the press. The figure is told the frames on the press. 0 = the neutral value: the hit lands on the press's frame, as before (same state hash).
+	// cross_hold ships ON (R-0064: the operator's order; CONTACT-10.md section 0). The wind-ups ship at 0 in this landing: measured and recommended at 4 / 4
+	// (the three cells -1.3 / 0.0 / 0.0 with the brace), but 17 staged tests and law 3's drill press and land on one frame (CONTACT-10.md section 4): the next
+	// evolution names their wind-up and turns these two on. JamBaseline::MakeNeutral gives back the game before the lane (false, 0, 0: hash-identical).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossHold = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 0;
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

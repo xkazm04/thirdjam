@@ -210,6 +210,9 @@ namespace JamContactTests
 		// sets them (Jam.Core.Contact.StandingSides stages both and asserts the shipped values).
 		S.Cfg.Contact.StandSideBrace = 0.0;
 		S.Cfg.Contact.bBraceExchange = false;
+		// Lane A184: the scenes press and land on the same frame as they were written; the wind-ups (shipped at 4) are off in a scene unless its Edit sets them.
+		S.Cfg.Contact.CheckWindupFrames = 0;
+		S.Cfg.Contact.CrossWindupFrames = 0;
 		Edit(S.Cfg);
 		S.Sim = NewObject<UJamSim>();
 		S.Sim->Init(S.Cfg, 7);
@@ -1816,6 +1819,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Skater.SpinExposedTail = 0;   // lane A128: and before the spin's price (burst.frames 0 covers its standing start)
 		C->Game.Contact.bPlaytesterClosingPress = false;   // lane A132: and played by the scripted human's old check press (on its own speed)
 		C->Game.Stick.PokeAssistDeg = 0.0; C->Game.Stick.MissRecoveryFrames = 0;   // lane A152 (track F2): and before the poke that reaches and the miss's recovery
+		C->Game.Contact.bCrossHold = false; C->Game.Contact.CheckWindupFrames = 0; C->Game.Contact.CrossWindupFrames = 0;   // lane A184: and before the held cross-check and the wind-ups
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;
@@ -2172,6 +2176,7 @@ namespace JamContactTests
 		if (!C) return JamAI::FJamPlaytestStats();
 		C->Game.Rules.ScoreToWin = 99;
 		C->Game.Rules.bPenalties = false;
+		C->Game.Contact.bCrossHold = false;   // lane A184: these matches measure the check press; with the held cross-check on the scripted human braces instead
 		Edit(C->Game);
 		JamAI::FJamSimAdapter Sim(*C);
 		R.Base = FContactCount();
@@ -2849,6 +2854,134 @@ bool FJamContactTakeShield::RunTest(const FString& Parameters)
 	TestTrue(*FString::Printf(TEXT("flat: a hit of ratio %.2f is the same 16-frame stumble as one of %.2f"), Flat.Ratio, On.Ratio), Flat.Outcome == UJamSim::ContactStumble && Flat.Stumble == 16 && Flat.Ratio > On.Ratio);
 	TestTrue(*FString::Printf(TEXT("stagger max 45: the stumble follows the hit (%d frames at ratio %.2f, %d at %.2f), never a knockdown"), Soft.Stumble, Soft.Ratio, Hard.Stumble, Hard.Ratio),
 		Soft.Outcome == UJamSim::ContactStumble && Hard.Outcome == UJamSim::ContactStumble && Soft.Stumble >= 16 && Hard.Stumble > Soft.Stumble && Hard.Stumble <= 45 && Hard.Knock == 0);
+	return true;
+}
+
+// Lane A184 (track F1, evolution 9; R-0064 points 1 and 5; docs/experiments/CONTACT-10.md): the held cross-check and the wind-ups.
+//   cross_hold: a hold of CrossHoldTapFrames braces; the braced body delivers the pressed cross-check's own hit by closing speed (the frames down at 4 / 8 / 12
+//   / 16 m/s, held against pressed); the brace is spent until the release; a tap never braces; braced, no poke and no lift; off (the neutral value): nothing.
+//   check_windup_frames / cross_windup_frames: the window opens, the swing lands, that many frames after the press; the figure is told on the press.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactCrossHold, "Jam.Core.Contact.CrossHold", JamContactTests::Flags)
+bool FJamContactCrossHold::RunTest(const FString& Parameters)
+{
+	struct FHit { int32 Outcome = 0, Knock = 0, Stumble = 0, Frame = -1; float Ratio = 0.f; bool bCross = false, bBraceHit = false; };
+	auto Idle = [](FContactScene& S) { TArray<FJamInput> In; In.SetNum(S.Sim->GetSkaters().Num()); return In; };
+	// The victim stands at the origin with a placed puck, facing +x; the attacker comes from +x along -x at Speed, facing it (closing = Speed).
+	auto Hit = [&](bool bHeld, double Speed, bool bRule) -> FHit
+	{
+		FHit O;
+		FContactScene S = Make(*this, [=](FJamGameConfig& G) { G.Contact.bCrossHold = bRule; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		if (!HandPuck(S, S.V)) { AddError(TEXT("the victim did not pick the placed puck up")); return O; }
+		S.Sim->SetSkater(S.V, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		const double R2 = 2.0 * UJamSim::SkaterRadius;
+		if (bHeld)
+		{
+			S.Sim->SetSkater(S.A, FVector2D(20.0, 8.0), FVector2D::ZeroVector, PI);
+			for (int32 F = 0; F < UJamSim::CrossHoldTapFrames + 2; ++F) { TArray<FJamInput> In = Idle(S); In[S.A].bCrossHold = true; S.Sim->Step(In); }
+			S.Sim->SetSkater(S.A, FVector2D(R2 + 0.02, 0.0), FVector2D(-Speed, 0.0), PI);
+		}
+		else
+		{
+			S.Sim->SetSkater(S.A, FVector2D(R2 + S.Cfg.Contact.CrossReachM - 0.05, 0.0), FVector2D(-Speed, 0.0), PI);
+		}
+		for (int32 F = 0; F < 6; ++F)
+		{
+			TArray<FJamInput> In = Idle(S);
+			In[S.A].bCrossHold = bHeld;
+			In[S.A].bLift = !bHeld && F == 0;
+			S.Sim->Step(In);
+			if (S.Vic().ContactOutcome == 0) continue;
+			O.Outcome = S.Vic().ContactOutcome; O.Knock = S.Vic().KnockFrames; O.Stumble = S.Vic().StumbleFrames; O.Ratio = S.Vic().ContactRatio;
+			O.bCross = S.Vic().bContactCross; O.bBraceHit = S.Vic().bCrossBraceHit; O.Frame = F;
+			break;
+		}
+		AddInfo(FString::Printf(TEXT("JAMBRACE %s at %.0f m/s of closing (cross_hold %d): outcome %d ratio %.3f down %d stumble %d cross %d out of the brace %d (frame %d)"),
+			bHeld ? TEXT("held") : TEXT("pressed"), Speed, bRule ? 1 : 0, O.Outcome, O.Ratio, O.Knock, O.Stumble, O.bCross ? 1 : 0, O.bBraceHit ? 1 : 0, O.Frame));
+		return O;
+	};
+	// 1. The table: the held cross-check is the pressed one's hit, by closing speed.
+	int32 PrevKnock = -1;
+	for (const double V : { 4.0, 8.0, 12.0, 16.0 })
+	{
+		const FHit P = Hit(false, V, true), H = Hit(true, V, true);
+		TestTrue(*FString::Printf(TEXT("%.0f m/s: the pressed cross-check lands"), V), P.Outcome >= UJamSim::ContactBump && P.bCross);
+		TestTrue(*FString::Printf(TEXT("%.0f m/s: the held one lands out of the brace as a cross-check"), V), H.Outcome >= UJamSim::ContactBump && H.bCross && H.bBraceHit);
+		TestEqual(*FString::Printf(TEXT("%.0f m/s: the same outcome held and pressed"), V), H.Outcome, P.Outcome);
+		TestTrue(*FString::Printf(TEXT("%.0f m/s: the same frames down held (%d) and pressed (%d), within 3 (the held man glides a frame before the bodies meet)"), V, H.Knock, P.Knock), FMath::Abs(H.Knock - P.Knock) <= 3);
+		TestTrue(*FString::Printf(TEXT("%.0f m/s: more momentum, no fewer frames down (%d after %d)"), V, H.Knock, PrevKnock), H.Knock >= PrevKnock);
+		PrevKnock = H.Knock;
+	}
+	// 2. The neutral value: the held button does nothing.
+	{
+		const FHit Off = Hit(true, 12.0, false);
+		TestTrue(TEXT("cross_hold false: the held body meets the man and no cross-check lands"), !Off.bCross && Off.Outcome == 0);
+	}
+	// 3. The brace is spent until the release; a tap never braces; braced, no poke and no lift.
+	{
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.bCrossHold = true; });
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.A, FVector2D(20.0, 8.0), FVector2D::ZeroVector, PI);
+		for (int32 F = 0; F < UJamSim::CrossHoldTapFrames - 3; ++F) { TArray<FJamInput> In = Idle(S); In[S.A].bCrossHold = true; S.Sim->Step(In); }
+		TestFalse(TEXT("a tap (held under CrossHoldTapFrames) is not braced"), S.Att().bCrossBraced);
+		{ TArray<FJamInput> In = Idle(S); S.Sim->Step(In); }
+		TestEqual(TEXT("the release resets the hold"), S.Att().CrossHoldFrames, 0);
+		for (int32 F = 0; F < UJamSim::CrossHoldTapFrames; ++F) { TArray<FJamInput> In = Idle(S); In[S.A].bCrossHold = true; S.Sim->Step(In); }
+		TestTrue(TEXT("held CrossHoldTapFrames: braced"), S.Att().bCrossBraced);
+		{
+			TArray<FJamInput> In = Idle(S); In[S.A].bCrossHold = true; In[S.A].bPoke = true; In[S.A].bLift = true;
+			S.Sim->Step(In);
+			TestTrue(TEXT("braced: the poke and the lift are not swung"), !S.Att().bPokeThisFrame && !S.Att().bLiftThisFrame && S.Att().bCrossBraced);
+		}
+		S.Sim->SetSkater(S.V, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(2.0 * UJamSim::SkaterRadius + 0.02, 0.0), FVector2D(-10.0, 0.0), PI);
+		bool bFirst = false;
+		for (int32 F = 0; F < 4 && !bFirst; ++F) { TArray<FJamInput> In = Idle(S); In[S.A].bCrossHold = true; S.Sim->Step(In); bFirst = S.Vic().bCrossBraceHit; }
+		TestTrue(TEXT("the first body met takes the braced hit"), bFirst);
+		TestTrue(TEXT("then the brace is spent while the button stays down"), S.Att().bCrossSpent && !S.Att().bCrossBraced && S.Att().CrossBraceHits == 1);
+		int32 Second = -1;
+		for (const FJamSkaterState& K : S.Sim->GetSkaters()) if (K.Team == S.Vic().Team && K.Index != S.V) { Second = K.Index; break; }
+		if (Second >= 0 && S.Att().CanAct())
+		{
+			S.Sim->SetSkater(Second, S.Att().Pos + FVector2D(-2.0 * UJamSim::SkaterRadius - 0.02, 3.0), FVector2D::ZeroVector, 0.0);
+			S.Sim->SetSkater(S.A, S.Att().Pos + FVector2D(0.0, 3.0), FVector2D(-6.0, 0.0), PI);
+			bool bSecond = false;
+			for (int32 F = 0; F < 4; ++F) { TArray<FJamInput> In = Idle(S); In[S.A].bCrossHold = true; S.Sim->Step(In); bSecond |= S.Sim->GetSkaters()[Second].bCrossBraceHit; }
+			TestFalse(TEXT("a second body met with the button still down takes no braced hit"), bSecond);
+		}
+		{ TArray<FJamInput> In = Idle(S); S.Sim->Step(In); }
+		TestTrue(TEXT("the release re-arms the brace"), !S.Att().bCrossSpent && S.Att().CrossHoldFrames == 0);
+	}
+	// 4. The wind-ups.
+	{
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.CheckWindupFrames = 6; G.Contact.CrossWindupFrames = 5; });
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.A, FVector2D(20.0, 8.0), FVector2D::ZeroVector, PI);
+		int32 Open = -1, Told = 0;
+		for (int32 F = 0; F < 10 && Open < 0; ++F)
+		{
+			TArray<FJamInput> In = Idle(S); In[S.A].bCheck = F == 0; S.Sim->Step(In);
+			if (F == 0) Told = S.Att().WindupFrames;
+			if (S.Att().CheckWindow > 0) Open = F;
+		}
+		TestEqual(TEXT("check_windup_frames 6: the figure is told 6 on the press"), Told, 6);
+		TestEqual(TEXT("check_windup_frames 6: the window opens 6 frames after the press"), Open, 6);
+		int32 Swing = -1, Pressed = -1;
+		for (int32 F = 0; F < 40 && Swing < 0; ++F)
+		{
+			TArray<FJamInput> In = Idle(S); In[S.A].bLift = F == 0; S.Sim->Step(In);
+			if (S.Att().bLiftThisFrame) Pressed = F;
+			for (const FJamSimEvent& E : S.Sim->GetFrameEvents()) if (E.Name == JamEvents::Lift && E.Who == S.A) Swing = F;
+		}
+		TestTrue(*FString::Printf(TEXT("cross_windup_frames 5: the swing is pressed on frame 0 (%d) and lands on frame 5 (%d)"), Pressed, Swing), Pressed == 0 && Swing == 5);
+	}
+	{
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.CheckWindupFrames = 0; G.Contact.CrossWindupFrames = 0; });
+		if (!S.Ok()) return false;
+		TArray<FJamInput> In = Idle(S); In[S.A].bCheck = true; S.Sim->Step(In);
+		TestTrue(TEXT("the wind-ups at 0 (neutral): the window opens on the press, nothing is told"), S.Att().CheckWindow > 0 && S.Att().WindupFrames == 0 && S.Att().CheckWindupLeft == 0);
+	}
 	return true;
 }
 

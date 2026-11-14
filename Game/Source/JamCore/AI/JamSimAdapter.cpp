@@ -276,6 +276,7 @@ namespace JamAI
 		W.StickReach = G.Stick.ReachM;
 		W.LiftRange = G.Stick.LiftRangeM;
 		W.LiftConeDeg = G.Stick.LiftConeDeg;   // lane A95 (B-to-A-0037)
+		W.CheckWindupFrames = G.Contact.CheckWindupFrames;   // lane A184
 		W.ReverseBrakeDecel = G.Skater.ReverseBrakeDecel;   // lane A95: the movement verbs the playtester uses only when they exist
 		W.BurstFrames = G.Skater.BurstFrames;
 		W.SprintCarryBonus = G.Skater.SprintCarryBonus;
@@ -373,6 +374,7 @@ namespace JamAI
 			I.bSpin = In[i].bSpin;   // lane A51 (R-0034): the spin tap
 			I.bSprint = In[i].bSprint;   // lane A72 (asks A2, A3): the bots' and the playtester's sprint
 			I.bAbility = In[i].bAbility;   // lane A84 (R-0041 point 3): the playtester's F
+			I.bCrossHold = In[i].bCrossHold;   // lane A184 (R-0064 point 1): the held cross-check
 		}
 		if (bWithSystems) { Systems.BeforeStep(*Sim); }   // lane A41: score mirror, sim step, zone update, effect step (the game mode's order)
 		Sim->Step(Inputs);

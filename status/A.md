@@ -465,3 +465,4 @@
 - package 13:25: `Hokej_Hokej_H32.zip` from main 9472de42, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 13:30: main 1f4be055 (Skaters without the puck are 15 % faster (A185, track F2, evolution 9; R-0064 point 2: the) pushed.
 - link green 13:33: main f7d0b97c (At the boards the camera no longer turns on its own (A186, track U1, evolution 7; R-0064 p) pushed.
+- link green 13:36: main 13e36667 (A front end that looks like a game a studio shipped (A187, track U2, evolution 5; R-0064 p) pushed.

@@ -1214,6 +1214,9 @@ namespace
 			ReadInteger(Ct, TEXT("take_shield_stagger_max"), C.Contact.TakeShieldStaggerMax);   // lane A177: the capped hit's stumble scales up to this; 0 = flat
 			ReadInteger(Ct, TEXT("lunge_frames"), C.Contact.LungeFrames);   // lane A157: the lunge as a motion; 0 = the neutral value
 			ReadNumber(Ct, TEXT("lunge_step_mps"), C.Contact.LungeStepMps);   // lane A157: its forward step; 0 = the neutral value
+			ReadBool(Ct, TEXT("cross_hold"), C.Contact.bCrossHold);   // lane A184: the held cross-check; false = the neutral value
+			ReadInteger(Ct, TEXT("check_windup_frames"), C.Contact.CheckWindupFrames);   // lane A184: the body check's wind-up; 0 = the neutral value
+			ReadInteger(Ct, TEXT("cross_windup_frames"), C.Contact.CrossWindupFrames);   // lane A184: the cross-check's wind-up; 0 = the neutral value
 		}
 		// Lane A132 (track F1), measurement only (as JAM_PLAYTESTER_VERBS in JamPlaytester.cpp): with JAM_TEST_SHIELD_SHOVE=0 in the environment every cartridge
 		// loads with the shove rule at its neutral value (contact.bShieldShove false: the refusal of main before lane A125; the rule has no key), so the three
@@ -1240,6 +1243,9 @@ namespace
 					else if (Name == TEXT("late_press")) C.Contact.LatePressFrames = FMath::RoundToInt32(V);
 					else if (Name == TEXT("take_shield")) C.Contact.TakeShieldFrames = FMath::RoundToInt32(V);   // lane A177: law 3's drill with the take shield on (measurement only)
 					else if (Name == TEXT("take_shield_max")) C.Contact.TakeShieldStaggerMax = FMath::RoundToInt32(V);
+					else if (Name == TEXT("cross_hold")) C.Contact.bCrossHold = V != 0.0;   // lane A184: law 3's drill and the proofs with the rules on (measurement only)
+					else if (Name == TEXT("check_windup")) C.Contact.CheckWindupFrames = FMath::RoundToInt32(V);
+					else if (Name == TEXT("cross_windup")) C.Contact.CrossWindupFrames = FMath::RoundToInt32(V);
 					// A151-SEAM-MORE
 				}
 			}

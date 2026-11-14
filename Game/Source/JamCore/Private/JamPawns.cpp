@@ -434,6 +434,23 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	// B-to-A-0024 point 2 (lane A31): PlayShoot only for a shot; a pass is PlayPass alone (below), never a charge-0 shot in the same frame.
 	if (S.bShotThisFrame) IJamSkaterVisual::Execute_PlayShoot(V, S.LastShotCharge);
 	if (S.bCheckThisFrame) IJamSkaterVisual::Execute_PlayCheck(V);
+	// Lane A184 (track F1, evolution 9; A-to-B-0027 point 1): by name (CallFigure), so the game runs before device B's figure has them and uses them after:
+	// the frames from the press to the contact for the two takes, and the braced pose of the held cross-check.
+	{
+		static const FName NamePlayCheckWindup(TEXT("PlayCheckWindup")), NamePlayCrossCheck(TEXT("PlayCrossCheck")), NameSetCrossCheckHold(TEXT("SetCrossCheckHold"));
+		if (S.bCheckThisFrame && S.WindupFrames > 0) CallFigure(V, NamePlayCheckWindup, { static_cast<double>(S.WindupFrames) });
+		if (S.bLiftThisFrame)
+		{
+			const bool bSent = CallFigure(V, NamePlayCrossCheck, { static_cast<double>(S.WindupFrames) });
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosscheck frame=%lld skater=%d team=%d human=1 to_contact=%d call=%s"), SimFrameForLog(), S.Index, S.Team, S.WindupFrames, bSent ? TEXT("PlayCrossCheck") : TEXT("PlayLift"));
+		}
+		if (S.bCrossBraced != bWasCrossBraced)
+		{
+			bWasCrossBraced = S.bCrossBraced;
+			const bool bSent = CallFigure(V, NameSetCrossCheckHold, { bWasCrossBraced ? 1.0 : 0.0 });
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosshold frame=%lld skater=%d team=%d human=1 on=%d speed=%.2f call=%s"), SimFrameForLog(), S.Index, S.Team, bWasCrossBraced ? 1 : 0, S.Vel.Size(), bSent ? TEXT("SetCrossCheckHold") : TEXT("none"));
+		}
+	}
 	if (S.IsDown() != bWasDown)
 	{
 		bWasDown = S.IsDown();

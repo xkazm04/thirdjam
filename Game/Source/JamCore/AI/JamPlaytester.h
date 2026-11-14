@@ -91,6 +91,12 @@ namespace JamAI
 		bool bOldVerbs = false;          // lane A95: the before arm of job 3 (env JAM_PLAYTESTER_VERBS=old): no brake intent, no cut, no carry sprint (measurement only)
 		int CoursePctOverride = -1;      // lane A151, measurement only: env JAM_PLAYTESTER_CHECK=course:NN plays the press on course and time at NN per cent of the chances (-1 = the profile's CheckPct)
 		bool bCourseCheck = false;       // lane A151: the check press on course and time (contact.bPlaytesterCoursePress, or env JAM_PLAYTESTER_CHECK=course; =closing forces lane A132's press)
+		// Lane A184 (track F1, evolution 9): the held cross-check. BraceMode 0 = never; 1 = as a person would (the rule's own switch, contact.cross_hold: held from
+		// BraceFromM out when skating at an opposing carrier, closing at BraceClosingMps or more and not into his back; the body-check press is not made while
+		// braced); 2 = held whenever it does not carry (the "held all match" arm: env JAM_PLAYTESTER_BRACE=always; =off forces 0; measurement only).
+		int BraceMode = 0;
+		static constexpr double BraceFromM = 5.0;
+		static constexpr double BraceClosingMps = 3.0;
 		bool bOldCheck = false;          // lane A132: the check press on the playtester's own speed along the line, as before (contact.bPlaytesterClosingPress false, or env JAM_PLAYTESTER_CHECK=old for a measurement's before arm)
 		// Lane A134 (track Q2, evolution 3, item 1): the scripted human reads the body shield and the take grace as a person does (the HUD and the figure
 		// show both): no poke and no lift the sim would refuse (StickCannotTake), so the poke is there the frame the puck is in the open.
@@ -198,6 +204,11 @@ namespace JamAI
 		// play frames he lay on the ice; HumanStumbleFrames: play frames he stumbled. ShieldHuman / ShieldBots: hits the take shield capped
 		// (FJamSkaterState::ContactShielded), on the human and on every other skater.
 		int KdWon = 0, KdWon15 = 0, KdCarry = 0, KdNoPuck = 0, ShieldHuman = 0, ShieldBots = 0;
+		// Lane A184 (track F1, evolution 9): the held cross-check and the hits. CrossLanded: the human's cross-checks that stumbled or felled (pressed or
+		// braced); BraceLanded: of those, out of the brace; KdGiven: knockdowns the human's hits gave (any kind); BraceFrames / BraceHits: the human's frames
+		// braced and hits out of the brace (FJamSkaterState::CrossBraceFrames / CrossBraceHits); BotBraceHits: every other skater's hits out of a brace;
+		// BotCrossLanded / BotChecksLanded: the bots' landed cross-checks and body checks (stumble or down), every bot.
+		int CrossLanded = 0, BraceLanded = 0, KdGiven = 0, BraceFrames = 0, BraceHits = 0, BotBraceHits = 0, BotCrossLanded = 0, BotChecksLanded = 0;
 		int64_t HumanDownFrames = 0, HumanStumbleFrames = 0;
 		int64_t SlamDownFrames = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck

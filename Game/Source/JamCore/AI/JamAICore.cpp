@@ -466,6 +466,7 @@ namespace JamAI
 			Out[i].bPoke = In.bPoke;
 			Out[i].bCheck = In.bCheck;   // R-0031 point 2 (lane A45): the check press is live like the shot (a delayed press misses the 6-frame window)
 			Out[i].bLift = In.bLift;
+			Out[i].bCrossHold = In.bCrossHold;   // lane A184: the brace is live like the press it replaces
 			Out[i].bGoalie = In.bGoalie;
 			Out[i].GoalieSide = In.GoalieSide;
 			Out[i].bDeke = In.bDeke;   // lane A39: live, like the shot: a delayed deke would miss the moment
@@ -1147,7 +1148,10 @@ namespace JamAI
 			const FJamAISkater& T = W.Skaters[C];
 			const FVec2 Rel = T.Pos - S.Pos;
 			const double Dist = Rel.Length();
-			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM && !T.bDown && T.GraceFrames <= 0)   // lane A113 (R-0049 point 1): no check starts on a skater inside its release grace
+			// Lane A184 (game.contact.check_windup_frames): the window opens that many frames after the press, so the press goes as much earlier: the arm gap
+			// grows by the ground the closing speed covers in the wind-up (0 frames: the gap as it was, the same presses).
+			const double WindupLeadM = (W.CheckWindupFrames > 0 && Dist > 1e-6) ? Clamp((S.Vel - T.Vel).Dot(Rel * (1.0 / Dist)), 0.0, 1e9) * W.CheckWindupFrames / 60.0 : 0.0;
+			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM + WindupLeadM && !T.bDown && T.GraceFrames <= 0)   // lane A113 (R-0049 point 1): no check starts on a skater inside its release grace
 			{
 				const FVec2 N = Rel * (1.0 / Dist);   // the push: checker towards the carrier
 				const double Closing = (S.Vel - T.Vel).Dot(N);
@@ -1161,6 +1165,22 @@ namespace JamAI
 					In.bCheck = true;
 					CheckCool[Id] = CheckCoolFrames;
 				}
+			}
+		}
+		// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the bot's brace. Held on an opposing carrier it is closing on at K.CrossHoldClosing or more,
+		// from the front or the side (the sim's braced hit is not into a back), within CrossHoldRangeM of contact; let go otherwise, so the sim's brace re-arms
+		// after it was spent. -1 (every level) = never: the input stays false.
+		In.bCrossHold = false;
+		if (K.CrossHoldClosing >= 0.0 && bOppCarrier && C != Id && !bFreshTake && !S.bDown && !W.bFaceoffPhase)
+		{
+			constexpr double CrossHoldRangeM = 4.0;
+			const FJamAISkater& T = W.Skaters[C];
+			const FVec2 Rel = T.Pos - S.Pos;
+			const double Dist = Rel.Length();
+			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CrossHoldRangeM && !T.bDown && T.GraceFrames <= 0)
+			{
+				const FVec2 N = Rel * (1.0 / Dist);
+				if ((S.Vel - T.Vel).Dot(N) >= K.CrossHoldClosing && N.Dot(T.Facing.Normalized()) <= 0.35) In.bCrossHold = true;
 			}
 		}
 		// R-0019: never shoot from inside a no_shoot zone

@@ -69,7 +69,8 @@ FJamNetQuantInput FJamNetQuantInput::From(const FJamInput& In)
 	Q.StickY = Q16(In.Stick.Y);
 	Q.Flags = (In.bShoot ? Shoot : 0) | (In.bCheck ? Check : 0) | (In.bBrake ? Brake : 0) | (In.bShootHeld ? ShootHeld : 0)
 		| (In.bPass ? Pass : 0) | (In.bPoke ? Poke : 0) | (In.bLift ? Lift : 0) | (In.bDeke ? Deke : 0) | (In.bSprint ? Sprint : 0) | (In.bSpin ? Spin : 0) | (In.bPassHeld ? PassHeld : 0)
-		| (In.bAbility ? Ability : 0);   // lane A84
+		| (In.bAbility ? Ability : 0)   // lane A84
+		| (In.bCrossHold ? CrossHold : 0);   // lane A184 (protocol 9)
 	return Q;
 }
 
@@ -90,13 +91,14 @@ FJamInput FJamNetQuantInput::ToInput() const
 	In.bSpin = (Flags & Spin) != 0;   // lane A51
 	In.bPassHeld = (Flags & PassHeld) != 0;   // lane A77
 	In.bAbility = (Flags & Ability) != 0;   // lane A84 (R-0041 point 3)
+	In.bCrossHold = (Flags & CrossHold) != 0;   // lane A184 (R-0064 point 1): the held cross-check, a level
 	return In;
 }
 
 TArray<FName> FJamNetQuantInput::CoveredFields()
 {
 	return { FName(TEXT("Move")), FName(TEXT("bShoot")), FName(TEXT("bShootHeld")), FName(TEXT("bPass")), FName(TEXT("bCheck")), FName(TEXT("bBrake")),
-		FName(TEXT("Stick")), FName(TEXT("bPoke")), FName(TEXT("bLift")), FName(TEXT("bDeke")), FName(TEXT("bSprint")), FName(TEXT("bSpin")), FName(TEXT("bPassHeld")), FName(TEXT("bAbility")) };
+		FName(TEXT("Stick")), FName(TEXT("bPoke")), FName(TEXT("bLift")), FName(TEXT("bDeke")), FName(TEXT("bSprint")), FName(TEXT("bSpin")), FName(TEXT("bPassHeld")), FName(TEXT("bAbility")), FName(TEXT("bCrossHold")) };
 }
 
 void FJamNetInputPacket::Write(TArray<uint8>& Out) const

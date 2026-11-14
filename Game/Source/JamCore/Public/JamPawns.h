@@ -124,6 +124,12 @@ public:
 	//   PlayStumble(DirX, DirZ, Frames)  one-shot on the first frame of a stumble a hit caused (the victim's, or the attacker's own bounce): the push as
 	//                                    PlayHitReaction's, Frames = the frames the sim still holds the skater without control (StumbleFramesFor). A figure
 	//                                    without it gets PlayHitReaction(DirX, DirZ) as before. A bump keeps PlayHitReaction.
+	//   PlayCheckWindup(Frames)          lane A184: one-shot on a body-check press that has a wind-up (game.contact.check_windup_frames): the window opens
+	//                                    Frames sim frames later (PlayCheck still plays on the press). A figure without it gets PlayCheck alone.
+	//   PlayCrossCheck(Frames)           lane A184: one-shot on every cross-check press (the lift's swing), with the frames until it lands (0 = this frame;
+	//                                    game.contact.cross_windup_frames). PlayLift still plays on the press. A figure without it gets PlayLift alone.
+	//   SetCrossCheckHold(bOn)           lane A184: level, on the change: true while the sim holds the skater braced (FJamSkaterState::bCrossBraced, the held
+	//                                    cross-check), false when the brace ends (released, spent on a body, the skater down). A figure without it gets nothing.
 	//   SetBraking(bOn, Decel)           level, on the change: true on the frames the sim applies the reverse brake (FJamSkaterState::bReverseBraking, the sim's
 	//                                    own condition), Decel = the speed the sim took off that frame, in m/s^2 (BrakeDecelFor); false, 0 when it ends. A
 	//                                    figure without it gets nothing.
@@ -158,6 +164,7 @@ private:
 	bool bWasPinned = false;   // lane A45 (C-0001 v4): SetBoardPin level, sent on the change
 	int32 SeenSoft = 0, SeenMissed = 0, SeenGraced = 0;   // lane A113: the sim's press counters at the last frame applied (the JAMVIS press line)
 	bool bWasBraking = false;   // lane A125: SetBraking level, sent on the change
+	bool bWasCrossBraced = false;   // lane A184: SetCrossCheckHold level, sent on the change
 	bool bWasTakeGrace = false, bWasStickLock = false;   // lane A163 (track F2): the take grace and the stick lock at the last frame applied (the JAMVIS takegrace / sticklock lines)
 	double LastSimSpeed = 0.0;   // lane A125: the sim speed at the last frame applied (SetBraking's Decel)
 	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.

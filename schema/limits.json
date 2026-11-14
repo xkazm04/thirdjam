@@ -135,6 +135,8 @@
     "contact.take_shield_stagger_max": "0..90",
     "contact.lunge_frames": "0..30",
     "contact.lunge_step_mps": "0..4",
+    "contact.check_windup_frames": "0..12",
+    "contact.cross_windup_frames": "0..12",
     "rules.mode": "first_to|timer",
     "rules.score_to_win": "1..9",
     "rules.timer_frames": "600..28800",

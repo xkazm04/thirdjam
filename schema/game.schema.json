@@ -939,6 +939,22 @@
           "minimum": 0,
           "maximum": 4,
           "description": "The lunge's forward step in m/s, added to the velocity along the facing when a lunge starts (lunge_frames above 0). It is real closing speed in the hit, so the impulse's own lunge_mps is reduced by it while the lunge runs (at lunge_step_mps = lunge_mps a head-on hit is the hit it was). 0 = the neutral value."
+        },
+        "cross_hold": {
+          "type": "boolean",
+          "description": "The held cross-check (R-0064 points 1 and 5): the cross-check button held 10 frames or more without the puck braces the skater (stick across the body): the first opponent his body meets while braced takes the cross-check by the momentum he brings (closing speed plus thrust_mps, the pressed cross-check's own line; not into a back); then the brace is spent until the button is released. A tap is the pressed cross-check as before. Its prices: no poke, no lift, no pass reception and no sprint while braced, top speed x 0.9 and turning x 0.7, and a braced skater hit by a man closing faster than he skates himself stands at 0.75 of his stability. Part of the momentum model (contact.momentum true). false = the neutral value: the held button does nothing."
+        },
+        "check_windup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "The body check's wind-up (R-0064 point 5): a pressed check opens its window this many frames after the press, so the figure's take has a beat the eye catches before the contact; the cooldown and the figure's call stay on the press, a press inside the wind-up is the same press, a skater that loses its feet or gets the puck in it loses the press. 0 = the neutral value: the window opens on the press's frame."
+        },
+        "cross_windup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "The cross-check's wind-up (R-0064 point 5): a pressed cross-check (the stick lift's swing: its shove, its strip and its miss) lands this many frames after the press, on the positions of that frame; the swing's cooldown and the figure's call stay on the press. 0 = the neutral value: the swing lands on the press's frame."
         }
       }
     },

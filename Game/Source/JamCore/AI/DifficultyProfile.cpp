@@ -153,6 +153,7 @@ namespace JamAI
 			if (std::strcmp(Key, "deke") == 0) { K.bDeke = V != 0.0; return true; }
 			if (std::strcmp(Key, "check_min_closing") == 0) { K.CheckMinClosing = V; return true; }   // R-0031 point 2 (lane A45); -1 = never
 			if (std::strcmp(Key, "check_from_behind") == 0) { K.bCheckFromBehind = V != 0.0; return true; }
+			if (std::strcmp(Key, "cross_hold_closing") == 0) { K.CrossHoldClosing = V; return true; }   // lane A184: the bots' brace; -1 = never
 			if (std::strcmp(Key, "hunt_radius_m") == 0) { K.HuntRadiusM = V; return true; }   // R-0041 point 1 (lane A79)
 			// Lane A94 (R-0045 law 2): the hockey principles. hk_on 0 | 1 switches all four; the others tune one.
 			if (std::strcmp(Key, "hk_on") == 0) { K.Hk.bCarryOrPass = K.Hk.bAttackShape = K.Hk.bDefenceShape = K.Hk.bTransition = V != 0.0; return true; }

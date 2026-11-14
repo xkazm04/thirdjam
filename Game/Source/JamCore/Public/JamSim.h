@@ -95,6 +95,14 @@ struct JAMCORE_API FJamInput
 	// (a mode grant from the drop, or a pickup grant). LOCKSTEP: FJamNetQuantInput carries it as flag bit 2048 (protocol 7).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bAbility = false;
+
+	// Lane A184 (track F1, evolution 9; R-0064 points 1 and 5): the cross-check held (level): true on every frame the cross-check button is held while the
+	// skater does not carry the puck (the controls lane maps LMB without the puck: the press itself still sends bLift, today's cross-check). With
+	// game.contact.cross_hold on, a hold of UJamSim::CrossHoldTapFrames or more BRACES the skater (stick across the body): the first opponent his body meets
+	// takes the cross-check with the momentum he brings; then the brace is spent until the button is released. Ignored with cross_hold off.
+	// LOCKSTEP: FJamNetQuantInput carries it as flag bit 4096 (protocol 9), a held level.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bCrossHold = false;
 };
 
 // (Named EJamSimPhase, not EJamPhase: lane A5's presentation enum EJamPhase lives in JamGame/HUDFeed.h.)
@@ -345,6 +353,23 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 TakeShieldLeft = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactShield = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactShielded = 0;
+	// Lane A184 (track F1, evolution 9): the held cross-check (game.contact.cross_hold) and the wind-ups (game.contact.check_windup_frames,
+	// cross_windup_frames). RULE STATE, hashed in StateHash() behind tags while not at its default (so the keys' neutral values hash as before):
+	// CrossHoldFrames, the frames FJamInput::bCrossHold has been held in a row while the skater could brace (0 = released); bCrossBraced, braced this frame
+	// (read by the contact, the puck, the poke and the lift, the skating); bCrossSpent, the brace was spent on a body (or the skater was hit, went down or got
+	// the puck) and stays spent until the button is released; CheckWindupLeft, frames until a pressed check's window opens; LiftWindupLeft, frames until a
+	// pressed cross-check (the lift's swing) resolves. Read-outs, never hashed, read by no rule: CrossBraceFrames (frames braced, a match statistic),
+	// CrossBraceHits (hits delivered out of the brace), bCrossBraceHit (this frame's hit on the victim came out of a brace), WindupFrames (the frames to
+	// contact the figure is told on this frame's press: PlayCheckWindup / PlayCrossCheck by name; 0 = none).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossHoldFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossBraced = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossSpent = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CheckWindupLeft = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LiftWindupLeft = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceHits = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossBraceHit = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 WindupFrames = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
@@ -669,6 +694,23 @@ public:
 	// at LungeSteerShare of its turn rate; a lunge that runs out on nobody costs LungeMissCost x lunge_step_mps of speed.
 	static constexpr double LungeSteerShare = 0.25;
 	static constexpr double LungeMissCost = 2.0;
+	// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the held cross-check. A hold shorter than CrossHoldTapFrames is a tap (today's cross-check,
+	// sent by the press's bLift, unchanged); from that many frames held the skater is braced. Its prices (a commitment, not a shield): no poke, no lift, no
+	// reception (the blade takes no pass and no loose puck) and no sprint while braced; top speed x CrossHoldSpeedShare and turn rate x CrossHoldTurnShare;
+	// a braced skater hit by a man closing faster than he skates himself stands at CrossHoldExposed of his stability (the stick is across, not braced
+	// against the hit). StepCrossHold runs it at the start of the skater's input step.
+	static constexpr int32 CrossHoldTapFrames = 10;
+	static constexpr double CrossHoldSpeedShare = 0.9;
+	static constexpr double CrossHoldTurnShare = 0.7;
+	static constexpr double CrossHoldExposed = 0.75;
+	void StepCrossHold(FJamSkaterState& S, const FJamInput& In);
+	// Lane A184: the lift's swing as TryLift ran it, after the press's cooldown (TryLift calls it at once, or StepWindups when cross_windup_frames runs out).
+	void ResolveLift(FJamSkaterState& S);
+	// Lane A184: the wind-ups' clocks (game.contact.check_windup_frames, cross_windup_frames), in the skater's input step: a check whose wind-up ends opens
+	// its window (and its lunge) now; a cross-check whose wind-up ends swings now.
+	void StepWindups(FJamSkaterState& S, bool bStickLocked);
+	// Lane A184: open the pressed check's window (and the lunge): the press's own frame without a wind-up, the wind-up's last frame with one.
+	void OpenCheckWindow(FJamSkaterState& S);
 	// Lane A165 (track F1, evolution 7): the board slam (game.contact.board_slam_frames). Earned by a knockdown whose victim's centre is within
 	// BoardSlamRangeM of the boards (0.6 m of ice between its body and them) with the attacker closing on it along the boards' outward normal at
 	// BoardSlamMinMps or more. ResolveContact reads both.

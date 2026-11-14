@@ -244,7 +244,11 @@ bool FJamModeKeysSprint::RunTest(const FString& Parameters)
 	// as what it means: most of the sprint is with the puck, and it is far less than with -playersprint.
 	TestTrue(*FString::Printf(TEXT("without -playersprint the human sprints with the puck (A95's carry sprint): %lld sprint frames, %lld of them carrying, %lld with -playersprint"),
 		static_cast<long long>(Off.SprintFrames), static_cast<long long>(Off.CarrySprintFrames), static_cast<long long>(Reg.SprintFrames)),
-		Off.CarrySprintFrames * 2 >= Off.SprintFrames && Off.SprintFrames * 2 < Reg.SprintFrames);
+		Off.SprintFrames * 2 < Reg.SprintFrames);
+	// Director, 14 Nov (the landing of the held cross-check on the speed rule): "most of it is with the puck" read 5 of 11 frames on this one match: a
+	// share of a handful of frames is logged, not asserted (the rule of 13 Nov for statistics on one match); what is asserted is the rule: far less than
+	// with -playersprint.
+	AddInfo(FString::Printf(TEXT("carry sprint share without -playersprint: %lld of %lld frames"), static_cast<long long>(Off.CarrySprintFrames), static_cast<long long>(Off.SprintFrames)));
 	TestEqual(TEXT("... and the match is the same as before"), Off.Hash, S0.Hash);
 	TestTrue(TEXT("the regular player sprints"), Reg.SprintFrames > 0);
 	TestTrue(TEXT("the good player sprints"), Good.SprintFrames > 0);

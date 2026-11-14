@@ -337,7 +337,7 @@ bool JamControls::HasPuckForButtons(const UJamSim& Sim, int32 Skater)
 
 // A184 (the contact lane) adds FJamInput::bCrossHold. Until that field is on this tree the hold is computed, logged and dropped here.
 // THE DIRECTOR FLIPS THIS ONE LINE when A183 and A184 are both on main: 0 -> 1.
-#define JAM_INPUT_HAS_CROSS_HOLD 0
+#define JAM_INPUT_HAS_CROSS_HOLD 1
 
 void JamControls::SetCrossHold(FJamInput& In, bool bHeld)
 {

@@ -76,6 +76,7 @@ namespace JamAI
 		bool bPassHeld = false;    // lane A77 (R-0036): pass held (FJamInput::bPassHeld) for the saucer: held W.SaucerHalfFrames then released; the sim lifts the pass
 		bool bSprint = false;      // lane A72 (asks A2, A3): sprint held (FJamInput::bSprint); the brain with game.ai.sprint, the playtester with -playersprint
 		bool bAbility = false;     // lane A84 (R-0041 point 3): the held ability on F (FJamInput::bAbility); the playtester sends it, the brain never does
+		bool bCrossHold = false;   // lane A184 (R-0064 point 1): the held cross-check (FJamInput::bCrossHold), a level; the playtester, and bots with FJamBotSkill::CrossHoldClosing
 	};
 
 	// Lane A94 (R-0045 law 2, docs/VISION.md section 2, docs/experiments/BRAIN.md): the hockey principles. Every level knows them; the level decides how
@@ -362,6 +363,10 @@ namespace JamAI
 		// push would run along the carrier's facing (the sim's foul_from_behind band, 0.5; the brain keeps a margin at 0.35), so no bot ever earns the box for it.
 		double CheckMinClosing = -1.0;
 		bool bCheckFromBehind = false;
+		// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the bot braces (holds the cross-check) on an opposing carrier it closes on at this many m/s
+		// or more, from the front or the side, inside CrossHoldRangeM of contact, and lets go when that is no longer so. -1 = never (every level ships at -1:
+		// the neutral value; the sim ignores the hold with cross_hold off anyway). Tune key cross_hold_closing.
+		double CrossHoldClosing = -1.0;
 		// Lane A72 (ask A5, game.ai.body_check): the share of the chances above that the bot takes; the coin is a fixed function of the skater and the
 		// one-second window. 1 = every chance (the levels' own rule), 0 = never. Only a cartridge that writes game.ai.body_check changes it.
 		double BodyCheckShare = 1.0;
@@ -532,6 +537,7 @@ namespace JamAI
 		double CarrierReach() const { return (ShotReach > SkaterRadius + StickReach ? ShotReach : SkaterRadius + StickReach) + 0.05; }
 		double LiftRange = 1.0;         // game.stick.lift_range_m
 		double LiftConeDeg = 180.0;     // lane A95 (B-to-A-0037): game.stick.lift_cone_deg (the brain lifts only inside it)
+		int CheckWindupFrames = 0;      // lane A184: game.contact.check_windup_frames (a pressed check's window opens this many frames after the press: press that much earlier)
 		// Lane A95 (R-0045 law 3 / 4): the movement verbs the sim offers (A93's keys; 0 = the verb is off). The playtester uses a verb only when it exists.
 		double ReverseBrakeDecel = 0.0; // game.skater.reverse_brake_decel
 		int BurstFrames = 0;            // game.skater.burst.frames
