@@ -440,3 +440,4 @@
 - link green 04:27: main a9446394 (PLAY NOW plays the level that is lit: the match is built once (Director, from lane A155's ) pushed.
 - link green 04:44: main a46c8081 (Merge device B's night (dev-b 83c76776) with the arena's last pass (A160), the unused figu) pushed.
 - link green 04:52: main 1f5b6389 (Nothing is drawn over a downed player (A158, track U1), and the contact track's next three) pushed.
+- link green 05:00: main d21fa8b8 (The player sees why: a yellow ring while no stick can take the puck, STICK LOCKED after a ) pushed.

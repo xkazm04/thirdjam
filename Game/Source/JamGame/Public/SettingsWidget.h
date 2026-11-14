@@ -56,6 +56,8 @@ struct JAMGAME_API FJamSettings
 	// Tests: Load() returns this instead of the saved file while it is set (null clears it). Nothing is written.
 	static void SetOverrideForTest(const FJamSettings* Settings);
 	void Save() const;
+	// Lane A164: false when this process writes no config file (-Multiprocess without -MultiprocessSaveConfig, or -nowrite): a save lives in memory.
+	static bool WritesReachDisk();
 	// Applies what applies anywhere (the volume). The look tier is applied per match by UJamDirectorsCallController.
 	void Apply() const;
 

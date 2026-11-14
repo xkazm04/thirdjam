@@ -21,6 +21,8 @@ param(
     [switch]$Switch,       # instead of the stills: the first screen's level switch, stepped by real key presses (jam.menuscreen key right / left), then Enter: the match must start at the level picked
     [switch]$Level,        # instead of the stills: PLAY NOW, then the match card and the pause card, which name the level in force (JAMMATCH level=... in menu-lines.txt)
     [switch]$Walk,         # instead of the stills: the pad walk (jam.menuscreen walk); prints its JAMMENU walk lines; exit 0 when the verdict is pass
+    [switch]$Where,        # lane A164: instead of the stills: every screen's places from the widgets' own geometry (jam.menuscreen where) at 1920x1080 and 1280x720, into where-lines.txt
+    [switch]$ClickReturn,  # lane A164: instead of the stills: ROOKIE, then a Slate-routed click on PRO (jam.menuscreen click pro), then Return: the match must play pro
     [switch]$Say,          # also direct one sentence on the Direct screen: with an API key on the machine this is a live, paid call
     [int]$ScriptHuman = 1,
     [int]$EndTimeoutSec = 120,
@@ -140,6 +142,37 @@ if ($Level) {
     [void](Console 'r.SetRes 1280x720w'); Start-Sleep -Seconds 2
     Still '720-pause' 800
     Finish 0 'the level is on the match card and the pause card'
+}
+
+if ($Where) {
+    # The places a driver clicks, read from the widgets themselves (MENU.md section 3 is written from this): no driver hard-codes a number.
+    foreach ($res in @(@{ n = '1080'; s = '1920x1080w' }, @{ n = '720'; s = '1280x720w' })) {
+        [void](Console "r.SetRes $($res.s)"); Start-Sleep -Seconds 2
+        foreach ($scr in @('main', 'cuts', 'direct', 'settings', 'controls', 'credits')) { [void](Console "jam.menuscreen $scr"); Start-Sleep -Milliseconds 900; [void](Console 'jam.menuscreen where'); Start-Sleep -Milliseconds 300 }
+    }
+    [void](Console 'r.SetRes 1920x1080w'); [void](Console 'jam.menuscreen main'); Start-Sleep -Milliseconds 500
+    $lines = @(Select-String -Path $log -Pattern 'JAMMENU (where|place)' | ForEach-Object { $_.Line -replace '^.*JAMMENU ', 'JAMMENU ' })
+    $lines | ForEach-Object { Write-Host "  | $_" }
+    $lines | Set-Content (Join-Path $out 'where-lines.txt')
+    Still '1080-main-where' 300
+    if (@($lines | Where-Object { $_ -match 'place screen=main label="PLAY NOW".*painted=1' }).Count -lt 2) { Finish 1 'PLAY NOW has no painted place at one of the two sizes' }
+    Finish 0 'every screen printed its places'
+}
+
+if ($ClickReturn) {
+    # The window's fault (A155): a click on a level segment took the keyboard focus off PLAY NOW and Return started nothing.
+    [void](Console 'jam.menuscreen level rookie'); Start-Sleep -Milliseconds 500
+    [void](Console 'jam.menuscreen click pro'); Start-Sleep -Milliseconds 500
+    Still '1080-pro-clicked' 300
+    [void](Console 'jam.menuscreen key enter')
+    $started = WaitLog 'JAMMATCH level=' 60
+    Start-Sleep -Seconds 2
+    $lines = @(Select-String -Path $log -Pattern 'JAMMENU (click|segment|key|level picked|start|focus home)|JAMMATCH level|JAMSETTINGS saved' | ForEach-Object { $_.Line -replace '^.*(JAMMENU|JAMMATCH|JAMSETTINGS)', '$1' })
+    $lines | ForEach-Object { Write-Host "  | $_" }
+    $lines | Set-Content (Join-Path $out 'click-return-lines.txt')
+    if (-not $started) { Finish 1 'Return after the click on PRO started nothing' }
+    if (@($lines | Where-Object { $_ -match 'MATCH level=pro source=settings' }).Count -eq 0) { Finish 1 'the match did not play the level clicked (pro)' }
+    Finish 0 'click PRO, Return: the match plays pro'
 }
 
 if ($Walk) {

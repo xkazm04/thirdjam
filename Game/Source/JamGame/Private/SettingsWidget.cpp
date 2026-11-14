@@ -10,11 +10,15 @@
 #include "Components/SizeBox.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/App.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 
 using namespace JamMenuStyle;
 using S = FJamUiStyle;
+
+DEFINE_LOG_CATEGORY_STATIC(LogJamSettings, Log, All);
 
 // Lane A18 (visual layer): two columns (key, difficulty, look | volume, voice, barks) with kit icons, the controls under both;
 // type and plates from FJamUiStyle. The settings themselves (load, save, apply) are lane A8's.
@@ -82,8 +86,21 @@ void FJamSettings::Save() const
 	// A test's profile stays in memory: nothing of a test reaches the player's file.
 	if (GJamSettingsForTest.IsSet()) { GJamSettingsForTest = *this; return; }
 	if (!GConfig) return;
+	// Every key in one save and one flush: the level and its pick key never travel apart.
 	for (const TPair<FString, FString>& P : ToSaved()) GConfig->SetString(Section, *P.Key, *P.Value, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
+	// Lane A164 (evolution 4): say whether this save reaches the disk. A process started with -Multiprocess (the gate, the off-screen stills, an
+	// uncooked `-game -Multiprocess` window) keeps it in memory only (the engine's ConfigContext / AreWritesAllowedGlobally), so a restart of such a
+	// process reads the file as it was: that is the flag, not the game (A155's editor-mode "pick lost").
+	UE_LOG(LogJamSettings, Log, TEXT("JAMSETTINGS saved difficulty=%s chosen=%d to_disk=%d file=%s"), *DifficultyString(Difficulty), bDifficultyChosen ? 1 : 0,
+		WritesReachDisk() ? 1 : 0, *GGameUserSettingsIni);
+}
+
+bool FJamSettings::WritesReachDisk()
+{
+	const TCHAR* Cmd = FCommandLine::Get();
+	if (FParse::Param(Cmd, TEXT("nowrite"))) return false;
+	return !FParse::Param(Cmd, TEXT("Multiprocess")) || FParse::Param(Cmd, TEXT("MultiprocessSaveConfig"));
 }
 
 void FJamSettings::Apply() const
@@ -295,6 +312,7 @@ void UJamSettingsWidget::OnVoiceClicked()
 
 void UJamSettingsWidget::OnBarksClicked()
 {
+	Settings = FJamSettings::Load();   // lane A164: a press changes its own field on the profile as saved, never on a copy older than the switch's pick
 	// Cycle: cut's own -> on, quiet -> on, normal -> on, loud -> off -> cut's own.
 	if (Settings.Barks < 0) { Settings.Barks = 1; Settings.BarkIntensity = TEXT("quiet"); }
 	else if (Settings.Barks == 1 && Settings.BarkIntensity == TEXT("quiet")) Settings.BarkIntensity = TEXT("normal");
@@ -356,6 +374,7 @@ void UJamSettingsWidget::OnClearKey()
 void UJamSettingsWidget::OnDifficultyClicked()
 {
 	// Lane A144: the button steps on from what it shows (rookie on a first run), and a press is the player's pick from now on.
+	Settings = FJamSettings::Load();   // lane A164: from the level in force now (the first screen's switch may have moved it since this panel loaded)
 	Settings.Difficulty = static_cast<EJamMenuDifficulty>((static_cast<uint8>(Settings.EffectiveDifficulty()) + 1) % 3);
 	Settings.bDifficultyChosen = true;
 	Settings.Save();
@@ -364,6 +383,7 @@ void UJamSettingsWidget::OnDifficultyClicked()
 
 void UJamSettingsWidget::OnTierClicked()
 {
+	Settings = FJamSettings::Load();   // lane A164: the profile as saved, so this save cannot put back an older level or pick key
 	TArray<FString> Options;
 	Options.Add(FString());
 	Options.Append(ULookTierSwitcher::GetKnownTiers());
@@ -375,6 +395,8 @@ void UJamSettingsWidget::OnTierClicked()
 
 void UJamSettingsWidget::OnVolumeChanged(float V)
 {
+	// Lane A164: the slider also fires when RefreshLabels sets it (USlider::SetValue broadcasts a change): the volume goes onto the profile as saved.
+	Settings = FJamSettings::Load();
 	Settings.Volume = FMath::Clamp(V, 0.f, 1.f);
 	Settings.Apply();
 	Settings.Save();

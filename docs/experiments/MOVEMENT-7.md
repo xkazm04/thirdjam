@@ -141,7 +141,8 @@ this brief. It ships as code only at 0; its key, for every skater, belongs to th
 |---|---|---|---|---|
 | base (`baseC`, build 1 = a7d89871) | 86.5 | 53.2 | 30.0 | |
 | `stop_grace_frames 30` (`stop30C`) | 86.5 | 52.8 | 34.0 | 0 / -0.4 / **+4.0** |
-| the pickup settles (code only) | | | | its 600-seed cells were still running when the tree was closed: `status/A163.md` has them |
+| the pickup settles 6 frames, every skater (code arm; the trace's 600 matches a cell paired by seed, `Game/logs/a163/cellpair.mjs`) | 92.3 | 44.2 | 25.0 | **+5.8 / -9.0 / -5.0** |
+| the pickup settles 6 frames, a person's only (the same) | 97.7 | 69.7 | 47.0 | **+11.2 / +16.5 / +17.0** |
 
 With the default instrument (lane A151's press) the base reads 87.0 / 54.7 / 29.8 on the same seeds.
 
@@ -253,7 +254,8 @@ Outside the gate: `Bar.Movement.CarryTrace` (sections 2 to 4; its `set` takes `s
    `FJamStickConfig::PickupSettleFrames`, `bPickupSettleBots`). A puck met at more than 4 m/s against the body is touched and slides on: half of the
    human's short touches and 8.5 % of his carries. Proof: the puck on nobody's blade at pro 49.7 % -> 45 % or less (the arm read 43.2 %), the carries that
    leave the blade with no cause 8.5 % -> under 4 % (3.7 %), possessions under 20 frames halved; and the three cells back inside 3 points of 85 / 48 / 26
-   after the curve lane's numbers (the arm alone reads pro 63 -> 38 of 100 with the default instrument: it cannot land without them).
+   after the curve lane's numbers (the arm alone reads +5.8 / -9.0 / -5.0 on 600 paired seeds a cell, the puck on nobody's blade 43.1 % at pro on
+   those 600: it cannot land without them).
 2. **The contested puck: a cue, and the arrival.** 65 % of his knockdowns (6.1 of the 9.1 % of play he lies down) fall within half a second of his first
    touch, at 16 m/s of closing. A mark on a loose puck an opponent will reach head-on within a quarter second of him (the track's HUD function, one
    element), and the instrument braking for it, so the number can be read. Proof: knockdowns "as he won it" 4.4 a match -> under 2.5; he lies down under

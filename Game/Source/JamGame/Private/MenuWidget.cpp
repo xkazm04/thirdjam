@@ -24,6 +24,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 
 using namespace JamMenuStyle;
 using S = FJamUiStyle;
@@ -901,9 +903,29 @@ void UJamMenuWidget::StepLevel(int32 Delta)
 	if (Next != Now) PickLevel(static_cast<EJamMenuDifficulty>(Next));
 }
 
-void UJamMenuWidget::OnLevelRookieClicked() { PickLevel(EJamMenuDifficulty::Rookie); }
-void UJamMenuWidget::OnLevelProClicked() { PickLevel(EJamMenuDifficulty::Pro); }
-void UJamMenuWidget::OnLevelAllStarClicked() { PickLevel(EJamMenuDifficulty::AllStar); }
+void UJamMenuWidget::OnLevelRookieClicked() { OnSegmentClicked(EJamMenuDifficulty::Rookie); }
+void UJamMenuWidget::OnLevelProClicked() { OnSegmentClicked(EJamMenuDifficulty::Pro); }
+void UJamMenuWidget::OnLevelAllStarClicked() { OnSegmentClicked(EJamMenuDifficulty::AllStar); }
+
+void UJamMenuWidget::OnSegmentClicked(EJamMenuDifficulty Level)
+{
+	PickLevel(Level);
+	// Lane A164 (evolution 4): "click PRO, press Return" plays pro. The segments take no focus, so on the mouse-down Slate gave the keyboard focus
+	// to the leaf-most focusable widget under the pointer (FSlateApplication::RoutePointerDownEvent): the menu widget itself, where Return started
+	// nothing (seen twice in a window, A155). The focus goes back to PLAY NOW now, and once more on the next tick should the mouse-up move it.
+	if (Screen == EJamMenuScreen::Main && PlayNowButton)
+	{
+		PlayNowButton->SetFocus();
+		PendingFocus = PlayNowButton.Get();
+	}
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU segment clicked level=%s focus=play_now"), *FJamSettings::DifficultyString(Level));
+}
+
+bool UJamMenuWidget::IsFocusOnPlayNow() const
+{
+	APlayerController* PC = GetOwningPlayer();
+	return PlayNowButton && PC && PlayNowButton->HasUserFocus(PC);
+}
 
 UWidget* UJamMenuWidget::OnPlayNowNavigate(EUINavigation Direction)
 {
@@ -986,6 +1008,18 @@ void UJamMenuWidget::OnQuitClicked()
 void UJamMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+	// Lane A164 (evolution 4): on the first screen the keyboard focus never rests on the menu widget itself (a click on a segment, on the title or
+	// on the card's empty cloth puts it there, and Return then started nothing): it goes home to PLAY NOW. A focus anywhere else (a button of this
+	// screen, the lobby's boxes over the menu, a text box) is left where the player put it.
+	if (Screen == EJamMenuScreen::Main && WalkScreen < 0 && PlayNowButton && PlayNowButton->GetIsEnabled() && !PendingFocus.IsValid())
+	{
+		APlayerController* PC = GetOwningPlayer();
+		if (PC && HasUserFocus(PC))
+		{
+			PendingFocus = PlayNowButton.Get();
+			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU focus home from=menu to=play_now"));
+		}
+	}
 	if (PendingFocus.IsValid())
 	{
 		PendingFocus->SetFocus();
@@ -1003,6 +1037,16 @@ FReply UJamMenuWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEv
 	if (IsBackKey(InKeyEvent.GetKey()) && Screen != EJamMenuScreen::Main)
 	{
 		ShowScreen(EJamMenuScreen::Main);
+		return FReply::Handled();
+	}
+	// Lane A164 (evolution 4): Return and the pad's A on the first screen always start the match. A focused button takes the key itself (a click on
+	// that button); a key that reaches the menu widget (nothing of the first screen had the focus) presses PLAY NOW. The first screen has no text box.
+	const FKey K = InKeyEvent.GetKey();
+	if (Screen == EJamMenuScreen::Main && WalkScreen < 0 && PlayNowButton && PlayNowButton->GetIsEnabled()
+		&& (K == EKeys::Enter || K == EKeys::Gamepad_FaceButton_Bottom))
+	{
+		UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU start key %s reached the menu: PLAY NOW"), *K.ToString());
+		PlayNow();
 		return FReply::Handled();
 	}
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
@@ -1096,6 +1140,87 @@ void UJamMenuWidget::PressKeyForQa(const FKey& Key)
 		PlayNowButton && PlayNowButton->GetCachedWidget() == After ? 1 : 0, Before != After ? 1 : 0, *FJamSettings::DifficultyString(SwitchLevel));
 }
 
+TArray<FString> UJamMenuWidget::GetPlacesForQa() const
+{
+	// Lane A164 (evolution 4): the places of the shown screen from the widgets' own painted geometry. Paint space is the game window's client
+	// area in pixels (the viewport fills it); the 1920 x 1080 figures scale that by the viewport's size, as MENU.md's tables are written.
+	TArray<FString> Out;
+	TArray<UWidget*> Places = FocusablesOf(Screen);
+	if (Screen == EJamMenuScreen::Main)
+	{
+		// The level segments take a click and no focus: listed after PLAY NOW, where they sit.
+		int32 At = Places.IndexOfByKey(PlayNowButton.Get()) + 1;
+		for (const TObjectPtr<UButton>& B : LevelButtons) if (B) Places.Insert(B.Get(), At++);
+	}
+	FVector2D Vp(1920.0, 1080.0);
+	if (GEngine && GEngine->GameViewport) { FVector2D S; GEngine->GameViewport->GetViewportSize(S); if (S.X > 1.0 && S.Y > 1.0) Vp = S; }
+	for (UWidget* W : Places)
+	{
+		const TSharedPtr<SWidget> Slate = W ? W->GetCachedWidget() : nullptr;
+		if (!Slate.IsValid()) continue;
+		const FGeometry G = Slate->GetPaintSpaceGeometry();
+		const FVector2D Size = FVector2D(G.GetAbsoluteSize());
+		const FVector2D C = FVector2D(G.GetAbsolutePosition()) + Size * 0.5;
+		const bool bPainted = Size.X > 0.5 && Size.Y > 0.5;
+		Out.Add(FString::Printf(TEXT("screen=%s label=\"%s\" x=%d y=%d w=%d h=%d at1080=%d,%d painted=%d"), WalkNames[FMath::Clamp(static_cast<int32>(Screen), 0, 5)],
+			*WalkLabel(W).Replace(TEXT("\n"), TEXT(" ")), FMath::RoundToInt32(C.X), FMath::RoundToInt32(C.Y), FMath::RoundToInt32(Size.X), FMath::RoundToInt32(Size.Y),
+			FMath::RoundToInt32(C.X * 1920.0 / Vp.X), FMath::RoundToInt32(C.Y * 1080.0 / Vp.Y), bPainted ? 1 : 0));
+	}
+	return Out;
+}
+
+bool UJamMenuWidget::ClickForQa(UWidget* W, FString& Why)
+{
+	bLastClickDownOnMenu = false;
+	if (!FSlateApplication::IsInitialized()) { Why = TEXT("no Slate application"); return false; }
+	const TSharedPtr<SWidget> Slate = W ? W->GetCachedWidget() : nullptr;
+	if (!Slate.IsValid()) { Why = TEXT("the widget has no Slate widget"); return false; }
+	FWidgetPath Full;
+	if (!FSlateApplication::Get().GeneratePathToWidgetUnchecked(Slate.ToSharedRef(), Full) || !Full.IsValid()) { Why = TEXT("no widget path to it"); return false; }
+	// The whole path from the window to the widget (contiguous, so the capture and the hover Slate keep as weak paths resolve again), each step
+	// with no virtual pointer (no 3D widget on it).
+	TArray<FWidgetAndPointer> Steps;
+	for (int32 i = 0; i < Full.Widgets.Num(); ++i) Steps.Add(FWidgetAndPointer(Full.Widgets[i], TOptional<FVirtualPointerPosition>()));
+	const FWidgetPath Path(Steps);
+	if (!Path.IsValid()) { Why = TEXT("the click's path did not build"); return false; }
+	const FGeometry G = Path.Widgets.Last().Geometry;
+	const FVector2D At = FVector2D(G.GetAbsolutePosition()) + FVector2D(G.GetAbsoluteSize()) * 0.5;
+	TSet<FKey> Down;
+	Down.Add(EKeys::LeftMouseButton);
+	const uint32 Pointer = FSlateApplicationBase::CursorPointerIndex;
+	FSlateApplication::Get().RoutePointerMoveEvent(Path, FPointerEvent(WalkUser, Pointer, At, At, TSet<FKey>(), FKey(), 0.f, FModifierKeysState()), false);
+	FSlateApplication::Get().RoutePointerDownEvent(Path, FPointerEvent(WalkUser, Pointer, At, At, Down, EKeys::LeftMouseButton, 0.f, FModifierKeysState()));
+	APlayerController* PC = GetOwningPlayer();
+	bLastClickDownOnMenu = PC && HasUserFocus(PC);
+	FSlateApplication::Get().RoutePointerUpEvent(Path, FPointerEvent(WalkUser, Pointer, At, At, TSet<FKey>(), EKeys::LeftMouseButton, 0.f, FModifierKeysState()));
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU click label=\"%s\" at=%d,%d down_focus=%s focus_on_play_now=%d"), *WalkLabel(W), FMath::RoundToInt32(At.X), FMath::RoundToInt32(At.Y),
+		bLastClickDownOnMenu ? TEXT("menu_itself") : TEXT("other"), IsFocusOnPlayNow() ? 1 : 0);
+	return true;
+}
+
+bool UJamMenuWidget::ClickPlaceForQa(const FString& Name)
+{
+	UWidget* W = nullptr;
+	EJamMenuDifficulty D;
+	if (FJamSettings::ParseDifficulty(Name, D)) W = GetLevelButton(D);
+	else if (Name == TEXT("play")) W = PlayNowButton.Get();
+	else if (Name == TEXT("settingslevel") && SettingsPanel) W = SettingsPanel->GetFirstFocusable();
+	FString Why = TEXT("no such place");
+	const bool bOk = W && ClickForQa(W, Why);
+	if (!bOk) UE_LOG(LogJamMenuUi, Warning, TEXT("JAMMENU click %s failed: %s"), *Name, *Why);
+	return bOk;
+}
+
+void UJamMenuWidget::PrintPlacesForQa() const
+{
+	FVector2D Vp(0.0, 0.0);
+	if (GEngine && GEngine->GameViewport) GEngine->GameViewport->GetViewportSize(Vp);
+	const TArray<FString> Places = GetPlacesForQa();
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU where screen=%s viewport=%dx%d places=%d"), WalkNames[FMath::Clamp(static_cast<int32>(Screen), 0, 5)],
+		FMath::RoundToInt32(Vp.X), FMath::RoundToInt32(Vp.Y), Places.Num());
+	for (const FString& P : Places) UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU place %s"), *P);
+}
+
 void UJamMenuWidget::StartPadWalk()
 {
 	WalkScreen = 0;
@@ -1136,10 +1261,12 @@ void UJamMenuWidget::TickPadWalk()
 		WalkEdges = 0;
 		WalkStart = WalkFocusedIndex();
 		const int32 Seed = WalkStart >= 0 ? WalkStart : (WalkNodes.Num() ? 0 : -1);
-		// Directional navigation reads the window's hit-test grid and nothing else. In an off-screen process (-RenderOffScreen) that grid ends at
-		// the game viewport: the menu is drawn but not in it, so no press can move the focus and no walk can be judged. Measured, not assumed: the
-		// grid's path under the centre of the place the screen opened on must reach that place.
-		bWalkBlind = true;
+		// Directional navigation reads the window's hit-test grid. In an off-screen process (-RenderOffScreen) that grid ends at the game viewport
+		// (the menu is drawn but not in it) and no press moves the focus. Lane A164 (evolution 4): the walk no longer predicts that from the
+		// opening place's geometry (that test read `blind` in a real window that was not the active one, A155): it walks every screen and judges
+		// what Slate's own navigation did. A screen is blind only when no press from any place moved the focus AND the grid has no menu under the
+		// opening place (grid_hit, logged as a diagnostic); a screen where nothing moves although the grid holds the menu is a fail (all traps).
+		bWalkGridHit = false;
 		if (Seed >= 0 && WalkNodes[Seed].IsValid() && WalkNodes[Seed]->GetCachedWidget().IsValid())
 		{
 			const TSharedRef<SWidget> Slate = WalkNodes[Seed]->GetCachedWidget().ToSharedRef();
@@ -1148,10 +1275,11 @@ void UJamMenuWidget::TickPadWalk()
 			const FVector2D Centre = FVector2D(G.GetAbsolutePosition()) + FVector2D(G.GetAbsoluteSize()) * 0.5;
 			if (Win.IsValid())
 			{
-				for (const FWidgetAndPointer& W : Win->GetHittestGrid().GetBubblePath(Centre, 0.f, true, WalkUser)) if (W.Widget == Slate) bWalkBlind = false;
+				for (const FWidgetAndPointer& W : Win->GetHittestGrid().GetBubblePath(Centre, 0.f, true, WalkUser)) if (W.Widget == Slate) bWalkGridHit = true;
 			}
 		}
-		if (Seed >= 0 && !bWalkBlind) { WalkReached.Add(Seed); WalkQueue.Add(Seed); }
+		bWalkBlind = false;
+		if (Seed >= 0) { WalkReached.Add(Seed); WalkQueue.Add(Seed); }
 		WalkNode = -1;
 		WalkPhase = 0;
 		return;
@@ -1190,18 +1318,21 @@ void UJamMenuWidget::TickPadWalk()
 			else if (WalkNodes.Num() > 1 && WalkOut[i] == 0) ++Traps;
 		}
 		const FString OpensOnText = WalkNodes.IsValidIndex(WalkStart) ? WalkLabel(WalkNodes[WalkStart].Get()) : FString(TEXT("nothing"));
+		// Lane A164: blind is measured from the moves (see the entry step); the grid's answer only decides blind against fail when nothing moved.
+		bWalkBlind = WalkNodes.Num() > 1 && WalkEdges == 0 && !bWalkGridHit;
 		const TCHAR* BackText = bMain ? TEXT("n/a") : (bBack ? TEXT("yes") : TEXT("NO"));
 		if (bWalkBlind)
 		{
 			// The opening focus and the B press are real (the key went down the focus path); the directions were not judged.
-			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk screen=%s focusables=%d grid=blind opens_on=%s back=%s"), WalkNames[WalkScreen], WalkNodes.Num(), *OpensOnText, BackText);
+			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk screen=%s focusables=%d grid=blind moves=0 grid_hit=0 opens_on=%s back=%s"), WalkNames[WalkScreen], WalkNodes.Num(), *OpensOnText, BackText);
 			++WalkBlindScreens;
 			Traps = 0;
+			WalkReached.Reset();   // the opening place was seeded but nothing was walked: reached counts nothing on a blind screen
 		}
 		else
 		{
-			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk screen=%s focusables=%d reached=%d traps=%d moves=%d opens_on=%s back=%s unreachable=[%s]"), WalkNames[WalkScreen],
-				WalkNodes.Num(), WalkReached.Num(), Traps, WalkEdges, *OpensOnText, BackText, *FString::Join(Unreached, TEXT(" | ")));
+			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk screen=%s focusables=%d reached=%d traps=%d moves=%d grid_hit=%d opens_on=%s back=%s unreachable=[%s]"), WalkNames[WalkScreen],
+				WalkNodes.Num(), WalkReached.Num(), Traps, WalkEdges, bWalkGridHit ? 1 : 0, *OpensOnText, BackText, *FString::Join(Unreached, TEXT(" | ")));
 		}
 		WalkTotals[0] += WalkNodes.Num();
 		WalkTotals[1] += WalkReached.Num();
@@ -1215,7 +1346,9 @@ void UJamMenuWidget::TickPadWalk()
 
 	// Probing one place in one direction: stand on it (tick 1), press (tick 3), see where the focus went (tick 4).
 	UWidget* Here = WalkNodes.IsValidIndex(WalkNode) ? WalkNodes[WalkNode].Get() : nullptr;
-	const bool bSkip = !Here || !Here->GetCachedWidget().IsValid() || (Here->IsA<USlider>() && WalkDir >= 2);   // left / right on the slider move the volume, by design
+	// Left / right on the slider move the volume, and on PLAY NOW they step the level (the switch, by design; lane A164: the walk would otherwise
+	// change the player's saved level while it probes): neither is a way to another place.
+	const bool bSkip = !Here || !Here->GetCachedWidget().IsValid() || ((Here->IsA<USlider>() || Here == PlayNowButton.Get()) && WalkDir >= 2);
 	if (!bSkip)
 	{
 		if (WalkPhase == 1) FSlateApplication::Get().SetUserFocus(WalkUser, Here->GetCachedWidget(), EFocusCause::SetDirectly);
