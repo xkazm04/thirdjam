@@ -971,6 +971,16 @@
           "minimum": 0,
           "maximum": 12,
           "description": "The bots' own cross-check wind-up (lane A200, track F1, evolution 11): the same rule as cross_windup_frames for every skater the game does not seat as a human (both sides' bots; the online guest is a human): the pressed cross-check's shove lands this many frames after the press. Absent = 12 (ships on). The neutral value is the shared cross_windup_frames (set it equal to it)."
+        },
+        "check_pull_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "The hit he aims lands (lane A209, track F1, the night): while a human skater's pressed body check winds up (contact.check_windup_frames), his root is drawn toward the man he pressed at (the nearest opponent on his feet inside 60 degrees of his facing, his going or his stick's aim) so the two bodies meet as the wind-up ends: what his own closing will not cover is spread over the wind-up's frames, at most this many metres in all; a meeting inside his wind-up is the hit. His pressed cross-check's man is drawn to arm's length (half of contact.cross_reach_m) the same way, so its shove reaches from this much farther. His speed is never changed by the pull: the hit's size stays his momentum's (a standing shove is a bump, a full-speed hit a knockdown). Bots aim their own. Part of the momentum model (contact.momentum true). 0 = the neutral value: the press goes where the skater was going."
+        },
+        "cross_any_man": {
+          "type": "boolean",
+          "description": "The cross-check is a hit on any man in front (lane A209, track F1, the night): a human skater's pressed cross-check shoves the nearest opponent on his feet inside the lift's cone and the stick's reach (stick.lift_range_m) whether or not he has the puck, by the shove's own momentum rule (closing speed plus contact.thrust_mps against his stability: mostly a stumble, a knockdown at speed); a back stays a back. The strip of the puck stays the carrier's. Bots keep the carrier-only shove. false = the neutral value: the shove only on a carrier (or one who carried within stick.foul_grace_frames)."
         }
       }
     },

@@ -1128,6 +1128,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			}
 		}
 		StepCheckReach(S);   // lane A125 (track F1): an open window bends toward its man (contact.check_reach_m; 0 = off)
+		StepCheckPull(S);   // lane A209 (track F1): the human's wind-up finds its man (contact.check_pull_m; 0 = off)
 		// Lane A152 (track F2, game.stick.miss_recovery_frames): the recovery after a missed poke. While it runs the stick is locked: no poke, no lift, and a
 		// check pressed now or still open is dropped (the skater skates and steers; it does not fall).
 		const bool bStickLocked = S.StickLockLeft > 0;
@@ -1739,12 +1740,18 @@ void UJamSim::LandCrossShove(FJamSkaterState& S)
 	S.CrossTarget = -1;
 	if (!Skaters.IsValidIndex(T) || !Config.Contact.bMomentum || !Config.Skater.bCheckEnabled) return;
 	FJamSkaterState& O = Skaters[T];
-	if (O.IsDown() || O.InBox() || O.ShieldFrames > 0 || FVector2D::Distance(O.Pos, S.Pos) > SkaterRadius * 2.0 + Config.Contact.CrossReachM || OutsideLiftCone(S, O)) return;
+	// Lane A209: a pulled human's committed shove (contact.check_pull_m) lands one frame's pull farther, inside 90 degrees of his facing or aim, and in the back
+	// of a man without the puck (as it was taken at the press: cross_any_man).
+	const bool bPulled = PullsHuman(S) && Config.Contact.CrossWindupFor(S.bHuman) > 0;
+	const double LandReach = SkaterRadius * 2.0 + Config.Contact.CrossReachM + (bPulled ? Config.Contact.CheckPullM / Config.Contact.CrossWindupFor(S.bHuman) : 0.0);
+	const bool bOutCone = bPulled ? Dot((O.Pos - S.Pos).GetSafeNormal(), S.Forward()) < 0.0 && Dot((O.Pos - S.Pos).GetSafeNormal(), (S.BladePos - S.Pos).GetSafeNormal()) < 0.0 : OutsideCrossCone(S, O);
+	if (O.IsDown() || O.InBox() || O.ShieldFrames > 0 || FVector2D::Distance(O.Pos, S.Pos) > LandReach || bOutCone) return;
 	if (CarrierIndex() == O.Index && IsShoveShielded(S, O)) return;
 	FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 	if (Dir.IsNearlyZero()) Dir = S.Forward();
-	if (Dot(Dir, O.Forward()) > 0.5 && !S.bCrossTargetStickOnly) return;
-	ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+	const bool bNoPuckBack = bPulled && Config.Contact.bCrossAnyMan && CarrierIndex() != O.Index && Frame - O.LastCarryFrame > Config.Stick.FoulGraceFrames;
+	if (Dot(Dir, O.Forward()) > 0.5 && !S.bCrossTargetStickOnly && !bNoPuckBack) return;
+	ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross, bPulled ? ContactStumble : ContactNone);   // lane A209: his shove is a stumble at least
 }
 
 void UJamSim::ResolveLift(FJamSkaterState& S)
@@ -1777,7 +1784,7 @@ void UJamSim::ResolveLift(FJamSkaterState& S)
 		const bool bTallyStickOnly = bStickRefused && O.ShieldFrames == 0 && !IsShoveShielded(S, O);
 		if (bTallyStickOnly) { ++Tally.Presses; if (FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM) ++Tally.AtArm; }
 		if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !O.IsDown() && O.ShieldFrames == 0 && !bShoveRefused
-			&& FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM)
+			&& FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM + CrossPullFor(S))   // lane A209: the wind-up draws him to arm's length
 		{
 			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 			if (Dir.IsNearlyZero()) Dir = S.Forward();
@@ -1813,11 +1820,18 @@ void UJamSim::ResolveLift(FJamSkaterState& S)
 	if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !CarrierMayNotHit(S))
 	{
 		int32 Best = -1;
-		double BestD = SkaterRadius * 2.0 + Config.Contact.CrossReachM;
+		double BestD = SkaterRadius * 2.0 + Config.Contact.CrossReachM + CrossPullFor(S);   // lane A209: the wind-up's pull
+		// Lane A209 (contact.cross_any_man): the human's cross-check is a shove on the man in front of him, puck or not (the stick's reach, the lift's cone;
+		// a back stays a back); without the key only one who carried within stick.foul_grace_frames.
+		const bool bAnyMan = Config.Contact.bCrossAnyMan && PullsHuman(S);
+		if (bAnyMan) BestD = FMath::Max(BestD, SkaterRadius * 2.0 + Config.Stick.LiftRangeM);   // the stick's reach, or arm's length + the pull (BestD above), the farther
 		for (const FJamSkaterState& O : Skaters)
 		{
-			if (O.Team == S.Team || O.IsDown() || O.InBox() || O.ShieldFrames > 0 || Frame - O.LastCarryFrame > Config.Stick.FoulGraceFrames || OutsideLiftCone(S, O)) continue;
-			const double D = FVector2D::Distance(O.Pos, S.Pos);
+			if (O.Team == S.Team || O.IsDown() || O.InBox() || O.ShieldFrames > 0 || (!bAnyMan && Frame - O.LastCarryFrame > Config.Stick.FoulGraceFrames) || (bAnyMan ? OutsideCrossCone(S, O) : OutsideLiftCone(S, O))) continue;
+			// lane A209: a man the human closes on is judged where the wind-up will bring him (his closing over cross_windup_frames), not where he is now
+			const FVector2D ToO = O.Pos - S.Pos;
+			const double Lead = bAnyMan ? FMath::Max(0.0, Dot(S.Vel - O.Vel, ToO.GetSafeNormal())) * Config.Contact.CrossWindupFor(S.bHuman) * DT : 0.0;
+			const double D = ToO.Size() - Lead;
 			if (D <= BestD) { BestD = D; Best = O.Index; }
 		}
 		if (Best >= 0)
@@ -1825,7 +1839,11 @@ void UJamSim::ResolveLift(FJamSkaterState& S)
 			FJamSkaterState& O = Skaters[Best];
 			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 			if (Dir.IsNearlyZero()) Dir = S.Forward();
-			if (Dot(Dir, O.Forward()) <= 0.5) CrossShove(S, O, Dir, false);   // lane A192: at once, or after the wind-up
+			const bool bBack = Dot(Dir, O.Forward()) > 0.5;
+			// lane A209 (cross_any_man): the human's shove in the back of a man WITHOUT the puck lands as the stick-only widening lets it (CrossThrust: on a back
+			// only as far as he closes); a back with the puck stays the stick lift
+			const bool bBackOk = bBack && bAnyMan && Frame - O.LastCarryFrame > Config.Stick.FoulGraceFrames && CarrierIndex() != O.Index;
+			if (!bBack || bBackOk) CrossShove(S, O, Dir, bBackOk);   // lane A192: at once, or after the wind-up
 		}
 	}
 	Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss, S.BladePos - S.Pos);
@@ -1912,11 +1930,103 @@ int32 UJamSim::CheckReachTarget(const FJamSkaterState& S) const
 		if (O.Team == S.Team || O.IsDown() || O.InBox()) continue;
 		const FVector2D To = O.Pos - S.Pos;
 		const double D = To.Size();
-		if (D > BestD || D < 1e-6 || (Dot(To, Fwd) < CosCone * D && Dot(To, Going) < CosCone * D)) continue;
+		if (D > BestD || D < 1e-6 || (Dot(To, Fwd) < CosCone * D && Dot(To, Going) < CosCone * D && !(Config.Contact.CheckPullM > 0.0 && Dot(To, (S.BladePos - S.Pos).GetSafeNormal()) >= CosCone * D))) continue;   // lane A209: or the stick's aim
 		BestD = D;
 		Best = O.Index;
 	}
 	return Best;
+}
+
+// Lane A209 (track F1, the night): a hit he aims lands (JamSim.h, FJamContactConfig::CheckPullM / bCrossAnyMan).
+bool UJamSim::PullsHuman(const FJamSkaterState& S) const
+{
+	return S.bHuman && Config.Contact.CheckPullM > 0.0 && Config.Contact.bMomentum && Config.Skater.bCheckEnabled;
+}
+
+int32 UJamSim::PullTarget(const FJamSkaterState& S, double MaxGap) const
+{
+	const FVector2D Fwd = S.Forward();
+	const FVector2D Going = S.Vel.GetSafeNormal();
+	const FVector2D Aim = (S.BladePos - S.Pos).GetSafeNormal();
+	const double CosCone = FMath::Cos(FMath::DegreesToRadians(CheckReachConeDeg));
+	int32 Best = -1;
+	double BestD = SkaterRadius * 2.0 + MaxGap;
+	for (const FJamSkaterState& O : Skaters)
+	{
+		if (O.Team == S.Team || O.IsDown() || O.InBox()) continue;
+		const FVector2D To = O.Pos - S.Pos;
+		const double D = To.Size();
+		if (D > BestD || D < 1e-6 || (Dot(To, Fwd) < CosCone * D && Dot(To, Going) < CosCone * D && Dot(To, Aim) < CosCone * D)) continue;
+		BestD = D;
+		Best = O.Index;
+	}
+	return Best;
+}
+
+bool UJamSim::OutsideCrossCone(const FJamSkaterState& S, const FJamSkaterState& O) const
+{
+	if (!OutsideLiftCone(S, O)) return false;
+	if (!PullsHuman(S)) return true;
+	const FVector2D To = (O.Pos - S.Pos).GetSafeNormal();
+	const FVector2D Aim = (S.BladePos - S.Pos).GetSafeNormal();
+	return Aim.IsNearlyZero() || Dot(To, Aim) < FMath::Cos(FMath::DegreesToRadians(FMath::Min(Config.Stick.LiftConeDeg, 180.0)));
+}
+
+double UJamSim::CrossPullFor(const FJamSkaterState& S) const
+{
+	return PullsHuman(S) && Config.Contact.CrossWindupFor(S.bHuman) > 0 ? Config.Contact.CheckPullM : 0.0;
+}
+
+void UJamSim::EndWindupOnContact(FJamSkaterState& S)
+{
+	if (PullsHuman(S)) S.CheckWindupLeft = 0;
+}
+
+void UJamSim::StepCheckPull(FJamSkaterState& S)
+{
+	if (!PullsHuman(S) || !S.CanAct() || CarrierMayNotHit(S)) return;
+	const double R2 = SkaterRadius * 2.0;
+	const double PullM = Config.Contact.CheckPullM;
+	// The pull toward O: what S's own closing will not cover in Left frames, spread over them, at most Cap a frame.
+	auto Pull = [&](const FJamSkaterState& O, int32 Left, double Cap, double GoalGap)
+	{
+		const FVector2D To = O.Pos - S.Pos;
+		const double D = To.Size();
+		if (D < 1e-6 || Left <= 0) return;
+		const FVector2D N = To / D;
+		const double Closing = FMath::Max(0.0, Dot(S.Vel - O.Vel, N));
+		const double Need = (D - R2 - GoalGap) - Closing * Left * DT;
+		if (Need <= 0.0) return;   // the man is drawn as far as the cap allows: a man beyond the pull is chosen by no PullTarget (the body) or was taken at the press (the cross)
+		S.Pos += N * FMath::Min(Need / Left, Cap);
+	};
+	const int32 CheckWu = Config.Contact.CheckWindupFor(S.bHuman);
+	if (CheckWu > 0 && (S.CheckWindupLeft > 0 || S.CheckWindow > 0))
+	{
+		// in the window (after the wind-up) what is left is spread over its frames, at most half of the pull in all
+		const int32 Left = S.CheckWindupLeft > 0 ? S.CheckWindupLeft : FMath::Max(1, S.CheckWindow);
+		const double Cap = S.CheckWindupLeft > 0 ? PullM / CheckWu : FMath::Min(PullM / CheckWu, 0.5 * PullM / Left);
+		const int32 T = PullTarget(S, Cap * Left + S.Vel.Size() * Left * DT);
+		if (T >= 0)
+		{
+			const FJamSkaterState& O = Skaters[T];
+			// in the wind-up the speed is turned onto the collision course as the open window's bend does (StepCheckReach), none added
+			const double V = S.Vel.Size();
+			const FVector2D Nt = (O.Pos - S.Pos).GetSafeNormal();
+			if (S.CheckWindupLeft > 0 && V > 1e-6 && !Nt.IsNearlyZero())
+			{
+				const FVector2D Side(-Nt.Y, Nt.X);
+				const double Across = FMath::Clamp(Dot(O.Vel, Side), -CheckReachAcrossMax * V, CheckReachAcrossMax * V);
+				S.Vel = Nt * FMath::Sqrt(FMath::Max(0.0, V * V - Across * Across)) + Side * Across;
+			}
+			Pull(O, Left, Cap, PullGoalGapM);
+		}
+	}
+	const int32 CrossWu = Config.Contact.CrossWindupFor(S.bHuman);
+	if (CrossWu > 0 && S.LiftWindupLeft > 0 && Skaters.IsValidIndex(S.CrossTarget) && !S.bCrossBraced)
+	{
+		const FJamSkaterState& O = Skaters[S.CrossTarget];
+		if (!O.IsDown() && !O.InBox()) Pull(O, S.LiftWindupLeft, PullM / CrossWu, Config.Contact.CrossReachM * 0.5);
+	}
 }
 
 // On every frame of an open check window the skater's velocity is turned onto the collision course with that man: across the line between them it takes the
@@ -2077,7 +2187,7 @@ void UJamSim::CollideSkaters()
 				auto Can = [&](const FJamSkaterState& Checker, const FJamSkaterState& Victim)
 				{
 					// The carrier cannot hit, also with a window opened before the puck arrived; an armed hip check (lane A84's ability) keeps its rule.
-					return Checker.CheckWindow > 0 && Checker.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && (Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker));
+					return (Checker.CheckWindow > 0 || (Checker.CheckWindupLeft > 0 && PullsHuman(Checker))) && Checker.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && (Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker));   // lane A209: or inside the human's wind-up
 				};
 				const bool bA = Can(A, B), bB = Can(B, A);
 				// Lane A184 (game.contact.cross_hold): a braced skater (never one with the key off) whose body meets an opponent delivers the cross-check by the
@@ -2089,8 +2199,8 @@ void UJamSim::CollideSkaters()
 						&& Dot(Dir, Victim.Forward()) <= 0.5 && !(CarrierIndex() == Victim.Index && IsShoveShielded(Hitter, Victim));
 				};
 				const bool bBa = !bA && !bB && Braced(A, B, N), bBb = !bA && !bB && Braced(B, A, -N);
-				if (bA && (!bB || Dot(A.Vel, N) >= Dot(B.Vel, -N))) bLanded = ResolveContact(A, B, N, Contact, EContactKind::Body) >= ContactStumble;
-				else if (bB) bLanded = ResolveContact(B, A, -N, Contact, EContactKind::Body) >= ContactStumble;
+				if (bA && (!bB || Dot(A.Vel, N) >= Dot(B.Vel, -N))) { bLanded = ResolveContact(A, B, N, Contact, EContactKind::Body) >= ContactStumble; EndWindupOnContact(A); }   // lane A209: the end call
+				else if (bB) { bLanded = ResolveContact(B, A, -N, Contact, EContactKind::Body) >= ContactStumble; EndWindupOnContact(B); }
 				else if (bBa || bBb)
 				{
 					const bool bFromA = bBa && (!bBb || Dot(A.Vel, N) >= Dot(B.Vel, -N));
@@ -2347,7 +2457,7 @@ double UJamSim::CrossThrust(const FJamSkaterState& Attacker, const FJamSkaterSta
 	return Thrust * FMath::Clamp(Dot(Attacker.Vel - Victim.Vel, HitDir) / Match, 0.0, 1.0);
 }
 
-int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind)
+int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind, int32 MinOutcome)
 {
 	const FJamContactConfig& K = Config.Contact;
 	Att.CheckWindow = 0;   // the press is spent on this contact, whatever comes of it
@@ -2371,6 +2481,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	const double PhysRatio = Impulse / FMath::Max(1e-6, StabV);
 	const double Ratio = PhysRatio * (ReferenceCheckSpeedMin / FMath::Max(0.5, Eff(EJamStat::CheckSpeedMin, Att.Index)));
 	int32 Outcome = bHip || Ratio >= K.DownRatio ? ContactDown : Ratio >= K.BumpRatio ? ContactStumble : ContactBump;
+	if (MinOutcome > Outcome) Outcome = MinOutcome;   // lane A209 (0 = none: as before)
 	// Lane A177 (track F1, evolution 8; game.contact.take_shield_frames): a skater that won the puck inside the last take_shield_frames keeps its feet: the
 	// hit that would fell it is a stumble (TakeShieldLeft is only ever set with the key on; an armed hip check keeps its rule). Read before the line below, so
 	// a skater already stumbling takes a bump, as from any stumble.

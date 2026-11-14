@@ -341,7 +341,7 @@ struct JAMCORE_API FJamContactConfig
 	// facing (UJamSim::StepCheckReach). 0 = the neutral value: the press goes where the skater was going, the game before the lane (same state hash).
 	// Ships at 0: at 1.0 the playtester's whiffs fall from 60 % to 51 % of its presses, not under the 40 % asked for (five whiffs in six are presses on a man it
 	// is not closing on, which no bend of direction cures), and Jam.Bot.HumanHasSomethingToDo leaves its budget (docs/experiments/CONTACT-4.md section 6).
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckReachM = 0.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckReachM = 1.0;   // lane A209: on (1.0, the measured value); neutral 0
 	// Lane A157 (track F1, evolution 6; B-to-A-0041 point 2; docs/experiments/CONTACT-7.md section 1): nobody stands in a man who is down. A downed skater
 	// was an ordinary 0.4 m body circle: a skater on its feet stopped 0.8 m from its root (on the lying figure, which is longer than the circle), pushed it
 	// along the ice and bounced off it. With this key above 0 a downed skater's body has THIS radius for every skater on its feet (roots kept
@@ -387,8 +387,8 @@ struct JAMCORE_API FJamContactConfig
 	// Ship ON (R-0064: the operator's order): cross_hold true (lane A184, CONTACT-10.md), the wind-ups 4 / 4 (lane A192, CONTACT-11.md: the staged tests, law 3's
 	// drill and the acceptance drill wait the wind-up). JamBaseline::MakeNeutral gives back the game before the lanes (false, 0, 0: hash-identical).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossHold = true;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 4;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 4;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 8;   // lane A209: the human's as the bots' (8); neutral of tonight 4
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 8;   // lane A209: 8; neutral of tonight 4
 	// Lane A200 (track F1, evolution 11; docs/experiments/CONTACT-12.md): the bots' own wind-ups. bot_check_windup_frames, bot_cross_windup_frames: the same two
 	// rules for a skater the sim does not seat as a human (FJamSkaterState::bHuman false: every bot of both sides; the online guest's seat is a human), so the
 	// bots' wind-up can be longer than the human's, whose own press must not feel late. -1 = the shared value above (the neutral value: the same state hash;
@@ -399,6 +399,14 @@ struct JAMCORE_API FJamContactConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BotCrossWindupFrames = 12;
 	int32 CheckWindupFor(bool bHuman) const { return (!bHuman && BotCheckWindupFrames >= 0) ? BotCheckWindupFrames : CheckWindupFrames; }
 	int32 CrossWindupFor(bool bHuman) const { return (!bHuman && BotCrossWindupFrames >= 0) ? BotCrossWindupFrames : CrossWindupFrames; }
+	// Lane A209 (track F1, the night; docs/experiments/CONTACT-13.md): a hit he aims lands. game.contact.check_pull_m (0 = off, the neutral value; ships
+	// 1.0): while a HUMAN skater's pressed body check winds up, his root is drawn toward the man he pressed at (the nearest opponent on his feet inside
+	// UJamSim::CheckReachConeDeg of his facing, his going or his stick's aim) so the bodies meet as the wind-up ends, at most check_pull_m over the wind-up
+	// (his speed is not changed by it: the hit's size stays his momentum's); a meeting inside his wind-up is the hit; his pressed cross-check's man is
+	// drawn to arm's length the same way. game.contact.cross_any_man (false = the neutral value; ships true): the human's pressed cross-check shoves the
+	// man in front of him with or without the puck (without: the shove's momentum rule, as on a carrier; the strip stays the carrier's).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckPullM = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossAnyMan = true;
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

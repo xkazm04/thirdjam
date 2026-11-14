@@ -54,6 +54,7 @@ namespace JamBaseline
 		G.Contact.bCrossHold = false; G.Contact.CheckWindupFrames = 0; G.Contact.CrossWindupFrames = 0; G.Contact.BotCheckWindupFrames = G.Contact.BotCrossWindupFrames = -1;   // lane A200: bot_*_windup_frames absent; lane A184 (track F1): game.contact.cross_hold, check_windup_frames, cross_windup_frames
 		G.Skater.BreakawaySpeedBonus = 0.2;       // lane A194 (track F2 evolution 10): game.skater.breakaway.speed_bonus (default 0.3)
 		G.Skater.bChargeDiesOnLoss = false;      // lane A203 (track K1 evolution 4): game.skater.charge_dies_on_loss (ships true since the Director, 17:01)
+		G.Contact.CheckPullM = 0.0; G.Contact.bCrossAnyMan = false;   // lane A209 (track F1, the night): game.contact.check_pull_m, cross_any_man (ship 1.0, true)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

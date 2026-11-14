@@ -239,6 +239,8 @@ namespace JamAI
 		// Lane A200 (track F1, evolution 11): the hits he saw coming and those that landed anyway (FJamPlaytester::SeenHits / SeenLanded), the ones he
 		// answered with the dodge (Dodges), and every landed hit of an opponent on him (BotHitsOnHuman: body or cross, stumble or down).
 		int SeenHits = 0, SeenLanded = 0, Dodges = 0, BotHitsOnHuman = 0;
+		// Lane A209 (track F1, the night): the audit of the human's hit presses (JamHitHand.h, EHand: index names in HandKeyName), "hand" in the JSON line.
+		int Hand[64] = {};
 		int64_t HumanDownFrames = 0, HumanStumbleFrames = 0;
 		int64_t SlamDownFrames = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck

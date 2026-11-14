@@ -4,6 +4,7 @@
 #include "JamEventBus.h"
 #include "JamSim.h"
 #include "JamCarrierMarks.h"
+#include "JamHitHand.h"   // lane A209: the person-like hand and the hit audit (measurement only)
 
 #include <cstdio>
 #include <cstdlib>
@@ -948,6 +949,12 @@ namespace JamAI
 		const FName KindFoulBehind(TEXT("foul_from_behind"));
 		const FName KindOneTimer(TEXT("one_timer"));
 		int64_t LastPayoff = -100000;   // R-0029 point 4 (lane A39): the frame of the human's last one-timer, burst or deke
+		// Lane A209 (measurement only): JAM_PLAYTESTER_HAND=person = the person-like hand presses the human's hits (JamHitHand.h); the audit runs always.
+		static_assert(Hand_Count <= 64, "FJamPlaytestStats::Hand");
+		const char* HandEnv = std::getenv("JAM_PLAYTESTER_HAND");
+		const bool bPersonHand = HandEnv && std::strcmp(HandEnv, "person") == 0;
+		FJamHitHand PersonHand; PersonHand.Seed = Seed ^ 0xA209ull;
+		FJamHitAudit HitAudit;
 		for (int64_t F = 0; F < MaxFrames && !Sim.IsOver(); ++F)
 		{
 			Sim.View(W);
@@ -975,6 +982,7 @@ namespace JamAI
 				if (Mk.bLit && MarkSim->GetSkaters().IsValidIndex(Mk.Def)) { const FVector2D Dp = MarkSim->GetSkaters()[Mk.Def].Pos; Tester.StopDef = FVec2(Dp.X, Dp.Y); }
 			}
 			if (Pi >= 0) { In[Pi] = Tester.Think(W); ++St.Acts[static_cast<int>(Tester.LastAct())]; }
+			if (Pi >= 0 && bPersonHand) { if (const UJamSim* HandSim = Sim.GetSim()) { PersonHand.Apply(*HandSim, Pi, In[Pi]); } }   // lane A209
 			if (Pi >= 0 && MashPeriod > 0 && F >= NextMash)   // lane A157: the masher (measurement only); lane A165: with a jitter
 			{
 				In[Pi].bCheck = true;
@@ -985,6 +993,7 @@ namespace JamAI
 			if (Pi >= 0) { if (const UJamSim* AbSim = Sim.GetSim()) { In[Pi].bAbility = PlaytesterAbility(*AbSim, Pi, In[Pi]); } }   // lane A84
 			const FJamAIStepEvents Ev = Sim.Step(In);
 			++St.Frames;
+			if (Pi >= 0) { if (const UJamSim* AuSim = Sim.GetSim()) { HitAudit.Step(*AuSim, Pi, In[Pi], St.Hand); } }   // lane A209: reads only
 			Sim.View(W);
 			const bool bPlay = !W.bFrozen;
 			if (bPlay) { ++St.PlayFrames; }
@@ -1246,6 +1255,9 @@ namespace JamAI
 			S.CrossLanded, S.BraceLanded, S.KdGiven, S.BraceFrames, S.BraceHits, S.BotBraceHits, S.BotCrossLanded, S.BotChecksLanded);   // lane A184
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"seen_hits\":%d,\"seen_landed\":%d,\"dodges\":%d,\"bot_hits_on_human\":%d",
 			S.SeenHits, S.SeenLanded, S.Dodges, S.BotHitsOnHuman);   // lane A200
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"hand\":{");   // lane A209: the hit audit
+		for (int h = 0; h < Hand_Count && N < BufLen; ++h) { N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), "%s\"%s\":%d", h ? "," : "", HandKeyName(h), S.Hand[h]); }
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), "}");
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)
