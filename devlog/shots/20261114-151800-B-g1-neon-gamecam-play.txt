@@ -1,0 +1,1 @@
+Neon rig (LR_L3_Neon, tier l3_neon), game camera, un-paused match (hockey.regular with look.tier l3_neon via jam.Cut), t=4.5 s after load, ten figures (BP_SkaterVisual_TB1), frozen for the capture. Lilac lattice on the ice at +/-30 deg, 4 m apart; magenta lines on the hall walls; A rink trims (yellow cap, blue rail) as they are on the bare tier.
