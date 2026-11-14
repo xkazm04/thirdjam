@@ -1,0 +1,1 @@
+QA5 B2. Closer crops. Top: the dash at frames 0, 8, 20, 50, 96, 104, 114, 120. Bottom: the carries over the stride (giant stand-in, hidden behind an opponent; mallet stand-in; cannon), the stick back, skid left, skid right, bump left, wipeout.
