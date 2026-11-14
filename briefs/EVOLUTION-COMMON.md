@@ -59,3 +59,11 @@ Read first, always: `docs/VISION.md` (the game's laws), `docs/PLAN-RECONCILED.md
 4. Findings outside your family, with file and line.
 5. The next three evolutions for your track, ranked, each with its proving number.
 6. The file list relative to your worktree.
+
+## Stopping processes (added 14 Nov 07:35, after an incident)
+At 07:28 a lane stopping its own chain filtered processes by a command-line pattern (`p\.sh`). The pattern also matched the shell-snapshot path that every
+bash wrapper of this session carries: about 25 wrappers and 2 node processes died in one sweep, other lanes' build wrappers among them. The rule, with no
+exceptions: **stop a process only by a process id you recorded when YOU started it** (write the ids into your status file or a pid file as you start
+them: the editor's, the node driver's, the shell's). Never stop by name, by a command-line pattern, by window title, by "everything under this folder",
+or by parent. If you have lost the ids, do not sweep: let the processes finish, or tell the Director. A stopped background task leaves its `sh` child
+running: record that child's id too when you start a chain. Before any stop, list what you are about to stop and check each line is yours.
