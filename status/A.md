@@ -485,3 +485,4 @@
 - link green 21:16: main db7471e3 (Handoff A-to-B-0033: the hits' takes as the game camera sees them (lane A210's list); merg) pushed.
 - link green 21:23: main d10be133 (The blue bar is gone and the figure does the hitting: device B's takes on the human, the m) pushed.
 - link green 22:09: main e142f300 (A hit he aims lands: the check finds its man, the cross-check shoves any man in front, the) pushed.
+- link green 22:14: main 1efde4d9 (Handoff A-to-B-0034 (the hits' takes, wave 2); merge dev-b at b42e55c3 (the 12-frame clamp) pushed.

@@ -64,6 +64,7 @@ namespace JamBaseline
 	// no-shove-from-behind rule is dead wherever MakeNeutral has switched the sim's shove rule off (or HooksDead was called).
 	// brain7=0: lane A193 (track Q2, evolution 7): the brain plans with skater.speed for everyone (with MakeNeutral's free_speed_mult 1 it is the same).
 	// brain8=0: lane A202 (track Q2, evolution 8): every rule of evolution 8 off (all four ship on: the pair gives back evolution 7, the old game).
+	// brain9=0: lane A206 (track Q2, evolution 9, BRAIN-9.md): every rule of evolution 9 off, rookie's pace and read included (evolution 8 as shipped).
 	// THE NEXT LANE: your brain rule's off-switch here, one pair.
 	// Level ("rookie", "pro", "all_star"; every pin so far is a pro match): THE CURVE LANE: when you move a level's profile numbers, the numbers that level
 	// had before you go here for that level (as JamAI::PreA95Tune carries the levels of the commit before the vision), and the pins stay where they are.
@@ -74,10 +75,10 @@ namespace JamBaseline
 	// not a tune key: no pin is an all_star match on the large rink).
 	inline const char* BrainTune(const char* Level = "pro", bool bLargeRink = false)
 	{
-		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.97";
-		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0;speed_scale=1.4";   // lane A154: all_star speed 1.4 -> 1.45
-		return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
-			: "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
+		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;brain9=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;brain9=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.97";
+		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;brain9=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0;speed_scale=1.4";   // lane A154: all_star speed 1.4 -> 1.45
+		return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;brain9=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
+			: "brain2=0;brain3=0;brain4=0;brain5=0;brain6=0;brain7=0;brain8=0;brain9=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
 	}
 
 	// Lane A133 (track C0): the shipped cuts' whistle. Lane A112 took it out of hockey.regular, hockey.arena.wide, hockey.arena.large and the season's takes
