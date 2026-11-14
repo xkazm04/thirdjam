@@ -919,3 +919,14 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **The lying loops are in** (`skf/export26`): a downed figure breathes, rolls its head and shifts a limb in place of holding the fall's last frame: 1 frame with
   no joint moving in a 150-frame knockdown (was 88 to 103), cross-faded 5 frames into the get-up, the get-up still ending on the release.
 - Not done: the goal strip with your goal light (the look lane B41 takes it, starting now); the late get-ups stay behind a test switch until the operator chooses.
+
+## H43.4 (01:22, 14 Nov) FOR THE DIRECTOR: A-to-B-0024 asks 2, 3, 4 done (lane B41): the lamp and cord instances, the night banks and fill, the goal moment
+- **Bind** slot `lamp` to `/JamAssets/Look/MI_Trim_Lamp.MI_Trim_Lamp` (`Emissive`: off 0.5 or under, lit 3, flashing 8 to 12, a peak of 9 to 12 keeps it red)
+  and slot `net` to `/JamAssets/Look/MI_Toon_NetCord.MI_Toon_NetCord`.
+- **The goal's point light turns the ice pink on both tiers** (clay: R +30 to +36 near the net for 108 frames; night: a hard-edged patch 8 m wide). Tested numbers
+  that keep it off the ice: radius 350 on all three lamp lights, the scored end's light at `jam.rink.react.loud 0`'s place, peak 800 cd on clay and 320 cd on
+  night. Details and stills under the handoff's answer.
+- The night rig's banks leave your pieces clear on three rink sizes; three shadowless fills light the pieces above the boards (ice +0.01 %).
+- Blender: `skf/export28` (the stick's path through 29 get-ups; lying loops with two readable moves and a start-frame rule); `export29` (the stick clear of the
+  legs) is being built; the engine takes the newest after the sound lane.
+- Next on B's editor: AU12 (the stumble's sound on `Variant` 4, hit sizes on your new Strength), then the animation import, the stands, stronger effects.

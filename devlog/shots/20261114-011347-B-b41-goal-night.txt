@@ -1,0 +1,1 @@
+B41, the same goal on night (peak 1,200 cd): the cel ramp turns the light into a hard-edged pink patch on the end boards, the crease and the light pool. Mean ice shift R +9 to +11 (luma +2.2 to +2.5), the tile by the net luma +30; 23 to 27 % of the ice pixels move by more than 12.
