@@ -39,6 +39,10 @@ namespace JamBaseline
 		G.Stick.bTakeGraceSameFrame = false;      // lane A138 (track I1): the take grace covers the frame the puck is won in (a rule, no key)
 		G.Contact.bPlaytesterClosingPress = false;   // lane A132 (track F1): the scripted human presses its check on closing speed (the instrument, no key; false = its own speed, as the pins were played)
 		G.Skater.BurstRestKeptMps = 0.0;          // lane A147 (track F2): game.skater.burst.rest_kept_mps (default 3)
+		G.Contact.bPlaytesterCoursePress = false;    // lane A151 (track F1): the scripted human presses its check on course and time (the instrument, no key)
+		G.Contact.LatePressFrames = 0;            // lane A151 (track F1): the late press: a check pressed just after an unpressed body contact is that hit (a rule, no key yet)
+		G.Contact.StandSideBrace = 0.0;           // lane A151 (track F1): the standing skater's brace against a body hit from the side (a rule, no key yet; 0 = stand_brace there too)
+		G.Contact.bBraceExchange = false;         // lane A151: the brace is mass in the skater-to-skater bounce (a rule, no key yet)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

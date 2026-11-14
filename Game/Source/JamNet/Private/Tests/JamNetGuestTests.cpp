@@ -208,6 +208,7 @@ namespace JamNetGuestTests
 	struct FReadout { const TCHAR* Name; const TCHAR* Why; };
 	const FReadout SkaterReadouts[] = {
 		{ TEXT("ChecksMissed"), TEXT("read-out counter behind the HUD's MISSED line (lane A113); read by no rule") },
+		{ TEXT("ChecksLate"), TEXT("read-out counter: check presses the late-press rule resolved (lane A151); read by no rule") },
 		{ TEXT("ChecksGraced"), TEXT("read-out counter behind the HUD's JUST GOT UP line (lane A113); read by no rule") },
 		{ TEXT("ChecksSoft"), TEXT("read-out counter behind the HUD's TOO SOFT line (lane A113); read by no rule") },
 		{ TEXT("ContactGraced"), TEXT("read-out counter behind the HUD's contact line (lane A113); read by no rule") },
@@ -289,6 +290,8 @@ namespace JamNetGuestTests
 		{ TEXT("SweepSide"), TEXT("SweepFrames"), 5 }, { TEXT("SpinLength"), TEXT("SpinFrames"), 5 }, { TEXT("SpinDir"), TEXT("SpinFrames"), 5 },
 		{ TEXT("DekeSide"), TEXT("DekeFrames"), 5 }, { TEXT("AbilityCharges"), TEXT("AbilitySlot"), 0 }, { TEXT("AbilityReadyFrame"), TEXT("AbilitySlot"), 0 },
 		{ TEXT("AbilityArmed"), TEXT("AbilitySlot"), 0 },
+		// Lane A151 (track F1): the late press's memory is hashed while LateFrames runs.
+		{ TEXT("LateWho"), TEXT("LateFrames"), 5 }, { TEXT("LateDir"), TEXT("LateFrames"), 5 }, { TEXT("LateVelSelf"), TEXT("LateFrames"), 5 }, { TEXT("LateVelOther"), TEXT("LateFrames"), 5 },
 	};
 	const FGuard PuckGuards[] = {
 		{ TEXT("ShotgunBy"), TEXT("ShotgunFrames"), 5 }, { TEXT("ShotgunMul"), TEXT("ShotgunFrames"), 5 },

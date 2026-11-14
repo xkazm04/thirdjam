@@ -205,6 +205,11 @@ namespace JamContactTests
 		if (!C) return S;
 		S.Cfg = C->Game;
 		S.Cfg.Rules.bPenalties = false;
+		// Lane A151: the scenes written before it stage their own rule (the boards, the levers, the figure's calls, the stability table) with a body hit from
+		// the side on a STANDING skater, at the brace that hit had then. They keep it: the side brace and the braced bounce are off in a scene unless its Edit
+		// sets them (Jam.Core.Contact.StandingSides stages both and asserts the shipped values).
+		S.Cfg.Contact.StandSideBrace = 0.0;
+		S.Cfg.Contact.bBraceExchange = false;
 		Edit(S.Cfg);
 		S.Sim = NewObject<UJamSim>();
 		S.Sim->Init(S.Cfg, 7);
@@ -879,9 +884,9 @@ bool FJamContactReachMatch::RunTest(const FString& Parameters)
 	}
 	// Lane A132: what the press on closing speed buys, and what it does not. The brief's bar (the whiff share under 40 %) is met by no arm (58 % -> 49 % at reach
 	// 0, 51 % with the reach on top): it is logged, not asserted, and it is the track's next evolution (docs/experiments/CONTACT-5.md section 2).
-	// Director at the landing (14 Nov): logged, not asserted. On lane A132's tree the closing press whiffed less (49.2 % against 58.4 %, ten matches); on main with
-	// the ladder set and lane A147's kept first step it reads 55.4 % against 53.0 %: ten matches do not carry a 5-point claim either way. Lane A151 traces the whiff.
-	AddInfo(FString::Printf(TEXT("JAMREACH the press on closing speed against the playtester's own speed, reach 0: %.1f %% against %.1f %% whiffs"), Share[1], Share[0]));
+	// Lane A151 (the Director, 14 Nov 01:55): on main with the ladder set the same ten matches read 55.4 % against 53.0 %, the reverse of lane A132's 49.2 % against
+	// 58.4 %: ten matches do not carry a five-point claim either way. Logged, not asserted; the press is decided on 600 matches (docs/experiments/CONTACT-6.md).
+	AddInfo(FString::Printf(TEXT("JAMREACH the press on closing speed against the playtester's own speed: %.1f %% against %.1f %% whiffs (reach 0; logged, not asserted)"), Share[1], Share[0]));
 	AddInfo(FString::Printf(TEXT("JAMREACH BAR whiff share: own speed %.1f %%, closing speed %.1f %%, own speed + reach 1.0 %.1f %%, closing speed + reach 1.0 %.1f %% (the brief's bar: under 40 %%: %s)"), Share[0], Share[1], Share[2], Share[3],
 		FMath::Min(FMath::Min(Share[0], Share[1]), FMath::Min(Share[2], Share[3])) < 40.0 ? TEXT("met") : TEXT("NOT met")));
 	return true;
@@ -1982,6 +1987,431 @@ bool FJamLiftCone::RunTest(const FString& Parameters)
 		TestEqual(*FString::Printf(TEXT("cone 70, %.0f deg: the shove lands only inside"), Theta), D.bShove, bInside);
 		if (D.bClean) TestTrue(*FString::Printf(TEXT("%.0f deg: the clean lift's Dir is attacker -> victim"), Theta), D.Dir.Equals(D.Want, 0.01));
 		TestTrue(*FString::Printf(TEXT("cone 180 (no cone), %.0f deg: the lift is clean"), Theta), N.bClean);
+	}
+	return true;
+}
+
+// ---- Lane A151 (track F1, evolution 5, docs/experiments/CONTACT-6.md): the press that lands, traced -------------------------------------------------------
+//   Jam.Core.ContactPressMatch       the scripted human's check presses in ten three-minute pro matches, each read twice against the sim's check window: on
+//                                    the state the playtester DECIDED on (its whole input arrives ReactionFrames later: 6 for the regular player) and on the
+//                                    frame the sim got the press: the course (closest approach of the two bodies on their velocities), the frames to contact
+//                                    against the window as delivered, whether the bodies had already met; a whiff frame by frame; by how the script presses
+namespace JamContactTests
+{
+	struct FPressCourse { double Dist = 0, Closing = 0, Across = 0, Cpa = 0, Frames = -1; };
+	// The course of a man at P moving at V (both relative to the presser): centres, closing along the line, speed across it, closest approach, frames to contact.
+	FPressCourse CourseOf(const FVector2D& P, const FVector2D& V)
+	{
+		FPressCourse C;
+		const double R2 = 2.0 * UJamSim::SkaterRadius;
+		const FVector2D Nn = P.GetSafeNormal();
+		C.Dist = P.Size();
+		C.Closing = -FVector2D::DotProduct(V, Nn);
+		C.Across = FMath::Abs(FVector2D::DotProduct(V, FVector2D(-Nn.Y, Nn.X)));
+		const double V2 = V.SizeSquared();
+		const double Tc = V2 > 1e-9 ? FMath::Max(0.0, -FVector2D::DotProduct(P, V) / V2) : 0.0;
+		C.Cpa = (P + V * Tc).Size();
+		if (C.Dist <= R2) C.Frames = 0.0;
+		else if (C.Cpa < R2 && V2 > 1e-9)
+		{
+			const double Bq = FVector2D::DotProduct(P, V), Cq = P.SizeSquared() - R2 * R2;   // |P + V t| = R2: the first root
+			const double Disc = Bq * Bq - V2 * Cq;
+			C.Frames = Disc >= 0.0 ? 60.0 * (-Bq - FMath::Sqrt(Disc)) / V2 : -1.0;
+		}
+		return C;
+	}
+
+	struct FPressTrace
+	{
+		FContactCount Base;
+		static constexpr int32 MaxSk = 16, Watch = 30, Classes = 6, Results = 5, MaxDump = 3, RingLen = 16;
+		int32 Delay = 6;   // the playtester's ReactionFrames (the regular player)
+		// The states after each of the last RingLen steps: entry Count - 1 is what the sim stood on when it got this frame's input, entry Count - 1 - Delay is
+		// what the playtester decided that input on.
+		FVector2D RingPos[RingLen][MaxSk], RingVel[RingLen][MaxSk];
+		int32 RingCarrier[RingLen];
+		int64 Count = 0;
+		int64 LastTouch[MaxSk];   // the frame the human's body last met this skater's (centres at two radii after the step)
+		int32 SeenMissed = 0, SeenSoft = 0, SeenGraced = 0;
+		// The open press.
+		bool bOpen = false;
+		int32 Target = -1, Class = 0, Age = 0, Result = -1, MinFrame = 0, LateContact = -1, SinceTouch = 1000;
+		FPressCourse Dec, Got;
+		double MinDist = 0;
+		TArray<FString> Lines;
+		// Totals. Class, read on the DECISION state: 0 no opposing carrier, 1 off course (closest approach of the centres 0.8 m or more), 2 on course but the
+		// bodies meet before the press arrives, 3 on course and the bodies meet inside the window as delivered, 4 on course but after it, 5 already touching.
+		// Result: 0 landed (a check event), 1 too soft (a bump), 2 met a grace, 3 whiff, 4 the window closed some other way (the human took the puck, went down).
+		int32 Presses = 0, N[Classes][Results] = {};
+		int32 CpaBin[4] = {};            // whiffs off course by closest approach at the decision: 0.8-1.0, 1.0-1.3, 1.3-1.8, beyond
+		int32 LateBin[3] = {};           // whiffs: the bodies met after the window, within 13-18, 19-30 frames of the press; never within 30
+		int32 TouchBin[3] = {};          // whiffs: the human's body met the man's 1 to 6 frames before the press arrived, 7 to 12, not within 12
+		int32 GotApart = 0, GotOff = 0;  // whiffs: on the frame the sim got the press the two were already separating; were off course
+		double SumDecDist = 0, SumDecClosing = 0, SumDecCpa = 0, SumGotDist = 0, SumGotClosing = 0, SumMinDist = 0;
+		int32 WhiffsWithMan = 0;
+		TArray<FString> Dumps;
+		int64 Last = -1;
+		void Reset() { Count = 0; Last = -1; bOpen = false; SeenMissed = SeenSoft = SeenGraced = 0; for (int64& T : LastTouch) T = -1000; }
+	};
+
+	void TracePress(void* Ctx, const JamAI::FJamAIWorld& W, const JamAI::FJamAIInput* In, const JamAI::FJamBrain& B, int64_t F, bool bTouch)
+	{
+		FPressTrace& R = *static_cast<FPressTrace*>(Ctx);
+		const UJamSim* Sim = R.Base.Sim->GetSim();
+		if (Sim && Sim->GetFrame() != R.Last && Sim->GetSkaters().IsValidIndex(R.Base.Human) && R.Base.Human < FPressTrace::MaxSk)
+		{
+			R.Last = Sim->GetFrame();
+			const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
+			const FJamSkaterState& H = Sk[R.Base.Human];
+			const int32 Hi = R.Base.Human;
+			const double R2 = 2.0 * UJamSim::SkaterRadius;
+			bool bCheckEvent = false;
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Check && E.Who == Hi) bCheckEvent = true;
+			auto LineOf = [&](int32 Age) -> FString
+			{
+				const FJamSkaterState* O = Sk.IsValidIndex(R.Target) ? &Sk[R.Target] : nullptr;
+				const FVector2D To = O ? O->Pos - H.Pos : FVector2D::ZeroVector;
+				const FVector2D Nn = To.GetSafeNormal();
+				const FVector2D Mv(In[Hi].Move.X, In[Hi].Move.Y);
+				return FString::Printf(TEXT("  +%02d window %2d | human at (%6.2f, %6.2f) vel (%6.2f, %6.2f) push (%5.2f, %5.2f)%s%s | man at (%6.2f, %6.2f) vel (%6.2f, %6.2f)%s | centres %.2f m closing %6.2f m/s | puck at (%6.2f, %6.2f) carrier %d"),
+					Age, H.CheckWindow, H.Pos.X, H.Pos.Y, H.Vel.X, H.Vel.Y, Mv.X, Mv.Y, In[Hi].bPoke ? TEXT(" POKE") : TEXT(""), H.IsStumbling() ? TEXT(" stumbling") : TEXT(""),
+					O ? O->Pos.X : 0.0, O ? O->Pos.Y : 0.0, O ? O->Vel.X : 0.0, O ? O->Vel.Y : 0.0, O && O->IsDown() ? TEXT(" down") : TEXT(""), To.Size(),
+					O ? FVector2D::DotProduct(H.Vel - O->Vel, Nn) : 0.0, Sim->GetPuck().Pos.X, Sim->GetPuck().Pos.Y, Sim->CarrierIndex());
+			};
+			if (H.bCheckThisFrame && R.Count > R.Delay + 1)
+			{
+				// A new press (the playtester leaves 30 frames between presses, so no window is open).
+				++R.Presses;
+				R.bOpen = true; R.Age = 0; R.Result = -1; R.LateContact = -1; R.Lines.Reset(); R.MinDist = 1e9; R.MinFrame = 0; R.SinceTouch = 1000;
+				const int32 Dx = static_cast<int32>((R.Count - 1 - R.Delay) % FPressTrace::RingLen), Gx = static_cast<int32>((R.Count - 1) % FPressTrace::RingLen);
+				const int32 Dc = R.RingCarrier[Dx];
+				R.Target = Dc >= 0 && Dc < FPressTrace::MaxSk && Sk.IsValidIndex(Dc) && Sk[Dc].Team != H.Team ? Dc : -1;
+				R.Class = 0; R.Dec = FPressCourse(); R.Got = FPressCourse();
+				if (R.Target >= 0)
+				{
+					R.Dec = CourseOf(R.RingPos[Dx][R.Target] - R.RingPos[Dx][Hi], R.RingVel[Dx][R.Target] - R.RingVel[Dx][Hi]);
+					R.Got = CourseOf(R.RingPos[Gx][R.Target] - R.RingPos[Gx][Hi], R.RingVel[Gx][R.Target] - R.RingVel[Gx][Hi]);
+					R.Class = R.Dec.Dist <= R2 ? 5 : R.Dec.Frames < 0.0 ? 1 : R.Dec.Frames <= R.Delay ? 2 : R.Dec.Frames <= R.Delay + UJamSim::HumanCheckWindowFrames ? 3 : 4;
+					R.SinceTouch = static_cast<int32>(FMath::Min<int64>(1000, Sim->GetFrame() - R.LastTouch[R.Target]));
+					static const TCHAR* Names[] = { TEXT(""), TEXT("OFF COURSE"), TEXT("ON COURSE, THE BODIES MEET BEFORE THE PRESS ARRIVES"), TEXT("ON COURSE, INSIDE THE WINDOW"), TEXT("ON COURSE, AFTER THE WINDOW"), TEXT("TOUCHING") };
+					R.Lines.Add(FString::Printf(TEXT("  decided %d frames before, on: centres %.2f m, closing %.2f m/s along the line, %.2f m/s across it, closest approach of the centres %.2f m (contact under %.2f), contact in %.1f frames (the window as delivered: frames %d to %d) => %s"),
+						R.Delay, R.Dec.Dist, R.Dec.Closing, R.Dec.Across, R.Dec.Cpa, R2, R.Dec.Frames, R.Delay + 1, R.Delay + UJamSim::HumanCheckWindowFrames, Names[R.Class]));
+					R.Lines.Add(FString::Printf(TEXT("  the sim got it on: centres %.2f m, closing %.2f m/s, closest approach %.2f m, contact in %.1f frames; the bodies last met %d frames before"),
+						R.Got.Dist, R.Got.Closing, R.Got.Cpa, R.Got.Frames, R.SinceTouch >= 1000 ? -1 : R.SinceTouch));
+				}
+			}
+			if (R.bOpen)
+			{
+				if (R.Target >= 0)
+				{
+					const double D = FVector2D::Distance(Sk[R.Target].Pos, H.Pos);
+					if (D < R.MinDist && R.Result < 0) { R.MinDist = D; R.MinFrame = R.Age; }
+					if (R.Result == 3 && R.LateContact < 0 && D <= R2 + 1e-3) R.LateContact = R.Age;
+				}
+				if (R.Lines.Num() < FPressTrace::Watch + 3) R.Lines.Add(LineOf(R.Age));
+				if (R.Result < 0)
+				{
+					if (bCheckEvent) R.Result = 0;
+					else if (H.ChecksSoft > R.SeenSoft) R.Result = 1;
+					else if (H.ChecksGraced > R.SeenGraced) R.Result = 2;
+					else if (H.ChecksMissed > R.SeenMissed) R.Result = 3;
+					else if (H.CheckWindow == 0) R.Result = 4;
+					if (R.Result >= 0)
+					{
+						++R.N[R.Class][R.Result];
+						if (R.Result == 3 && R.Target >= 0)
+						{
+							++R.WhiffsWithMan;
+							R.SumDecDist += R.Dec.Dist; R.SumDecClosing += R.Dec.Closing; R.SumDecCpa += R.Dec.Cpa; R.SumGotDist += R.Got.Dist; R.SumGotClosing += R.Got.Closing; R.SumMinDist += R.MinDist;
+							if (R.Class == 1) ++R.CpaBin[R.Dec.Cpa < 1.0 ? 0 : R.Dec.Cpa < 1.3 ? 1 : R.Dec.Cpa < 1.8 ? 2 : 3];
+							++R.TouchBin[R.SinceTouch <= 6 ? 0 : R.SinceTouch <= 12 ? 1 : 2];
+							if (R.Got.Closing < 0.0) ++R.GotApart;
+							if (R.Got.Frames < 0.0) ++R.GotOff;
+						}
+						if (R.Result != 3) R.bOpen = false;
+					}
+				}
+				if (R.bOpen && R.Result == 3 && (R.Age >= FPressTrace::Watch || R.LateContact >= 0))
+				{
+					++R.LateBin[R.LateContact < 0 ? 2 : R.LateContact <= 18 ? 0 : 1];
+					if (R.Dumps.Num() < FPressTrace::MaxDump && R.Target >= 0)
+					{
+						FString D = FString::Printf(TEXT("JAMPRESS WHIFF frame by frame (the sim got the press at frame %lld; the man = skater %d, the opposing carrier when it was decided):\n"), static_cast<long long>(Sim->GetFrame() - R.Age), R.Target);
+						for (int32 i = 0; i < R.Lines.Num() && i < 16; ++i) D += R.Lines[i] + TEXT("\n");
+						D += FString::Printf(TEXT("  => closest the centres came inside the window: %.2f m at +%d; bodies met after the window: %s"), R.MinDist, R.MinFrame, R.LateContact >= 0 ? *FString::Printf(TEXT("at +%d"), R.LateContact) : TEXT("not within 30 frames"));
+						R.Dumps.Add(D);
+					}
+					R.bOpen = false;
+				}
+				++R.Age;
+			}
+			R.SeenMissed = H.ChecksMissed; R.SeenSoft = H.ChecksSoft; R.SeenGraced = H.ChecksGraced;
+			const int32 Wx = static_cast<int32>(R.Count % FPressTrace::RingLen);
+			for (const FJamSkaterState& S : Sk)
+			{
+				if (S.Index >= FPressTrace::MaxSk) continue;
+				R.RingPos[Wx][S.Index] = S.Pos; R.RingVel[Wx][S.Index] = S.Vel;
+				if (S.Team != H.Team && !S.IsDown() && FVector2D::Distance(S.Pos, H.Pos) <= R2 + 1e-4) R.LastTouch[S.Index] = Sim->GetFrame();
+			}
+			R.RingCarrier[Wx] = Sim->CarrierIndex();
+			++R.Count;
+		}
+		Trace(&R.Base, W, In, B, F, bTouch);
+	}
+
+	JamAI::FJamPlaytestStats MatchPress(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FPressTrace& R, TFunctionRef<void(FJamGameConfig&)> Edit, int64 Frames = 10800)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+		for (const FString& E : Errors) T.AddError(FString::Printf(TEXT("hockey.regular: %s"), *E));
+		if (!C) return JamAI::FJamPlaytestStats();
+		C->Game.Rules.ScoreToWin = 99;
+		C->Game.Rules.bPenalties = false;
+		Edit(C->Game);
+		JamAI::FJamSimAdapter Sim(*C);
+		R.Base = FContactCount();
+		R.Base.Sim = &Sim;
+		R.Reset();
+		JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
+		R.Base.Human = M.PlayerIndex();
+		R.Delay = JamAI::PlaytesterProfile(JamAI::EPlaytester::Regular).ReactionFrames;
+		return JamAI::RunPlaytestMatch(Sim, M, Seed, JamAI::EPlaytester::Regular, Frames, C->Game.Shot.ChargeFramesMax, false, &TracePress, &R, 1);
+	}
+
+	void ReportPress(FAutomationTestBase& T, const TCHAR* Arm, const FPressTrace& R, int32 Seeds, int32 Landed, int32& OutWhiffs, int32& OutPresses, int32& OutLanded)
+	{
+		static const TCHAR* ClassNames[] = { TEXT("no opposing carrier when decided"), TEXT("off course"), TEXT("on course, the bodies meet before the press arrives"), TEXT("on course, inside the window as delivered"),
+			TEXT("on course, after the window"), TEXT("touching when decided") };
+		int32 ByResult[FPressTrace::Results] = {};
+		for (int32 c = 0; c < FPressTrace::Classes; ++c) for (int32 r = 0; r < FPressTrace::Results; ++r) ByResult[r] += R.N[c][r];
+		OutWhiffs = ByResult[3]; OutPresses = R.Presses; OutLanded = ByResult[0];
+		T.AddInfo(FString::Printf(TEXT("JAMPRESS TOTAL %s, %d three-minute pro matches: presses %d (a match %.1f) | landed %d = %.1f %% (a match %.2f) | too soft %d | met a grace %d | WHIFF %d = %.1f %% | closed otherwise %d | check events of the human %d"),
+			Arm, Seeds, R.Presses, static_cast<double>(R.Presses) / Seeds, ByResult[0], R.Presses > 0 ? 100.0 * ByResult[0] / R.Presses : 0.0, static_cast<double>(ByResult[0]) / Seeds, ByResult[1], ByResult[2], ByResult[3],
+			R.Presses > 0 ? 100.0 * ByResult[3] / R.Presses : 0.0, ByResult[4], Landed));
+		for (int32 c = 0; c < FPressTrace::Classes; ++c)
+		{
+			const int32 All = R.N[c][0] + R.N[c][1] + R.N[c][2] + R.N[c][3] + R.N[c][4];
+			T.AddInfo(FString::Printf(TEXT("JAMPRESS CLASS %s | by the state the press was DECIDED on (%d frames before the sim got it): %s: presses %d -> landed %d, too soft %d, grace %d, whiff %d, other %d"),
+				Arm, R.Delay, ClassNames[c], All, R.N[c][0], R.N[c][1], R.N[c][2], R.N[c][3], R.N[c][4]));
+		}
+		const int32 Wm = FMath::Max(1, R.WhiffsWithMan);
+		T.AddInfo(FString::Printf(TEXT("JAMPRESS WHIFFS %s: %d whiffs at a man | the means when DECIDED: centres %.2f m, closing %.2f m/s, closest approach %.2f m | when the sim GOT the press: centres %.2f m, closing %.2f m/s; already separating %d, off course %d | ")
+			TEXT("closest the centres came inside the window %.2f m | off course when decided, by the closest approach: 0.8 to 1.0 m %d, 1.0 to 1.3 m %d, 1.3 to 1.8 m %d, beyond %d | ")
+			TEXT("the bodies had met 1 to 6 frames before the press arrived %d, 7 to 12 frames %d, not within 12 %d | the bodies met after the window within 13 to 18 frames of the press %d, 19 to 30 %d, not within 30 %d"),
+			Arm, R.WhiffsWithMan, R.SumDecDist / Wm, R.SumDecClosing / Wm, R.SumDecCpa / Wm, R.SumGotDist / Wm, R.SumGotClosing / Wm, R.GotApart, R.GotOff, R.SumMinDist / Wm,
+			R.CpaBin[0], R.CpaBin[1], R.CpaBin[2], R.CpaBin[3], R.TouchBin[0], R.TouchBin[1], R.TouchBin[2], R.LateBin[0], R.LateBin[1], R.LateBin[2]));
+		for (const FString& D : R.Dumps) T.AddInfo(D);
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactPressMatch, "Jam.Core.ContactPressMatch", JamContactTests::Flags)
+bool FJamContactPressMatch::RunTest(const FString& Parameters)
+{
+	// Ten matches show the mechanism (which state a press is decided on, what the sim gets); the shares are decided on 600 matches a cell
+	// (tools/perf/results/a151, check_presses and check_whiffs on the playtest line), never on these ten (the Director, 14 Nov 01:55).
+	const int32 Seeds = 10;
+	struct FArm { const TCHAR* Name; bool bCourse; int32 Late; };
+	const FArm Arms[] = { { TEXT("the press on closing speed inside 1.8 m (lane A132)"), false, 0 }, { TEXT("the press on course and time"), true, 0 },
+		{ TEXT("the press on closing speed, the late press 6 frames"), false, 6 } };
+	int32 Whiffs[3] = { 0, 0, 0 }, Presses[3] = { 0, 0, 0 }, Lands[3] = { 0, 0, 0 };
+	int32 ArmIndex = 0;
+	for (const FArm& Arm : Arms)
+	{
+		FPressTrace* R = new FPressTrace();
+		int32 Landed = 0;
+		for (uint64 Seed = 1; Seed <= Seeds; ++Seed)
+		{
+			const JamAI::FJamPlaytestStats S = MatchPress(*this, TEXT("pro"), Seed, *R, [&Arm](FJamGameConfig& G) { G.Contact.bPlaytesterCoursePress = Arm.bCourse; G.Contact.LatePressFrames = Arm.Late; G.Contact.StandSideBrace = 0.0; G.Contact.bBraceExchange = false; });
+			Landed += S.ChecksLanded;
+			AddInfo(FString::Printf(TEXT("JAMPRESS match %s pro seed %llu: frames %lld hash %016llx goals %d:%d | check_presses %d check_whiffs %d checks_landed %d"), Arm.Name, static_cast<unsigned long long>(Seed),
+				static_cast<long long>(S.Frames), static_cast<unsigned long long>(S.Hash), S.GoalsFor, S.GoalsAgainst, S.CheckPresses, S.CheckWhiffs, S.ChecksLanded));
+		}
+		ReportPress(*this, Arm.Name, *R, Seeds, Landed, Whiffs[ArmIndex], Presses[ArmIndex], Lands[ArmIndex]);
+		TestTrue(*FString::Printf(TEXT("%s: the scripted human pressed its check"), Arm.Name), Presses[ArmIndex] > 0);
+		delete R;
+		++ArmIndex;
+	}
+	AddInfo(FString::Printf(TEXT("JAMPRESS BAR (ten matches: the mechanism, not the verdict): whiffs %d of %d = %.1f %% on closing speed, %d of %d = %.1f %% on course and time, %d of %d = %.1f %% on closing speed with the late press; landed a match %.2f / %.2f / %.2f"),
+		Whiffs[0], Presses[0], Presses[0] ? 100.0 * Whiffs[0] / Presses[0] : 0.0, Whiffs[1], Presses[1], Presses[1] ? 100.0 * Whiffs[1] / Presses[1] : 0.0, Whiffs[2], Presses[2], Presses[2] ? 100.0 * Whiffs[2] / Presses[2] : 0.0,
+		static_cast<double>(Lands[0]) / Seeds, static_cast<double>(Lands[1]) / Seeds, static_cast<double>(Lands[2]) / Seeds));
+	// The Director, 14 Nov 02:27: a statistic over a handful of matches is a logged line, never an assertion. The two reads below are logged; the shares are
+	// decided on the 600-match cells (CONTACT-6.md section 2), and this test pins no hash of a shipped cut's match.
+	AddInfo(FString::Printf(TEXT("JAMPRESS READ (logged, not asserted): on course and time the script whiffs %s as often as on closing speed; with the late press the old press whiffs %s"),
+		Presses[0] > 0 && Presses[1] > 0 && 2.0 * Whiffs[1] / Presses[1] < static_cast<double>(Whiffs[0]) / Presses[0] ? TEXT("less than half") : TEXT("NOT less than half"), Whiffs[2] < Whiffs[0] ? TEXT("less") : TEXT("NOT less")));
+	return true;
+}
+
+// ---- Lane A151 (track F1, evolution 5, CONTACT-6.md section 3): a standing skater is braced, not a wall and not a rocket ---------------------------------
+//   Jam.Core.Contact.StandingSides   a standing skater hit at 9 m/s closing from the side, the front and behind, pressed and unpressed, before the rule
+//                                    (contact.StandSideBrace 0, bBraceExchange false: the equal bounce) and with it: from the side it holds (a bump, under
+//                                    2 m/s after), from the front it goes down, from behind it goes down for longer, and the attacker pays
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactStandingSides, "Jam.Core.Contact.StandingSides", JamContactTests::Flags)
+bool FJamContactStandingSides::RunTest(const FString& Parameters)
+{
+	struct FOut { int32 Outcome = 0, Knock = 0, VicStumble = 0, AttStumble = 0, Frame = -1; float Ratio = 0.f; double VicAfter = 0, AttAfter = 0, AttBefore = 0, AttAlongAfter = 0; bool bRecoil = false, bMet = false; };
+	struct FArm { const TCHAR* Name; double Side; bool bExchange; };
+	const FArm Arms[] = { { TEXT("before (side brace 0, equal bounce)"), 0.0, false }, { TEXT("side brace 5 alone"), 5.0, false }, { TEXT("the braced bounce alone"), 0.0, true }, { TEXT("the rule (side brace 5, braced bounce)"), 5.0, true } };
+	struct FCase { const TCHAR* Name; FVector2D From; double Speed; bool bPress; };
+	// The victim stands at the centre dot facing +x. From = where the attacker starts (1.3 m out: a gap of 0.5 m); it glides at the victim at Speed.
+	const FCase Cases[] = {
+		{ TEXT("side, pressed, 9 m/s"), FVector2D(0.0, -1.3), 9.0, true },
+		{ TEXT("front, pressed, 9 m/s"), FVector2D(1.3, 0.0), 9.0, true },
+		{ TEXT("behind, pressed, 9 m/s"), FVector2D(-1.3, 0.0), 9.0, true },
+		{ TEXT("side, no press, 9 m/s"), FVector2D(0.0, -1.3), 9.0, false },
+		{ TEXT("front, no press, 9 m/s"), FVector2D(1.3, 0.0), 9.0, false },
+		{ TEXT("behind, no press, 9 m/s"), FVector2D(-1.3, 0.0), 9.0, false },
+		{ TEXT("side, pressed, 11 m/s (top speed)"), FVector2D(0.0, -1.3), 11.0, true },
+		{ TEXT("15 degrees ahead of the side, pressed, 9 m/s"), FVector2D(0.3365, -1.2557), 9.0, true },
+		{ TEXT("front, pressed, 4 m/s"), FVector2D(1.3, 0.0), 4.0, true },
+		{ TEXT("side, pressed, 4 m/s"), FVector2D(0.0, -1.3), 4.0, true },
+	};
+	constexpr int32 NumCases = UE_ARRAY_COUNT(Cases), NumArms = UE_ARRAY_COUNT(Arms);
+	FOut Out[NumArms][NumCases];
+	for (int32 a = 0; a < NumArms; ++a)
+	{
+		for (int32 c = 0; c < NumCases; ++c)
+		{
+			const FArm& Arm = Arms[a];
+			const FCase& K = Cases[c];
+			FOut& O = Out[a][c];
+			FContactScene S = Make(*this, [&Arm](FJamGameConfig& G) { G.Contact.StandSideBrace = Arm.Side; G.Contact.bBraceExchange = Arm.bExchange; });
+			if (!S.Ok()) return false;
+			S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+			const FVector2D Dir = -K.From.GetSafeNormal();
+			S.Sim->SetSkater(S.A, K.From, Dir * K.Speed, FMath::Atan2(Dir.Y, Dir.X));
+			for (int32 F = 0; F < 24 && !O.bMet; ++F)
+			{
+				TArray<FJamInput> In;
+				In.SetNum(S.Sim->GetSkaters().Num());
+				In[S.A].bCheck = K.bPress && F == 0;
+				O.AttBefore = S.Att().Vel.Size();
+				S.Sim->Step(In);
+				if (S.Vic().Vel.Size() > 1e-3 || S.Vic().ContactOutcome != 0 || S.Vic().IsDown())
+				{
+					O.bMet = true; O.Frame = F;
+					O.Outcome = S.Vic().ContactOutcome; O.Ratio = S.Vic().ContactRatio; O.Knock = S.Vic().KnockFrames; O.VicStumble = S.Vic().StumbleFrames;
+					O.AttStumble = S.Att().StumbleFrames; O.bRecoil = S.Att().bRecoilThisFrame;
+					O.VicAfter = S.Vic().Vel.Size(); O.AttAfter = S.Att().Vel.Size(); O.AttAlongAfter = FVector2D::DotProduct(S.Att().Vel, Dir);
+				}
+			}
+			AddInfo(FString::Printf(TEXT("JAMSTAND %s | %s: %s ratio %.2f | the standing skater leaves at %.2f m/s%s | the attacker %.2f -> %.2f m/s (%.2f along its way)%s | met at frame %d"), Arm.Name, K.Name,
+				!O.bMet ? TEXT("NO CONTACT") : O.Outcome == UJamSim::ContactDown ? TEXT("DOWN") : O.Outcome == UJamSim::ContactStumble ? TEXT("STUMBLE") : O.Outcome == UJamSim::ContactBump ? TEXT("BUMP") : TEXT("no hit (a collision)"),
+				O.Ratio, O.VicAfter, O.Knock > 0 ? *FString::Printf(TEXT(", down %d frames"), O.Knock) : O.VicStumble > 0 ? *FString::Printf(TEXT(", stumbling %d frames"), O.VicStumble) : TEXT(", on its feet"),
+				O.AttBefore, O.AttAfter, O.AttAlongAfter, O.bRecoil ? *FString::Printf(TEXT(", RECOILS: stumbling %d frames"), O.AttStumble) : TEXT(""), O.Frame));
+			TestTrue(*FString::Printf(TEXT("%s | %s: the two met"), Arm.Name, K.Name), O.bMet);
+		}
+	}
+	// The shipped values (JamCartridge.h): the side brace 5, the braced bounce on. Make() switches both off for the older scenes; the arms above set them.
+	TestEqual(TEXT("the shipped side brace"), FJamContactConfig().StandSideBrace, 5.0, 1e-12);
+	TestTrue(TEXT("the shipped bounce is the braced one"), FJamContactConfig().bBraceExchange);
+	// Before: the equal bounce gives the standing skater 0.6 x the closing speed whatever the law said, and a pressed side hit at 9 m/s fells it (ratio 1.17).
+	TestTrue(*FString::Printf(TEXT("before: an unpressed 9 m/s collision from the side leaves the standing skater at 0.6 x the closing speed (%.2f m/s)"), Out[0][3].VicAfter), FMath::Abs(Out[0][3].VicAfter - 0.6 * Out[0][3].AttBefore) < 0.05);
+	TestEqual(TEXT("before: a pressed side hit at 9 m/s fells the standing skater"), Out[0][0].Outcome, UJamSim::ContactDown);
+	// The rule.
+	const FOut* R = Out[3];
+	TestEqual(TEXT("the rule: from the side at 9 m/s a standing skater holds: a bump"), R[0].Outcome, UJamSim::ContactBump);
+	TestTrue(*FString::Printf(TEXT("... ratio under bump_ratio 0.4 (%.2f)"), R[0].Ratio), R[0].Ratio < 0.4f);
+	TestTrue(*FString::Printf(TEXT("... and leaves the hit under 2 m/s (%.2f)"), R[0].VicAfter), R[0].VicAfter < 2.0);
+	TestTrue(*FString::Printf(TEXT("... and the attacker pays: it recoils (stumbling %d frames) and is all but stopped (%.2f m/s)"), R[0].AttStumble, R[0].AttAfter), R[0].bRecoil && R[0].AttStumble > 0 && R[0].AttAfter < 2.0);
+	TestEqual(TEXT("the rule: from the front at 9 m/s the standing skater goes down"), R[1].Outcome, UJamSim::ContactDown);
+	TestEqual(TEXT("... with the ratio it had before (the front keeps stand_brace)"), static_cast<double>(R[1].Ratio), static_cast<double>(Out[0][1].Ratio), 1e-6);
+	TestEqual(TEXT("the rule: from behind at 9 m/s the standing skater goes down"), R[2].Outcome, UJamSim::ContactDown);
+	TestTrue(*FString::Printf(TEXT("... for longer than from the front (%d against %d frames)"), R[2].Knock, R[1].Knock), R[2].Knock > R[1].Knock);
+	TestEqual(TEXT("... exactly as before (unseen: no brace either way)"), R[2].Knock, Out[0][2].Knock);
+	TestTrue(*FString::Printf(TEXT("the rule: an unpressed 9 m/s collision from the side moves the standing skater under 2 m/s (%.2f; before %.2f)"), R[3].VicAfter, Out[0][3].VicAfter), R[3].VicAfter < 2.0 && R[3].VicAfter > 0.0);
+	TestTrue(*FString::Printf(TEXT("... and stops the one who ran into it (%.2f m/s along its way; before %.2f)"), R[3].AttAlongAfter, Out[0][3].AttAlongAfter), FMath::Abs(R[3].AttAlongAfter) < 1.0);
+	TestEqual(TEXT("the rule: an unpressed collision from behind is the equal bounce (unseen: no brace)"), R[5].VicAfter, Out[0][5].VicAfter, 1e-9);
+	TestTrue(*FString::Printf(TEXT("the rule: not a wall: from the side at top speed (11 m/s) the standing skater stumbles (outcome %d, ratio %.2f)"), R[6].Outcome, R[6].Ratio), R[6].Outcome == UJamSim::ContactStumble);
+	TestTrue(*FString::Printf(TEXT("the rule: between side and front the brace falls off (15 degrees ahead of the side: ratio %.2f between the side %.2f and the front %.2f)"), R[7].Ratio, R[0].Ratio, R[1].Ratio),
+		R[7].Ratio > R[0].Ratio && R[7].Ratio < R[1].Ratio);
+	// The carrier is not braced from the side (law 3's gate): the same pressed side hit at 9 m/s on a standing CARRIER is what it was before the lane.
+	{
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.StandSideBrace = 5.0; G.Contact.bBraceExchange = true; });
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(-10.0, -10.0), FVector2D::ZeroVector, 0.0);
+		TestTrue(TEXT("the standing skater carries the puck"), HandPuck(S, S.V));
+		Carry(S, S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(0.0, -1.3), FVector2D(0.0, 9.0), PI * 0.5);
+		const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; });
+		AddInfo(FString::Printf(TEXT("JAMSTAND the rule | side, pressed, 9 m/s, the standing skater CARRIES the puck: %s"), *Facts(H)));
+		TestEqual(TEXT("the rule: a standing CARRIER hit from the side at 9 m/s goes down, as before the lane"), H.Outcome, UJamSim::ContactDown);
+		TestEqual(TEXT("... with the ratio it had (stand_brace, no side brace with the puck)"), static_cast<double>(H.Ratio), static_cast<double>(Out[0][0].Ratio), 1e-2);
+	}
+	// Each half alone: the side brace decides the outcome, the braced bounce decides the speed.
+	TestEqual(TEXT("side brace alone: a bump from the side at 9 m/s"), Out[1][0].Outcome, UJamSim::ContactBump);
+	TestTrue(*FString::Printf(TEXT("the braced bounce alone: the unpressed side collision moves the standing skater less (%.2f against %.2f m/s)"), Out[2][3].VicAfter, Out[0][3].VicAfter), Out[2][3].VicAfter < Out[0][3].VicAfter);
+	return true;
+}
+
+// ---- Lane A151 (track F1, evolution 5, CONTACT-6.md section 2): the late press --------------------------------------------------------------------------
+//   Jam.Core.Contact.LatePress       contact.LatePressFrames 6: a human's check pressed 1 to 6 frames after its body met an opponent's with no check open is
+//                                    that hit (the outcome and the ratio of the press made in time); a press 7 frames after opens a window and runs out;
+//                                    0 (the neutral value) = no such press; a bot's late press is nothing
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactLatePress, "Jam.Core.Contact.LatePress", JamContactTests::Flags)
+bool FJamContactLatePress::RunTest(const FString& Parameters)
+{
+	struct FLate { int32 ContactFrame = -1, HitFrame = -1, Outcome = 0, Knock = 0, ChecksLate = 0, Missed = 0, VicLate = 0, AttOutcome = 0, LateLeftAfterContact = 0; float Ratio = 0.f; double VicAfter = 0, AttAfter = 0; bool bCheck = false; };
+	// The victim stands at the centre dot facing +x; the human glides at it head-on at 9 m/s from 1.3 m (a gap of 0.5 m: the bodies meet in the fourth step).
+	// PressAt = the frame of the press (-1 none); bVictim = the standing bot presses instead of the human.
+	auto Play = [this](const TCHAR* Name, int32 LateFrames, int32 PressAt, bool bVictim) -> FLate
+	{
+		FLate O;
+		FContactScene S = Make(*this, [LateFrames](FJamGameConfig& G) { G.Contact.LatePressFrames = LateFrames; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(1.3, 0.0), FVector2D(-9.0, 0.0), PI);
+		for (int32 F = 0; F < 32; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[bVictim ? S.V : S.A].bCheck = F == PressAt;
+			S.Sim->Step(In);
+			for (const FJamSimEvent& E : S.Sim->GetFrameEvents()) if (E.Name == JamEvents::Check && E.Who == S.A) O.bCheck = true;
+			if (O.ContactFrame < 0 && S.Vic().Vel.Size() > 1e-3) { O.ContactFrame = F; O.LateLeftAfterContact = S.Att().LateFrames; }
+			if (O.HitFrame < 0 && S.Vic().ContactOutcome != 0)
+			{
+				O.HitFrame = F; O.Outcome = S.Vic().ContactOutcome; O.Ratio = S.Vic().ContactRatio; O.Knock = S.Vic().KnockFrames;
+				O.VicAfter = S.Vic().Vel.Size(); O.AttAfter = S.Att().Vel.Size();
+			}
+			if (S.Att().ContactOutcome != 0) O.AttOutcome = S.Att().ContactOutcome;
+		}
+		O.ChecksLate = S.Att().ChecksLate; O.Missed = S.Att().ChecksMissed; O.VicLate = S.Vic().ChecksLate;
+		AddInfo(FString::Printf(TEXT("JAMLATE %s (late_press_frames %d, press at frame %d by %s): the bodies met at frame %d | hit at frame %d outcome %d ratio %.3f down %d frames | the victim %.2f m/s, the attacker %.2f m/s after | check event %d | late presses resolved %d, whiffs %d"),
+			Name, LateFrames, PressAt, bVictim ? TEXT("the bot") : TEXT("the human"), O.ContactFrame, O.HitFrame, O.Outcome, O.Ratio, O.Knock, O.VicAfter, O.AttAfter, O.bCheck ? 1 : 0, O.ChecksLate, O.Missed));
+		return O;
+	};
+	const FLate Ref = Play(TEXT("pressed in time"), 6, 0, false);
+	const FLate None = Play(TEXT("no press"), 6, -1, false);
+	if (!TestTrue(TEXT("the bodies meet (no press)"), None.ContactFrame >= 0) || !TestTrue(TEXT("the press in time lands on the frame the bodies meet"), Ref.HitFrame == None.ContactFrame)) return false;
+	const int32 C = None.ContactFrame;
+	TestEqual(TEXT("pressed in time: down"), Ref.Outcome, UJamSim::ContactDown);
+	TestEqual(TEXT("no press: no hit"), None.Outcome, 0);
+	TestEqual(TEXT("no press: the human keeps the meeting for late_press_frames (the counter reads 7 after the contact's step: 6 presses to come)"), None.LateLeftAfterContact, 7);
+	TestEqual(TEXT("no press: nothing resolved, nothing missed"), None.ChecksLate + None.Missed, 0);
+	for (int32 After : { 1, 3, 6 })
+	{
+		const FLate L = Play(*FString::Printf(TEXT("pressed %d frames late"), After), 6, C + After, false);
+		TestEqual(*FString::Printf(TEXT("%d frames late: the press is the hit, on its own frame"), After), L.HitFrame, C + After);
+		TestEqual(*FString::Printf(TEXT("%d frames late: the outcome of the press made in time"), After), L.Outcome, Ref.Outcome);
+		TestEqual(*FString::Printf(TEXT("%d frames late: and its ratio (the velocities the two met with)"), After), static_cast<double>(L.Ratio), static_cast<double>(Ref.Ratio), 1e-3);
+		TestTrue(*FString::Printf(TEXT("%d frames late: and its frames down (%d against %d: the late one has already counted its own frame)"), After, L.Knock, Ref.Knock), FMath::Abs(L.Knock - Ref.Knock) <= 1);
+		TestTrue(*FString::Printf(TEXT("%d frames late: the victim leaves as from the hit in time (%.2f against %.2f m/s)"), After, L.VicAfter, Ref.VicAfter), FMath::Abs(L.VicAfter - Ref.VicAfter) < 0.5);
+		TestTrue(*FString::Printf(TEXT("%d frames late: a check event, one late press counted, no whiff"), After), L.bCheck && L.ChecksLate == 1 && L.Missed == 0);
+	}
+	{
+		const FLate L = Play(TEXT("pressed 7 frames late"), 6, C + 7, false);
+		TestEqual(TEXT("7 frames late: no hit"), L.Outcome, 0);
+		TestTrue(TEXT("7 frames late: the press opens a window that runs out (a whiff), nothing resolved late"), L.ChecksLate == 0 && L.Missed == 1 && !L.bCheck);
+	}
+	{
+		const FLate L = Play(TEXT("the neutral value, pressed 1 frame late"), 0, C + 1, false);
+		TestEqual(TEXT("late_press_frames 0: no hit"), L.Outcome, 0);
+		TestTrue(TEXT("late_press_frames 0: the press is a whiff as before, and nothing was kept"), L.ChecksLate == 0 && L.Missed == 1 && L.LateLeftAfterContact == 0);
+	}
+	{
+		const FLate L = Play(TEXT("the bot presses 1 frame late"), 6, C + 1, true);
+		TestTrue(TEXT("a bot's late press is nothing: no hit on the human, nothing resolved"), L.AttOutcome == 0 && L.VicLate == 0);
 	}
 	return true;
 }

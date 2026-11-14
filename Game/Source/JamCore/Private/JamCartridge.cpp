@@ -1209,6 +1209,26 @@ namespace
 			static const bool bNoShieldShove = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_TEST_SHIELD_SHOVE")) == TEXT("0");
 			if (bNoShieldShove) C.Contact.bShieldShove = false;
 		}
+		// Lane A151 (track F1), measurement only, the same pattern: JAM_TEST_A151="name=value;..." in the environment sets this lane's rules that have no key
+		// yet on every cartridge that loads, so one set of binaries plays each rule alone on paired seeds (tools/perf/results/a151). Never set in a game or the gate.
+		{
+			static const FString Seam = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_TEST_A151"));
+			if (!Seam.IsEmpty())
+			{
+				TArray<FString> Pairs;
+				Seam.ParseIntoArray(Pairs, TEXT(";"));
+				for (const FString& Pair : Pairs)
+				{
+					FString Name, Value;
+					if (!Pair.Split(TEXT("="), &Name, &Value)) continue;
+					const double V = FCString::Atod(*Value);
+					if (Name == TEXT("side_brace")) C.Contact.StandSideBrace = V;
+					else if (Name == TEXT("brace_exchange")) C.Contact.bBraceExchange = V != 0.0;
+					else if (Name == TEXT("late_press")) C.Contact.LatePressFrames = FMath::RoundToInt32(V);
+					// A151-SEAM-MORE
+				}
+			}
+		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
 		ReadName(Rules, TEXT("mode"), C.Rules.Mode);

@@ -247,6 +247,7 @@ bool FJamStick::RunTest(const FString& Parameters)
 
 	// 5b. R-0029 point 3, foul grace: the human lifts the puck off O, then checks O from the side. Six frames after the strip the check is clean
 	// (O carried within foul_grace_frames); twenty frames after, the same check is foul_no_puck.
+	G.Contact.StandSideBrace = 0.0;   // lane A151 (track F1): this scene and the next stage their rule with a body check from the side on a STANDING skater without the puck, at the brace that hit had (CONTACT-6.md section 3)
 	for (const int32 Wait : { 6, 20 })
 	{
 		UJamSim* Sim = MakeSim(G, 1, true);

@@ -433,3 +433,4 @@
 - link green 02:45: main 425f54e (The first match loads nothing on its start frame (A150, track Q3): the warm scene follows ) pushed.
 - link green 02:50: main b7ee3da (Twelve modes on the real ladder: each a contest, each winnable, the whistle out of all but) pushed.
 - 03:03: acceptance run RED on main b7ee3da (exit 1): no H27. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H27-2.txt
+- link green 03:07: main 3f5cbda (The level is chosen where it is played (A144, track U2, evolution 3): a ROOKIE / PRO / ALL) pushed.
