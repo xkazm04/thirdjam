@@ -392,3 +392,103 @@ Stills are in `C:\Users\kazda\jam\wt\b-fig\devlog\shots\` as `20261114-154600-B-
 | Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Left_Heavy_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export37/p3_clay (gate passed; export37 replaced export36's take) loopcut file, take Check_Deliver_Left_Heavy_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (175548 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 11.02 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | as the job-5 E2 row above (lanes up to FILM3, E2 jobs 1 to 5), and: the equipped props hidden on the knockdown's own frame (EquipApply called in KnockDown right after bDown), the wind-up takes behind bWindupTakes (bool, default false) with WindN (int, 0 = 8) and WindT0: SetWindupTakes(bool, int), ChkCut branches to ChkCutWind (Check_Deliver_<side><size>_Wind from frame 10-N), PlayCheckWindup(int) re-times it, PlayCrossCheck(int) plays CrossCheck_Wind via CrossWind when not held (lane E2, part 3) (11552300 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 11.22 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | as the job-5 E2 row above (lanes up to FILM3, E2 jobs 1 to 5), and: the equipped props hidden on the knockdown's own frame (EquipApply called in KnockDown right after bDown), the wind-up takes behind bWindupTakes (bool, default false) with WindN (int, 0 = 8) and WindT0: SetWindupTakes(bool, int), ChkCut branches to ChkCutWind (Check_Deliver_<side><size>_Wind from frame 10-N), PlayCheckWindup(int) re-times it, PlayCrossCheck(int) plays CrossCheck_Wind via CrossWind when not held (lane E2, part 3) (11761301 bytes) |
+
+---
+
+# Fourth hand-back (headless, 16:10 onward): the hold's in and out through the hold layer, the middle and heavy wind-ups proved, export38
+
+Headless editor pid 14124 (port 8004, started 15:52). The tree is as it was merged; dev-b is not merged into it. 0 Blueprint errors in every session.
+
+## The hold's in and out, while the legs keep skating
+- **What changed** (both animation Blueprints; there is no new skeleton slot):
+  - The hold layer (`LayeredBoneBlend_0`, `spine_01` up, mesh space) now takes its pose from two Blend Poses by Bool:
+    - `BlendListByBool_9` on `bHoldOut`: `CrossCheck_Hold_Out` through `SequenceEvaluator_2` at `HoldOutT`
+    - otherwise `BlendListByBool_10` on `bHoldIn`: `CrossCheck_Hold_In` through `SequenceEvaluator_0` at `HoldInT`
+    - otherwise the `CrossCheck_Hold` loop through `SequenceEvaluator_3` at `HoldLoopT`
+  - Blend times are 0. The loop's time starts at 0 where Hold_In ends (Hold@0).
+  - The old `SequencePlayer_9` is left unconnected.
+  - New ABP variables: `bHoldIn`, `bHoldOut`, `HoldInT`, `HoldOutT`, `HoldLoopT`.
+  - The figure's `HoldTick` sets them:
+    - in for the first 0.1 s after `SetCrossCheckHold(true)`
+    - out from `false` on
+    - the loop time is (t − 0.1) mod 0.9833 s
+  - The 6-frame weight ramp stays: the in and out takes start and end on stance, so the weight carries the change from and to the skating arms.
+- **Proving numbers** (test figures `fa_I`, clay `w6_cI2`, night `w6_nI2`):
+  - **Legs (feet, calves, thighs, pelvis, root) 0.00 cm from a control figure through in, hold and out**, at 6 m/s and at 9 m/s, clay and night, ticks 0 to 219.
+  - **The in and out are what plays:**
+    - Against the earlier ramp-only hold, the right hand differs by 21.6 cm on tick 33 and 19.5 cm on tick 155, and by 0.0 to 0.3 cm once held.
+    - With the takes, the hand travels out at the side at waist height (z 78 to 80 cm). The plain blend dipped it through the body (z 70, y 4).
+  - **Largest one-frame arm step:** 24.3 cm (clay) / 26.6 cm (night) on the last frame of the in, against the control's 2.2 / 2.5 cm and 17.1 for the ramp-only blend. The brace is a fast 6-frame move. Not seen on a GPU.
+- **Not done:** I could not set the Blend list's "reset child on activation" from Python. I made the loop an evaluator on its own time instead, so it is not needed.
+
+## The middle and heavy body-check wind-ups, switch on
+- A test call `TestChkCut(Size, bRight)` sets the check size and cuts.
+- Results (`SetWindupTakes(true, 0)`, so N = 8, start frame 2 on tick 30; the contact frame 10 is due on tick 38):
+
+  | Figure | Take | Hand forward peak (clay) | Night |
+  |---|---|---|---|
+  | M1 | `Check_Deliver_Right_Wind` | hand_r 103.2 cm on **tick 38** | 103.6 on 38 |
+  | M2 | `Check_Deliver_Left_Wind` | hand_l 104.9 on **38** | 109.4 on 38 |
+  | M3 | `Check_Deliver_Right_Heavy_Wind` (export37) | hand_r 96.4 on **39** | 96.4 on 39 |
+  | M4 | `Check_Deliver_Left_Heavy_Wind` (export37) | hand_l 96.7 on **40** | 96.8 on 40 |
+  | C1 / C2, switch off | `Check_Deliver_Right` / `_Heavy` | unchanged (peaks 46 / 68 cm on 32 / 37) | same |
+
+- The middle wind-ups peak exactly on the contact frame. The heavy ones peak 1 to 2 frames after it: the heavy follows through past the contact.
+
+## export38: `Stride` imported by name (its `DIFF.md` names only `Stride`)
+- **Import:** `C:\Users\kazda\jam\skater-lab\skf\export38\READY.txt` (16:14). `Stride` was re-keyed by name from the loopcut file, 60 keys, both styles (`replaced`, 60 → 60). The other 163 takes are key-identical to export37 by the lab's `DIFF.md`, so I did not touch them.
+- **The loop and its joins** (component-space joints, every key):
+  - last key against the first: 0.46 cm (cel) / 0.42 cm (clay), the same as before the import
+  - largest key-to-key step inside the loop: 6.44 / 5.32 cm, the same as before
+  - so the wrap keeps
+- **Shaft against the thighs** (my axis measure: the nearest distance from the stick shaft, socket to blade point, to the thigh-to-calf line; not the skin):
+
+  | Style | Before | After |
+  |---|---|---|
+  | cel | min 1.83 cm (key 1), 26 keys under 5 cm | min 1.75 cm (key 21), 32 keys under 5 cm |
+  | clay | min 4.64 cm (key 4), 5 keys under 5 cm | min 2.21 cm (key 17), 20 keys under 5 cm |
+
+  By this crude measure the shaft runs nearer the leg's axis in the changed frames, which **contradicts the lab's skin measure** (legs 12 → 0 frames cel, 6 → 0 clay). Two caveats:
+  - My line-to-line distance knows no skin or volume.
+  - The tree's `Stride` before the import may not have been export37's. I measured it 1.9 to 3.1 cm lower on the back in the props check, which suggests an older solve.
+
+  **Not proved either way headless.** One GPU look from the game camera at a striding figure decides it.
+- **Seeded clay match after all of this** (`m5`, headless, to sim 7156):
+  - sim lines 26 = 26, identical to m1
+  - 0 Blueprint errors
+  - all 7 get-ups end on the release (`end_f` = `down_f`)
+  - `PlayCelebrate` 4 times, `PlayCrossCheck` 10 times, as before
+
+## Verdict for a later merge: **merge** the hold's in and out and the wind-up proofs (the wind-ups stay off). **Merge `Stride` only after one GPU look**
+- **The hold's in and out:**
+  - legs exactly as a control figure at 6 and 9 m/s, 0 errors, the match unchanged
+  - the brace is a fast 6-frame move: the arms' largest step is 24 to 27 cm in a frame; take one look on a GPU when the window allows
+- **`Stride`** is the loop the game plays most. Hold it out of a package until a GPU look at a striding figure shows the shaft clear of the front thigh: my axis numbers contradict the lab's skin measure. Without that look, leave the tree's `Stride` as merged (revert the re-key) and ship the rest.
+
+## Not verified
+- Nothing in this hand-back was seen on a GPU (headless only, as asked).
+- The shaft against the skin in `Stride`.
+- The hold's in and out in motion.
+
+## For device A
+- Nothing new to call.
+- `TestChkCut(int32 Size, bool bRight)` is a test call only.
+
+## Decisions for the operator
+1. `Stride` from export38: take it after one look from the game camera, or keep the merged one?
+
+## The next three steps
+1. A GPU look at `Stride` (export38) and at the hold's in and out from the game camera.
+2. Delete the unconnected `SequencePlayer_9` from both animation Blueprints once the in and out are accepted.
+3. The heavy wind-ups' peak one to two frames after the contact: ask the lab whether the heavy contact should move to frame 11, or time A's contact to the peak.
+
+## Ledger rows, fourth hand-back (6 rows; they replace the earlier rows of the same files)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB1.uasset | anim | 0.98 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | as the job-1 E2 row (lanes B4 to SK30, E2), and: the hold layer's pose through two Blend Poses by Bool (bHoldOut: CrossCheck_Hold_Out on HoldOutT; bHoldIn: CrossCheck_Hold_In on HoldInT; else the CrossCheck_Hold loop through a Sequence Evaluator on HoldLoopT), blend 0; SequencePlayer_9 left unconnected (lane E2, fourth hand-back) (1029336 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB1_P3.uasset | other | 0.98 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | y | as the job-1 E2 row (lanes SKI3 to SK30, E2), and: the hold layer's in, loop and out as ABP_SkaterTB1 on the P3 takes (lane E2, fourth hand-back) (1025198 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 11.12 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | as the part-3 E2 row above, and: HoldTick sets the ABP's bHoldIn (first 0.1 s of the hold), bHoldOut, HoldInT, HoldOutT and HoldLoopT ((t-0.1) mod 0.9833 s); test call TestChkCut(Size, bRight) (lane E2, fourth hand-back) (11656719 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 11.32 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | as the part-3 E2 row above, and: HoldTick drives the hold layer's in, loop and out, and TestChkCut, as BP_SkaterVisual_TB1 (lane E2, fourth hand-back) (11865740 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Stride.uasset | anim | 0.19 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export38/p2_cel (gate passed) loopcut file, take Stride by name, re-keyed in place on SKEL_SkaterTB1v2, 60 keys: the stick heel carried farther forward on frames 13 to 34 (the shaft out of the front thigh, by the lab's skin measure); loop join 0.46 cm unchanged; not yet seen on a GPU (lane E2, fourth hand-back) (200781 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Stride.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export38/p3_clay (gate passed) loopcut file, take Stride by name, re-keyed in place on SKEL_SkaterTB1_P3, 60 keys: the stick heel farther forward on frames 13 to 34; loop join 0.42 cm unchanged; not yet seen on a GPU (lane E2, fourth hand-back) (210094 bytes) |
