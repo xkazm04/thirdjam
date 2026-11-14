@@ -1075,3 +1075,6 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 ## H50.0 (11:16, 14 Nov) FOR THE DIRECTOR: **merge dev-b a4c15ab9 into main now** (the operator's request): handoff B-to-A-0043
 - The operator will package on device A and test before giving directions. `dev-b` a4c15ab9 holds main 3fa9c2e6, builds, cook-only PASS, gates PASS:
   42 commits since your last merge of dev-b, listed in the handoff. The board caps' usage flag is among them.
+
+## H50.5 (11:30, 14 Nov) FOR THE DIRECTOR: main has B's progress (7f55b48f); one more batch on dev-b for after the test
+- dev-b now adds only the figure lane's last run (filmed; dormant unless called): details under `handoff/B-to-A-0043.md`. Merge it when the operator says.
