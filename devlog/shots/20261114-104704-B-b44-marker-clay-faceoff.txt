@@ -1,0 +1,1 @@
+Puck kit at the centre faceoff, game camera, clay, engine (GPU), frozen (crop). Before: jam.puck.Post 0 (black ring) and 1 (black post). After: SM_PuckDisc without the Beacon and Marker triangles, at scale 1 and at A's flatten: only the pale halo and the puck.

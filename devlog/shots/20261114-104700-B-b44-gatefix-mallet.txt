@@ -1,0 +1,1 @@
+NS_mallet_bonk at +4 frames, game camera, clay, engine (GPU), frozen. Left: as B43 built it (0 particles: the DeltaTime gate kills the burst at time 0). Right: rebuilt without the gate (22 particles, cream puff and star). Spawn point mirrored to the figure's right by my test helper.
