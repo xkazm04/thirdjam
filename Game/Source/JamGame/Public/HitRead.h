@@ -19,7 +19,13 @@
 //   jam.hit.BTakes 2: device B's wind-up takes on every figure, the human's too; A's stand-in lean stands down wherever B's take plays.
 //   jam.hit.Quiet 1: the chevron and the brace's arc 7 cm wide in the ice's white; the contact ring 0.95 to 1.35 m (jam.hit.RingScale), white, 8 frames,
 //     no second ring on a braced hit (0 = package H34: 18 cm in the team's colour, a ring to 3 m for 14 frames). The downed man's oval is unchanged.
-//   jam.hit.BraceArc: the arc's own switch. jam.hit.CaptureBots, -JamHitShots=<folder>: the strips' tools.
+//   jam.hit.RingFar 1: the small ring is for a hit near the eye; from 10 m to 30 m from the camera it grows back to package H34's radius and 14 frames
+//     (still white): a hit across the rink is 30 px of bodies and the ring says where.
+//   jam.hit.Pop 1: the hit's coil and drive on the drawn figure (its scale, never the sim): sunk through the wind-up, sprung at the window, settled in 8.
+//   jam.hit.BraceSet 1, jam.hit.BraceLean 12: the braced figure sets (a tenth lower, 6 % wider, pitched 12 degrees) while device B's hold cannot be
+//     seen from behind: a bridge on the figure, to be switched off when B's pose reads.
+//   jam.hit.Retime 1: a check that lands inside its wind-up (lane A209's rule) sends the checker's take to its contact pose (PlayCheckWindup(1)).
+//   jam.hit.BraceArc: the arc's own switch. jam.hit.CaptureBots / CaptureBotsM / CaptureBotsMinM, -JamHitShots=<folder>, JAMHIT stick / step lines: the strips' tools.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -66,6 +72,8 @@ public:
 	static constexpr double TellNearM = 1.4;    // the chevron's tip: from here at the press (outside the HUD's YOU and carrier rings, ~1 m) ...
 	static constexpr double TellFarM = 2.4;     // ... to here when the wind-up is done
 	static constexpr double BraceRadiusM = 1.35;
+	static constexpr double RingNearM = 10.0;       // lane A210: the small ring within 10 m of the eye ...
+	static constexpr double RingFarM = 30.0;        // ... the full one from 30 m
 	static constexpr double RingMinM = 0.95;         // lane A210: the small contact ring never closer than this to the contact point (it clears the two bodies)
 
 	// The burst's ring radius for a hit's closing speed (m/s): 0.8 m at a soft touch to 3.0 m at 14 m/s and over; a braced hit x 1.2.
@@ -160,10 +168,16 @@ public:
 	struct FDrawSwitches { bool bTell = true; bool bBurst = true; bool bDown = true; bool bFlash = true; float Scale = 1.f; bool bStreak = true; bool bBraceBar = true; bool bBraceArc = true;
 		// Lane A210 (the quiet marks; the defaults here are package H34's, the game's are jam.hit.Quiet 1): bThinTell a thin white chevron and arc;
 		// RingScale < 1 the small contact ring (radius x RingScale, never under RingMinM); bRingTeam false: white, no team colour; RingLife: its share of BurstFrames.
-		bool bThinTell = false; float RingScale = 1.f; bool bRingTeam = true; float RingLife = 1.f; };
+		bool bThinTell = false; float RingScale = 1.f; bool bRingTeam = true; float RingLife = 1.f;
+		// bRingByDistance (with RingScale < 1): the ring grows back to its full radius and life between RingNearM and RingFarM from EyeAtCm (the camera).
+		bool bRingByDistance = false; FVector EyeAtCm = FVector::ZeroVector; };
 	void Draw(double FrameF, const TArray<FVector>& SkaterAtCm, const TArray<float>& SkaterYawDeg, const FVector& PuckAtCm, const FDrawSwitches& Sw, TArray<FJamHitBar>& Out) const;
 	// The figure lean for skater I this render frame (degrees, + = top back); 0 = upright.
 	float LeanFor(int32 I, double FrameF) const;
+	// Lane A210 (jam.hit.Pop): the hit's coil and drive for skater I this render frame, -1 (sunk) .. +1 (sprung); 0 = his own size. CheckPop is the curve (pure).
+	static constexpr float PopSettleFrames = 8.f;
+	static float CheckPop(float Since, int32 Windup, float End, bool bLanded);
+	float PopFor(int32 I, double FrameF) const;
 
 	const TArray<FHitLog>& GetFrameLogs() const { return FrameLogs; }
 	const TArray<FPress>& GetPresses() const { return Presses; }
@@ -273,6 +287,25 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UJamHitEdgeWidget> Edge;
 	// PROPS READY: device B's wind-up takes told per figure (jam.hit.BTakes).
 	void TellTakes(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters);
+	// Lane A210: the braced figure's set (jam.hit.BraceSet): per figure 0..1, 6 sim frames in and out; the drawn figure's scale at K (pure, for the test).
+	void StepBraceSet(const UJamSim* Sim);
+	void LogStick(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters);
+	TArray<float> BraceSetK;
+	TArray<bool> BraceScaled;
+	TArray<float> PopHeld;
+	int64 StickPressFrame = -1;
+	int32 StickPressWindup = 0;
+	void RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters);
+public:
+	// Lane A210: the frames-to-contact to re-send to the checker's figure when his check lands PressToContact frames after a press with Windup frames of
+	// wind-up (1: the take jumps to the frame before its contact pose), or -1 when the take is within a frame of it already. Pure.
+	// The drawn figure's scale for a pop of P (-1 sunk: a tenth lower, 6 % wider; +1 sprung: 7 % taller, 4 % narrower). Pure.
+	static FVector PopScale(float P) { const float A = FMath::Clamp(P, -2.f, 2.f); return A >= 0.f ? FVector(1.f - 0.04f * A, 1.f - 0.04f * A, 1.f + 0.07f * A) : FVector(1.f - 0.06f * A, 1.f - 0.06f * A, 1.f + 0.10f * A); }
+	static constexpr int32 RetimeLeadFrames = 2;
+	static int32 RetimeFor(int32 PressToContact, int32 Windup);
+	static constexpr float BraceSetFrames = 6.f;
+	static FVector BraceSetScale(float K, float Amount) { const float A = FMath::Clamp(K, 0.f, 1.f) * Amount; return FVector(1.f + 0.06f * A, 1.f + 0.06f * A, 1.f - 0.10f * A); }
+private:
 	TArray<bool> TakesOn, TakesWant;
 	TArray<TWeakObjectPtr<UObject>> TakesFig;
 };

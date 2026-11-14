@@ -100,8 +100,9 @@ namespace JamEffects
 	JAMCORE_API bool StackFromName(FName Name, EJamEffectStack& Out);
 	// bolt (speed), crosshair (precision), weight (heavy_puck), circle (big_puck), swirl (reverse_other), star (custom).
 	JAMCORE_API FName DefaultIcon(FName Kind);
-	// Team-neutral colour per kind for the toy pickup and the HUD (sRGB): speed yellow, precision cyan, heavy_puck violet,
-	// big_puck white, reverse_other magenta, custom green.
+	// Team-neutral colour per kind for the pickup, its beacon, the radar and the HUD: the colours of contracts/events.md (linear): speed cyan
+	// (0.1, 0.9, 1.0), precision magenta (1.0, 0.2, 0.9), heavy_puck violet (0.55, 0.3, 1.0), big_puck amber (1.0, 0.75, 0.1), reverse_other red
+	// (1.0, 0.15, 0.1), custom and unknown white (lane A210: yellow / cyan / violet / white / magenta / green before).
 	JAMCORE_API FLinearColor KindColour(FName Kind);
 	constexpr int32 MaxDurationFrames = 7200;
 	constexpr double MinMultiply = 0.25;

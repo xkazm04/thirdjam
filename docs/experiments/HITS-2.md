@@ -58,7 +58,7 @@ A's stand-in lean was tried ON TOP of B's takes (`jam.hit.Lean 2`, the same sim 
 | the bar across the stick (tap) | **gone** (`jam.hit.Streak 0`) | |
 | the arc on the ice ahead of a brace | **stays, quiet** | 7 cm wide (16 before), the ice's white (the team's colour before), dimmer: the only sign of "braced" while B's hold is hidden from behind; `jam.hit.BraceArc 0` removes it |
 | the chevron of a body check | **stays, quiet** | 7 cm wide (18), arms 60 % as long, white (white-hot over the team's colour before): a direction cue on the ice; grey on a miss as before |
-| the contact ring | **stays, small** | radius 0.95 to 1.35 m (0.8 to 3.0 before; 2.6 m at 11 m/s was the loudest thing on the sheet and covered the two bodies' moment), bars at most 11 cm wide (28), white only (white then the checker's colour before), 8 frames (14), no second ring on a braced hit, still nothing within 0.75 m of either body |
+| the contact ring | **stays, small near the eye** (wave 2: it grows back with the distance from the camera, section 5.6) | radius 0.95 to 1.35 m (0.8 to 3.0 before; 2.6 m at 11 m/s was the loudest thing on the sheet and covered the two bodies' moment), bars at most 11 cm wide (28), white only (white then the checker's colour before), 8 frames (14), no second ring on a braced hit, still nothing within 0.75 m of either body |
 | the downed man's oval | **stays** | unchanged |
 | the stripped puck's flash, the off-screen arrows, the radar's down marks | stay | unchanged |
 
@@ -79,7 +79,85 @@ A's stand-in lean was tried ON TOP of B's takes (`jam.hit.Lean 2`, the same sim 
   `jam.ctrl.DrillLead N` makes drill 1 press N frames earlier (a staged 8-frame wind-up needs 4). Cuts: `tools/qa/screen/a196/cut-clay-rookie.json`,
   `cut-clay-rookie-8-8.json` (`check_windup_frames` 8, `cross_windup_frames` 8: lane A209's target, staged).
 
-## 5. FOR B (what the eye still lacks; exact)
+## 5. Wave 2: a tackle that is recognised, and a bridge for the brace (READY 2)
+
+The regular match has no whistle (R-0048): the strips' cuts carried `penalties: true` from an older cut; from here on they are the regular cartridge
+at rookie (`tools/qa/screen/a196/cut-clay-rookie.json`, `-8-8`, `-pro`, `-cam20`), so a check from behind no longer sends the camera to the box.
+
+### 5.1 The coil and the drive on the figure (`jam.hit.Pop 1`)
+
+Device B's body-check take crouches and springs; from behind at 7 m that is a helmet travelling about 33 px (960 x 540). The drawn figure (the
+skater actor's scale, never the sim) now does the same thing larger: through the wind-up it sinks and widens (to height x 0.90, width x 1.06, fully
+sunk three frames before the window), over the two frames up to the window it springs tall and narrow (x 1.07 / x 0.96), holds through the contact
+(the hit-stop keeps the contact frame's size), settles over 8 frames. A contact inside the wind-up (lane A209's rule) goes straight to the drive. A
+cross-check gets 0.7 of it. Measured on the same sim frames (the landed 8-frame check, sim 4061 to 4070): the helmet's coil-to-spring travel **33 px
+without, 55 px with**; no frame reads as rubber (`tools/qa/screen/out/a210-sheets/g6-check-8-pop-zoom.jpg`). `FJamHitReadModel::CheckPop` / `PopFor`,
+`AJamHitRead::PopScale`; `jam.hit.Pop 0` = off.
+
+### 5.2 The brace: a bridge on the figure (`jam.hit.BraceSet 1`, `jam.hit.BraceLean 12`)
+
+What can be had without device B's pose, and what cannot. **The stick cannot be shown**: it is a mesh skinned to B's animated `stick_socket` bone; A
+has no call that poses it, and a line drawn where it is would be a slab in the air again, seen through his back. What A can move is the figure
+itself: while the cross-check is held the drawn figure **sets**: over 6 frames (the length of B's `CrossCheck_Hold_In`) it sinks a tenth, widens 6 %
+and pitches 12 degrees forward; over 6 frames it stands up again when the button is let go or the brace is spent. An eye sees "he hunkers down" and
+"he stands up": the state is on the figure, nothing is drawn on it. It does not say "he holds his stick across": that is B's (section 7).
+`img/a210/brace-bridge.jpg`: package H34 (the bar), READY 1 (the bar gone, the hold hidden), now (the figure set), the same sim frames.
+Set `jam.hit.BraceSet 0` when B's pose reads from behind.
+
+Where B's hold has the stick (new `JAMHIT stick` lines, the figure's own frame, cm; the head bone stands at 114): the right hand at (43 ahead, 9 to
+23 right, 96 up), the left at (38 to 46 ahead, 25 to 40 left, 98 up): hands 49 cm apart at chest height, the stick level and across but gripped at
+its butt: all its free length (about 100 cm) runs out to the left, nothing passes the right hand.
+
+### 5.3 The hit-stop and the kick: measured, left as they are
+
+- **Hit-stop** (`jam.hitstop 3`, `AJamSkater::HitStopFramesFor`): already by the hit's weight: a knockdown holds 2 frames at ratio 1.0 to 6 at 3.0 (the
+  11 m/s check of the strips: 6 frames, the two bodies standing in the contact pose from +5 to +10: reads); a stumble 1 or 2. `jam.hitstop 5` changes
+  nothing on the heavy hit (the cap is 6). Not changed: the weak knockdown's 2 frames are short, but the rule and its test
+  (`Jam.Core.Contact.HitStop`) live in the contact lane's files, which are being edited tonight; the change is one number (a knockdown from 3, not 2)
+  and is offered as the next evolution.
+- **Kick** (`jam.hitkick 1`, 12 cm along the hit, 8 frames): at 1, 2 and 3 on the same frames the pictures differ (mean absolute difference 9 grey
+  levels over 7 frames at 2 against 1) but side by side an eye cannot tell them apart in stills: it is felt in motion. No proof that more is
+  better: left at 1.
+- **The victim thrown along the hit's line**: `SetKnockedDown(dir)` and the sim's own push do it: in every landed strip the man leaves along the
+  checker's line and lies with his oval round him.
+
+### 5.4 Before and after, the same sim frames
+
+`img/a210/tackle-4-before-after.jpg`: the first hit of drill 1 (rookie, the regular cut, sim 142 to 160: the human's check at 4 frames, 11 m/s, the
+man down): top row package H34's look (`jam.hit.Quiet 0`, `BraceBar 1`, `Streak 1`, `BTakes 1`, `BraceSet 0`, `Pop 0`), bottom row the defaults. Before:
+the checker folded over the man under a ring of white slabs 5 m across that turns blue. After: he turns his shoulder in with the stick up, the two
+bodies stand held, a few white dashes at the feet, the stick stays raised through the follow-through. JAMSIM 600 / 1200 / 1800 equal in both runs
+(`a34d4f88952450e6` / `249a688987f7795f` / `47f1c77d68337fc0`).
+
+### 5.5 A check that lands inside its wind-up (`jam.hit.Retime 1`)
+
+Lane A209's rule for the human ("a meeting inside the wind-up is the hit") would find B's take in its coil when the man falls. On such a contact
+(two frames or more before the wind-up's end) the checker's figure is told `PlayCheckWindup(1)`: the take jumps to the frame before its contact pose,
+the hit-stop holds it there. `AJamHitRead::RetimeFor` (pure, tested). It cannot fire on today's sim (a contact comes only in the window): to be seen
+on A209's build.
+
+### 5.6 The tackle at 20 and 35 m: the ring grows back with distance (`jam.hit.RingFar 1`)
+
+A hit between bots inside the picture at 15 to 40 m could not be had by waiting (a human standing still, `jam.hit.CaptureBots 2`: one press, a miss,
+in 25 000 frames; the two landed hits filmed from the press were outside the picture, where A196's edge arrow with its distance did show). So the
+same hit was filmed from far: the human's first check of drill 1 with the cut's camera 20 m behind and 9 m up (`cut-clay-rookie-cam20.json`; the
+schema's limit is 20 m, so the 35 m rows are the same stills at 57 % size). Read on those strips (wave 1's marks against package H34's): at 20 m the
+raised stick and the two bodies still read with the quiet marks; **at 35 m the bodies are 30 px and a hit with the small ring is almost not
+there, while H34's ring said "a hit, there"**. The small ring was right near the eye, where it covered the two bodies of the player's own hit, and
+wrong far from it. Now the quiet ring reads the distance from the camera: within 10 m (every hit of the player's own: his camera is 7 m from him)
+the small one (0.95 to 1.35 m, 8 frames); from 10 to 30 m it grows back to package H34's radius (to 3 m), bar width and 14 frames; white at any
+distance. On the screen it is about the same size wherever the hit is. `img/a210/tackle-at-20-and-35-m.jpg`: rows H34, now, at 20 m; rows H34,
+now, at 35 m's size; sim frames 144 to 170.
+
+## 6. The boosts' colours (device B's answer to A-to-B-0031 point 3)
+
+`JamEffects::KindColour` (`Game/Source/JamCore/Effects/JamEffectTypes.cpp`), the one table behind the pickup's tint, its beacon (pedestal and ground
+ring), the radar's dots and the HUD's chips, is now `contracts/events.md`'s: speed (0.1, 0.9, 1.0), precision (1.0, 0.2, 0.9), heavy_puck
+(0.55, 0.3, 1.0), big_puck (1.0, 0.75, 0.1), reverse_other (1.0, 0.15, 0.1), custom and unknown white (before: yellow, cyan, violet, white, magenta,
+green). The binder's `PickupKindColour` already had them. Pinned in `Jam.Fx.BoostLook`. `img/a210/boost-kinds-contract-colours.jpg`: the five kinds on
+the ice in one still (cut `tools/qa/screen/a196/cut-clay-boost-kinds.json`): prop, pedestal and ring agree for each kind.
+
+## 7. FOR B (what the eye still lacks; exact)
 
 See `status/A210.md`, section FOR B: the hold must read from behind; the cross-check's shove must show above the shoulders; the body check's
 drive needs the shoulder and a flag; the clamp at 12 frames; the braced hit's sound.

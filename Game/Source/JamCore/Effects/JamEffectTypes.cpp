@@ -76,12 +76,14 @@ namespace JamEffects
 
 	FLinearColor KindColour(FName Kind)
 	{
-		if (Kind == TEXT("speed")) return FLinearColor::FromSRGBColor(FColor(0xFF, 0xD4, 0x00));
-		if (Kind == TEXT("precision")) return FLinearColor::FromSRGBColor(FColor(0x22, 0xF5, 0xE1));
-		if (Kind == TEXT("heavy_puck")) return FLinearColor::FromSRGBColor(FColor(0x8B, 0x5C, 0xF6));
-		if (Kind == TEXT("big_puck")) return FLinearColor::FromSRGBColor(FColor(0xF5, 0xF5, 0xF5));
-		if (Kind == TEXT("reverse_other")) return FLinearColor::FromSRGBColor(FColor(0xFF, 0x2B, 0xD6));
-		return FLinearColor::FromSRGBColor(FColor(0x4A, 0xDE, 0x80));
+		// Lane A210 (device B's answer to A-to-B-0031 point 3: the speed prop is cyan, A's pedestal and ring were yellow): the colours of contracts/events.md
+		// (the pickup kind's colour, linear; the same numbers as UJamEffectsBinder::PickupKindColour and B's PickupColour instances): custom and unknown white.
+		if (Kind == TEXT("speed")) return FLinearColor(0.1f, 0.9f, 1.0f);
+		if (Kind == TEXT("precision")) return FLinearColor(1.0f, 0.2f, 0.9f);
+		if (Kind == TEXT("heavy_puck")) return FLinearColor(0.55f, 0.3f, 1.0f);
+		if (Kind == TEXT("big_puck")) return FLinearColor(1.0f, 0.75f, 0.1f);
+		if (Kind == TEXT("reverse_other")) return FLinearColor(1.0f, 0.15f, 0.1f);
+		return FLinearColor::White;
 	}
 }
 

@@ -486,3 +486,4 @@
 - link green 21:23: main d10be133 (The blue bar is gone and the figure does the hitting: device B's takes on the human, the m) pushed.
 - link green 22:09: main e142f300 (A hit he aims lands: the check finds its man, the cross-check shoves any man in front, the) pushed.
 - link green 22:14: main 1efde4d9 (Handoff A-to-B-0034 (the hits' takes, wave 2); merge dev-b at b42e55c3 (the 12-frame clamp) pushed.
+- link green 22:24: main 4d644b4d (Skaters who play to score: rookie's opponents arrive, carriers drive the net, the mates sh) pushed.
