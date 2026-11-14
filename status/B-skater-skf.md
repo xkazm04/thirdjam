@@ -4243,3 +4243,184 @@ Frames with the shaft through a leg (5 cm of shaft more than 3 cm inside; `clear
 1. **The gate's own finds, mended.** The 36 arm twists at the end of the late, snap and quick get-ups and the two lifts (the cause is now known from this pass's light check: the stick or hand given another way on the last key), `Poke_Hit`'s end, the four takes with the shaft through the trunk, the two stick dips. Proving number: rows on `gate_known_skf.txt`, 44 today, 0.
 2. **The hit seen moving, and the reach set by what is seen.** Each same-size pair as a short film at 60 fps with both pawns moving as the sim moves them (the attacker closing at the speed of its size, the victim's pawn knocked away), from the engine if a slot is free, else from Blender with the roots keyed. Then the reach per size is set where the way back no longer reads as a slide: perhaps a shorter reach for the light, a longer take, or the engine holding the attacker's pawn. Proving numbers: the attacker's hips moving backwards over the ice, frames per take, 0 at the sim's speeds (today not measured); shoulder to chest at contact still 10 cm or less in the pairs kept.
 3. **The victims meet the hit too.** A chest height the attacker can aim at from every side (today 101 cm from the front, 80 from behind, 85 from the side at the victims' frame 2), a front bump (there is none: `Check_Hit_Back`, `_Left`, `_Right` only), and the cross-check measured stick to chest. Proving numbers: shoulder to chest 10 cm or less in all 12 body-check pairs (today 7 of 12 on p2_cel and 8 on p3_clay); the cross-check's shaft within 10 cm of the chest at its contact frame (today not measured, the stick short by eye).
+
+## Thirty-second pass: the gate's finds mended; the victims meet the hit; the reach table (SKF32, 03:35 to 04:09)
+
+Done: evolutions 1 and 2 with one row and one pair short, and evolution 3. **The known list is 44 rows down to 1** (one clay aim hold, tried and taken back: mending it breaks the aim grid's own check). **14 of the 15 body-check pairs are within 10 cm in both styles** (11 of the 12 of the thirty-first pass's list, which had 7 and 8): the one left is the open-ice heavy against the board fall, where the victim cannot be moved without going through the wall plane; the board take is for that case and is within 10. **The cross-check's shaft is within 5 cm of the chest's skin in all three sizes, both styles**, at the cost of the same kind of reach as the body check's (the hips 55 to 64 cm ahead of the root at its contact frame), which nobody has seen in motion. `C:\Users\kazda\jam\skater-lab\skf\export32\` is complete (`READY.txt`, `DIFF.md`, `JOINS.md`, `GATE.md`): 149 takes = export31's 145 names plus 4 new. 44 takes of export31 differ on p2_cel and 42 on p3_clay, each named with its reason; every other take is key-identical. One Blender process of this lane at a time, CPU renders only, no git, no editor.
+
+### 1. The gate's finds
+
+`gate.sh` on export32 against export31 with **no known list: 298 take-and-style rows, 1 failing** (`Aim_N46_R100` on p3_clay, shaft). With `gate_known_skf32.txt` (that one row): **298 rows, 0 failing, 1 passing on the known list; 1 file, 149 takes found and 149 checked per style, the same takes as `READY.txt` lists; 138 s.**
+
+| Find (rows on export31's list) | What it was | What was done | Rows now |
+|---|---|---|---|
+| Arm twist at a take's end: the late, snap and quick open-ice get-ups (32), `Lift_Hit` (2), `Lift_Light` (2) | Not what I named in the thirty-first pass (the stick given another way on the last key): that only made the roll change fast. The cause is the bake's roll limit: a limb bone's roll about its own axis may change 12 deg a frame, so when the solver's roll moves fast in the last frames the bone arrives on the last frame still behind: 24 to 48 deg in the left upper arm, 70 in `Lift_Light`'s right, every joint in place | A per-take switch in the bake (`settle_end`): the last frame is the stance as a fresh solve gives it (as any take's frame 0 is solved), and the twist that was missing there is handed out over the last 4 to 6 frames, eased, at most 12 deg more a frame. Nothing but limb roll changes in those frames: no joint moves, the blade's path is identical (measured: 0.005 cm in the get-ups compared) | 0 |
+| `Poke_Hit`'s end 0.5 to 3.8 cm off the stance (2) | Half a fault of my joins file: `Poke_Hit` is not a tackling take, its first and last keys are the glide, and I had asked the gate for the stance. Against `Glide` frame 0 it starts exact; its end had an 18 deg twist of the same kind | The joins line corrected (`gate_joins_skf32.txt`); the twist settled as above. Now 0.0000 cm, 0.000 deg at both ends against `Glide` frame 0 | 0 |
+| Shaft through the trunk: `Check_Hit_Right` p2_cel, frames 2 to 10 (1) | The hip came over the shaft while the body is off its skates | On cel the stick turned 7 deg about its heel in those keys (the grip goes out to the right). On clay the same turn put the shaft through the trunk for 7 frames (tried), so clay's stick is as it was | 0 |
+| Shaft through the trunk: `Deke_Right` p3_clay, frames 4 to 6 (1) | At the sell the stick is swept across the body | The heel 7 cm farther forward at that key | 0 |
+| Shaft through the trunk: `Lean_Left` p3_clay, 16 of 31 frames (1) | A held pose at the limit | The stick turned 6 deg about its heel in the hold. (Moving the heel forward, my first try, made it worse: 31 frames on cel.) | 0 |
+| Shaft through the trunk: `Aim_N46_R100` p3_clay, all 31 frames (1) | The near right aim hold, where clay's trunk leans in over the stick | **Not mended.** Turning its stick 8 deg about the heel takes the shaft out (tried: the gate passed it), but the aim grid's own check in the build then fails two cells: the blade blended between this hold and its neighbours goes 3.15 cm under the ice. Taken back; the hold is key-identical to export31 | **1** |
+| Stick under the ice: `Pass` p2_cel 0.12 cm at frame 15 (1), `Poke` p3_clay 0.6 cm at frame 9 (1) | Neither take keeps the tackling takes' 2 cm margin, and the blade's mesh is thicker than the points the clamp looks at | The clamp keeps a margin in the frames around the dip only (`Pass` 0.4 cm in frames 12 to 17, `Poke` 1 cm in 7 to 13), so the frames other takes start from (`Poke` frame 6 for `Stumble_Short`) are as they were. Lowest stick point now 0.13 / 0.33 cm (`Pass`), 0.14 / 0.24 (`Poke`) | 0 |
+
+- **Rows on the known list: 44 to 1.** The one left is said in `gate_known_skf32.txt` with its reason.
+- **Nothing else in the gate turned red**: 297 of 298 rows pass with no known list, the 4 new takes among them.
+- **The 40 cm line for the blade: kept.** Largest one-frame move of the blade's end in the 22 get-ups measured: 33.9 cm (`GetUp_Snap`, p2_cel, frame 19), as in export30 and export31; the settling moves no joint.
+- **The wall plane: kept.** No take built against a wall is among the changed ones (the one I tried to change, `Board_Fall_Back`, went 7 cm through its plane on cel at frame 2 and was taken back).
+- **No take changed that the list does not name**, for this evolution: the 16 get-ups, `Lift_Hit`, `Lift_Light`, `Poke_Hit`, `Pass`, `Poke`, `Check_Hit_Right`, `Deke_Right`, `Lean_Left`. (`Pass` and `Poke_Hit` differ on cel only: on clay the margin and the settling had nothing to do.) The takes evolution 2 changed are named below; `DIFF.md` has all of them.
+- Pop limits: 0 of 145 played takes over, both styles.
+
+### 2. The victims meet the hit
+
+Nothing was added to the body check's reach: the nine attacker takes are key-identical to export31.
+
+**One place for the chest in the victim's first played frame.** The attacker's shoulder is at one place at contact; the victims' frame 2 had the chest 11 to 35 cm along the hit and 75 to 101 cm up, by the side the hit came from (behind and from the side the take was already folded over). `meet32` in the build now puts the chest joint of a take's frame 2 on one place for every side: 16 cm from its own root along the hit, 7 cm under the stance's chest height (98.1 cm on cel, 93.1 to 93.7 on clay), and across the hit where the take's own frame 4 has it, so the first two frames leave straight. A folded trunk is unfolded toward the stance's first; the rest is the hips' place. The second played frame (3) of the falls from behind and from the side is set where the front fall has it (28.5 cm along, 85.7 up), of the stumbles where the front stumble has it (21.6 along, 90.0 up). The 20 changed victim takes and `Board_Fall_Back` (chest along the hit, chest height; p2_cel / p3_clay; cm):
+
+| Victim take | Hit from | Frame 2: chest along the hit / up, cm: export31 | export32 | Frame 3: export31 | export32 |
+|---|---|---|---|---|---|
+| Fall | front | 19.4, 100.9 / 18.7, 95.8 | 16.0, 98.1 / 16.0, 93.1 | 28.5, 85.7 / 27.7, 81.7 | 28.5, 85.7 / 27.7, 81.7 |
+| Fall_Heavy | front | 19.4, 100.9 / 18.7, 95.8 | 16.0, 98.1 / 16.0, 93.1 | 28.5, 85.7 / 27.7, 81.7 | 28.5, 85.7 / 27.7, 81.7 |
+| Fall_Light | front | 10.7, 86.9 / 10.6, 83.4 | 16.0, 98.1 / 16.0, 93.7 | 11.2, 83.6 / 11.1, 81.1 | 15.9, 93.6 / 15.9, 90.3 |
+| Stumble_Front | front | 13.9, 100.5 / 13.7, 95.9 | 16.0, 98.1 / 16.0, 93.7 | 21.6, 90.0 / 21.4, 86.2 | 22.8, 88.6 / 22.6, 84.9 |
+| Check_Hit_Front | front | no such take / no such take | 14.0, 98.1 / 14.0, 93.7 | no such take / no such take | 17.6, 100.9 / 17.7, 96.3 |
+| Board_Fall_Back | front, at the boards | 5.0, 113.0 / 12.0, 107.3 | 5.0, 113.0 / 12.0, 107.3 | 5.0, 111.7 / 12.0, 106.2 | 5.0, 111.7 / 12.0, 106.2 |
+| Knockdown_Back | behind | 24.7, 79.9 / 23.8, 76.0 | 16.0, 98.1 / 16.0, 93.3 | 35.3, 66.5 / 34.3, 63.7 | 28.5, 85.7 / 28.5, 82.1 |
+| Knockdown_Back_Heavy | behind | 24.7, 79.9 / 23.8, 76.0 | 16.0, 98.1 / 16.0, 93.3 | 33.2, 69.2 / 32.3, 66.2 | 28.5, 85.7 / 28.5, 81.9 |
+| Knockdown_Back_Light | behind | 29.6, 81.1 / 28.8, 77.6 | 16.0, 98.1 / 16.0, 93.3 | 30.0, 78.8 / 29.3, 75.5 | 18.7, 93.2 / 18.6, 88.8 |
+| Stumble_Back | behind | 35.2, 75.3 / 34.2, 71.7 | 16.0, 98.1 / 16.0, 93.3 | 41.8, 69.4 / 40.8, 66.3 | 21.6, 90.0 / 21.6, 85.8 |
+| Check_Hit_Back | behind | 20.2, 98.8 / 19.7, 94.2 | 16.0, 98.1 / 16.0, 93.4 | 23.3, 97.2 / 22.8, 92.6 | 22.3, 97.0 / 21.8, 92.4 |
+| Knockdown_Left | its left | 20.6, 85.1 / 19.8, 81.1 | 16.0, 98.1 / 16.0, 93.3 | 34.8, 64.1 / 33.8, 61.4 | 28.5, 85.7 / 28.5, 81.9 |
+| Knockdown_Left_Heavy | its left | 20.6, 85.1 / 19.8, 81.1 | 16.0, 98.1 / 16.0, 93.3 | 29.0, 80.7 / 28.1, 77.0 | 28.5, 85.7 / 28.5, 81.7 |
+| Knockdown_Left_Light | its left | 21.7, 83.8 / 21.2, 80.4 | 16.0, 98.1 / 16.0, 93.3 | 23.1, 81.0 / 22.6, 77.7 | 18.0, 93.8 / 17.9, 89.3 |
+| Stumble_Left | its left | 31.5, 82.5 / 30.7, 78.6 | 16.0, 98.1 / 16.0, 93.3 | 37.6, 77.9 / 36.8, 74.4 | 21.6, 90.0 / 21.6, 86.0 |
+| Check_Hit_Left | its left | 15.5, 99.7 / 15.2, 95.0 | 16.0, 98.1 / 16.0, 93.5 | 20.4, 98.0 / 19.9, 93.3 | 20.5, 97.5 / 20.1, 93.0 |
+| Knockdown_Right | its right | 20.6, 85.1 / 19.8, 81.1 | 16.0, 98.1 / 16.0, 93.3 | 29.6, 72.9 / 28.7, 69.7 | 28.5, 85.7 / 28.5, 81.8 |
+| Knockdown_Right_Heavy | its right | 20.6, 85.1 / 19.8, 81.1 | 16.0, 98.1 / 16.0, 93.3 | 29.6, 72.9 / 28.7, 69.7 | 28.5, 85.7 / 28.5, 81.8 |
+| Knockdown_Right_Light | its right | 21.7, 83.8 / 21.2, 80.4 | 16.0, 98.1 / 16.0, 93.3 | 23.1, 81.0 / 22.6, 77.7 | 18.0, 93.8 / 17.9, 89.3 |
+| Stumble_Right | its right | 31.5, 82.5 / 30.7, 78.6 | 16.0, 98.1 / 16.0, 93.3 | 37.6, 77.9 / 36.8, 74.4 | 21.6, 90.0 / 21.6, 86.0 |
+| Check_Hit_Right | its right | 15.5, 99.7 / 15.2, 95.0 | 16.0, 98.1 / 16.0, 93.5 | 20.4, 98.0 / 19.9, 93.3 | 20.5, 97.5 / 20.1, 93.0 |
+
+- Not touched: `Board_Fall_Back` (see above) and the other board falls, the `_B` falls, `Trip`, `Fall_Forward`. The three old bumps' frame 3 is their own.
+- The price: from behind and from the side the chest now falls farther between frames 3 and 4 than it did (for example `Knockdown_Left`: 85.7 cm up at frame 3, 52 at frame 4), because the fold that used to be there at frame 2 now happens after it. The pop pass passes all of them; I have not seen them move.
+
+**A bump from the front: `Check_Hit_Front`, new** (20 frames, contact frame 2, starts and ends on the stance): pushed back 16 cm with the trunk rocked back, one step back with the left skate, back on the stance at 20. What the engine plays today for a bump from the front I could not find: the lab has only `Check_Hit_Back`, `_Left` and `_Right`, `status/SK21-report.md` says the stumble is chosen "as for the bump, plus `Front`", and the choice is not in the C++ I can read (`SkeletalSkaterVisual.cpp` only stores the push direction), so it is in the animation blueprint.
+
+**The side fall leaves along the drive**: `Knockdown_Left` 1 deg (12 to 13 before), `Knockdown_Right` 0 deg, both styles. The side bump leaves 32 deg off (it moves 7 cm in two frames, 4 of them forward as its trunk comes back): the chest had to come 4 cm nearer the line for the 10 cm, and a bump hardly leaves.
+
+**The cross-check at 120 cm.** Measured now: the shaft's axis (from the socket to the blade) against the chest's front skin, taken as 11.6 cm (cel) and 20.3 cm (clay) ahead of the chest joint along the victim's facing. Those two depths are measured on the meshes in the stance (`skin32.py`); clay's is its trunk's own skin, cel's is from a window in front of the joint because the trunk filter found no vertex there, so cel's is the weaker number. On export31 the shaft was 58 to 76 cm (cel) and 51 to 69 (clay) short of that skin: 46 / 61 / 71 cm out from the attacker's root and 86 cm up, with the skin 124 cm out and 98 up. As with the body check the gap can only be closed by the body: `Lift_Light`, `Lift` and `Lift_Heavy` now drive off the back skate to one place, the shaft at the chest's skin at their contact frame (2). Lengths (13 / 24 / 24) and the contact frame are as they were; `Lift_Heavy` goes 14 cm on to frame 6 and recoils to 9.
+
+**The pairs, measured** (`pair32.js`; p2_cel / p3_clay; 15 body-check pairs and 3 cross-check pairs; pawns 80 cm apart, the cross-check 120):
+
+| Pair | Attacker take | Victim take (its turn to the attacker, deg) | Pawns apart cm (assumed) | Shoulder to chest at contact cm (the cross-check: the shaft to the chest's front skin; to the chest joint in brackets): export31 | export32 | 1 frame later | 2 frames later | Chest ahead / to the side / above the shoulder at contact cm | Angle between the attacker's drive and the way the victim leaves, deg | Victim's chest travel in its first 2 frames cm |
+|---|---|---|---|---|---|---|---|---|---|---|
+| light on a bump, from behind (same size) | Check_Deliver_Right_Light | Check_Hit_Back (0) | 80 | 8 / 8.8 | 4.3 / 5.9 | 8.3 / 8.9 | 9.3 / 9.6 | 2.8, 0.1, 3.3 / 3, 1.8, 4.8 | 0 / 0 | 8.4 / 7.8 |
+| light on a bump, from the victim's left (same size) | Check_Deliver_Right_Light | Check_Hit_Left (90) | 80 | 11.2 / 13 | 7.1 / 9.2 | 10.9 / 12.4 | 11.8 / 13.1 | 2.8, 5.6, 3.3 / 3, 7.2, 4.9 | 32 / 32 | 7 / 6.5 |
+| light on a stumble, front on | Check_Deliver_Right_Light | Stumble_Front (180) | 80 | 5.8 / 7.5 | 4.3 / 6.1 | 10.5 / 9.5 | 18 / 16 | 2.8, 0.1, 3.3 / 3, 1.7, 5.1 | 0 / 0 | 11.5 / 11.3 |
+| middle on a stumble, front on | Check_Deliver_Right | Stumble_Front (180) | 80 | 5.4 / 7.3 | 2.8 / 4.9 | 8.8 / 6.3 | 16.1 / 12.8 | 0.4, -1.3, 2.5 / 0.3, 0, 4.9 | 0 / 0 | 11.5 / 11.3 |
+| middle on a light fall, front on | Check_Deliver_Right | Fall_Light (180) | 80 | 10.1 / 7.5 | 2.8 / 4.9 | 2.9 / 2.3 | 13.4 / 7.7 | 0.4, -1.3, 2.5 / 0.3, 0, 4.9 | the victim does not leave / the victim does not leave | 0.3 / 0.3 |
+| middle on a fall, front on (same size) | Check_Deliver_Right | Fall (180) | 80 | 6.6 / 7.6 | 2.8 / 4.3 | 14.8 / 12.3 | 31 / 27.3 | 0.4, -1.3, 2.5 / 0.3, 0, 4.2 | 0 / 0 | 20.6 / 19.7 |
+| middle on a side fall, from the victim's left (same size) | Check_Deliver_Right | Knockdown_Left (90) | 80 | 13.5 / 11.8 | 3.4 / 5.7 | 14.8 / 13.2 | 44.9 / 40.6 | 0.4, 2.3, 2.5 / 0.3, 3.5, 4.5 | 1 / 1 | 26.1 / 25.3 |
+| heavy on a fall, front on | Check_Deliver_Right_Heavy | Fall (180) | 80 | 6.5 / 7.8 | 3.8 / 5 | 4.4 / 2.6 | 14.7 / 11.3 | -1.1, -2, 3 / -1.1, -0.7, 4.8 | 0 / 1 | 20.6 / 19.7 |
+| heavy on a heavy fall, front on (same size) | Check_Deliver_Right_Heavy | Fall_Heavy (180) | 80 | 6.5 / 7.8 | 3.8 / 5 | 4.4 / 2.6 | 14.7 / 11.3 | -1.1, -2, 3 / -1.1, -0.7, 4.8 | 0 / 1 | 20.6 / 19.7 |
+| heavy on a heavy fall, from behind (same size) | Check_Deliver_Right_Heavy | Knockdown_Back_Heavy (0) | 80 | 17.2 / 14 | 3.8 / 5.2 | 4.4 / 3.4 | 27 / 22.9 | -1.1, -2, 3 / -1.1, -0.7, 5.1 | 0 / 1 | 25.1 / 24.1 |
+| heavy on a board fall, front on, the boards 47 cm behind the victim | Check_Deliver_Right_Heavy | Board_Fall_Back (180) | 80 | 21.7 / 19.7 | 21.7 / 19.7 | 31.2 / 27.8 | 37 / 32.8 | -12.1, -2, 17.9 / -5.1, -0.7, 19.1 | the victim does not leave / the victim does not leave | 0 / 0 |
+| heavy at the boards (the board take) on a board fall, front on (same size), the boards 47 cm behind the victim | Check_Deliver_Right_Heavy_Board | Board_Fall_Back (180) | 80 | 5.7 / 8.9 | 5.7 / 8.9 | 4.7 / 7.2 | 3.4 / 5.1 | -0.2, 1.5, 5.5 / 5.6, 2.3, 6.5 | the victim does not leave / the victim does not leave | 0 / 0 |
+| light on a bump, front on (the new take) (same size) | Check_Deliver_Right_Light | Check_Hit_Front (180) | 80 | 3.4 / 5.5 | 3.4 / 5.5 | 7 / 8.6 | 7.9 / 9.5 | 0.8, 0.1, 3.3 / 1, 1.7, 5.1 | 0 / 0 | 4.8 / 4.9 |
+| middle on a stumble, from behind | Check_Deliver_Right | Stumble_Back (0) | 80 | 28.3 / 25.3 | 2.8 / 4.5 | 7 / 4.9 | 27.8 / 24.8 | 0.4, -1.3, 2.5 / 0.3, 0, 4.5 | 0 / 0 | 22.4 / 21.8 |
+| middle on a side fall, from the victim's right (same size) | Check_Deliver_Right | Knockdown_Right (-90) | 80 | 15 / 11.8 | 6.3 / 6.2 | 15.8 / 13.6 | 40.4 / 35.9 | 0.4, -5.8, 2.5 / 0.3, -4.3, 4.5 | 0 / 0 | 21.1 / 20.1 |
+| cross-check, light on a stumble, front on (same size) | Lift_Light | Stumble_Front (180) | 120 | 75.8 / 69 | 4 (15.5) / 2.4 (17.8) | - / - | - / - | 4, 0, -0.5 (the skin against the shaft) / -2.3, 0, -0.3 (the skin against the shaft) | 0 / 0 | 11.6 / 11.3 |
+| cross-check, middle on a fall, front on (same size) | Lift | Fall (180) | 120 | 67.4 / 60.6 | 3.8 (14.9) / 2.5 (17.7) | - / - | - / - | 3.3, 0, 1.6 (the skin against the shaft) / -2.4, 0, 0.6 (the skin against the shaft) | 0 / 0 | 20.6 / 19.7 |
+| cross-check, heavy on a heavy fall, front on (same size) | Lift_Heavy | Fall_Heavy (180) | 120 | 58.2 / 51.4 | 2.8 (13.9) / 3.4 (16.7) | - / - | - / - | 2.3, 0, 1.5 (the skin against the shaft) / -3.4, 0, 0.5 (the skin against the shaft) | 0 / 0 | 20.6 / 19.7 |
+
+- **Body-check pairs within 10 cm shoulder to chest at contact: 14 of 15 on both styles** (the thirty-first pass's 12: 11 of 12, from 7 and 8). Largest among the 14: 7.1 cm on cel and 9.2 on clay (the light on the bump from the side).
+- **Not within 10: the open-ice heavy on the board fall, 21.7 / 19.7 cm**, as in export31. The board take on the same fall is 5.7 / 8.9.
+- **The cross-check's shaft to the chest's skin at its contact frame: 4.0 / 3.8 / 2.8 cm on cel and 2.4 / 2.5 / 3.4 on clay** (light / middle / heavy), all within the 5 asked. On cel the shaft stops short of the skin by that much; on clay it is that far in.
+- **What the cross-check's reach costs** (cel): the hips are 64 / 56 / 55 cm ahead of the root at the contact frame (export31: 0 / 0 / 8), 66 / 61 / 69 at the farthest (frames 5 / 8 / 6), and come back at up to 15.1 / 8.3 / 7.7 cm a frame. `Lift_Light` is the worst case of the whole set: 66 cm out and back inside 13 frames. The same caution as for the body checks holds, more so: these three should be filmed with both pawns moving before the engine takes them, and export31's three are the fallback.
+
+### 3. For the engine's film: the reach table and the half-reach takes
+
+The hips' offset from the root along the drive, cm, per frame (p2_cel; the left takes and p3_clay are the same to 0.0 cm):
+
+| Frame | Light: Check_Light, Check_Deliver_Right_Light, Check_Deliver_Left_Light | Middle: Check, Check_Deliver_Right, Check_Deliver_Left | Heavy: Check_Heavy, Check_Deliver_Right_Heavy, Check_Deliver_Left_Heavy | Check_Deliver_Right_Light_Half | Check_Deliver_Right_Half | Check_Deliver_Right_Heavy_Half |
+|---|---|---|---|---|---|---|
+| 0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| 1 | 20.0 | 19.0 | -5.0 | 10.0 | 9.5 | -5.0 |
+| 2 | 40.0 | 38.0 | 32.5 | 20.0 | 19.0 | 16.3 |
+| 3 | 58.0 | 58.0 | 58.5 | 29.0 | 29.0 | 29.3 |
+| 4 | 59.0 | 60.0 | 65.5 | 30.0 | 30.7 | 34.5 |
+| 5 | 60.0 | 62.0 | 70.5 | 31.0 | 32.3 | 38.3 |
+| 6 | 54.4 | 64.0 | 73.5 | 28.0 | 34.0 | 40.5 |
+| 7 | 42.0 | 63.1 | 74.5 | 21.5 | 33.4 | 41.3 |
+| 8 | 29.6 | 60.9 | 69.3 | 15.0 | 31.9 | 37.4 |
+| 9 | 24.0 | 58.0 | 59.7 | 12.0 | 30.0 | 30.1 |
+| 10 | 20.3 | 55.1 | 54.5 | 10.1 | 28.1 | 26.3 |
+| 11 | 12.0 | 52.9 | 52.0 | 6.0 | 26.6 | 25.1 |
+| 12 | 3.8 | 52.0 | 45.9 | 1.9 | 26.0 | 22.3 |
+| 13 | 0.0 | 50.5 | 38.6 | 0.0 | 25.2 | 19.0 |
+| 14 |  | 46.5 | 32.5 |  | 23.2 | 16.2 |
+| 15 |  | 41.0 | 30.0 |  | 20.5 | 15.0 |
+| 16 |  | 35.0 | 29.0 |  | 17.5 | 14.5 |
+| 17 |  | 29.6 | 26.2 |  | 14.8 | 13.1 |
+| 18 |  | 25.6 | 22.2 |  | 12.8 | 11.1 |
+| 19 |  | 24.0 | 17.5 |  | 12.0 | 8.7 |
+| 20 |  | 23.2 | 12.5 |  | 11.6 | 6.3 |
+| 21 |  | 21.0 | 7.8 |  | 10.5 | 3.9 |
+| 22 |  | 17.8 | 3.8 |  | 8.9 | 1.9 |
+| 23 |  | 14.0 | 1.0 |  | 7.0 | 0.5 |
+| 24 |  | 10.0 | 0.0 |  | 5.0 | 0.0 |
+| 25 |  | 6.2 |  |  | 3.1 |  |
+| 26 |  | 3.0 |  |  | 1.5 |  |
+| 27 |  | 0.8 |  |  | 0.4 |  |
+| 28 |  | 0.0 |  |  | 0.0 |  |
+| 29 |  | 0.0 |  |  | 0.0 |  |
+| 30 |  | 0.0 |  |  | 0.0 |  |
+
+| Take | Hips at contact (frame 3) cm | Farthest cm (frame) | Fastest way back, cm a frame (between frames) | Pawn speed after contact under which the hips move backwards over the ice, m/s | Frames from the farthest point to the root | Largest difference of the left take's or clay's hips from this column cm |
+|---|---|---|---|---|---|---|
+| Light: Check_Light, Check_Deliver_Right_Light, Check_Deliver_Left_Light | 58.0 | 60.0 (5) | 12.4 (7 to 8) | 7.4 | 8 | 0.0 |
+| Middle: Check, Check_Deliver_Right, Check_Deliver_Left | 58.0 | 64.0 (6) | 6.0 (15 to 16) | 3.6 | 24 | 0.0 |
+| Heavy: Check_Heavy, Check_Deliver_Right_Heavy, Check_Deliver_Left_Heavy | 58.5 | 74.5 (7) | 9.6 (8 to 9) | 5.8 | 17 | 0.0 |
+| Check_Deliver_Right_Light_Half | 29.0 | 31.0 (5) | 6.5 (6 to 7) | 3.9 | 8 | 0.0 |
+| Check_Deliver_Right_Half | 29.0 | 34.0 (6) | 3.0 (15 to 16) | 1.8 | 24 | 0.0 |
+| Check_Deliver_Right_Heavy_Half | 29.3 | 41.3 (7) | 7.2 (8 to 9) | 4.3 | 17 | 0.0 |
+
+- The last column but two is the number the engine lane asked for: if the attacker's pawn moves slower than that after contact, the figure's hips move backwards over the ice in the fastest frame of the way back. The light is the tight one (7.4 m/s: it will go backwards after almost any hit); the middle needs 3.6 m/s, the heavy 5.8.
+- **New, three takes: `Check_Deliver_Right_Light_Half`, `Check_Deliver_Right_Half`, `Check_Deliver_Right_Heavy_Half`** (13 / 30 / 24 frames, contact frame 3, start and end on the stance): the same takes with the hips 29 cm ahead of the root at contact instead of 58. They pass the gate. They stop about 29 cm short of the chest (not measured as pairs, not rendered).
+
+### What the strips show
+
+`skf32-pairs-cel`, `skf32-pairs-clay` (18 strips each: 15 body-check pairs and 3 cross-checks at the game camera's pitch and scale, seen across the hit) and `skf32-contact-side` (four pairs level from the side, export31 above export32):
+
+- From behind and from the side the victim was folded over already at the contact frame in export31, under the attacker's shoulder; in export32 it stands there with its chest at the shoulder and folds one frame later. At the game camera the contact frame is one shape in all 15 body-check pairs, and the victim comes out of it along the attacker's line in the falls.
+- The front bump reads as a bump: the victim rocks back, and the two stay one shape for about three frames, as in the other bumps.
+- The cross-check in export31: two figures with a stick's length of air between them. In export32 the attacker arrives at the victim with the stick across its chest. At game size the cross-check now looks much like a body check: at the contact frame the two are one shape either way and the stick across is small. That it reads as its own kind of hit I would not claim from these stills.
+- As in the thirty-first pass the attacker's front leg overlaps the victim's legs at contact, and the open-ice heavy at the boards goes through the victim (the row above the board take's).
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export32\`: `READY.txt` (written last, with a `Takes:` line the gate reads), `DIFF.md` (against export31), `JOINS.md` (159 pairs), `GATE.md`. 149 takes: export31's 145 plus `Check_Hit_Front` and the three `_Half` takes.
+
+- 44 takes of export31 differ on p2_cel, 42 on p3_clay (`Pass` and `Poke_Hit` on cel only), the same in the take file and the loop-cut file, every one named with its reason in `DIFF.md`; no other take differs. The clay aim holds are among the identical ones. Bones, parents, rest pose (0), meshes and stick files as export31; root identity keys in all 149 takes of all four files; 60 fps.
+- Joins: 159 pairs, positions at most 0.0005 cm, rotations 0 deg, both styles.
+- The aim grid's own check in the build: 0 cells failing, both styles, as before.
+
+### Not looked at, and known gaps
+
+- **Nothing of export32 has been seen in the engine or in motion.** The changed victims' first frames and the cross-check's reach are judged from numbers and from stills at five frames per pair.
+- The 20 changed victim takes were looked at only where they are in a pair (11 of them); the light falls from behind and from the side, the heavy side falls and the side stumbles in no strip.
+- The 19 takes with the settled twist were not rendered: the change is limb roll in the last 4 to 6 frames, checked by the gate's join and the blade's path only.
+- `Check_Hit_Right`, `Deke_Right`, `Lean_Left`, `Pass`, `Poke` after their changes: gate numbers only, no picture.
+- The three `_Half` takes: gate only.
+- The cel chest-skin depth (11.6 cm) is the weaker of the two measures; if it is 2 cm off, the cel cross-check numbers are 2 cm off.
+- Only right-shoulder attackers in the pairs; no pair with the `_B` falls, `Trip` or `Fall_Forward`.
+- The leg frames outside the right-wall takes are as in export30 (not measured again).
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-second pass block, the bake's `settle_end` and `ice_margin`; the pass-31 state is `build_clips_pass31.py`, this one `build_clips_pass32.py`), `gate_joins_skf32.txt`, `gate_known_skf32.txt` (one row), `pair32.js`, `tab32.js`, `skin32.py`, `it32.sh`, `sheet32.sh`. The gate itself (`gate.sh`, `gate_fbx.py`, `gate_md.js`) is as handed back at 03:22.
+- Sheets in `devlog/shots/`: `20261114-040913-B-lab-skf32-pairs-cel.png`, `20261114-040913-B-lab-skf32-pairs-clay.png`, `20261114-040913-B-lab-skf32-contact-side.png`, each with its `.txt` caption.
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The hit filmed, in the lab, with both pawns moving.** A short film per same-size pair at 60 fps with the roots keyed as the sim moves them (the attacker closing at its size's speed and keeping a named share of it, the victim's pawn knocked away), full reach beside half reach, body check and cross-check, on the CPU. It answers what this pass and the last could not: whether the body leaving and rejoining its pawn reads. Proving numbers: frames in which the attacker's hips move backwards over the ice, per take and pawn speed (today only the table's bound: 3.6 to 7.4 m/s for the body checks); films made, 0 today, 8 or more.
+2. **The last pair and the last row.** A board fall whose chest the open-ice heavy can meet without the wall plane giving (or the engine told to use the board take within a named distance of the boards), and the aim grid re-fitted around `Aim_N46_R100` so the shaft comes out of clay's trunk and the grid's blend check still passes. Proving numbers: body-check pairs within 10 cm, 15 of 15 (today 14); rows on the known list, 0 (today 1).
+3. **The victims after the first two frames.** Frames 3 to 6 of the changed falls looked at and shaped (the fold now comes one frame later and faster), the side bump leaving along the drive, the remaining victim takes (`_B`, `Trip`, `Fall_Forward`, three board falls) brought to the common place where a wall allows. Proving numbers: largest fall of the chest in one frame in the first six frames, per take (today up to 34 cm in `Knockdown_Left`), under 25; the side bump's leave within 10 deg (today 32); victim takes on the common place, 20 of 30 today.
