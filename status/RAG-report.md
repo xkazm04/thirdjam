@@ -147,3 +147,153 @@ No take was added or changed. If the film makes this worth another day, the beha
 | Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1_P3_Rag.uasset | other | 0.02 | original | UE 5.9 PhysicsAssetToolset.CreateFromMesh (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 14 capsule bodies for SK_SkaterTB1_P3 (stick body removed, seven radii reduced, limits set through the constraint accessor), used only by Lab/BP_SkaterVisual_TB1_P3_Rag (lane RAG) (25939 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_P3_Rag.uasset | other | 0.05 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | n | lab, not shipped: child Blueprint of BP_SkaterVisual_TB1_P3 with a physics asset override on Mesh, RagAnim (physical animation) and RagFloor (own floor box); the powered-ragdoll schedule is driven by rag-lab/rag.py, not by the Blueprint (lane RAG) (52297 bytes) |
 ```
+
+---
+
+# Part 2 (second loop, 02:20 to 03:15): ends-only physics, a stick body, the schedule inside the child Blueprint
+
+Same tree (`C:\Users\kazda\jam\wt\b-vfx`, branch `lab/ragdoll`, now at 7c92338c, local, not pushed), port 8000, every editor started with `-nullrhi -unattended`. Four editor sessions (pids 15912, 38424, 36436, 28408), each left through `ExitEditor` with the discard flag and confirmed gone, the last at 03:02:33. `LogD3D12RHI` lines: 0 in each of the four logs, `Error:` lines 0, 44 play sessions started and stopped. In the lead's tree only this report is mine.
+
+## 1. What is done, what is not
+
+All four items are done and measured; one bound is not met. **Ends-only physics hands back within 3 cm in 20 of 20 knockdowns at every motor tried, keeps the timing line at 0.0, repeats exactly, and with the stick body the blade stays within 1.5 cm of the hand-made twin's lowest point.** The child Blueprint now runs the schedule itself: its positions equal the script-driven run to 0.01 cm, and two seeded matches ran with it as the game's figure (11 knockdowns, end minus release 0.0 on all, 4 wall falls skipped). **Not met: "never more than 25 cm from the take".** No motor holds it, because the hand-made take itself moves a hand or the head more than 25 cm in a single frame on 13 to 24 % of the fall's frames. The softest motor that keeps every end within 60 cm is 5000 / 106. Nothing was seen; the film scripts are updated.
+
+## 2. Per evolution
+
+### Evolution 1: ends-only physics
+
+**What changed.** The pelvis, spine, upper arms and thighs stay on the take. Simulated: both forearms (they carry the hands), neck and head, shins and feet, and the stick. Five things made it work:
+
+- **The physics starts 3 frames after the call, not on it.** The figure cuts from its skating pose into the fall with no blend: within the first three frames a hand moves up to 86 cm in a single frame, the head's top 108 cm, the blade 272 cm. Bodies switched on across that cut were flung.
+- **Velocities are reset to the root's own at the switch-on.** Without it the stick kept the cut's spin: in the knockdown I followed frame by frame the blade sat 30 to 75 cm off for 14 frames.
+- **A neck body between chest and head.** With the head jointed straight to the chest the joint sat 2.5 to 3 cm off wherever the take bent the neck, and 9 or 10 of 20 hand-backs missed 3 cm by that alone.
+- **The hand-back motor is 25000 / 237** (was 12000 / 220): with 12000, 3 of 20 missed at 3.94 cm.
+- **The floor is on the ice plane (was 2 cm under) with an ice-like material** (friction 0.05, `Lab/PM_RagIce`).
+
+**Schedule** (frame 0 is `SetKnockedDown(true)`; H is the fall's hold frame, 13 to 28): simulated from frame 4 at the weak motor; ramp to the hand-back motor over frames H+4 to H+12; physics weight 1 to 0 over H+18 to H+25; off at H+25. A 60-frame knockdown is back on the take at frame 38, `GetUp_Snap` starts at 41; the longest is frame 53.
+
+**Proving numbers** (the same 20 knockdowns as part 1, driven by the child Blueprint, measured against the hand-made twin in the same spot; "ends" are both hands, both feet, the head's top and the stick's grip):
+
+| Weak motor (stiffness / damping) | 800 / 42 | 2500 / 75 | 5000 / 106 | 12000 / 164 | 25000 / 237 |
+|---|---|---|---|---|---|
+| Handed back within 3 cm | 20 of 20 | 20 | 20 | 20 | 20 |
+| Worst end when the hand-back starts | 2.17 cm | 2.17 | 2.17 | 2.17 | 2.17 |
+| Knockdowns with every end within 60 cm of the take | 11 | 17 | **20** | 20 | 20 |
+| Knockdowns with every end within 25 cm | 0 | 2 | 3 | 10 | 13 |
+| Furthest any end got | 72.0 cm | 65.5 | 57.8 | 48.1 | 37.3 |
+| **Lag of hands and head behind the take during the fall, mean** | **12.8 cm** | **9.2** | **7.3** | **5.2** | **3.8** |
+| the same, peak | 72.0 cm | 58.3 | 50.0 | 39.2 | 30.8 |
+| mean by point: left hand, stick hand, head's top | 8.1, 11.0, 19.3 | 6.0, 7.5, 14.1 | 4.8, 5.5, 11.5 | 3.5, 3.7, 8.4 | 2.6, 2.6, 6.3 |
+| Knockdowns where no simulated shape went lower than the twin's own lowest | 14 | 14 | 14 | 14 | 17 |
+| Pose error two frames after the hand-back | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
+| NaN | 0 | 0 | 0 | 0 | 0 |
+| Get-up end minus release (40 `SK6REL` lines per run) | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+
+- **Run-to-run spread: 0.000 cm** at the record's 0.01 cm rounding, over 33,908 samples each time: 2500 twice across an editor restart, 25000 twice, 5000 three times, the last from a clean start on the committed files.
+- **The 25 cm bound.** After frame 3 the hand-made take's own step from one frame to the next is over 25 cm in 42 to 75 of 318 fall frames for each hand and the head's top (peaks 52 to 71 cm; the root's slide of up to 13 cm a frame is included). A body cannot be nearer than that without moving inside the same frame. At 100000 / 474 (run once, script-driven, before the floor moved) 18 of 20 held it, with a mean lag of 2.3 cm, which is the take.
+- **The lowest shape.** The twin itself reads 26.5 cm under the ice by these shapes (the stick, frame 1 of `Knockdown_Back_Heavy`), so I compared per knockdown instead of fixing the shapes to read 0. Where the ragdoll goes lower than both the ice and its twin, it is the stick forearm or a foot at a landing: 6 knockdowns, at most 6 frames, at most 8.5 cm at 2500; 1 knockdown, 1 frame, 3.4 cm at 25000.
+- **Is it doing something?** At 5000 the hands trail 5 cm and the head's top 11.5 cm on average through the fall, with single-frame peaks of 35 to 50 cm at the landing; by arithmetic that is 3 to 7 pixels on a 110-pixel figure. At 25000 it is 2.6 and 6.3 cm: close to the hand-made take and probably not worth its cost.
+
+Per-knockdown tables: `C:\Users\kazda\jam\rag-lab\runs\P08.txt`, `P25.txt`, `P50.txt`, `P120.txt`, `P250.txt`. No still.
+
+### Evolution 2: the stick body
+
+**What changed.** A capsule of 3.5 cm radius along the shaft from the grip to 3 cm short of the blade's tip, mass scale 0.2, jointed to the stick forearm, simulated with the ends and held up by the floor.
+
+**Proving number: the blade's lowest point is within 5 cm of the hand-made twin's in 20 of 20 knockdowns at every motor in the table** (worst 0.8 to 1.5 cm under the twin's). Whole-body, without a stick body, it was 58 to 89 cm lower. The blade's error when the hand-back starts is 1.7 cm at worst.
+
+Two things to know: where the take itself puts the blade under the ice (5 to 27 cm: at frame 1 of the back falls, later in the side falls) the ragdoll is under the ice with it only on frames when the stick is not simulated; and the stick only stays in the top hand because of the joint, the lower hand is not tied to it.
+
+### Evolution 3: the schedule inside the child Blueprint
+
+**What changed** in `Lab/BP_SkaterVisual_TB1_P3_Rag` (still a child of the shipped figure; 529,350 bytes):
+
+- `SetKnockedDown` is overridden: it calls the parent's, then arms the schedule on `true` and stops it on `false`.
+- `ReceiveTick` is overridden: it calls the parent's, then runs the schedule by game time since the call, so a hit-stop does not shift it.
+- Four helper events (`RagSim`, `RagWeight`, `RagDrive`, `RagStop`) and sixteen variables. Ten are editable per figure: `RagEnabled`, `RagS0` 3, `RagLate` 18, `RagRu` 8, `RagHs` 6, `RagBl` 7, `RagKw` 5000, `RagCw` 106, `RagKs` 25000, `RagCs` 237.
+- **Wall falls are skipped** (`DownKind` 5 to 8 when the physics would start). The schedule also stops at once if the get-up has started.
+- The figure's tick is made to run before its mesh's and the motor component's, so an order of ticks cannot change the result.
+
+**Proving numbers.**
+
+- **Blueprint against script: 0.000 cm** largest difference over 33,908 samples, at 5000 / 106, in two editor sessions.
+- **Two seeded matches** (my cartridges `C:\Users\kazda\jam\rag-lab\rag.s1.cartridge.json` and `rag.s7920.cartridge.json`: the regular cartridge with the seed set, `pro`, five a side, `jam.ScriptHuman 1`), the child as every pawn's figure, called by the pawn:
+
+| | Seed 1 | Seed 7920 |
+|---|---|---|
+| Last sim frame | 6355 | 6366 |
+| Figures of the child's class, with the motor component | 10 of 10 | 10 of 10 |
+| Knockdowns | 6 (the human) | 5 (human 4, bot 2 once) |
+| Physics ran | 4 (35, 35, 40, 43 frames) | 3 (40, 40, 50 frames) |
+| Wall falls skipped, 0 frames simulated | 2 | 2 |
+| Frames between physics off and the get-up's start, smallest | 6 (a 64-frame knockdown) | 19 |
+| Still simulating at the release | 0 | 0 |
+| Get-up end minus release | 0.0 on all 6 | 0.0 on all 5 |
+| NaN at the ends | 0 | 0 |
+| `Error:` lines, Blueprint runtime warnings | 0, 0 | 0, 0 |
+
+- **How it was swapped in, in my tree only.** The game picks the figure class from a path written in its code; no cartridge key or console variable names a class. A cartridge can pick the other track (`"visual": "generated_b2"`), which on clay loads `/JamAssets/Skaters/BP_SkaterVisual_TB2_P3`. I duplicated the child under that asset name in a lab folder, closed the editor, put that file in the place of `Skaters\BP_SkaterVisual_TB2_P3.uasset` in my tree for one session, and put the original back afterwards (its SHA-256 equals the repository's LFS id again; `git status` shows nothing). The parent of the swapped figure was the real, untouched `BP_SkaterVisual_TB1_P3`. Device A's cartridges were not touched.
+- A dead end worth a line: renaming the two generated classes in memory leaves redirectors and cannot be undone in the session; I restarted the editor without saving.
+
+### Evolution 4: the film scripts
+
+All in `C:\Users\kazda\jam\rag-lab\film\`. For the GPU lane, in three lines:
+
+1. Copy the three files in `film\loop2\` (the child Blueprint, the physics asset, `PM_RagIce`) into `Game\Plugins\JamAssets\Content\Skaters\Lab\` of the filming tree before its editor starts.
+2. In a play session run `film_make_ends.py` through `execute_python`: the same ten pairs and timeline as before (hand-made in blue at x -1800 to +1800, the ends-only twin 150 cm to its right in red, pair i knocked down at frame 90 + 150 i, about 1,800 frames), weak motor 2500 / 75; `film_ends_status.py` until `done`, then `film_ends_off.py`.
+3. `film_make_ends_stiff.py` is the same at 25000 / 237, the setting nearest the bounds.
+
+**For the whole-body film already planned:** use the two files in `film\loop1\` (they are the ones measured in part 1) with `film_make_soft.py`. The files now in my tree's `Lab` folder are the ends-only ones and carry their own schedule; I made `film_make_soft.py` switch that off if it meets them, but that pairing was not run.
+
+## 3. Not verified
+
+- **Anything by eye**, again. Whether 5 to 12 cm of trailing hands and head reads as life or as mush at game size is the film's question.
+- The film scripts on the GPU editor: `film_make_ends.py` ran headless (ten pairs, 1,791 frames, no error); the whole-body scripts were only rebuilt and parsed.
+- In the matches there is no twin, so no distance from the take was measured there: only timing, NaN, errors and whether the physics ran. Seven knockdowns with physics is a small sample; `Trip` never occurred; no second knockdown arrived while one was simulated.
+- The match figure was a duplicate of the child made before the last edit (the stop on a started get-up). The 20-knockdown run after that edit equals the one before to 0.01 cm.
+- The matches used 5000 / 106 only.
+- Whether the lower hand leaves the stick while both are simulated: not measured.
+- Wall falls with physics, the night figure, a cook, a packaged build, frame-time cost.
+- The figure lane's whip is not in my tree; what I say about it below is reasoning, not a test.
+
+## 4. For the engine lane
+
+- **Use the child as it is:** `Lab/BP_SkaterVisual_TB1_P3_Rag` needs `Lab/PHYS_SkaterTB1_P3_Rag` and `Lab/PM_RagIce`, and nothing else. It changes nothing while `RagEnabled` is false.
+- **Trigger:** the game's `SetKnockedDown(true)`. **Starts on** the take's pose at frame 3. **Ends on** the lying loop's own pose (0.00 cm two frames after). **Lengths:** physics from frame 4 to H+25, so 38 to 53 frames.
+- **Must never:** run on a wall fall; be on when the get-up starts (a knockdown under about 58 frames would cut it short by the guard); use `PhysicsOnly` collision on the mesh; start on frame 0.
+- **The whip and the physics on the same bones.** During a knockdown the whip should yield on the head, the neck and the stick arm from the frame the physics starts until it is off, and keep the spine, which the physics inherits through the take. The physics is pulled toward whatever pose the animation gives, so a whip that changes the pose is followed, not fought; the fight would be a whip that also moves those bones after the physics has. **How each side knows, with no shared variable:** the whip can ask the mesh `IsSimulatingPhysics("head")` (or `"lowerarm_r"`) and take its weight on those bones to 0 while true. On frames 0 to 3, before the physics, the whip owns everything. The hit's direction and strength reach the child in the same `SetKnockedDown` call if the physics should ever take the hit as an impulse instead.
+- **Three tool traps** (PhysicsAssetToolset through MCP): `SetConstraintLimits` does not reach a running figure (part 1); `AddConstraint` leaves the parent's anchor at the parent bone's origin (the stick grip sat 30 cm off in all 20 until I set `Pos2` on the template's `DefaultInstance`); a bone that animates between two bodies needs a body of its own (the neck).
+- After `ExitEditor`, port 8000 can show as taken by "pid 0" for up to about a minute and `editor.ps1` refuses to start; retry.
+
+## 5. For the other device
+
+- **To let a figure class be swapped without replacing a file:** a console variable read in `AHokejGameMode::ResolveVisualClass`, for example `jam.vis.ClassOverride <class path>`, tried before the built-in paths. Input: one class path implementing `IJamSkaterVisual`; empty = today's behaviour.
+- If ends-only ships: the child's class path in `VisualClassPathsFor` for `humanoid_b1` on `p3_clay` (or the child's parts folded into the shipped Blueprint by B), and one named collision channel for figure bodies against the ice in place of `Destructible`.
+- Nothing else. The pawn's calls were enough; no new call or event is needed.
+
+## 6. Decisions for the operator
+
+1. **Ends-only at 5000 / 106 is the candidate if the film is liked.** It holds the hand-back, the timing, the stick and 60 cm; it does not hold 25 cm and no setting can. My view: decide by the film, red against blue, not by the 25 cm number.
+2. **Softer or stiffer.** 2500 / 75 shows more (9 cm mean lag) and lets 3 of 20 knockdowns past 60 cm; 25000 / 237 is nearly the hand-made take.
+3. **Clay only.** There is no night figure with physics; building one is the same steps on the other mesh, about an hour, unmeasured.
+4. **Feet and the stick forearm dip into the ice for a few frames at the landing in 6 of 20 falls** (up to 8.5 cm at 2500). Accept for a toy, or hold it back until evolution 2 below.
+
+## 7. The next three evolutions
+
+1. **The landing dips.** More solver iterations on the physics asset, or shins kept on the take with only the feet simulated. **Proving number: 20 of 20 knockdowns with no simulated shape lower than its twin's lowest, at 5000 / 106** (14 today).
+2. **The night figure and the wall falls.** The same physics asset and child on `SK_SkaterTB1v2`; wall falls with the boards as a second floor. **Proving number: the part 2 table for the night figure, and 0 bodies through the boards in the eight wall takes.**
+3. **The hit as an impulse.** The knockdown's direction and strength pushed into the head and stick arm at switch-on, with the whip yielding as in section 4. **Proving number: the head's lag peak moves with the hit's strength (two strengths, at least 10 cm apart) while the hand-back stays 20 of 20 within 3 cm.**
+
+## State left behind
+
+- My tree: `lab/ragdoll` at 7c92338c (3e55f946, then 2d4ac3eb, then this), three Lab files, nothing else changed: `BP_SkaterVisual_TB1_P3.uasset` and `BP_SkaterVisual_TB2_P3.uasset` both hash to their LFS ids. No process of mine is running.
+- Console variables were set back (`jam.Cut hockey.regular`, `jam.ScriptHuman 0`, `jam.vis.lowlog 0`) before the session ended.
+- Lab folder additions: `rag2.py`, `run2.sh`, `ana2.mjs`, `lag2.mjs`, `lowx.mjs`, `rag_match.py`, `match.sh`, `anam.mjs`, `child.dsl` (the Blueprint's schedule as written), the two cartridges, `runs\P*.json`, `runs\M1.json`, `runs\M2.json` with their logs, `backup\` (the swapped file and the original), `film\`.
+
+## Ledger rows for part 2 (11 fields, as the ledger's header; these replace part 1's two rows if the files are adopted)
+
+```
+| Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_P3_Rag.uasset | other | 0.50 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) |  |  | 2026-11-14 | B | n | lab, not shipped: child Blueprint of BP_SkaterVisual_TB1_P3; overrides SetKnockedDown and ReceiveTick (parent called first) to run ends-only physics on a fall: forearms, neck and head, shins and feet and the stick simulated from frame 4 to hold frame + 25, wall falls skipped; RagAnim (physical animation), RagFloor (own floor box on the ice plane), physics asset override on Mesh (lane RAG) (529350 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1_P3_Rag.uasset | other | 0.03 | original | UE 5.9 PhysicsAssetToolset (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 16 bodies for SK_SkaterTB1_P3 (14 fitted capsules with seven radii reduced, a neck sphere, a thin stick capsule at mass scale 0.2), limits and the neck and stick joint anchors set by Python, used only by Lab/BP_SkaterVisual_TB1_P3_Rag (lane RAG) (28883 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/PM_RagIce.uasset | other | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | n | lab, not shipped: physical material of the child figure's own floor (friction 0.05, restitution 0, combine min) (lane RAG) (1795 bytes) |
+```
