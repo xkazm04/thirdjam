@@ -1,0 +1,1 @@
+CrossCheck_Wind (export37) behind SetWindupTakes(true), played from frame 2 (N = 8): coil with the stick back low, then the thrust; ticks 31 to 50. Switch default off.
