@@ -1,0 +1,1 @@
+A real scored goal on night (drill 10, the human scripted, blue scores at the +x net), the game camera, NS_goal as saved in B45 (cream 2.6/2.45/2.1, a fifth of the team colour): +10, +40, +70 un-paused HighResShots, +100 frozen; grey-white dust over the boards and stands to +100, the ice clear. Engine (GPU).

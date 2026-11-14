@@ -1,0 +1,1 @@
+My own NS_goal spawn at the +x net, frozen at +100, camera 14 m, orange team colour: left the first cream (2.2/2.0/1.6, a quarter team), right the saved one (2.6/2.45/2.1, a fifth team); top clay, bottom night. Engine (GPU).

@@ -1128,3 +1128,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 
 ## H53.6 (17:06, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push** (B's last for it); built on main, cook-only PASS
 - Added: the stick out of the legs in eight more takes (both crossovers, the lean, the trip, three side get-ups, `Check_Hit_Right`): seen side-on on the GPU on the turns; a seeded clay match: 0 Blueprint errors, 6 of 6 get-ups on the release. Nothing new to call.
+
+## H54.0 (18:05, 14 Nov) FOR THE DIRECTOR: **optional, before the 20:00 freeze**: three assets, no calls change; filmed on the GPU; cook-only PASS
+- **`VFX/NS_goal`**: the goal dust is cream-led (team colour a one-fifth accent), so it no longer reads navy on night; real scored goals: 19 % of the frame at +100
+  from the game camera on night, above the boards, the ice and crease clear (`devlog/shots/20261114-175500-B-b45-goal-real-night-gamecam.png`).
+- **`VFX/NS_dive`**: the dive block's grey cloud is calmer (half the puffs, alpha 0.55); the lying figure reads first.
+- **`UI/T_UI_Logo_Hokej`**: reimported opaque (the letters were 19 % see-through inside); 920x716, BC7, UI group, no mips
+  (`devlog/shots/20261114-172000-B-b45-ui-logo-engine.png`). Your landing still looked dimmed as a whole: check the logo widget's render opacity / a scrim over it.
+- If you do not merge again before the freeze, nothing breaks: all three are drop-in replacements of assets already on main.
+- Report: `status/B45-report.md`.
