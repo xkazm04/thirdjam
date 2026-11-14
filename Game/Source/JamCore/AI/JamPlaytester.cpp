@@ -85,6 +85,7 @@ namespace JamAI
 			P.BrakeIntent = 2;           // lane A95: stop and go
 			P.CutPct = 50;
 			P.CarrySprintPct = 50;
+			P.bPokeRead = true;          // lane A152: pokes when the poke can land
 			break;
 		default:
 			P.ReactionFrames = 3;
@@ -106,6 +107,7 @@ namespace JamAI
 			P.BrakeIntent = 2;           // lane A95
 			P.CutPct = 100;
 			P.CarrySprintPct = 100;
+			P.bPokeRead = true;          // lane A152
 			break;
 		}
 		return P;
@@ -466,14 +468,20 @@ namespace JamAI
 					Target = Puck + PuckV * Lead;
 				}
 				// the blade follows the puck; poke once it is in reach
-				const FVec2 Tp = W.PuckPos - Me.Pos;
+				// Lane A152 (track F2, R-0059 point 4): the poke when it can land (P.bPokeRead with bPokeReadOn). This decision reaches the sim ReactionFrames
+				// late: the aim leads by that much (the puck rides with its carrier, so on the carrier's velocity and the player's own), and no press goes into
+				// a take grace that will still run then or a body between. Off, the press is as it was: at where the puck was, whatever shields it.
+				const bool bRead = bPokeReadOn && P.bPokeRead;
+				const double LeadS = static_cast<double>(P.ReactionFrames) / 60.0;
+				const FVec2 Tp = bRead ? (W.PuckPos + C.Vel * LeadS) - (Me.Pos + Me.Vel * LeadS) : W.PuckPos - Me.Pos;
 				const double Dp = Tp.Length();
 				if (Dp > 1e-6 && Dp < W.SkaterRadius + W.StickReach + 1.0)
 				{
 					const double Reach = Dp - W.SkaterRadius;
 					In.Stick = Tp * (1.0 / Dp) * (Reach < W.StickReach ? Clamp(Reach / W.StickReach, 0.2, 1.0) : 1.0);
 					const bool bNoStick = bReadShield && StickCannotTake(W, Pi, W.Carrier);   // lane A134: no swing the sim would refuse
-					if (Me.bCanPoke && Dp <= W.SkaterRadius + W.StickReach && !bNoStick) { In.bPoke = true; Act = EPlaytesterAct::Poke; }
+					const bool bCanLand = !bRead || (C.TakeGraceFrames <= P.ReactionFrames && !BodyShields(W, Pi, W.Carrier));   // lane A152: the poke when it can land
+					if (Me.bCanPoke && Dp <= W.SkaterRadius + W.StickReach && !bNoStick && bCanLand) { In.bPoke = true; Act = EPlaytesterAct::Poke; }
 					if (Me.bCanLift && !bNoStick && C.Pos.DistTo(Me.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9) { In.bLift = true; }
 				}
 				// a body check when closing fast and not from behind (the sim's foul line is 0.5 on the contact normal . the victim's facing)
@@ -734,6 +742,9 @@ namespace JamAI
 			if (bEnvCourse && CheckEnv[6] == ':') { Tester.CoursePctOverride = std::atoi(CheckEnv + 7); }   // course:NN = NN per cent of the chances
 			Tester.bOldCheck = (CheckEnv && std::strcmp(CheckEnv, "old") == 0) || (!bEnvClosing && !bEnvCourse && CfgSim && !CfgSim->GetConfig().Contact.bPlaytesterClosingPress);
 			Tester.bCourseCheck = !Tester.bOldCheck && (bEnvCourse || (!bEnvClosing && CfgSim && CfgSim->GetConfig().Contact.bPlaytesterCoursePress));
+			const char* PokeEnv = std::getenv("JAM_PLAYTESTER_POKE");   // lane A152: read = the poke when it can land, old = the press as it was (measurement arms); absent = the config's switch
+			Tester.bPokeReadOn = PokeEnv ? std::strcmp(PokeEnv, "read") == 0 : (CfgSim && CfgSim->GetConfig().Stick.bPlaytesterPokeRead);
+			if (CfgSim && CfgSim->GetConfig().Stick.bPokeRulesOff) { Tester.bPokeReadOn = false; }   // the test seam: the press as it was
 			Tester.StickVariant = !StickEnv ? 0 : (std::strcmp(StickEnv, "carry") == 0 ? 2 : (std::strcmp(StickEnv, "front") == 0 ? 3 : (std::strcmp(StickEnv, "short") == 0 ? 4 : 0)));
 		}
 		FJamAIWorld W;

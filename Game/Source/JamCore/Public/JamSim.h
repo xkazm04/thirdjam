@@ -185,6 +185,8 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bPokeArmed = false;
 	// Frames of lost control after a mistimed poke; 0 = in control.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 StumbleFrames = 0;
+	// Lane A152 (game.stick.miss_recovery_frames): frames left of the recovery after a missed poke: no poke, lift or check while above 0. Hashed while above 0.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 StickLockLeft = 0;
 	// Frames left in the penalty box; 0 = on the ice.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PenaltyFrames = 0;
 	// First frame a poke / lift is allowed again.
@@ -759,6 +761,8 @@ private:
 	void StepSkater(FJamSkaterState& S, const FJamInput& In);
 	void StepStick(FJamSkaterState& S, const FJamInput& In);
 	void TryPoke(FJamSkaterState& S);
+	// Lane A152 (game.stick.poke_assist_deg): S's open poke reaches the puck its opponent Carrier carries (within the stick's reach and the aim's cone).
+	bool PokeReaches(const FJamSkaterState& S, int32 Carrier) const;
 	void TryLift(FJamSkaterState& S);
 	void ResolvePokes();
 	void CallFoul(FJamSkaterState& Fouler, const FJamSkaterState& Victim, const FVector2D& Contact, float Strength, FName Kind);

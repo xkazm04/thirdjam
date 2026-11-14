@@ -434,3 +434,5 @@
 - link green 02:50: main b7ee3da (Twelve modes on the real ladder: each a contest, each winnable, the whistle out of all but) pushed.
 - 03:03: acceptance run RED on main b7ee3da (exit 1): no H27. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H27-2.txt
 - link green 03:07: main 3f5cbda (The level is chosen where it is played (A144, track U2, evolution 3): a ROOKIE / PRO / ALL) pushed.
+- link green 03:14: main e9d0b55 (A standing skater holds a side hit, and the scripted human presses for the hit it sees com) pushed.
+- package 03:20: `Hokej_Hokej_H27.zip` from main e9d0b55, acceptance run green (18 verbs through the cursor and the buttons).

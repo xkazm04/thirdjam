@@ -458,6 +458,18 @@
           "maximum": 120,
           "description": "Lane A121 (track F2; R-0049 point 2): the take grace. A skater that has just won the puck (by a poke, a lift, a loose puck, a pass or the draw: the puck came to it from somebody else) cannot be poked or stick-lifted for this many physics frames; a body check still loosens the puck, and a poke that runs out on it costs the poker no stumble. Leave the key out for 30 (half a second); 0 = off, the neutral value (the game before the lane)."
         },
+        "poke_assist_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180,
+          "description": "Lane A152 (track F2; R-0059 point 4): the poke reaches. Inside the open poke window of the skater a person steers, a puck an opponent carries is taken when it is within the stick's full reach of the poker's body (as far as a perfectly aimed blade takes from, never further) and within this many degrees of the direction the blade is aimed in; the body between, the sweep's shield, the spin and the take grace refuse it as before. Bots keep the blade rule (the blade itself within 0.35 m of the puck). Leave the key out for the default in DEFAULTS.md; 0 = off, the neutral value (the game before the lane: the blade rule for everybody)."
+        },
+        "miss_recovery_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "Lane A152 (track F2; R-0059 point 4): a miss costs a recovery, not a fall. A poke of the skater a person steers whose window runs out next to an opposing carrier locks its stick for this many physics frames: no poke, no stick lift and no body check, while it skates and steers as it likes. Leave the key out for the default in DEFAULTS.md; 0 = the neutral value (the game before the lane): the miss costs stumble_frames without control instead. A bot's miss stays the stumble (the carrier's sweep and stop earn it); a poke the take grace refused costs neither; with stumble_frames 0 a miss costs nothing at all."
+        },
         "poke_window_frames": {
           "type": "integer",
           "minimum": 2,

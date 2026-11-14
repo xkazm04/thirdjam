@@ -68,6 +68,10 @@ namespace JamAI
 		// move -3.7 / +2.0 / +2.4 (600 seeds, paired; CONTACT-6.md section 2).
 		int CheckPct = 60;
 		int CarrySprintPct = 0;
+		// Lane A152 (track F2, R-0059 point 4): the poke when it can land. The player aims the blade where the puck will be when its hand arrives (its own
+		// reaction ahead, on the carrier's and its own velocity) and does not press into a take grace that will still run then or a body between (the
+		// brain's BodyShields). The regular and the good player; the novice presses whenever the puck is near. Only with FJamPlaytester::bPokeReadOn.
+		bool bPokeRead = false;
 	};
 	FJamPlaytesterProfile PlaytesterProfile(EPlaytester Kind);
 	const char* PlaytesterName(EPlaytester Kind);
@@ -92,6 +96,7 @@ namespace JamAI
 		// show both): no poke and no lift the sim would refuse (StickCannotTake), so the poke is there the frame the puck is in the open.
 		// env JAM_PLAYTESTER_READ=0 | 1 forces it (measurement). Off: it swings into every shield (14 pokes a match on the big ice, 0.7 clean).
 		bool bReadShield = false;
+		bool bPokeReadOn = false;        // lane A152: the profile's bPokeRead applies (stick.bPlaytesterPokeRead, or env JAM_PLAYTESTER_POKE=read; =old forces the press as it was)
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);

@@ -10,7 +10,8 @@
 // BrakeAtM 9.5 was the clean stop against a pro (lane A102): the brain does not leave its defender standing, it sends it at the carrier (11 m/s at contact), and
 // a stop begun at the brief's 5 m is run over in the middle of the brake (0 of 200). MOVEMENT-2.md section 3 has the share by where the stop begins. Since lane
 // A121 the window's centre is 8 m, and since lane A128 that is the drill's default (MOVEMENT-4.md).
-// Lane A147: the stop's distance is the level's (StopAtForLevel: pro and rookie 8 m, all_star 12 m), the drill says it in stick lengths (CoachLine), and a
+// Lane A153 (R-0058 point 1): one stop distance at every level, 8 m (StopAtForLevel; all_star's was 12 m while its presser charged from its hunt radius).
+// Lane A147: the stop's distance is the level's (StopAtForLevel), the drill says it in stick lengths (CoachLine), and a
 // carrier that is straight again with the defender still on its shoulder cuts back once more (SecondMove; MOVEMENT-5.md).
 // A carry ends Past (2 m beyond the defender along the attack with the puck, and still with it half a second later), or by how the puck was lost.
 // Header only; no state in the sim. docs/experiments/MOVEMENT-2.md.
@@ -132,10 +133,12 @@ struct FJamCarryDrill
 	// Lane A147 (track F2, evolution 4): the stop's window is the level's. Where the scripted stop begins against each level's defender (MOVEMENT-5.md
 	// section 2: pro creeps into its gap and the window's centre is 8 m; all_star commits at once with its first step and the window is 10 to 12 m (11 m 89 %, 12 m 100 %); rookie
 	// lets anything from 7 m out pass). Drill 21 script 1 takes its distance from here; jam.ctrl.CarryBrakeAtM overrides it.
+	// Lane A153 (R-0058 point 1): all_star's presser stays on its job inside the hunt (JamAI: Opp.Hk.bPressInHunt), so its window is pro's: the stop begins
+	// at 8 m at every level (12 m at all_star before). The level is still asked: a level whose approach changes says its distance here.
 	static double StopAtForLevel(FName Level)
 	{
-		static const FName AllStar(TEXT("all_star")), Rookie(TEXT("rookie"));
-		return Level == AllStar ? 12.0 : Level == Rookie ? 8.0 : 8.0;
+		(void)Level;
+		return 8.0;
 	}
 	// The distance in words a player can use: stick lengths (ReachM = the body's centre to the blade at full reach, UJamSim::SkaterRadius + game.stick.reach_m: 1.6 m). 8 m = "FIVE", 12 m = "EIGHT" (7.5 rounds up).
 	static const TCHAR* StickLengthsWord(double AtM, double ReachM)

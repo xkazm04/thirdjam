@@ -224,6 +224,9 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 		// twenty-seed sample (about 2 points at this share), so any unrelated change to a rookie match would turn the test red for a reason that is not its subject
 		// (lane A125's finding 2; 01:50 above). The budget stays 9.3 %: the measured share plus 2.4 standard errors. With game.contact.check_reach_m 1.0 and the old
 		// press the share is 6.61 % (255 of 3,860); the reach ships at 0.
+		// Lane A154 (CURVE-8.md): on main 4cab387 (lane A132's press, the ladder re-set) the soak's share over 2,000 matches is 0 of 9,849 faceoffs; seeds 1-20 give
+		// 0 of 97. R-0039's rule would set 2.0 % (one faceoff of these 97), but lane A151's check script lands next and A132's tree read 4.44 %: a 20-seed count
+		// is not tightened to one faceoff the hour before the script moves (R-0060; tonight's rule on statistics of a handful of matches). Re-set on A151's main.
 		const int32 Budget = Faceoffs * 93 / 1000;
 		const FString Msg = FString::Printf(TEXT("hockey.regular rookie novice, seeds 1-20: %d of %d faceoffs without a human touch inside 600 frames (budget 9.3 %%: %d)"), Without, Faceoffs, Budget);
 		if (Without <= Budget) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }

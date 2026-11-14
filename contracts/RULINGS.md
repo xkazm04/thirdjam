@@ -697,3 +697,14 @@ the operator's words: "Stationary player can resist most of side tackles"): on, 
 (a check pressed up to six frames after the bodies met still counts) stays off: it is the first thing to turn on if the operator says his checks do not
 land: one number; (4) a check press has no cooldown (RMB every 12 frames keeps the window open): the contact track's next evolution, with the lunge as a
 motion; (5) the HUD's contact line cannot be proven headless (the HUD does not tick without a renderer): the acceptance lane reads it in the window.
+
+## R-0061 (H27, 2026-11-14 03:20): one more curve pass, on the commit that carries the brace, the poke and the brain's one stop distance
+The ladder check (A154) measured main before three things reached it: the standing brace (A151: pro about +1.5), the poke that takes the puck and the miss
+that costs a recovery (A152: pro about +3.2), and all_star's presser inside the hunt (A153). Each is inside the 4-point rule alone; together pro sits about
+five points over its bar. Rulings: (1) **one last pass** by the curve lane on the commit that carries all three, measured with **the instrument the ladder
+was set with** (`JAM_PLAYTESTER_CHECK=closing`: R-0060 point 1), 600 a cell then 2,000 near a bar, targets 85 / 48 / 26 within 3; (2) **at most three profile
+numbers** move (aggression first, speed last; the hunt radius is not a lever: R-0055); law 3 stays a gate at every level (the stop begun at 8 m at 80 % or
+more, a straight charge under 20 %); (3) the lane writes **the two-column table** owed under R-0060 on that commit (the old press and the new press, six
+cells each) and re-sets `Jam.Bot.HumanHasSomethingToDo`'s budget from its own matches; (4) the pass lands **before 07:30** so the operator's package (H28) is
+cut from a measured ladder with its own acceptance run (R-0056); what is not measured by then does not land before he plays; (5) the season is re-read at 200
+a take for the novice after the trim: the ramp of R-0057 holds or the take that breaks it moves one number.

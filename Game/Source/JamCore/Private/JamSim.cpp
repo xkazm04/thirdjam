@@ -682,6 +682,7 @@ void UJamSim::FaceoffReset()
 		S.bBraking = S.bReverseBraking = false;
 		S.PokeWindow = 0;
 		S.bPokeArmed = false;
+		S.StickLockLeft = 0;   // lane A152: a faceoff ends the miss's recovery
 		S.bTouchingPuck = false;
 		S.bHasPuck = false;
 		S.bCentre = false;
@@ -1087,8 +1088,12 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			S.bCheckThisFrame = true;
 		}
 		StepCheckReach(S);   // lane A125 (track F1): an open window bends toward its man (contact.check_reach_m; 0 = off)
-		if (In.bPoke) TryPoke(S);
-		if (In.bLift) TryLift(S);
+		// Lane A152 (track F2, game.stick.miss_recovery_frames): the recovery after a missed poke. While it runs the stick is locked: no poke, no lift, and a
+		// check pressed now or still open is dropped (the skater skates and steers; it does not fall).
+		const bool bStickLocked = S.StickLockLeft > 0;
+		if (bStickLocked) { --S.StickLockLeft; S.CheckWindow = 0; S.bCheckThisFrame = false; }
+		if (In.bPoke && !bStickLocked) TryPoke(S);
+		if (In.bLift && !bStickLocked) TryLift(S);
 	}
 	for (FJamSkaterState& S : Skaters)
 	{
@@ -1538,6 +1543,21 @@ void UJamSim::TryPoke(FJamSkaterState& S)
 	S.bPokeArmed = C >= 0 && Skaters[C].Team != S.Team && FVector2D::Distance(Skaters[C].Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Stick.ReachM + 1.0;
 }
 
+// Lane A152 (track F2, game.stick.poke_assist_deg; R-0059 point 4): the poke reaches. A person's open poke takes a puck an opponent carries when the puck is
+// within the stick's full reach of the poker's body (the furthest a perfectly aimed blade takes from: never further) and within poke_assist_deg of the
+// direction the blade is aimed in. The caller applies the shields, the poker's control and the puck's height as for the blade. 0 = off; bots: never.
+bool UJamSim::PokeReaches(const FJamSkaterState& S, int32 Carrier) const
+{
+	const double Deg = Config.Stick.PokeAssistDeg;
+	if (Deg <= 0.0 || Config.Stick.bPokeRulesOff || !S.bHuman || !Skaters.IsValidIndex(Carrier) || Carrier == S.Index || Skaters[Carrier].Team == S.Team) return false;
+	const FVector2D To = Puck.Pos - S.Pos;
+	const double D = To.Size();
+	if (D > SkaterRadius + Config.Stick.ReachM + Eff(EJamStat::PuckRadius, -1) + PokeTakeM) return false;
+	const FVector2D Aim = (S.BladePos - S.Pos).GetSafeNormal();
+	if (D < 1e-6 || Aim.IsNearlyZero()) return true;
+	return Dot(To, Aim) >= FMath::Cos(FMath::DegreesToRadians(FMath::Min(Deg, 180.0))) * D;
+}
+
 // After the puck moved: an open poke window whose blade reaches the puck takes it; a window that runs out while armed stumbles.
 void UJamSim::ResolvePokes()
 {
@@ -1548,8 +1568,15 @@ void UJamSim::ResolvePokes()
 		// Lane A51 (R-0034): a poke at a carrier that sweeps (the side the puck left) or spins (the body is between) never reaches the puck; the window runs out as a miss.
 		const int32 Ci = CarrierIndex();
 		const bool bShielded = Ci >= 0 && Ci != S.Index && Skaters[Ci].Team != S.Team && IsPokeShielded(S, Skaters[Ci]);
-		if (S.CanAct() && !bShielded && Puck.Z < BladeClearM && FVector2D::Distance(S.BladePos, Puck.Pos) <= R + PokeTakeM)   // lane A77: a puck over the blades is not poked
+		const bool bReached = PokeReaches(S, Ci);   // lane A152: a person's poke reaches for a carried puck inside its stick's reach (stick.poke_assist_deg; 0 = never)
+		if (S.CanAct() && !bShielded && Puck.Z < BladeClearM && (bReached || FVector2D::Distance(S.BladePos, Puck.Pos) <= R + PokeTakeM))   // lane A77: a puck over the blades is not poked
 		{
+			// Lane A152: the blade goes to the puck it reached for (as far as the stick goes), so the figure's stick and the take agree.
+			if (bReached && FVector2D::Distance(S.BladePos, Puck.Pos) > R + PokeTakeM)
+			{
+				const FVector2D To = Puck.Pos - S.Pos;
+				S.BladePos = S.Pos + To.GetSafeNormal() * FMath::Min(To.Size(), SkaterRadius + Config.Stick.ReachM);
+			}
 			const int32 C = CarrierIndex();
 			const bool bFromOpponent = C >= 0 && Skaters[C].Team != S.Team;
 			if (bFromOpponent) Skaters[C].StickHitResult = 1;   // lane A45 read-out: the carrier's PlayStickHit(false)
@@ -1568,7 +1595,17 @@ void UJamSim::ResolvePokes()
 			S.bPokeArmed = false;
 			// Lane A121 (R-0049 point 2): a poke that ran out on a carrier in its take grace costs no stumble (nobody can see the grace: it refuses, it does not punish).
 			const bool bGraceOnly = Ci >= 0 && Ci != S.Index && Skaters[Ci].Team != S.Team && InTakeGrace(Skaters[Ci]);
-			if (!bGraceOnly) S.StumbleFrames = Config.Stick.StumbleFrames;
+			// Lane A152 (game.stick.miss_recovery_frames): a miss costs a recovery, not a fall: the stick is locked for that many frames (the poke's and the
+			// lift's ready frames carry it, so the brain's and the HUD's "can poke" read it without a change). 0 = the stumble, as before. A cut whose
+			// stumble_frames is 0 (hockey.raw: a miss costs nothing) gets no recovery either. A person's miss only: a bot's miss stays the stumble (the carrier's
+			// sweep and stop earn it; stick.bMissRecoveryBots is the measurement's arm).
+			if (!bGraceOnly && Config.Stick.MissRecoveryFrames > 0 && Config.Stick.StumbleFrames > 0 && !Config.Stick.bPokeRulesOff && (S.bHuman || Config.Stick.bMissRecoveryBots))
+			{
+				S.StickLockLeft = Config.Stick.MissRecoveryFrames;
+				S.PokeReadyFrame = FMath::Max<int64>(S.PokeReadyFrame, Frame + 1 + Config.Stick.MissRecoveryFrames);
+				S.LiftReadyFrame = FMath::Max<int64>(S.LiftReadyFrame, Frame + 1 + Config.Stick.MissRecoveryFrames);
+			}
+			else if (!bGraceOnly) S.StumbleFrames = Config.Stick.StumbleFrames;
 			S.PokeResult = -1;
 			Emit(JamEvents::Poke, S.Index, S.BladePos, 0.f, KindMiss, (Ci >= 0 && Skaters[Ci].Team != S.Team ? Skaters[Ci].Pos : S.BladePos) - S.Pos);   // lane A95: Dir toward the carrier
 		}
@@ -3249,6 +3286,7 @@ uint64 UJamSim::StateHash() const
 		// Lane A121: the earned first step and the take grace only while they are up (burst.own_stop false and stick.take_grace_frames 0 hash as before).
 		if (S.bBurstEarned) H.AddI(0x121B);
 		if (S.TakeGraceLeft != 0) H.AddI(S.TakeGraceLeft);
+		if (S.StickLockLeft != 0) { H.AddI(0x152A); H.AddI(S.StickLockLeft); }   // lane A152: the miss's recovery only while it runs (stick.miss_recovery_frames 0 hashes as before)
 		// Lane A128: the rest counter and the spin's recovery only while they are up (burst.rest_frames 0 and spin.recovery_frames 0 hash as before).
 		if (S.RestFrames != 0) { H.AddI(0x128A); H.AddI(S.RestFrames); }
 		if (S.SpinRecoverLeft != 0) { H.AddI(0x128B); H.AddI(S.SpinRecoverLeft); }

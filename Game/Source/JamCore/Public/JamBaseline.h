@@ -43,6 +43,7 @@ namespace JamBaseline
 		G.Contact.LatePressFrames = 0;            // lane A151 (track F1): the late press: a check pressed just after an unpressed body contact is that hit (a rule, no key yet)
 		G.Contact.StandSideBrace = 0.0;           // lane A151 (track F1): the standing skater's brace against a body hit from the side (a rule, no key yet; 0 = stand_brace there too)
 		G.Contact.bBraceExchange = false;         // lane A151: the brace is mass in the skater-to-skater bounce (a rule, no key yet)
+		G.Stick.PokeAssistDeg = 0.0; G.Stick.MissRecoveryFrames = 0; G.Stick.bPlaytesterPokeRead = false;   // lane A152 (track F2, R-0059 point 4): game.stick.poke_assist_deg, game.stick.miss_recovery_frames, the scripted human's poke read (the instrument, no key)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 
@@ -60,10 +61,10 @@ namespace JamBaseline
 	// not a tune key: no pin is an all_star match on the large rink).
 	inline const char* BrainTune(const char* Level = "pro", bool bLargeRink = false)
 	{
-		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
-		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0";
-		return bLargeRink ? "brain2=0;brain3=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
-			: "brain2=0;brain3=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
+		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
+		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;brain4=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0;speed_scale=1.4";   // lane A154: all_star speed 1.4 -> 1.45
+		return bLargeRink ? "brain2=0;brain3=0;brain4=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
+			: "brain2=0;brain3=0;brain4=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
 	}
 
 	// Lane A133 (track C0): the shipped cuts' whistle. Lane A112 took it out of hockey.regular, hockey.arena.wide, hockey.arena.large and the season's takes

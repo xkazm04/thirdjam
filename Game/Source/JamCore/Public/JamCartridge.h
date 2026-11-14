@@ -183,6 +183,25 @@ struct JAMCORE_API FJamStickConfig
 	// a pass, the draw: the puck came to it from somebody else) cannot be poked or lifted for this many frames; a body check still loosens it. 0 = off (the
 	// neutral value: the game before the lane, where device B counted a stick takeaway 1.4 times a second).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeGraceFrames = 30;
+	// game.stick.poke_assist_deg (lane A152, track F2; R-0059 point 4, docs/experiments/MOVEMENT-6.md): the poke reaches. Inside the open window of a skater a
+	// person steers (bHuman), a puck an opponent carries is taken when it is within the stick's full reach of the poker's body (what a perfectly aimed blade
+	// could take, never further) and within this many degrees of the direction the blade is aimed in; the shields refuse it as before. Before, the blade
+	// itself had to be within 0.35 m of the puck on one of the window's frames: an aim that trails a skating carrier by a tenth of a second missed.
+	// 0 = off (the neutral value: the game before the lane). Bots keep the blade rule (their aim's lag is the level's lever).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PokeAssistDeg = 60.0;
+	// game.stick.miss_recovery_frames (lane A152): a miss costs a recovery, not a fall. A person's poke (bHuman) that runs out next to an opposing carrier locks
+	// its stick for this many frames (no poke, no lift, no check; it skates and steers) where it cost stumble_frames without control. 0 = the neutral value: the
+	// stumble. A bot's miss stays the stumble: it is what the carrier's sweep and stop earn (with the recovery for bots too, all_star read -5.5 points on 600).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 MissRecoveryFrames = 20;
+	// Not a cartridge key (lane A152): the instrument. The scripted human (regular and good) presses a poke when it can land: its aim leads its own reaction, and
+	// it does not press into a take grace or a body between. false = the press as it was (every measurement before the lane).
+	bool bPlaytesterPokeRead = false;
+	// Not a cartridge key (lane A152): a test seam. true = the poke as it was before the lane whatever the two keys and the switch above say (the blade rule,
+	// the stumble, the old press). Jam.Core.Movement.PokeNeutral plays one seed with the keys at their neutral values and once more with the keys on and
+	// this seam closed, and asserts the two hashes equal: the neutral values are the game before, with no pinned constant.
+	bool bPokeRulesOff = false;
+	// Not a cartridge key (lane A152): the measurement's arm. true = a bot's missed poke costs the recovery too, where it keeps the stumble.
+	bool bMissRecoveryBots = false;
 	// Not a cartridge key. R-0048 point 2: a teammate never takes a carried puck by touch, under either value of passive_take (a pass is a pass). true brings
 	// back the teammate's touch of the game before lane A102, which the neutral-block tests need to replay older commits' matches hash for hash.
 	bool bTeammateTouchTakes = false;

@@ -757,7 +757,9 @@ namespace JamAI
 			&& W.Skaters[W.PlayerIndex].Team == S.Team)
 		{
 			// Lane A115: the human carries: this mate offers him an open lane beside or ahead (before: it stood between its own net and the puck, behind him)
-			Out = Arrive(Me, OfferLane(W, Id, W.PlayerIndex), Params.ArriveSlowRadius);
+			// Lane A153: in the first frames of his carry the mate nearest his nearest opponent screens it instead (ScreenPoint)
+			FVec2 Sc;
+			Out = ScreenPoint(W, Id, Sc) ? Arrive(Me, Sc, 1.0) : Arrive(Me, OfferLane(W, Id, W.PlayerIndex), Params.ArriveSlowRadius);
 		}
 		else if (Role == ERole::Support && FiveSupport(W, Id, Params.ArriveSlowRadius, Out))
 		{
@@ -1152,7 +1154,27 @@ namespace JamAI
 			bFaceOk = bFaceOk || Fwd.Dot(Dirg) > std::cos(DegToRad(Params.AimConeDeg * 0.9));
 		}
 		const bool bNearWall = std::fabs(Pp.Y) > W.HalfWidth - 2.0 && Dgoal > 6.0;
-		bool bOkShot = bFaceOk && Dgoal < W.ShotReach + K.ShootExtraM && !bNearWall;
+		// Lane A153 (evolution 4, REVIEW-2 item 10): a mate inside MateFinishM with an open lane finishes its chance (JamAICore.h)
+		// bDrive: the lane to the net is open inside the larger of MateFinishM and MateDriveM (the mate keeps the puck and goes); bFinish: inside MateFinishM (it shoots)
+		bool bFinish = false, bDrive = false;
+		const double ZoneM = K.Hk.MateFinishM > K.Hk.MateDriveM ? K.Hk.MateFinishM : K.Hk.MateDriveM;
+		if (ZoneM > 0.0 && Dgoal < ZoneM && Dgoal > 3.0 && !bNearWall && W.CarrierOrHolder() == Id
+			&& W.PlayerIndex >= 0 && W.PlayerIndex != Id && W.Skaters[W.PlayerIndex].Team == S.Team)
+		{
+			const FVec2 Tg = OppGoal - Pp;
+			bDrive = RadToDeg(std::atan2(std::fabs(Tg.Y), std::fabs(Tg.X))) <= 60.0;
+			const double Lane = Dgoal - 3.0;
+			for (int o = 0; o < W.NumSkaters && bDrive; ++o)
+			{
+				if (W.Skaters[o].Team == S.Team || W.Skaters[o].bDown) { continue; }
+				const FVec2 Rel = W.Skaters[o].Pos - Pp;
+				const double Along = Rel.Dot(Dirg);
+				if (Along > 0.0 && Along < Lane && std::fabs(Rel.Cross(Dirg)) < 1.2) { bDrive = false; }
+			}
+			bFinish = bDrive && Dgoal < K.Hk.MateFinishM;
+			if (bFinish && Params.AimConeDeg > 0.0) { bFaceOk = bFaceOk || Fwd.Dot(Dirg) > std::cos(DegToRad(Params.AimConeDeg * 0.9)); }
+		}
+		bool bOkShot = bFaceOk && (Dgoal < W.ShotReach + K.ShootExtraM || bFinish) && !bNearWall;
 		if (bOkShot && K.bClearLane)
 		{
 			// lane A3: no shot into a defender's body; keep carrying instead
@@ -1245,7 +1267,7 @@ namespace JamAI
 				}
 				bRoom = Free > (bSetUp ? 2.0 : 3.0);
 			}
-			if (bRoom && (bSetUp || (Coin < Share && bAheadOrLevel)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)
+			if (bRoom && (bSetUp || (Coin < Share && bAheadOrLevel && !bDrive)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)   // lane A153: a mate that goes to the net passes only to a human set up for the one-timer
 			{
 				bool bClear = true;
 				for (int o = 0; o < W.NumSkaters && bClear; ++o)
@@ -1294,7 +1316,7 @@ namespace JamAI
 			const FJamSpaceRead R = ReadSpace(W, Id, Aim, K.Hk.BetterByM, (bVsHuman && !K.Hk.bReadHumanPressure) ? W.PlayerIndex : -1);
 			const bool bPressure = R.ArriveSec < K.Hk.PressureSec || (R.FirstOpp >= 0 && R.FirstOppDist < 5.0);   // pressure, or the lane closes
 			const bool bWall = R.OnLane >= 2 && R.FirstOppDist < 12.0;
-			const bool bBetter = R.NumBetter > 0 && CarryFrames[Id] >= K.Hk.MinCarryFrames;
+			const bool bBetter = R.NumBetter > 0 && CarryFrames[Id] >= K.Hk.MinCarryFrames && !bDrive;   // lane A153: a mate that goes to the net does not look for a better-placed one
 			const int BestTo = W.Carrier == Id ? W.CarrierBestPass : W.HolderBestPass;
 			const bool bMateOpen = R.NumOpen > 0 && (BestTo >= 0 || (W.Carrier == Id && W.CarrierBestSaucer >= 0));
 			// the human's teammates give it to the open human first (PASSING.md: the sim's pass when the sim would pick the human, else an aimed tap from 8 m)
@@ -1302,10 +1324,10 @@ namespace JamAI
 			const bool bHumanOpen = Hi >= 0 && Hi < W.NumSkaters && W.Skaters[Hi].Team == S.Team && R.bOpen[Hi];
 			// Lane A115: the human open and ahead of the play (2 m up the ice from the puck, or better placed) gets a small preference: when the pass of the
 			// sim would go to another teammate, the carrier turns to him and gives it by the aimed tap, unless pressure makes it pass at once.
-			const bool bHumanAhead = K.Hk.bPassRoom && bHumanOpen
+			const bool bHumanAhead = K.Hk.bPassRoom && bHumanOpen && !bDrive
 				&& ((W.Skaters[Hi].Pos.X - Pp.X) * (OppGoal.X >= 0.0 ? 1.0 : -1.0) > 2.0 || R.bBetter[Hi]);
 			bool bTurnToHuman = false;
-			if ((bPressure || bWall || bBetter || (bHumanOpen && CarryFrames[Id] >= K.Hk.MinCarryFrames)) && bHumanOpen && S.bCanShoot)
+			if ((bPressure || bWall || bBetter || (bHumanOpen && !bDrive && CarryFrames[Id] >= K.Hk.MinCarryFrames)) && bHumanOpen && S.bCanShoot)
 			{
 				const FVec2 To = W.Skaters[Hi].Pos - Pp;
 				if (BestTo == Hi) { bPass = true; }
@@ -1337,6 +1359,15 @@ namespace JamAI
 				const FJamAISkater& Hm = W.Skaters[Hi];
 				return ((Hm.Pos + Hm.Vel * 0.4) - Me).Normalized();
 			}
+		}
+		// Lane A153 (evolution 4): the carry clock of a team without shape jobs (JamAICore.h): after CarryClockS with the puck the carrier moves it or
+		// shoots it at the net; until it faces up the ice it carries on towards the net (Push is the aim).
+		if (K.Hk.CarryClockS > 0.0 && W.CarrierOrHolder() == Id && !bShoot && !bPass && !bDeke && S.DekeFrames <= 0 && S.bCanShoot
+			&& CarryFrames[Id] > static_cast<int>(K.Hk.CarryClockS * 60.0) && TeamSize(W, S.Team) < 5)
+		{
+			const int ClockTo = W.Carrier == Id ? W.CarrierBestPass : W.HolderBestPass;
+			if (ClockTo >= 0) { bPass = true; }
+			else if (Fwd.Dot(Dirg) > 0.5 && !S.bNoShoot) { bShoot = true; }
 		}
 		// R-0019: the carrier takes the puck round any slow-ice circle whose edge comes within 3 m of its straight line to the net
 		if (W.Carrier == Id)
@@ -1643,6 +1674,32 @@ namespace JamAI
 		return Best;
 	}
 
+	bool FJamBrain::ScreenPoint(const FJamAIWorld& W, int Id, FVec2& Out) const
+	{
+		const FJamHockeySense& H = SkillOf(W, Id).Hk;
+		const int Hi = W.PlayerIndex;
+		if (H.ScreenFrames <= 0 || Hi < 0 || Hi >= W.NumSkaters || W.CarrierOrHolder() != Hi || CarryFrames[Hi] >= H.ScreenFrames || W.Skaters[Hi].Team != W.Skaters[Id].Team) { return false; }
+		const FVec2 Hp = W.Skaters[Hi].Pos;
+		int Opp = -1;
+		double Bd = 8.0;
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			if (W.Skaters[o].Team == W.Skaters[Id].Team || W.Skaters[o].bDown) { continue; }
+			const double Dd = W.Skaters[o].Pos.DistTo(Hp);
+			if (Dd < Bd) { Bd = Dd; Opp = o; }
+		}
+		if (Opp < 0 || Bd < 1.5) { return false; }   // nobody near him, or the opponent is on him already: no room to stand between
+		const FVec2 Op = W.Skaters[Opp].Pos;
+		const double Mine = W.Skaters[Id].Pos.DistTo(Op);
+		for (int m = 0; m < W.NumSkaters; ++m)
+		{
+			if (m == Id || m == Hi || W.Skaters[m].Team != W.Skaters[Id].Team || W.Skaters[m].bDown || W.Skaters[m].Role == ERole::Back) { continue; }
+			if (W.Skaters[m].Pos.DistTo(Op) < Mine - 1e-9) { return false; }   // a nearer mate screens; this one offers a lane
+		}
+		Out = Op + W.Skaters[Opp].Vel * 0.2 + (Hp - Op).Normalized() * 1.2;
+		return true;
+	}
+
 	bool BodyShields(const FJamAIWorld& W, int Poker, int Carrier)
 	{
 		if (!W.bBodyShield || Poker < 0 || Carrier < 0 || Poker >= W.NumSkaters || Carrier >= W.NumSkaters) { return false; }
@@ -1834,7 +1891,12 @@ namespace JamAI
 			const double Side = std::fabs(Cp.Y) > 3.0 ? -Sign(Cp.Y) : (Me.Y >= Cp.Y ? 1.0 : -1.0);
 			T = Cp + FVec2(-Up * 4.0, Side * 6.0) + Vc * 0.4;
 			// Lane A115: the human carries: his close support stands where his pass lane is open (beside or ahead), not at a fixed spot behind him
-			if (SkillOf(W, Id).Hk.bSupportHuman && bCarrier && C == W.PlayerIndex) { T = OfferLane(W, Id, C); }
+			if (SkillOf(W, Id).Hk.bSupportHuman && bCarrier && C == W.PlayerIndex)
+			{
+				FVec2 Sc;
+				if (ScreenPoint(W, Id, Sc)) { Out = Arrive(Me, Sc, 1.0); return true; }   // lane A153: the screen is played on its spot (no 7 m of room from the puck)
+				T = OfferLane(W, Id, C);
+			}
 			bLanes = true;
 			break;
 		}
