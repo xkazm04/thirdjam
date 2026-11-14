@@ -1,0 +1,1 @@
+AR4, Blender mock-up (not the engine): the game camera 12 m inside the side boards, without (top) and with (bottom) the wall dressing. Only posts, girts and cross-braces show, over the stands: 3.0 % of the frame at mean luma 28; the windows sit above the frame. The ice's mean luma moves by 0.02 %.
