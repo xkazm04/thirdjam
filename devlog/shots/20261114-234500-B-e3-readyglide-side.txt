@@ -1,0 +1,1 @@
+E3 GPU, clay, 1 m/s, both with the aim layer on (SetStickAim 0, 1.2): left the carrier (Glide), right a skater without the puck (Ready_Glide in its place): knees deeper and lower hips; blade on the ice on both (no blade under the ice on the GPU).
