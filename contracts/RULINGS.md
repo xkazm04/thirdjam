@@ -819,3 +819,30 @@ held cross-check row waits for its man to be on his feet; the ship row presses R
 played on a Development package alone before a release is cut (`q-landA3.sh`'s second half), which is how H33 was proven.
 (7) **H33** (17:45, main ea0c3b7a) is the verified fallback. The package at the freeze is cut from the last landing; if its acceptance run is red at
 20:00, H33 is what the operator plays and the red row is the first fault of the night.
+
+## R-0067 (14 Nov, 20:25): the operator played H34: "effectively unplayable"; the freeze is lifted for three goals; both devices work the night
+
+His words, verbatim: "1. AI is the main flaw, it does not try to play hockey to achieve a goal, all teammates/oponents are not interested in game,
+disengaged. They want to pass but no pass reaches the end (inprecise direction or speed), passess need to be able to be hold enough to cross 1/3 of
+arena length on max, shoot speed should double 2. Puck does not stick with players, it moves through them without locking 3. Tackles/Crosschecks are
+difficult to land as they need to land to thin space of the player, crosscheck has bug in animation displaying technical blue rectangle instead of
+animating player with stick into its position. Tackle is also unrecognizable and animation too quick ... the game itself does not look bad, but
+effectively is unplayable and both devices need to work towards these goals overnight intensively to perfect the game"
+
+The Director's rulings on it:
+(1) **The freeze of 20:00 is lifted for these goals and for nothing else.** Five lanes on device A (briefs A206 to A210, the night's rules in
+`briefs/NIGHT-COMMON.md`), device B by `handoff/A-to-B-0032.md`. Packages about 23:45, 03:15 and 07:00, each through the acceptance run.
+(2) **The operator's eye is the bar.** The day measured the game with scripted players and a win-rate ladder and shipped a game its player called
+unplayable: the ladder was on target at every level while the skaters looked asleep, the passes died and the hits missed. Tonight every lane states
+what a person sees or feels, measures that, and proves it moved. The ladder (85 / 48 / 26) is re-set last, on the game that plays.
+(3) **A level is easy by clumsiness, never by absence.** Rookie's bots want the puck and the net as pro's do; they are slower to release, wider in
+aim, later to read. The numbers of LADDER SET 1 and 2 that made rookie's opponents absent are the brain lane's to undo.
+(4) **His three orders that are numbers are taken as given:** a full-hold pass crosses at least a third of the rink's length; the shot's speed
+doubles; the hit lands when a person facing a man presses. Where an order breaks something measurable, the thing it breaks is fixed.
+(5) **Law 3 stays the one design gate** (a stop begun at 8 m beats a charging defender; a straight charge does not): a hit that finds its man must
+not turn a beaten charge into a hit.
+(6) **What the operator called a bug in the cross-check** is, by the Director's reading, A's own mark: a team-coloured streak drawn on the stick and
+across the chest by today's hits lane, over a figure left on a stand-in lean. The marks go; the figure does the hitting with device B's takes; the
+human's wind-up becomes 8 frames with a buffered press. (To be confirmed by lane A210 in its first hour.)
+(7) **A correction of the record:** the freeze landing's message and A-to-B-0031 say dev-b was merged at 65d347b8. It was not (the merge stopped on
+a staged file of the Director's and the script went on); H34 carries dev-b as of a5e48823. Merged with the commit that carries this ruling.
