@@ -33,3 +33,32 @@ Stills to keep (`devlog\shots\<yyyymmdd-hhmmss>-B-e2-<what>.png`, each with a ca
 **Not filmable yet:** the brace's hit, where a `check` bus event for the skater arrives while held. The figure plays `CrossCheck_Release` instead of a check take.
 The game's scripted human does not brace on this tree, because no human input reaches `bCrossHold` before the controls lane lands.
 In a match with braces on, look for the log line `E2 cross release why 2`.
+
+## Job 5 additions: the pickups and the equipped set (14:55 onward)
+
+**The pickups at 25 m and 45 m from the real game camera.** Scripts are in the E2 lab folder above. Never save the map.
+1. Start a play session on `Rink` with the clay cartridge, the game's own camera, and no test camera.
+2. Run `run pickcam.py` and keep its output (`[[x,y,z],pitch,yaw,fov]`; headless gave `[[77,996.5,350],-17.65,38.12,70]`).
+3. Stop the session.
+4. In the editor world, run `run pickput.py "MODE='put'" "CAM=<that output>" "DISTS=[25,45]"`. It places two rows of the six `SM_Boost_*` (speed, precision, heavy_puck, big_puck, reverse_other, custom) across the ice. The rows are 25 m and 45 m from the camera down the rink's long axis, spaced 2.5 m, each pickup turned 30 deg more than the last. Use `DIRX=-1` for the other way.
+5. Start the session again and capture from the game camera with the human facing down the rink.
+   - From a camera near centre ice, the 45 m row may reach the end boards. Start with the human near his own blue line facing the far end.
+   - A188 puts the real pickups on a pedestal of light, scaled to 0.8 m. These rows are the bare meshes at scale 1 (64 to 83 cm tall), standing on the ice.
+6. Clean up with `run pickput.py "MODE='clear'"`.
+
+What must be seen: each of the six told apart by shape and colour at 25 m, and at 45 m. What must never be seen: two kinds that read alike, or a pickup reading as a weapon.
+
+**The four equipped props on a skating figure.** Session `fa_Q`, runner `tx.sh <name> Q` with `NREC=280`.
+- Figure `M` skates at 6 m/s with all four equipped from tick 10; the shield goes off at tick 250.
+- Figures G0 to G3 loop `Glide`, S0 to S3 loop `Stride`, one kind each.
+- K0 to K3 wear one kind each and are knocked down on tick 40 (110 frames, up on 150).
+
+What must be seen:
+- the keg high on the upper back, about 1 to 2 cm off the jersey
+- the yellow bumper on the left back of the hips
+- the green round shield on the back
+- the snowflake crest on the helmet
+- every prop gone from the knockdown's second frame until after the get-up (measured: hidden 41 to 150, shown again on 151)
+
+What must never be seen: a prop through the jersey or the arms in Glide and Stride; a prop under the ice.
+Stills: M from behind, from the side and from the game camera; K0 on tick 80, which must show no keg.
