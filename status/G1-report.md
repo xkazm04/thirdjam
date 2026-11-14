@@ -1,5 +1,65 @@
 # G1 report: the GPU lane (device B)
 
+# Hand-back 4 (16:14): neon on the modes, the menu scene, the backdrop in A's menu
+
+Machine clock 15:51 to 16:14. `git merge --no-edit dev-b` (clean, to 02bf9732), build PASS (147 s), `GPU-FREE.txt` (E2's) deleted at the start. Editors: pid 2752 (left through `ExitEditor` with discard after an accident, below), pid 27756 (**crashed at 16:12** when the play session on A's `Menu.umap` was stopped: below). No editor of mine runs now; pid 14124 is not mine and was not touched. `GPU-FREE.txt` written ("free from G1 at 16:13"). Cvars live only in the crashed process; nothing persistent was changed.
+
+**An accident, repaired (say it plainly):** my first scripted attempt at the menu scene saved into the wrong maps: `/Game/Maps/Rink.umap` (A's) got a camera, a player start and a game-mode override, and `Rigs/LR_P3_Clay.umap` got the camera and player start (the streamed sub-level had become the current level). Both files are **restored byte-exact from their HEAD LFS objects** (`.git/lfs/objects/15/f2/15f24952...` for Rink, `22/e7/22e78c09...` for the clay rig); `git status` shows neither as modified. Nothing of it was committed or cooked.
+
+## 1. Done / not done
+- **Done: 1, neon on Cage, Bruisers and Glass House.** One fix: the board line becomes a frame round the grid (see below), because on Cage (60 x 28; the rig scales by length, so it is 30 m wide there) the old board-foot line would have run 1 m outside the long boards.
+- **Done: 2, job 4, `Maps/L_MenuScene`**: opens cleanly, plays, and shows the backdrop's picture live from the actor `MenuCamera` (tag `MenuCamera`).
+- **Done: 3, the backdrop in A's real menu**: landing and home stills from A's `Menu.umap` in this build.
+
+## 2. Items
+**Neon on the modes** (each forced by a copy of its mode cartridge passed to `jam.Cut`, frozen at the drop; game camera, a high corner and top-down):
+- The grid's clip moved from 2.0 to 2.3 m inside (base units), and the old board-foot line (80 cm inside) became a **frame line 2.2 m inside** the 90 x 45 outline (corner 2 m). Scaled: Glass House 2.2 m from the boards all round; Bruisers (56 x 28, scale 0.622) 1.37 m; Cage (60 x 28, scale 0.667) 1.45 m at the ends and 0.46 m at the long sides. Seen inside the boards on all three (top-down stills), nothing crossing out.
+- Cage's four pillars: the lattice runs under them and the pillar hides it; nothing reads wrong at the game camera. Glass House's penalty boxes stand outside the boards, untouched by the grid.
+- `LR_L3_Neon.umap` and the three `MI_Neon_*` re-saved by the rebuild (same values; the MIs differ by a few bytes of GUIDs).
+
+**`Maps/L_MenuScene`** (5,521,480 bytes): a `RinkActor` (`Menu_Rink`) built **in the editor** with `Build()` for 90 x 45, corner 3.75, goal 4 m, tier `p3_clay` and saved with the map (its procedural sections persist: reloaded and counted: Ice 1, Markings 4, Boards 1, KickPlate 1, Trim 1, TrimOrange 1, ...); `LR_P3_Clay` streamed as an always-loaded sub-level (barn, crowd, lights, its `BP_LookParams` sets `MPC_Look.Clay` 1); `MenuCamera` (CameraActor, tag `MenuCamera`, auto-activate for player 0) at camera C (x 900, y -2300, z 380, pitch +3, yaw 90, FOV 90) with the backdrop's grade in its post-process (exposure -0.5, vignette 0.6, 5200 K, saturation 0.9); `PlayerStart_Menu` behind the camera; world settings game mode `GameModeBase` (no match, no figures). In a play session the view is `MenuCamera`, the game mode `GameModeBase`, the picture the backdrop's frame live (crowd moving), a little darker in the roof than the still (the still was rendered in a match world).
+- For device A: the rink in the map is a built copy, not A's runtime build: if A changes the rink's look, the menu map needs a rebuild (open, `Menu_Rink.build(cfg)`, save) or A builds it at runtime instead. The map is not on the cook list (A adds it when it opens it).
+
+**The backdrop in A's front end** (`Menu.umap`, `AJamMenuGameMode`, shot with `shot showui` at 1920 x 1085, cropped): the backdrop sits under A's scrim on the landing and the home screens; the home screen reads well (panels clear, the barn quiet behind them). On the landing, the frosted HOKEJ logo is partly see-through, so the stand band and lamps show through the letters: legible, but a darker scrim on the landing (or an opaque logo) would make it cleaner: device A's / the UI lane's call.
+
+**The crash (for device A, likely ours, not yours):** stopping the play session on `Menu.umap` asserted in `PlayLevel.cpp:558` ("GameInstance from PIE level still referenced"): the editor's undo buffer held a `TextBlock` of `JamMenuWidget`. I drove the menu with `jam.menuscreen` through the MCP Python tool, which runs inside an editor transaction, so A's `SetText` was recorded in the undo buffer. Probably not seen when the menu is played by hand; if A's QA drives `jam.menuscreen` through Python in PIE, run it with the console tool instead. Crash dumps: `Game\Saved\Crashes\UECC-Windows-A8FF...`.
+
+**Stills** (each with a `.txt` caption):
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-160000-B-g1-neon-modes-sheet.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-160001-B-g1-neon-cage-gamecam.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-161300-B-g1-menuscene-live.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-161400-B-g1-amenu-landing-backdrop.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-161401-B-g1-amenu-home-backdrop.png`
+
+**What I looked at (Read tool):** Cage top-down and game camera; the six-panel modes sheet; the menu scene's live frame; A's landing and home frames.
+
+## 3. Not verified
+- Neon at a running match on each mode (frozen at the drop only); Glass House with a boxed figure lit.
+- `L_MenuScene` cooked or loaded in a packaged game; its cost.
+- The rink copy against later rink changes by A.
+
+## 4. For device A
+- `/JamAssets/Maps/L_MenuScene` ready to open; camera found by the tag `MenuCamera`; needs a `+MapsToCook` line when used.
+- Tier `l3_neon` unchanged in name; the frame line change is in the same rig file.
+- The landing logo over the backdrop (see above); the transaction crash note.
+
+## 5. Decisions for the operator
+- None new.
+
+## 6. Next three steps
+1. Device A: wire `L_MenuScene` behind the menu (or keep the still); cook line.
+2. Neon in a running Cage match (pillars and the lattice in motion).
+3. A darker landing scrim if the operator finds the logo busy.
+
+## 7. Ledger rows
+| Game/Plugins/JamAssets/Content/Maps/L_MenuScene.umap | map | 5.27 | original | UE 5.9 editor via MCP/Python (scratch mkmenu3.py) |  |  | 2026-11-14 | B | y | the menu scene: RinkActor Menu_Rink built in the editor (90x45, corner 3.75, p3_clay) and saved with its sections, LR_P3_Clay streamed always-loaded, CameraActor MenuCamera (tag MenuCamera, auto-activate player 0) at backdrop camera C with its grade, PlayerStart_Menu, game mode GameModeBase; no figures; seen live on the GPU (lane G1) (5521480 bytes) |
+| Game/Plugins/JamAssets/Content/Rigs/LR_L3_Neon.umap | map | 0.15 | original | UE 5.9 editor via MCP/Python (scratch neon.py) |  |  | 2026-11-14 | B | y | the neon tier's rig (l3_neon): PPV_L3_Neon, Sky_L3_Neon, Spot_L3_Neon_1-4, Fog_L3_Neon; a lattice of lilac light lines on the ice at +/-30 deg 4 m apart clipped 2.3 m inside the boards, a 28-segment orchid frame line 2.2 m inside, four dark hall walls with magenta lines; no collision; seen on the GPU on the regular rink, Cage, Bruisers and Glass House (lane G1) (160712 bytes) |
+| Game/Plugins/JamAssets/Content/Look/MI_Neon_Grid.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | instance of M_Trim, TeamColour lilac (0.60, 0.45, 1.0), Emissive 2.5; the ice lattice of LR_L3_Neon (lane G1) (7566 bytes) |
+| Game/Plugins/JamAssets/Content/Look/MI_Neon_BoardLine.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | instance of M_Trim, TeamColour orchid (0.85, 0.35, 1.0), Emissive 20; the frame line of LR_L3_Neon (lane G1) (7706 bytes) |
+| Game/Plugins/JamAssets/Content/Look/MI_Neon_WallLine.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | instance of M_Trim, TeamColour magenta (1.0, 0.15, 0.6), Emissive 10; the hall wall lines of LR_L3_Neon (lane G1) (7975 bytes) |
+
+---
+
 # Hand-back 3 (15:20): job 3, the neon arena
 
 Machine clock 14:58 to 15:20. The editor was restarted once to drop the dirty `Rink` map (pid 10980 left through `ExitEditor` with discard; new pid 40588), and at the end left through `ExitEditor` (see the hand-back message). Cvars put back: `jam.Cut hockey.regular`, `r.Editor.Viewport.OverridePIEScreenPercentage 1`. No dirty package at the end. Builder script: scratch `g1\neon.py` with `g1\params.txt` (re-runnable: it clears the rig map and rebuilds it).
