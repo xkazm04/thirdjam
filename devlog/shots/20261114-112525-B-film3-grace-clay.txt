@@ -1,0 +1,1 @@
+Shot 3, clay, 6 m/s treadmill, SetTakeGrace(true,30) at tick 230: the shoulders turn over the stick side from 233 to about 250, back by 256. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

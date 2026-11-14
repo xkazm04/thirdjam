@@ -1,0 +1,1 @@
+Shot 10, clay: EndDash(1) and SetBraking(true) at 340, braking released at 407. Dash_Skid_Left is held on its frames 7 to 9 (largest one-frame step 1.0 cm). NS_dash_skid shows as grey dabs behind the skates from 344 to about 355. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.
