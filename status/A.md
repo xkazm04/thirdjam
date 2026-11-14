@@ -446,3 +446,5 @@
 - link green 05:37: main c5dc15e5 (No black post at the faceoff (A168), two marks on the ice before the knockdowns a player c) pushed.
 - package 05:46: `Hokej_Hokej_H28.zip` from main c5dc15e5, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 05:57: main ca493723 (Rules that wait switched off, measured for the operator's answers: a mashed check lands no) pushed.
+- link green 06:07: main 2d159065 (The stop mark lights where the stop works (Director, from REVIEW-3's sweep), and the play ) pushed.
+- package 06:27: `Hokej_Hokej_H29.zip` from main 2d159065, acceptance run green (18 verbs through the cursor and the buttons).

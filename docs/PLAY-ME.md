@@ -4,7 +4,7 @@
 folder, run the exe. If Windows asks about the firewall, that is the joined match's socket: Cancel is fine for solo play.
 **Do not play H27** (its PLAY NOW built the match twice, played pro whatever was lit and drew a black rink: found in a real window at 03:50, fixed and
 verified in a real window at 04:30; the acceptance run now photographs the frame and fails on a black one) **nor H28** (its stop mark lit too early: obeying it
-at pro lost the feet half the time; found by the design review at 06:00, one constant).
+at pro failed half the time and cost the feet one try in four; found by the design review at 06:00, one constant).
 The Development twin with the drills and the console is `Game/Packaged/Accept_H29`.
 
 ## What changed since the package you last played (H26, Friday 19:46)
@@ -38,7 +38,7 @@ The Development twin with the drills and the console is `Game/Packaged/Accept_H2
   86 / 52 / 29 (R-0060).
   Tell the Director which you are: the curve follows your answer today.
 - **The stop works from 8 m**, the distance from the centre to a winger at a faceoff: five stick lengths, at every level (200 of 200 at each). At pro, from 3 to 6 m it
-  gets you flattened, and from 12 m or more it fails half the time: the window is 7 to 9.5 m. At rookie almost any stop works.
+  gets you flattened, and from 12 m or more it fails half the time: the window is 8 to 9.5 m. At rookie almost any stop works.
 - **Mashing RMB beats timing it today** (measured: about 20 hits a match against 4.6, and four points more wins at pro): a press costs nothing. A cooldown
   and a lunge that fix it are built and switched off, waiting for your word (see the last section).
 
@@ -46,7 +46,8 @@ The Development twin with the drills and the console is `Game/Packaged/Accept_H2
 
 1. **A first match on the regular cut at rookie.** Does the first minute explain itself? Is the rink what you want a stranger to see first?
 2. **The stop-and-go.** Carry at a defender, press **S against your motion** (or hold **Ctrl**) when the chalk ring ahead of you turns his colour (he is then six
-   to eight stick lengths away and closing; when he reaches the ring it is too late), then go the other way. At pro it
+   to eight stick lengths away and closing: count a beat, then stop: in a head-on rush an instant press still begins too far out; press before he is
+   past the ring: a stop begun as he reaches it works every time), then go the other way. At pro it
    should work nearly every time from there, and never if you just charge. `jam.ctrl.Drill 21` in the Development package (`Accept_H29`, the console on the tilde key) stages it and says the distance on
    screen. This is the game's central skill: does it feel like one?
 3. **Two hits.** Skate beside an opponent at his speed and check him (RMB): a nudge. Then hit one head-on at full speed: he goes down. Same button.
@@ -83,7 +84,8 @@ Enter still plays.
   puck or at nothing costs nothing and shows nothing. Measured, never yet seen by an eye in a window.
 - **Glass House**: the penalty box is below the camera's picture, so you never see the boxed skater sit; its look (blue ice, a dark hall) is another game's.
 - In corners the camera looks down steeply. The attacked net can be out of frame inside the blue line when you work the boards.
-- A good player wins Cage, Fog of War and Power Play nine times in ten; Sniper is hard on a newcomer (one in ten).
+- A good player wins Fog of War and Power Play nine times in ten (Cage 83 %); a newcomer wins Shotgun one time in ten (Sniper one in four) and waits for
+  the puck in the Marathon.
 - Device B's goal effect did not show on the ice in the window check. The pad's walk through the menu could not be proven on this machine (a foreign
   Windows Security window held the foreground all night): if a pad direction does nothing on a menu, say which.
 - Commentary: 412 lines are recorded; whether you hear them all depends on B's audio at this commit: say if the booth is silent.
