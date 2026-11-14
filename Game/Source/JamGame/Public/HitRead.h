@@ -1,0 +1,189 @@
+// Lane A196 (track F3, evolution 9, R-0064 point 5, docs/experiments/HITS.md): "a hit is read by an eye that was looking elsewhere".
+// Presentation only: everything here reads the sim's state and events after a step and writes nothing back (the default match's hash is untouched).
+//   BEFORE (jam.hit.Tell): a pressed body check shows a chevron of light on the ice 1.4 to 2.4 m ahead of the checker (outside the HUD's rings): it slides out over the wind-up (loading),
+//     is bright through the check window (the lunge), and goes out grey when the window runs out on nobody (a miss reads as a miss: the lunge, no burst).
+//     A pressed cross-check shows a streak across the stick (chest height) through its wind-up, thrust forward on the shove's frame. A held cross-check
+//     (bCrossBraced) holds the streak across the chest and an arc on the ice in front, brighter with speed.
+//     jam.hit.Lean: while the figure lacks device B's PlayCheckWindup / SetCrossCheckHold, the drawn figure (the skater actor, never the sim) leans:
+//     back over the wind-up, forward through the window, back to upright over 8 frames. B's takes, when the figure declares them, stand it down.
+//   AT CONTACT (jam.hit.Burst): at the contact point a ring on the ice that grows to BurstRadiusM(closing speed) and a fan of shards out from the hit,
+//     away from the victim's fall (nothing over a downed figure); a braced hit has a second ring and more shards. One JAMHIT line a hit and a miss.
+//     The camera kick (CameraFollow, jam.hitkick) and the hit-stop (jam.hitstop) already answer the human's hits; the sound is the binder's MS_check.
+//   AFTER (jam.hit.Down): a downed skater lies in a ring of 12 bars on the ice round his body that go out one by one as his down frames run out
+//     (a countdown an eye reads; on the ice only: nothing over the figure). (jam.hit.PuckFlash): a puck stripped by a stick lift flashes a ring.
+//   PROOF (jam.hit.Capture N): a still every sim frame from each of the human's presses to 30 frames after its contact or miss, N strips a kind.
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "JamSim.h"
+#include "HitRead.generated.h"
+
+class AJamSkater;
+class UStaticMeshComponent;
+class UMaterialInstanceDynamic;
+
+// One bar of light: a box CentreCm (world), turned YawDeg about Z then PitchDeg, SizeCm (along, across, tall), in Colour at Emissive.
+struct FJamHitBar
+{
+	FVector CentreCm = FVector::ZeroVector;
+	float YawDeg = 0.f;
+	float PitchDeg = 0.f;
+	FVector SizeCm = FVector(10.0);
+	FLinearColor Colour = FLinearColor::White;
+	float Emissive = 1.f;
+	uint8 Layer = 0;   // EJamHitLayer: which element drew it (tests and the probe)
+};
+
+enum class EJamHitLayer : uint8 { Tell = 1, Streak = 2, Brace = 3, Burst = 4, Shard = 5, Down = 6, PuckFlash = 7 };
+
+// What a press came to (the JAMHIT line's result).
+enum class EJamHitResult : uint8 { None, Bump, Stumble, Down, Miss, Strip };
+
+// The pure part: fed every sim frame (skaters' state after the step, the frame's events), it keeps the presses, the hits and the downs; Draw turns them
+// into bars for a render frame. No world, no UObject: the tests run it on hand-made states.
+class JAMGAME_API FJamHitReadModel
+{
+public:
+	static constexpr int32 MissFadeFrames = 12;
+	static constexpr int32 BurstFrames = 14;
+	static constexpr int32 FlashFrames = 18;
+	static constexpr int32 LeanBackFrames = 8;
+	static constexpr int32 DownSegments = 12;
+	static constexpr double DownRingRadiusM = 1.5;    // the oval round a lying figure: along his body (centred on its middle)
+	static constexpr double DownRingSideM = 0.95;     // and across it
+	static constexpr double DownBodyM = 1.7;          // a lying figure's length from the skates along the fall
+	static constexpr double DownBodyHalfWideM = 0.35;
+	static constexpr double TellNearM = 1.4;    // the chevron's tip: from here at the press (outside the HUD's YOU and carrier rings, ~1 m) ...
+	static constexpr double TellFarM = 2.4;     // ... to here when the wind-up is done
+	static constexpr double BraceRadiusM = 1.35;
+
+	// The burst's ring radius for a hit's closing speed (m/s): 0.8 m at a soft touch to 3.0 m at 14 m/s and over; a braced hit x 1.2.
+	static double BurstRadiusM(double ClosingMps, bool bBraced);   // 1.2 m at a soft touch to 3.0 m at 14 m/s
+	// The shards: how many, and whether a direction (unit, rink plane) may carry one for a victim falling along FallDir (none inside 55 degrees of it).
+	static int32 ShardCount(bool bBraced) { return bBraced ? 10 : 6; }
+	static bool ShardAllowed(const FVector2D& ShardDir, const FVector2D& FallDir);
+	// The countdown: bars still lit for a skater with FramesLeft of Total down frames (12 at the fall, 0 when he gets up).
+	static int32 DownBarsLit(int32 FramesLeft, int32 Total);
+	// The lean of the drawn figure (degrees, + = top back) Since frames after a check press with Windup frames of wind-up and Window frames of window.
+	static float CheckLeanDeg(int32 Since, int32 Windup, int32 Window, int32 EndedAt);
+
+	struct FPress
+	{
+		int32 Skater = -1;
+		int32 Team = 0;
+		bool bCross = false;
+		bool bHuman = false;
+		int64 PressFrame = 0;
+		int32 Windup = 0;
+		int32 Window = 0;          // body check: the window's frames (12 human, 6 bot)
+		int64 EndFrame = -1;       // the frame it landed or missed (-1 running)
+		EJamHitResult Result = EJamHitResult::None;
+		bool bStripped = false;    // a cross-check's stick took the puck on the press
+	};
+	struct FBurst
+	{
+		FVector2D AtM = FVector2D::ZeroVector;
+		FVector2D DirM = FVector2D(1, 0);     // checker -> victim
+		FVector2D FallM = FVector2D::ZeroVector;   // the victim's fall when the hit downed him (zero: he stays up)
+		int64 Frame = 0;
+		double RadiusM = 1.0;
+		bool bBraced = false;
+		FLinearColor Colour = FLinearColor::White;
+	};
+	struct FDown
+	{
+		int32 Skater = -1;
+		int32 Total = 0;
+		int32 Left = 0;
+		FVector2D DirM = FVector2D(1, 0);
+	};
+	struct FFlash
+	{
+		int64 Frame = 0;
+	};
+	// One line a hit or a miss (the acceptance run reads JAMHIT).
+	struct FHitLog
+	{
+		int64 Frame = 0;
+		FString Kind;              // check | cross | braced
+		EJamHitResult Result = EJamHitResult::None;
+		int32 Checker = -1, Victim = -1;
+		bool bHuman = false;
+		double ClosingMps = 0.0;
+		double BurstM = 0.0;
+		int32 Windup = 0;
+		int32 PressToContact = -1;
+	};
+
+	// After a sim step. SkaterSpeed: game.skater.speed (a check event's Strength is closing / it). TeamColours: the burst and the tells take the checker's.
+	void Step(int64 Frame, const TArray<FJamSkaterState>& Skaters, const TArray<FJamSimEvent>& Events, double SkaterSpeed, const FLinearColor TeamColours[2]);
+	void Reset();
+
+	// The bars for a render frame. SkaterAtCm / SkaterYawDeg: where each skater is drawn (the figure's interpolated place; index = sim index).
+	// PuckAtCm: the drawn puck. The cvar switches are passed in so the tests choose them.
+	struct FDrawSwitches { bool bTell = true; bool bBurst = true; bool bDown = true; bool bFlash = true; float Scale = 1.f; };
+	void Draw(double FrameF, const TArray<FVector>& SkaterAtCm, const TArray<float>& SkaterYawDeg, const FVector& PuckAtCm, const FDrawSwitches& Sw, TArray<FJamHitBar>& Out) const;
+	// The figure lean for skater I this render frame (degrees, + = top back); 0 = upright.
+	float LeanFor(int32 I, double FrameF) const;
+
+	const TArray<FHitLog>& GetFrameLogs() const { return FrameLogs; }
+	const TArray<FPress>& GetPresses() const { return Presses; }
+	const TArray<FBurst>& GetBursts() const { return Bursts; }
+	const TArray<FDown>& GetDowns() const { return Downs; }
+	// Running counts (the probe line): hits by result, misses, bursts drawn.
+	int32 Hits = 0, Misses = 0, Strips = 0;
+
+private:
+	TArray<FPress> Presses;     // the live ones and the recently ended (kept while their fade or lean runs)
+	TArray<FBurst> Bursts;
+	TArray<FDown> Downs;
+	TArray<FFlash> Flashes;
+	TArray<FHitLog> FrameLogs;
+	TArray<bool> Braced;        // per skater: braced this frame
+	TArray<double> BracedSpeed;
+	TArray<int32> Teams;
+	TArray<bool> Down;          // per skater, for the drawing (down skaters show no tells)
+	int64 LastFrame = -1;
+	FLinearColor Colours[2] = { FLinearColor(1.f, 0.4f, 0.05f), FLinearColor(0.05f, 0.3f, 1.f) };
+};
+
+UCLASS()
+class JAMGAME_API AJamHitRead : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	AJamHitRead();
+
+	// The game mode's two calls: after each sim step (once the pawns applied it) and each render frame (after the figures' ApplyRender). They make the
+	// actor on first use (Slot holds it). Null world or sim: nothing.
+	static void StepSim(UWorld* World, const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters, TObjectPtr<AJamHitRead>& Slot);
+	void Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters, const FVector& PuckAtCm, double FrameF);
+
+	// 0 off, 1 (default) while the figure lacks device B's take, 2 always.
+	static int32 LeanMode();
+	static constexpr int32 PrewarmBars = 96;
+	// True when the figure declares a function of that name (device B's takes: PlayCheckWindup, PlayCrossCheck, SetCrossCheckHold).
+	static bool FigureHas(UObject* Figure, const TCHAR* Function);
+
+	const FJamHitReadModel& GetModel() const { return Model; }
+	int32 GetBarsDrawn() const { return BarsDrawn; }
+
+private:
+	void Capture(const UJamSim* Sim);
+	void ApplyBars(const TArray<FJamHitBar>& Bars);
+
+	FJamHitReadModel Model;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Hit") TObjectPtr<USceneComponent> Root;
+	UPROPERTY(Transient) TArray<TObjectPtr<UStaticMeshComponent>> Pool;
+	UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> PoolMids;
+	TArray<FLinearColor> PoolColour;
+	TArray<float> PoolEmissive;
+	int32 BarsDrawn = 0;
+	// The capture (jam.hit.Capture): the human's press being filmed, the frame it stops, strips taken a kind.
+	int64 CaptureFrom = -1, CaptureUntil = -1;
+	FString CaptureKind;
+	TMap<FString, int32> CapturesPerKind;
+	TArray<bool> LeanApplied;
+};

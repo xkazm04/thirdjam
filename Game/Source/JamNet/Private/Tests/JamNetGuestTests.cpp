@@ -624,4 +624,38 @@ bool FJamNetGuestSites::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A204 (track N1, FAULT 4): the pause card in a joined match. Before, Esc paused this machine's world (SetGamePaused through the game mode's
+// AllowPausing, true standalone), its lockstep stopped and the other machine called the connection lost 3.1 s later (lane A198, two processes, 2 of 2).
+// The Director's ruling: online the world never pauses (the card opens over a match that goes on) and the paused seat sends neutral input; single player
+// pauses as before. The two-process repeat is tools/soak/lockstep/twoproc5.ps1 -PauseAt 20 -PauseFor 10 (status/A204.md).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetPauseCardOnline, "Jam.Net.PauseCardOnline", JamNetGuestTests::Flags)
+bool FJamNetPauseCardOnline::RunTest(const FString& Parameters)
+{
+	TestFalse(TEXT("policy: no world pause in a lockstep match"), ALobbyGameMode::PauseAllowedOnline(true));
+	TestTrue(TEXT("policy: single player pauses"), ALobbyGameMode::PauseAllowedOnline(false));
+	TestTrue(TEXT("the card open in play: neutral input"), ALobbyGameMode::LocalSeatNeutral(true, EJamSimPhase::Playing));
+	TestTrue(TEXT("the card open in a goal pause: neutral input"), ALobbyGameMode::LocalSeatNeutral(true, EJamSimPhase::GoalPause));
+	TestFalse(TEXT("the card open on the result card: the rematch ask still goes out"), ALobbyGameMode::LocalSeatNeutral(true, EJamSimPhase::Over));
+	TestFalse(TEXT("the card closed: the seat plays"), ALobbyGameMode::LocalSeatNeutral(false, EJamSimPhase::Playing));
+	TestTrue(TEXT("the lockstep game mode ticks under a paused world (any pause path it cannot refuse)"), GetDefault<ALobbyGameMode>()->PrimaryActorTick.bTickEvenWhenPaused);
+	if (!GEngine) return true;
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("JamNetPauseTestWorld"));
+	if (!TestNotNull(TEXT("a test world"), World)) return false;
+	FWorldContext& Ctx = GEngine->CreateNewWorldContext(EWorldType::Game);
+	Ctx.SetCurrentWorld(World);
+	ALobbyGameMode* GM = World->SpawnActor<ALobbyGameMode>();
+	if (TestNotNull(TEXT("a lobby game mode"), GM))
+	{
+		TestTrue(TEXT("no lobby session (single player): the game mode allows the pause"), GM->AllowPausing(nullptr));
+		GM->SetLockstepForTest(true);
+		TestFalse(TEXT("in a lockstep match the game mode refuses the pause (the card's SetGamePaused returns false, the world runs on)"), GM->AllowPausing(nullptr));
+		GM->SetLockstepForTest(false);
+		TestTrue(TEXT("after the match (the lockstep off) the pause is allowed again"), GM->AllowPausing(nullptr));
+		GM->Destroy();
+	}
+	GEngine->DestroyWorldContext(World);
+	World->DestroyWorld(false);
+	return true;
+}
+
 #endif

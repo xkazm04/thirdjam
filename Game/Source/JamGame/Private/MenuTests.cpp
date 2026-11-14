@@ -31,6 +31,8 @@
 #include "DifficultyProfile.h"
 #include "InputMappingContext.h"
 #include "MenuStyle.h"
+#include "HUDWidget.h"
+#include "Engine/UserInterfaceSettings.h"
 #include "Fonts/FontMeasure.h"
 #include "Rendering/SlateRenderer.h"
 #include "Framework/Application/SlateApplication.h"
@@ -466,6 +468,69 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		TestFalse(*FString::Printf(TEXT("%s is described by its own facts, not by a theme name"), *R.Display), R.Description.Contains(TEXT("Night Rink")));
 		const float LineW = static_cast<float>(Measure->Measure(UJamMenuFlow::CutCardLine(R), UJamMenuWidget::CutLineFont()).X);
 		TestTrue(*FString::Printf(TEXT("%s line fits two lines of its card (%.0f of %.0f)"), *R.Display, LineW, 1.75f * UJamMenuWidget::CutTextWidth()), LineW > 0.f && LineW <= 1.75f * UJamMenuWidget::CutTextWidth());
+	}
+
+	// Lane A195 (U2 evolution 6): every screen a player meets, not only the menu's. The three shipped sizes are one layout because the DPI curve maps each
+	// to 1920 x 1080 units: held here from the project's own curve, not assumed. Then the pause card (the pause menu, the rule card, CONTROLS) and the end
+	// card (a match's, a season take's between-takes card, the season's last) measured in those units.
+	if (const UUserInterfaceSettings* UI = GetDefault<UUserInterfaceSettings>())
+	{
+		for (const FIntPoint Res : { FIntPoint(1280, 720), FIntPoint(1920, 1080), FIntPoint(2560, 1440) })
+		{
+			const float Scale = UI->GetDPIScaleBasedOnSize(Res);
+			const FVector2D Units = FVector2D(Res) / FMath::Max(Scale, 0.01f);
+			AddInfo(FString::Printf(TEXT("JAMMENU dpi %dx%d scale %.3f = %.0f x %.0f units"), Res.X, Res.Y, Scale, Units.X, Units.Y));
+			TestTrue(*FString::Printf(TEXT("%dx%d is 1920 x 1080 units (%.0f x %.0f)"), Res.X, Res.Y, Units.X, Units.Y), FMath::IsNearlyEqual(Units.X, JamMenuTests::ViewW, 2.f) && FMath::IsNearlyEqual(Units.Y, JamMenuTests::ViewH, 2.f));
+		}
+	}
+	{
+		UJamDirectorsCallWidget* P = CreateWidget<UJamDirectorsCallWidget>(F.World, UJamDirectorsCallWidget::StaticClass());
+		if (TestNotNull(TEXT("the pause card builds"), P))
+		{
+			P->AddToRoot();
+			ON_SCOPE_EXIT { P->ReleaseSlateResources(true); P->RemoveFromRoot(); };
+			TSharedRef<SWidget> Slate = P->TakeWidget();
+			const TPair<int32, const TCHAR*> PauseScreens[] = { { 0, TEXT("pause") }, { 1, TEXT("rule card") }, { 2, TEXT("pause controls") } };
+			for (const TPair<int32, const TCHAR*>& Ps : PauseScreens)
+			{
+				if (Ps.Key == 0) P->ShowPause(); else if (Ps.Key == 1) P->ShowCall(); else P->ShowControls();
+				Slate->SlatePrepass(1.f);
+				const FVector2D Size = Slate->GetDesiredSize();
+				AddInfo(FString::Printf(TEXT("JAMMENU measure %s %.0f x %.0f of %.0f x %.0f"), Ps.Value, Size.X, Size.Y, JamMenuTests::ViewW, JamMenuTests::ViewH));
+				TestTrue(*FString::Printf(TEXT("the %s card is %.0f wide (%.0f)"), Ps.Value, UJamDirectorsCallWidget::PauseCardWidth, Size.X), FMath::IsNearlyEqual(Size.X, UJamDirectorsCallWidget::PauseCardWidth, 1.f));
+				TestTrue(*FString::Printf(TEXT("the %s card fits 1080 units high with the header band clear (%.0f of 1000)"), Ps.Value, Size.Y), Size.Y > 100.f && Size.Y <= 1000.f);
+				const float RowW = P->GetHintRowWidth();
+				TestTrue(*FString::Printf(TEXT("the %s card's key hints fit inside it (%.0f of %.0f)"), Ps.Value, RowW, UJamDirectorsCallWidget::PauseCardInnerWidth), RowW > 100.f && RowW <= UJamDirectorsCallWidget::PauseCardInnerWidth);
+			}
+			P->ShowPause();
+		}
+	}
+	{
+		UJamHudWidget* H = CreateWidget<UJamHudWidget>(F.World, UJamHudWidget::StaticClass());
+		if (TestNotNull(TEXT("the HUD builds"), H))
+		{
+			H->AddToRoot();
+			ON_SCOPE_EXIT { H->ReleaseSlateResources(true); H->RemoveFromRoot(); };
+			H->TakeWidget();
+			const TPair<const TCHAR*, const TCHAR*> Ends[] = {
+				{ TEXT("YOU WIN"), TEXT("R  REMATCH      ESC  MENU") },
+				{ TEXT("BEATEN"), TEXT("R  NEXT MATCH: THE FINAL CUT      ESC  MENU") },   // the season's between-takes card, the longest next take name
+				{ TEXT("YOU WIN"), TEXT("SEASON COMPLETE      R  MENU") } };
+			for (const TPair<const TCHAR*, const TCHAR*>& E : Ends)
+			{
+				H->ShowEndCardForTest(E.Key, UJamHudWidget::EndCardScore(3, 1), E.Value);
+				UWidget* Card = H->GetEndCardForTest();
+				if (!TestNotNull(TEXT("the end card exists"), Card)) break;
+				TSharedRef<SWidget> CS = Card->TakeWidget();
+				CS->SlatePrepass(1.f);
+				const FVector2D Size = CS->GetDesiredSize();
+				AddInfo(FString::Printf(TEXT("JAMMENU measure end card '%s' %.0f x %.0f (card %.0f)"), E.Value, Size.X, Size.Y, UJamHudWidget::EndCardW));
+				TestTrue(*FString::Printf(TEXT("the end card keeps its width with '%s' (%.0f)"), E.Value, Size.X), FMath::IsNearlyEqual(Size.X, UJamHudWidget::EndCardW, 1.f));
+				TestTrue(*FString::Printf(TEXT("the end card fits 1080 units high (%.0f)"), Size.Y), Size.Y > 100.f && Size.Y <= 0.8f * JamMenuTests::ViewH);
+				const float RowW = H->GetEndCardHintRowWidth(), Inner = UJamHudWidget::EndCardW - 2.f * FJamMenuLook::CardPad;
+				TestTrue(*FString::Printf(TEXT("the end card's keys fit inside it with '%s' (%.0f of %.0f)"), E.Value, RowW, Inner), RowW > 50.f && RowW <= Inner);
+			}
+		}
 	}
 	return true;
 }
@@ -1215,6 +1280,84 @@ bool FJamMenuClickThenReturn::RunTest(const FString&)
 	}
 	ADD_LATENT_AUTOMATION_COMMAND(FJamClickThenReturnCommand(this));
 	ADD_LATENT_AUTOMATION_COMMAND(FExitGameCommand());
+	return true;
+}
+
+// Lane A195 (U2 evolution 6, R-0064 point 3): every screen a player meets is one product. The pause card, the end card, SETTINGS and CONTROLS are drawn
+// from the front end's style table: the items in its look (the focus fill), key hints in its caps, and the words of the front end (no film words: no
+// "cut", no "Director" outside MAKE YOUR OWN). The end card's restart key follows the bindings (A183: it is rebindable).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuEveryScreenOneLook, "Jam.Menu.EveryScreenOneLook", JamMenuTests::MenuTestFlags)
+bool FJamMenuEveryScreenOneLook::RunTest(const FString&)
+{
+	const FJamSettings Fresh = FJamSettings();
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
+	const FJamBindings Before = UJamInputMap::Get()->GetBindings();
+	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	ON_SCOPE_EXIT { UJamInputMap::Get()->ApplyBindings(Before); };
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+	auto NoFilmWords = [this](const FString& Where, const FString& Text)
+	{
+		const FString U = Text.ToUpper();
+		TestFalse(*FString::Printf(TEXT("%s names no cut ('%s')"), *Where, *Text.Left(60)), U.Contains(TEXT("CUT'S")) || U.Contains(TEXT(" CUTS")) || U.Contains(TEXT("CUT ")));
+		TestFalse(*FString::Printf(TEXT("%s names no Director ('%s')"), *Where, *Text.Left(60)), U.Contains(TEXT("DIRECTOR")));
+	};
+
+	// The pause card: the five items in their order and words, the hints in caps, the item look.
+	UJamDirectorsCallWidget* P = CreateWidget<UJamDirectorsCallWidget>(F.World, UJamDirectorsCallWidget::StaticClass());
+	if (TestNotNull(TEXT("the pause card builds"), P))
+	{
+		P->AddToRoot();
+		ON_SCOPE_EXIT { P->ReleaseSlateResources(true); P->RemoveFromRoot(); };
+		P->TakeWidget();
+		P->ShowPause();
+		const TArray<FString> Labels = P->GetPauseLabels();
+		// The test world has no Designer, so the rule item reads "CHANGE A RULE  (USED THIS PERIOD)" here: its first words are held.
+		TestTrue(TEXT("the pause items"), Labels.Num() == 5 && Labels[0] == TEXT("RESUME") && Labels[1].StartsWith(TEXT("CHANGE A RULE")) && Labels[2] == TEXT("RESTART") && Labels[3] == TEXT("CONTROLS") && Labels[4] == TEXT("QUIT TO MENU"));
+		AddInfo(FString::Printf(TEXT("JAMMENU pause items: %s"), *FString::Join(Labels, TEXT(" | "))));
+		for (const FString& L : Labels) NoFilmWords(TEXT("the pause card"), L);
+		TestEqual(TEXT("the pause hints"), P->GetHintLine(), FString(TEXT("ESC / START RESUME   ENTER / A SELECT   R / VIEW RESTART")));
+		TestEqual(TEXT("RESUME is in the item look at rest before a tick"), P->GetPaintedState(P->GetResumeButton()), -1);
+		P->ShowCall();
+		TestTrue(TEXT("the rule card's hints say how to slide"), P->GetHintLine().Contains(TEXT("LEFT / RIGHT SLIDE")));
+		P->ShowControls();
+		TestTrue(TEXT("CONTROLS in the pause card says how to rebind"), P->GetHintLine().Contains(TEXT("ENTER / A REBIND")));
+		P->ShowPause();
+	}
+
+	// The end card: the key line as caps, the restart key from the bindings; the season's lines keep their words, the R becomes the bound key.
+	{
+		FString Note;
+		TArray<TPair<FString, FString>> H = UJamHudWidget::EndCardHints(UJamHudWidget::EndCardKeys(), Note);
+		TestEqual(TEXT("the match's end keys"), FJamMenuLook::HintsLine(H), FString(TEXT("R / VIEW REMATCH   ESC / START MENU")));
+		TestTrue(TEXT("no note on a match's end card"), Note.IsEmpty());
+		H = UJamHudWidget::EndCardHints(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  MENU"), Note);
+		TestEqual(TEXT("the between-takes card's keys"), FJamMenuLook::HintsLine(H), FString(TEXT("R / VIEW NEXT MATCH: THE BIG ROOM   ESC / START MENU")));
+		H = UJamHudWidget::EndCardHints(TEXT("SEASON COMPLETE      R  MENU"), Note);
+		TestEqual(TEXT("the season's last card: its line"), Note, FString(TEXT("SEASON COMPLETE")));
+		TestEqual(TEXT("the season's last card: its key"), FJamMenuLook::HintsLine(H), FString(TEXT("R / VIEW MENU")));
+		FJamBindings Re = FJamBindings::Defaults();
+		Re.Rebind(EJamVerb::Restart, EKeys::T);
+		UJamInputMap::Get()->ApplyBindings(Re);
+		TestEqual(TEXT("a rebound restart: the end card's line follows"), UJamHudWidget::EndCardKeys(), FString(TEXT("T  REMATCH      ESC  MENU")));
+		H = UJamHudWidget::EndCardHints(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  MENU"), Note);
+		TestTrue(TEXT("a rebound restart: the season's card shows the bound key"), H.Num() == 2 && H[0].Key == TEXT("T / VIEW"));
+		UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	}
+
+	// SETTINGS and CONTROLS: the words of the front end, and the buttons in the item look.
+	NoFilmWords(TEXT("the look's label"), FJamSettings::TierLabel(FString()));
+	NoFilmWords(TEXT("the barks' label"), FJamSettings::BarksLabel(-1, FString()));
+	NoFilmWords(TEXT("the barks' label with an intensity"), FJamSettings::BarksLabel(-1, TEXT("loud")));
+	const FButtonStyle Focus = FJamMenuLook::ItemStyle(2);
+	TestTrue(TEXT("the focus look is the away orange fill (or device B's focused plate)"), Focus.Normal.TintColor.GetSpecifiedColor().Equals(FJamMenuLook::Focus(), 0.01f) || Focus.Normal.GetResourceObject() != nullptr || Focus.Normal.DrawAs == ESlateBrushDrawType::RoundedBox);
+	F.Menu->ShowScreen(EJamMenuScreen::Settings);
+	if (UJamSettingsWidget* S = F.Menu->GetSettingsPanel())
+	{
+		TestEqual(TEXT("SETTINGS: seven places to stand"), S->GetFocusables().Num(), 7);
+		TestTrue(TEXT("SETTINGS opens on the level"), S->GetFirstFocusable() == S->GetFocusables()[0]);
+	}
 	return true;
 }
 

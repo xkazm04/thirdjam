@@ -97,6 +97,8 @@ struct JAMGAME_API FJamMenuLook
 	static constexpr float TransitionSeconds = 0.15f;   // a screen fades and slides in (under 200 ms)
 	static constexpr float TransitionSlide = 24.f;      // 3 units
 	static constexpr float PromptPulseSeconds = 1.6f;   // PRESS ENTER breathes once in this
+	static constexpr float DriftSeconds = 24.f;         // lane A195: the backdrop's strokes drift once across and back in this
+	static constexpr float DriftUnits = 40.f;           // and this far
 	// ---- colours (sRGB in the comments)
 	static FLinearColor Home();        // #2F6BFF the home team's blue: what is CHOSEN (the lit level)
 	static FLinearColor Away();        // #F26A1B the away team's orange: where the focus IS
@@ -117,6 +119,51 @@ struct JAMGAME_API FJamMenuLook
 	static bool HasKitFont();
 	// The names the front end looks for (status/A187.md lists them for device B).
 	static TArray<FString> KitNames();
+
+	// ---- Lane A195 (U2 evolution 6): the makers every screen a player meets uses, inside the menu and outside it (the pause card, the end card,
+	// SETTINGS, CONTROLS), so each is the same product: one item look, one panel, one title, one strip of key hints.
+	// The item look by state: 0 disabled, 1 rest, 2 focus (the away orange fill), 3 chosen (the home blue); Pad is the content's padding.
+	static FButtonStyle ItemStyle(int32 State, bool bSegment = false, const FMargin& Pad = FMargin(0));
+	static FSlateBrush FillBrush(const FLinearColor& C, bool bEdge);
+	// Device B's 9-slice by name (/JamAssets/UI/<Name>) drawn at half its pixels, or the fallback.
+	static FSlateBrush KitOr(const TCHAR* Name, const FSlateBrush& Fallback);
+	static FSlateBrush PanelBrush();
+	static UTextBlock* MakeText(UWidgetTree* T, const FString& Str, const FSlateFontInfo& F, const FLinearColor& C);
+	// A button in the item look: the focus bar at its left edge (white on the focus), the label at Size (Bold, wide tracking).
+	static UButton* MakeItem(UWidgetTree* T, const FString& Label, int32 Size, UTextBlock*& OutText, UWidget*& OutBar, bool bCentre = false);
+	// A panel: the two team colours on its top edge over the panel fill; Width 0 = as wide as its slot.
+	static UWidget* MakePanel(UWidgetTree* T, UWidget* Content, float Width, const FMargin& Pad = FMargin(CardPad, 24.f));
+	// The two team colours side by side, Height high (Width 0: as wide as the slot).
+	static UWidget* MakeTeamRule(UWidgetTree* T, float Height, float Width = 0.f);
+	// The key hints in the footer's look (a key cap, then the action), rebuilt into Box. Hints: { key, action } pairs.
+	static void FillHints(UWidgetTree* T, UHorizontalBox* Box, const TArray<TPair<FString, FString>>& Hints);
+	// The hints as one line ("ESC RESUME   ENTER / A SELECT"), what FillHints draws (tests and QA).
+	static FString HintsLine(const TArray<TPair<FString, FString>>& Hints);
+	// The restart verb's first key and pad button from the live bindings ("R / VIEW"): the end card's hint is never fixed text.
+	static FString RestartKeyCap();
+};
+
+// Lane A195: the item painter of a widget outside the menu (the pause card, SETTINGS, CONTROLS): every tick the focused item (or, with
+// bHoverFocus, the hovered one, which then takes the focus, so one item is lit) gets the focus look, the rest the rest look. Styles change only on change.
+struct JAMGAME_API FJamMenuPainter
+{
+	void Add(UButton* B, UTextBlock* T, UWidget* Bar = nullptr, const FMargin& Pad = FMargin(0));
+	void Paint(APlayerController* PC, bool bHoverFocus);
+	// The state painted last (0 disabled, 1 rest, 2 focus; -1 not painted or not in the list).
+	int32 StateOf(const UButton* B) const;
+	int32 Num() const { return Entries.Num(); }
+
+private:
+	struct FEntry
+	{
+		TWeakObjectPtr<UButton> Button;
+		TWeakObjectPtr<UTextBlock> Text;
+		TWeakObjectPtr<UWidget> Bar;
+		FMargin Pad;
+		int32 State = -1;
+	};
+	TArray<FEntry> Entries;
+	FVector2D LastCursor = FVector2D(-1, -1);
 };
 
 // A button that carries what it stands for (a cut name, a cached sentence, a screen, a take) back to the menu.
@@ -377,6 +424,9 @@ private:
 	uint64 LastBackFrame = 0;
 	FString FooterKey;
 	TWeakObjectPtr<UWidget> FeatureFor;
+	// Lane A195: the placeholder backdrop's two strokes (absent when device B's still is in the plugin) and their drift clock.
+	TArray<TWeakObjectPtr<UWidget>> BackdropStrokes;
+	float DriftT = 0.f;
 
 	UPROPERTY(Transient) TObjectPtr<UWidgetSwitcher> Switcher;
 	UPROPERTY(Transient) TObjectPtr<UWidget> TitlePicture;

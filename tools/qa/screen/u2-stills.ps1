@@ -15,11 +15,13 @@ param(
     [string]$Tag = 'after',
     [int]$Port = 4744,
     [switch]$EndCard,
+    [string]$StartCmd = 'jam.menuscreen play',  # lane A195: -EndCard starts its match with this (jam.menuscreen continue: a season take, its between-takes card)
     [string]$LaunchCut = '',  # start the game with -cut=<this>, as the acceptance run does: PLAY NOW must then start this cut at its own level (JAMMATCH ... source=launch)
     [string]$LevelCut = '',  # with -Level: this cut or mode through the menu (jam.menuscreen choose <name>) instead of PLAY NOW
     [string[]]$Before = @(), # console commands run once the menu is up, before the stills (for example "jam.menuscreen level pro")
     [switch]$Switch,       # instead of the stills: the first screen's level switch, stepped by real key presses (jam.menuscreen key right / left), then Enter: the match must start at the level picked
     [switch]$Level,        # instead of the stills: PLAY NOW, then the match card and the pause card, which name the level in force (JAMMATCH level=... in menu-lines.txt)
+    [int]$LevelSettleSec = 0,  # lane A195: -Level waits this long after the match starts before its first still (the GPU fault at the first frames, MENU-3.md)
     [switch]$Walk,         # instead of the stills: the pad walk (jam.menuscreen walk); prints its JAMMENU walk lines; exit 0 when the verdict is pass
     [switch]$Where,        # lane A164: instead of the stills: every screen's places from the widgets' own geometry (jam.menuscreen where) at 1920x1080 and 1280x720, into where-lines.txt
     [switch]$ClickReturn,  # lane A164: instead of the stills: ROOKIE, then a Slate-routed click on PRO (jam.menuscreen click pro), then Return: the match must play pro
@@ -55,6 +57,10 @@ function Note([string]$s) { Write-Host ('{0,7:n1}s  {1}' -f $sw.Elapsed.TotalSec
 function LogHas([string]$pat) {
     if (-not (Test-Path $log)) { return $false }
     try { $fs = [IO.File]::Open($log, 'Open', 'Read', 'ReadWrite'); $sr = New-Object IO.StreamReader($fs); $t = $sr.ReadToEnd(); $sr.Close(); $fs.Close(); return ($t -match $pat) } catch { return $false }
+}
+function LogCount([string]$pat) {
+    if (-not (Test-Path $log)) { return 0 }
+    try { $fs = [IO.File]::Open($log, 'Open', 'Read', 'ReadWrite'); $sr = New-Object IO.StreamReader($fs); $t = $sr.ReadToEnd(); $sr.Close(); $fs.Close(); return [int]([regex]::Matches($t, $pat).Count) } catch { return 0 }
 }
 function WaitLog([string]$pat, [int]$sec) {
     $t0 = $sw.Elapsed.TotalSeconds
@@ -134,6 +140,7 @@ if ($Switch) {
 if ($Level) {
     if ($LevelCut) { [void](Console "jam.menuscreen choose $LevelCut") } else { [void](Console 'jam.menuscreen play') }
     if (-not (WaitLog 'JAMMATCH level=' 60)) { Finish 2 'PLAY NOW did not start a match (no JAMMATCH line)' }
+    if ($LevelSettleSec -gt 0) { Note "settling $LevelSettleSec s before the first still"; Start-Sleep -Seconds $LevelSettleSec }
     $shown = $false
     for ($i = 0; $i -lt 8 -and -not $shown; $i++) { Start-Sleep -Milliseconds 700; Still "1080-match-card-$i" 0; $shown = $true }
     Still '1080-match-card-late' 900
@@ -141,6 +148,9 @@ if ($Level) {
     Still '1080-pause' 1200
     [void](Console 'r.SetRes 1280x720w'); Start-Sleep -Seconds 2
     Still '720-pause' 800
+    [void](Console 'r.SetRes 1920x1080w'); Start-Sleep -Seconds 2
+    [void](Console 'jam.pausemenu rule'); Still '1080-pause-rule' 900      # lane A195: the rule card and the pause card's CONTROLS
+    [void](Console 'jam.pausemenu controls'); Still '1080-pause-controls' 900
     Finish 0 'the level is on the match card and the pause card'
 }
 
@@ -189,16 +199,16 @@ if ($Walk) {
 }
 
 if ($EndCard) {
-    [void](Console 'jam.menuscreen play')
-    if (-not (WaitLog 'JAMMENU start match' 30)) { Finish 2 'PLAY NOW did not start a match' }
+    [void](Console $StartCmd)
+    if (-not (WaitLog 'JAMMENU start match|JAMMATCH level=' 30)) { Finish 2 "$StartCmd did not start a match" }
     foreach ($card in @(@{ n = 'loss'; team = 1 }, @{ n = 'win'; team = 0 })) {
         Start-Sleep -Seconds 12                                   # the rink is up and the first faceoff is over
-        $before = if (Test-Path $log) { @(Select-String -Path $log -Pattern 'JAMCTRL endmatch done').Count } else { 0 }
+        [int]$before = LogCount 'JAMCTRL endmatch done'   # lane A195: counted from a shared read (Select-String on the live log failed the compare)
         [void](Console "jam.ctrl.EndMatch $($card.team)")
         $t1 = $sw.Elapsed.TotalSeconds; $done = $false
         while ($sw.Elapsed.TotalSeconds - $t1 -lt $EndTimeoutSec -and -not $p.HasExited -and -not $done) {
             Start-Sleep -Milliseconds 500
-            $done = (Test-Path $log) -and (@(Select-String -Path $log -Pattern 'JAMCTRL endmatch done').Count -gt $before)
+            $done = (LogCount 'JAMCTRL endmatch done') -gt $before
         }
         if (-not $done) { Still "1080-end-$($card.n)-timeout" 0; Finish 1 "the match did not end for team $($card.team) inside the time box" }
         [void](Console 'r.SetRes 1920x1080w'); Start-Sleep -Seconds 2

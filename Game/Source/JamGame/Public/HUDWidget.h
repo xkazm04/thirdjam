@@ -426,7 +426,19 @@ public:
 	// player's side first: "YOU  3 : 1  THEM". The key line outside a season match: EndCardKeys().
 	static FString EndCardWord(EJamPhase Phase, int32 Mine, int32 Theirs);
 	static FString EndCardScore(int32 Mine, int32 Theirs);
-	static FString EndCardKeys() { return TEXT("R  REMATCH      ESC  MENU"); }
+	// Lane A195: the restart key from the live bindings ("R  REMATCH      ESC  MENU" with the shipped keys).
+	static FString EndCardKeys();
+	// Lane A195: a key line ("R  REMATCH      ESC  MENU", the season's "SEASON COMPLETE      R  MENU") as { key, action } caps for the card, the restart
+	// key as the bindings have it ("R / VIEW"); a part with no key ("SEASON COMPLETE") comes back in OutNote. Pure (tests call it).
+	static TArray<TPair<FString, FString>> EndCardHints(const FString& KeyLine, FString& OutNote);
+	// Lane A195: the end card's width and the word's size (Jam.Menu.FitsTheScreen measures the card).
+	static constexpr float EndCardW = 704.f;   // 88 units: the between-takes card's keys with the longest next take ("THE FINAL CUT", 584 units) inside its 640
+	static constexpr int32 EndCardWordPt = 72;
+	UWidget* GetEndCardForTest() const;
+	// Tests: the card filled as a match end fills it (the word, the score, the key line), then GetEndCardForTest() is measured.
+	void ShowEndCardForTest(const FString& Word, const FString& Score, const FString& KeyLine);
+	void PaintEndCardKeys(const FString& KeyLine, bool bWin);
+	float GetEndCardHintRowWidth() const;   // lane A195: the keys' row as laid out (after a prepass)
 	FString GetCardScoreText() const;
 	FString GetCardKeysText() const;
 	// Lane A14 (C-0005): the active-effects strip under the score, "BOLT speed 4.2s    WEIGHT heavy_puck 1.0s" (icon name, effect id, seconds left); empty = hidden.
@@ -607,6 +619,9 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UBorder> ControlsStrip;
 	UPROPERTY(Transient) TObjectPtr<UBorder> CardPlate;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CardScoreText;   // lane A144: the score on the end card
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> CardNoteText;   // lane A195: SEASON COMPLETE
+	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> CardHints;   // lane A195: the keys as caps
+	FString CardHintKey;
 	// Lane A49: the sprint stamina bar (bottom centre, above the strips): a dark back plate and a fill that shrinks with the stamina; hidden while full and idle.
 	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaBack;
 	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaFill;

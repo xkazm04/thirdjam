@@ -472,3 +472,5 @@
 - link green 14:39: main 58af359f (The bots plan with the speed a free skater really has (A193, track Q2, evolution 7)) pushed.
 - link green 14:50: main df03350f (Merge dev-b at ea9ce981: the puck's white ring half as thick (R-0064 point 7), the figure ) pushed.
 - link green 15:43: main 972ba542 (A held button does nothing across a change of possession; rebinding can never leave a cont) pushed.
+- link green 15:55: main 38766fc9 (The ladder after the speed rule, first set: four profile numbers (A189, track C0, evolutio) pushed.
+- 16:33: acceptance run RED on main 38766fc9 (exit 3): no H33. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H33-4.txt

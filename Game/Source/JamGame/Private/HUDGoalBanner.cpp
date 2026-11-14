@@ -25,6 +25,29 @@
 #include "HAL/IConsoleManager.h"
 #include "UnrealClient.h"
 #include "Misc/AutomationTest.h"
+#include "Engine/Texture2D.h"
+
+// Lane A196 (track F3, evolution 9, item 3): device B's GOAL banner art (A-to-B-0027 points 3b and 6), /JamAssets/UI/T_UI_Banner_Goal, by name: when the
+// texture exists the plate draws it (B's art as drawn, a quarter of the scoring side's colour in the tint so the two sides still differ); else A's rounded
+// plate stays. Looked up once a process (quiet). One JAMHUD goal_banner_art line the first time.
+static void GoalBannerArtBrush(UBorder* Plate, const FLinearColor& Team)
+{
+	static bool bLooked = false;
+	static TWeakObjectPtr<UTexture2D> Art;
+	if (!bLooked)
+	{
+		bLooked = true;
+		Art = LoadObject<UTexture2D>(nullptr, TEXT("/JamAssets/UI/T_UI_Banner_Goal.T_UI_Banner_Goal"), nullptr, LOAD_NoWarn | LOAD_Quiet);
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD goal_banner_art=%s"), Art.IsValid() ? TEXT("T_UI_Banner_Goal") : TEXT("none (A's plate)"));
+	}
+	if (!Plate || !Art.IsValid()) return;
+	FSlateBrush B;
+	B.SetResourceObject(Art.Get());
+	B.DrawAs = ESlateBrushDrawType::Image;
+	B.ImageSize = FVector2D(Art->GetSizeX(), Art->GetSizeY());
+	B.TintColor = FSlateColor(FMath::Lerp(FLinearColor::White, FLinearColor(Team.R, Team.G, Team.B, 1.f), 0.25f));
+	Plate->SetBrush(B);
+}
 
 static TAutoConsoleVariable<int32> CVarJamHudGoalBanner(TEXT("jam.hud.GoalBanner"), 1,
 	TEXT("Lane A188: 1 (default) the GOAL banner across the middle band on a goal; 0 none (the screen of before)."), ECVF_Default);
@@ -192,6 +215,7 @@ void UJamHudWidget::UpdateGoalBanner(const FJamPresentationFrame& F)
 		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(GoalBannerPlate->Slot)) CS->SetAnchors(FAnchors(0.5f, GoalBannerY));
 		const FLinearColor Team = F.GetTeamColour(ScoringTeamId);
 		GoalBannerPlate->SetBrush(FJamUiStyle::Rounded(FLinearColor(Team.R, Team.G, Team.B, 0.94f), 14.f, FJamUiStyle::Paper(), 4.f));
+		GoalBannerArtBrush(GoalBannerPlate, Team);   // lane A196 (R-0064 point 9): device B's banner art by name when it exists
 		GoalBannerScoreText->SetText(FText::FromString(GoalBannerScore(F.ScoreHome, F.ScoreAway)));
 		UE_LOG(LogTemp, Log, TEXT("JAMHUD goal_banner frame=%lld side=%s team=%d score=%d:%d band_y=%.2f scorer=%d scorer_y=%.2f..%.2f pause=%d in=%d out_by=%d"),
 			F.SimFrame, GoalBannerTeam == 0 ? TEXT("home") : TEXT("away"), ScoringTeamId, F.ScoreHome, F.ScoreAway, GoalBannerY, Scorer, TopY, FootY, Pause,

@@ -16,6 +16,7 @@
 #include "HUDFeed.h"
 #include "InputMapping.h"
 #include "CameraFollow.h"
+#include "DirectorsCallController.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
@@ -75,6 +76,15 @@ namespace
 ALobbyGameMode::ALobbyGameMode()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	// Lane A204 (FAULT 4): a world paused by any path AllowPausing does not see still pumps the lockstep (single player keeps its pause: see Tick).
+	PrimaryActorTick.bTickEvenWhenPaused = true;
+}
+
+bool ALobbyGameMode::AllowPausing(APlayerController* PC)
+{
+	if (PauseAllowedOnline(bLockstep)) return Super::AllowPausing(PC);
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET pause refused at frame %lld: the match goes on under the card (online the world never pauses)"), Driver ? Driver->GetFrame() : -1);
+	return false;
 }
 
 void ALobbyGameMode::StartPlay()
@@ -201,6 +211,25 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 		FJamInput Ask;
 		if (bLocalRematch) JamNet::SetRematchReady(Ask);
 		return Ask;
+	}
+	{
+		// Lane A204 (FAULT 4): the pause card is open on this machine: the match goes on and this seat sends neutral input (the lockstep keeps sending it every
+		// frame, so the other machine never stalls). Presses latched under the card are dropped, not fired when it closes; the cursor stays the card's.
+		const UJamDirectorsCallController* PauseCard = UJamDirectorsCallController::Get(this);
+		if (LocalSeatNeutral(PauseCard && PauseCard->IsMenuOpen(), GetSim()->GetPhase()))
+		{
+			if (AJamSkater* Me = SkaterActor(LocalIndex))
+				if (UJamPlayerInput* Pi = Me->FindComponentByClass<UJamPlayerInput>())
+				{
+					Pi->ConsumeShootPressed(); Pi->ConsumePassPressed(); Pi->ConsumeCheckPressed(); Pi->ConsumePokePressed(); Pi->ConsumeLiftPressed();
+					Pi->ConsumeDekePressed(); Pi->ConsumeSpinPressed(); Pi->ConsumeAbilityPressed();
+				}
+			if (!bCardNeutral) UE_LOG(LogJamNet, Log, TEXT("JAMNET pause card open at frame %lld: seat %d sends neutral input, the match goes on"), Driver->GetFrame(), LocalIndex);
+			bCardNeutral = true;
+			return FJamInput();
+		}
+		if (bCardNeutral) UE_LOG(LogJamNet, Log, TEXT("JAMNET pause card closed at frame %lld: seat %d plays again"), Driver->GetFrame(), LocalIndex);
+		bCardNeutral = false;
 	}
 	if (bScripted && bTesterSeat)
 	{
@@ -580,6 +609,7 @@ void ALobbyGameMode::Tick(float DeltaSeconds)
 {
 	if (!bLockstep)
 	{
+		if (GetWorld() && GetWorld()->IsPaused()) return;   // lane A204: single player's pause as before (this actor now ticks when paused, for the lockstep)
 		Super::Tick(DeltaSeconds);
 		return;
 	}
@@ -620,7 +650,9 @@ void ALobbyGameMode::Tick(float DeltaSeconds)
 	else if (Driver->IsLost() && !bEnded)
 	{
 		UE_LOG(LogJamNet, Warning, TEXT("JAMNET card: connection lost, %.2f s after the last frame"), LastFrameAt > 0.0 ? FPlatformTime::Seconds() - LastFrameAt : -1.0);
-		EndMatch(TEXT("CONNECTION LOST"), FString::Printf(TEXT("no word from %s for 3 seconds"), *Lobby->GetRemoteName()), TEXT("connection lost"));
+		// Lane A204: a peer never heard (its rink never came up, or it left while loading) is lost at the unheard limit, 30 s: say that, not "3 seconds".
+		EndMatch(TEXT("CONNECTION LOST"), Driver->HasHeardPeer() ? FString::Printf(TEXT("no word from %s for 3 seconds"), *Lobby->GetRemoteName())
+			: FString::Printf(TEXT("%s never reached the rink (30 seconds)"), *Lobby->GetRemoteName()), TEXT("connection lost"));
 	}
 	else if ((Driver->IsLost() || Driver->IsDesynced()) && bEnded && CVarJamNetQuitAtFrame.GetValueOnGameThread() > 0 && !bExitSent)
 	{

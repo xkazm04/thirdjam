@@ -19,6 +19,7 @@
 #include "CommentarySystem.h"
 #include "JamEffectSystem.h"
 #include "JamPickupActor.h"
+#include "HitRead.h"   // lane A196
 #include "ToySkaterVisual.h"
 #include "SkeletalSkaterVisual.h"
 #include "JamDesignerSubsystem.h"
@@ -1152,6 +1153,8 @@ FJamInput AHokejGameMode::DrillInput()
 	const double Dist = ToC.Size();
 	In.Move = ToC.GetSafeNormal();
 	In.Stick = In.Move;   // the blade toward the carrier, as the cursor would be held
+	// Lane A196 (track F3): drill 23, the brace: the human skates at the carrier holding the cross-check (released for a frame once the brace is spent) for the hits' strips.
+	if (Mode == 23) { In.bCrossHold = Dist < 10.0 && S.CanAct() && !(S.CrossHoldFrames > UJamSim::CrossHoldTapFrames && !S.bCrossBraced); return In; }
 	// Press when the bodies are about to meet inside the human's check window (a person's judgement: closing speed times the window), or inside lift range.
 	const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
 	const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(S.Vel - V.Vel, ToC / Dist) : 0.0;
@@ -1607,6 +1610,7 @@ void AHokejGameMode::StepOnce()
 			}
 		}
 	}
+	AJamHitRead::StepSim(GetWorld(), Sim, Skaters, HitRead);   // lane A196: the hits read (presentation only), after the pawns applied the frame
 	if (Puck) Puck->StepSimFrame();   // lane A73: the puck's hit-stop counter
 	StillsObserve();   // lane A73 proof
 	// Lane A73: while the figures hold the hit frame, the presentation frame (camera, HUD, radar) holds too; the hit frame itself is pushed (the camera's kick starts on it).
@@ -1649,6 +1653,7 @@ void AHokejGameMode::Tick(float DeltaSeconds)
 		const double FrameF = static_cast<double>(Sim->GetFrame()) + Alpha;
 		AJamPickupActor::Sync(GetWorld(), Effects, PickupActors, FrameF, &KeepClear);
 		AJamBoostAura::Sync(GetWorld(), Sim, Skaters, BoostAuras, FrameF);
+		if (HitRead) HitRead->Render(Sim, Skaters, Puck ? Puck->GetActorLocation() : FVector::ZeroVector, FrameF);   // lane A196: after the figures' ApplyRender (the lean)
 		if (Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex())) AJamPickupActor::Probe(GetWorld()->GetFirstPlayerController(), PickupActors, Sim->GetSkaters()[Sim->GetHumanIndex()].Pos, Sim->GetFrame());
 	}
 	// Lane A73: the camera interpolates between its last two sim poses with this alpha; while the hit frame is held it sits on the hit frame's pose (alpha 1).

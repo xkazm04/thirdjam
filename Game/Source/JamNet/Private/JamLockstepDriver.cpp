@@ -73,6 +73,9 @@ void UJamLockstepDriver::Receive()
 		}
 		if (Type != JamNet::EType::Input) continue;  // lobby leftovers
 		if (!FJamNetInputPacket::Read(Bytes, P)) continue;
+		// Lane A204 (FAULT 3): the ticks counted while the peer was unheard (its rink loading, limit StallLimitTicks * 10) must not meet the heard limit the
+		// moment its first packet arrives: that called the connection lost at frame 0 exactly as a slow-loading peer arrived. The heard count starts here.
+		if (!bHeard) StallTicks = 0;
 		bHeard = true;
 		RemoteFrame = FMath::Max(RemoteFrame, P.SenderFrame);
 		MaxFrameGap = FMath::Max(MaxFrameGap, static_cast<int32>(FMath::Abs(P.SenderFrame - Frame)));

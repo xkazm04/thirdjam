@@ -443,6 +443,36 @@ FString UJamHudWidget::EndCardScore(int32 Mine, int32 Theirs)
 	return FString::Printf(TEXT("YOU  %d : %d  THEM"), Mine, Theirs);
 }
 
+FString UJamHudWidget::EndCardKeys()
+{
+	// Lane A195: the restart verb is rebindable (A183): the card names the key the player has, not a fixed R.
+	const FJamVerbBinding& Bi = UJamInputMap::Get()->GetBindings()[EJamVerb::Restart];
+	const FString Key = Bi.Keys.Num() ? UJamInputMap::KeyName(Bi.Keys[0]) : FString(TEXT("R"));
+	return FString::Printf(TEXT("%s  REMATCH      ESC  MENU"), *Key);
+}
+
+TArray<TPair<FString, FString>> UJamHudWidget::EndCardHints(const FString& KeyLine, FString& OutNote)
+{
+	TArray<TPair<FString, FString>> Out;
+	OutNote.Reset();
+	const FString RestartFirst = EndCardKeys().Left(EndCardKeys().Find(TEXT("  ")));
+	TArray<FString> Parts;
+	KeyLine.ParseIntoArray(Parts, TEXT("      "), true);
+	for (FString Part : Parts)
+	{
+		Part.TrimStartAndEndInline();
+		FString Key, Action;
+		if (!Part.Split(TEXT("  "), &Key, &Action)) { OutNote = Part; continue; }
+		Key.TrimStartAndEndInline();
+		Action.TrimStartAndEndInline();
+		// The season's lines (Progression.cpp) say R; the restart key is whatever the bindings hold, with its pad button.
+		if (Key == TEXT("R") || Key == RestartFirst) Key = FJamMenuLook::RestartKeyCap();
+		else if (Key == TEXT("ESC")) Key = TEXT("ESC / START");
+		Out.Add(TPair<FString, FString>(Key, Action));
+	}
+	return Out;
+}
+
 FString UJamHudWidget::GetCardScoreText() const { return CardScoreText ? CardScoreText->GetText().ToString() : FString(); }
 FString UJamHudWidget::GetCardKeysText() const { return HintText ? HintText->GetText().ToString() : FString(); }
 
@@ -706,24 +736,33 @@ void UJamHudWidget::BuildTree()
 	FaceoffHintPlate->SetContent(HintLine);
 	Place(Root, FaceoffHintPlate, FVector2D(0.5, 0.66), FVector2D(0.5, 0), FVector2D(RingOffsetXPx, 124));
 
-	// ---- Win / lose cards on a slate plate with a clapper stripe, and the restart hint under it.
-	CardPlate = S::Plate(T, S::Panel(0.94f), FMargin(0, 0, 0, 30));   // lane A144: 18 put the key line on the plate's chalk edge
+	// ---- Win / lose cards. Lane A195 (U2 evolution 6): in the front end's look (FJamMenuLook): a panel with the two team colours on its top edge, the
+	// word in the display face, the score, and the keys as the footer's key caps, from the live bindings (the restart key is rebindable). No clapper.
+	CardPlate = S::Plate(T, FLinearColor::Transparent, FMargin(0));
 	CardPlate->SetVisibility(ESlateVisibility::Collapsed);
 	UVerticalBox* CardBody = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-	S::AddV(CardBody, S::Clapper(T, 10, 14), FMargin(0));
-	CardTextBlock = MakeText(T, TEXT("CardText"), S::Font(S::Display, FName("Black"), S::TrackTitle), S::Paper());
+	CardTextBlock = MakeText(T, TEXT("CardText"), FJamMenuLook::Font(EndCardWordPt, FName("Black"), 120), FJamMenuLook::Text());
 	CardTextBlock->SetJustification(ETextJustify::Center);
-	S::AddV(CardBody, CardTextBlock, FMargin(48, 14, 48, 0), HAlign_Center);
+	S::AddV(CardBody, CardTextBlock, FMargin(0), HAlign_Center);
 	// Lane A144: the score under the word, the player's side first.
-	CardScoreText = MakeText(T, TEXT("CardScore"), S::Font(S::Label + 6, FName("Black"), S::TrackLabel), S::Paper());
+	CardScoreText = MakeText(T, TEXT("CardScore"), FJamMenuLook::Font(FJamMenuLook::Title, FName("Black"), FJamMenuLook::TrackLabel), FJamMenuLook::Text());
 	CardScoreText->SetJustification(ETextJustify::Center);
 	CardScoreText->SetVisibility(ESlateVisibility::Collapsed);
-	S::AddV(CardBody, CardScoreText, FMargin(32, 0, 32, 8), HAlign_Center);
-	HintText = MakeText(T, TEXT("HintText"), S::Font(S::Body, FName("Bold"), 40), S::Yellow());
+	S::AddV(CardBody, CardScoreText, FMargin(0, 0, 0, FJamMenuLook::Unit * 2.f), HAlign_Center);
+	// The season's line (SEASON COMPLETE) when the hint carries one; collapsed otherwise.
+	CardNoteText = MakeText(T, TEXT("CardNote"), FJamMenuLook::Font(FJamMenuLook::Body, FName("Bold"), FJamMenuLook::TrackLabel), FJamMenuLook::Chosen());
+	CardNoteText->SetJustification(ETextJustify::Center);
+	CardNoteText->SetVisibility(ESlateVisibility::Collapsed);
+	S::AddV(CardBody, CardNoteText, FMargin(0, 0, 0, FJamMenuLook::Unit), HAlign_Center);
+	S::AddV(CardBody, FJamMenuLook::MakeTeamRule(T, 1.f), FMargin(0, 0, 0, FJamMenuLook::Unit * 1.5f));
+	CardHints = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("CardHints"));
+	S::AddV(CardBody, CardHints, FMargin(0), HAlign_Center);
+	// The key line as text (GetCardKeysText, tests): the same words the caps show.
+	HintText = MakeText(T, TEXT("HintText"), FJamMenuLook::Font(FJamMenuLook::Caption, FName("Bold"), FJamMenuLook::TrackLabel), FJamMenuLook::TextDim());
 	HintText->SetText(FText::FromString(EndCardKeys()));
-	HintText->SetJustification(ETextJustify::Center);
-	S::AddV(CardBody, HintText, FMargin(32, 0, 32, 0), HAlign_Center);
-	CardPlate->SetContent(CardBody);
+	HintText->SetVisibility(ESlateVisibility::Collapsed);
+	S::AddV(CardBody, HintText, FMargin(0), HAlign_Center);
+	CardPlate->SetContent(FJamMenuLook::MakePanel(T, CardBody, EndCardW, FMargin(FJamMenuLook::CardPad, FJamMenuLook::Unit * 3.f)));
 	Place(Root, CardPlate, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, 0));
 }
 
@@ -868,7 +907,6 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	CardTextBlock->SetVisibility(Card.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	// The plate shows for the end cards; lane A8's pause card covers the paused phase.
 	CardPlate->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-	HintText->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (CardScoreText)
 	{
 		CardScoreText->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -876,12 +914,11 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	}
 	if (bEnd)
 	{
-		// Lane A17: a season take's end card says what R does next (NEXT TAKE after a win, RETAKE after a loss).
+		// Lane A17: a season take's end card says what R does next (NEXT MATCH after a win, REMATCH after a loss).
 		FString Hint;
 		const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 		if (const UJamProgression* P = UJamProgression::Get(this); P && GM && GM->GetCartridge()) Hint = P->EndHint(GM->GetCartridge()->SourcePath);
-		HintText->SetText(FText::FromString(Hint.IsEmpty() ? EndCardKeys() : Hint));
-		CardTextBlock->SetColorAndOpacity(FSlateColor(F.Phase == EJamPhase::Win ? S::Yellow() : S::Paper()));
+		PaintEndCardKeys(Hint.IsEmpty() ? EndCardKeys() : Hint, F.Phase == EJamPhase::Win);   // lane A195: the key line as caps, from the live bindings
 	}
 	CallText->SetVisibility(ShowDirectorsCall(F) ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
@@ -1858,3 +1895,39 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 		if (!ShowNetLabel(ClearMiddleOn(), LMin, LMin + FVector2D(LabelW, 28.f), VW, VH)) OwnText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
+
+// ---------------------------------------------------------------- lane A195: the end card's keys in the front end's look
+
+void UJamHudWidget::PaintEndCardKeys(const FString& KeyLine, bool bWin)
+{
+	if (!CardHints || !HintText || !CardTextBlock) return;
+	FString Note;
+	const TArray<TPair<FString, FString>> Hints = EndCardHints(KeyLine, Note);
+	const FString Line = FJamMenuLook::HintsLine(Hints);
+	if (Line != CardHintKey)
+	{
+		CardHintKey = Line;
+		FJamMenuLook::FillHints(WidgetTree, CardHints, Hints);
+		HintText->SetText(FText::FromString(Line));
+	}
+	if (CardNoteText)
+	{
+		CardNoteText->SetText(FText::FromString(Note));
+		CardNoteText->SetVisibility(Note.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	}
+	CardTextBlock->SetColorAndOpacity(FSlateColor(bWin ? FJamMenuLook::Focus() : FJamMenuLook::Text()));
+}
+
+void UJamHudWidget::ShowEndCardForTest(const FString& Word, const FString& Score, const FString& KeyLine)
+{
+	if (!CardPlate) return;
+	CardTextBlock->SetText(FText::FromString(Word));
+	CardTextBlock->SetVisibility(ESlateVisibility::HitTestInvisible);
+	CardScoreText->SetText(FText::FromString(Score));
+	CardScoreText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	CardPlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+	PaintEndCardKeys(KeyLine, false);
+}
+
+UWidget* UJamHudWidget::GetEndCardForTest() const { return CardPlate.Get(); }
+float UJamHudWidget::GetEndCardHintRowWidth() const { return CardHints ? static_cast<float>(CardHints->GetDesiredSize().X) : 0.f; }
