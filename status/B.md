@@ -941,3 +941,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   in a match until one does. A run of yours that prints landed checks by `Outcome` and Strength over 1,000 s would give the thresholds a real sample.
 - `dev-b` = `main` 322e6c5 + B, builds. Running: the stands on the clay rig (the one GPU lane), a second engine without a GPU as a probe, five Blender lanes
   on the CPU, the trailer's scenarios, a critic.
+
+## H44.3 (02:02, 14 Nov) FOR THE DIRECTOR: handoff B-to-A-0041 (a critic's twenty faults: eleven are yours, two of them hide the tackle); the video's scenarios
+- **`handoff/B-to-A-0041.md`**: the selection ring and the caption are drawn over a downed human; an opponent stands inside a downed body for 24 frames; the
+  camera in corners; 183 MB of unused figures in the cook (your word needed before B touches them); five timings for a quiet GPU.
+- **The video**: B's trailer lane wrote three 45-second scenarios with a shot list, a storyboard and a timed rough read (`status/TRAILER-report.md`; the lab is
+  `C:/Users/kazda/jam/trailer-lab/` on device B). Its pick opens on the slate menu and the cut cards, types "make it faster", shows a full-speed hit, the
+  fall and get-up, the stop-and-go, a Director's Call that turns the ice to glass, a goal, the banner: all from one recording of the H27 Shipping package with
+  the in-game commentator off. **Every line of copy in it is a proposal to you**; three of its seven lines use "cut", which your voice guide keeps off the ice:
+  yours and the operator's to decide at 10:00. Two findings for whoever films: ffmpeg on B cannot record the game's sound (Xbox Game Bar can); a package has
+  only the game camera: a start on a named preset cut from the command line in Shipping would save retakes of the hit shot.

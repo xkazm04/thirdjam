@@ -1,0 +1,1 @@
+﻿Lane EYE. Eight of the night's most visible faults, cropped at full size from other lanes' engine stills (no new render; each tile names its source file): QA4 un-frozen match captures, SK24 un-paused strips, B40 effect strips (rows 1-2 of the ability strip frozen), B41 goal strip (un-paused, view held still). Built by C:/Users/kazda/jam/review/night/sheet.py.
