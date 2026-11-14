@@ -72,10 +72,14 @@ struct JAMGAME_API FJamBindings
 	EJamVerb WithVerbOn(const FKey& Key) const;
 	EJamVerb WithoutVerbOn(const FKey& Key) const;
 	// Puts Key in the verb's first keyboard slot (or first pad slot when the key is a gamepad key). A verb that held Key and may not share it with V
-	// gets V's old first key in its place (a swap); OutSwapped names that verb (EJamVerb::Count = no swap). False: a reserved key or no change.
+	// gets V's old first key in its place when it fits (a swap), else gives Key up; OutSwapped names that verb (EJamVerb::Count = no swap). The partner
+	// of a shared pair keeps the old key (the pair splits); nothing else moves (lane A199). False: a reserved key, no change, or a verb would be left
+	// with no key and no pad button (the table is unchanged).
 	bool Rebind(EJamVerb V, const FKey& Key, EJamVerb* OutSwapped = nullptr);
 	// No key on two verbs that may not share it. OutWhy names the first clash.
 	bool IsValid(FString* OutWhy = nullptr) const;
+	// Lane A199: every verb reachable (a key or a pad button; the skate directions a key). FromSaved refuses a table that is not, Rebind never makes one.
+	bool IsPlayable(FString* OutWhy = nullptr) const;
 
 	// The saved form: one entry per verb id, "Keys|Pads" with comma-separated key names ("LeftMouseButton,MiddleMouseButton|Gamepad_RightTriggerAxis").
 	TMap<FString, FString> ToSaved() const;
@@ -96,19 +100,46 @@ struct JAMGAME_API FJamButtonVerbs
 	bool bCrossHeld = false;   // level: a cross-check press still held (ApplyButtons gates it by "not carrying" into bCrossHold)
 	bool bShootPress = false;  // edge, for the JAMCTRL line
 	bool bPassPress = false;   // edge
+	// Lane A199: a held key whose verb went dead on this step (a change of possession), for the JAMCTRL line (EJamVerb::Count = none).
+	EJamVerb DeadNow = EJamVerb::Count;
+	// Lane A199: steps the two-role keys' current presses have been held (0 = none held), for the badge's fill.
+	int32 PassHoldSteps = 0;
+	int32 CrossHoldSteps = 0;
+};
+
+// Lane A199 (K1 evolution 3): what a step knows of the puck and the hand's thresholds. Filled by JamControls::ApplyButtons from the sim's frame.
+struct JAMGAME_API FJamButtonContext
+{
+	bool bWith = false;        // JamControls::HasPuckForButtons: the side a new press resolves to, and the with-verbs' change
+	bool bCarrying = false;    // UJamSim::CarrierIndex() == the skater: the brace's change (he took the puck)
+	bool bInReach = false;     // the puck inside his carrier reach: a dead shot / pass level stays up while it is (its fall would fire at a loose puck there)
+	bool bDeadAcrossChange = true;   // jam.ctrl.HeldAcrossChange: a key held across a change of possession does nothing until released (0 = main's rule of A183)
+	int32 SaucerDelaySteps = 0;      // a held pass's level starts this many steps late (taps released earlier send one step): the saucer from more frames
+	int32 BraceDelaySteps = 0;       // a held cross-check's hold starts this many steps late: the brace from more frames
 };
 
 struct JAMGAME_API FJamButtonResolver
 {
 	void Press(const FKey& Key);
 	void Release(const FKey& Key);
+	// The shipped rule with the sim's own thresholds; the possession reads as bWithPuck for all three of the context's facts.
 	FJamButtonVerbs Step(bool bWithPuck, const FJamBindings& B);
+	// Lane A199: a key held across a change of possession goes dead until it is released: a shot or a pass when the puck is no longer ours (its level is
+	// held up while the puck is still in his reach, then dropped), a cross-check when he takes the puck (the brace ends), a check when the puck becomes ours.
+	FJamButtonVerbs Step(const FJamButtonContext& C, const FJamBindings& B);
 	void Reset() { Held.Reset(); }
-	// The verb a held key is doing now (EJamVerb::Count = none / not yet resolved).
+	// The verb a held key is doing now (EJamVerb::Count = none / not yet resolved / dead).
 	EJamVerb ActiveVerb(const FKey& Key) const;
 
 private:
-	struct FHeldKey { FKey Key; EJamVerb Verb = EJamVerb::Count; bool bDown = false; bool bNew = false; };
+	struct FHeldKey
+	{
+		FKey Key; EJamVerb Verb = EJamVerb::Count; bool bDown = false; bool bNew = false;
+		bool bDead = false;          // lane A199: a change of possession happened under this press
+		bool bLevelSent = false;     // the verb's level went out on some step of this press
+		bool bLevelDropped = false;  // a dead level has fallen (it never comes back up for this press)
+		int32 Steps = 0;             // steps this press has been stepped (its first step = 1)
+	};
 	TArray<FHeldKey> Held;
 };
 
@@ -143,10 +174,26 @@ namespace JamControls
 	// "With the puck" for the two-role buttons: the skater carries it, or (jam.ctrl.OurPuckShoots 1, the default) the puck is loose and was last
 	// touched by his own team (our pass in flight: the one-timer's press comes before the reception).
 	JAMGAME_API bool HasPuckForButtons(const UJamSim& Sim, int32 Skater);
+	// Lane A199 (item 2): the badge's line with the hold shown: the pass key reads SAUCER from the frame the hold makes it a saucer, the cross-check key
+	// BRACED from the frame the brace counts (jam.ctrl.SaucerHoldFrames / BraceHoldFrames). Held is the human's last step (LastHumanButtons).
+	JAMGAME_API FString BadgeLineHeld(bool bWithPuck, const FJamButtonVerbs& Held, int32 SaucerFrames, int32 BraceFrames);
+	JAMGAME_API const FJamButtonVerbs& LastHumanButtons();
 	// The contact lane's level (A184, FJamInput::bCrossHold): true every frame the cross-check button is held while the skater does not carry.
 	JAMGAME_API void SetCrossHold(FJamInput& In, bool bHeld);
 	// The one call both game modes make: steps the resolver with the sim's possession and writes shoot, pass, check, the cross-check and its hold into In.
 	JAMGAME_API FJamButtonVerbs ApplyButtons(UJamPlayerInput& Pi, const UJamSim& Sim, int32 Skater, FJamInput& In);
+	// Lane A199: the context ApplyButtons steps with (the possession facts of the frame and the thresholds' delays from the cvars).
+	JAMGAME_API FJamButtonContext ButtonContext(const UJamSim& Sim, int32 Skater);
+	// Lane A199 (item 2): the frames a press must be held to be a hold. The saucer: jam.ctrl.SaucerHoldFrames (0 = the cartridge's pass.saucer.half_frames);
+	// the brace: jam.ctrl.BraceHoldFrames (0 = UJamSim::CrossHoldTapFrames). Never fewer than the sim's own (the mapping can only start a level late).
+	JAMGAME_API int32 SaucerHoldFrames(int32 SimHalfFrames);
+	JAMGAME_API int32 BraceHoldFrames();
+	// Lane A199 (item 4): writes Contents to Path through a temp file beside it and a rename, so a kill in the write never leaves half a file. False: the
+	// old file is untouched. The profile's ini (GameUserSettings.ini, where [Jam.Controls] lives) is saved through it (a pre-save hook, InstallAtomicSave).
+	JAMGAME_API bool SaveFileAtomically(const FString& Path, const FString& Contents);
+	JAMGAME_API void InstallAtomicSave();
+	// Tests: the next SaveFileAtomically fails after its temp write (a kill between the write and the rename).
+	JAMGAME_API void FailNextAtomicSaveForTest();
 }
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJamInputButtonSignature);
@@ -205,6 +252,12 @@ public:
 	// The HUD's first hint strip (UJamHudWidget::ControlsHintText), at most HintStripMaxChars characters with any binding.
 	static constexpr int32 HintStripMaxChars = 145;
 	static FString HintStripText();
+	// Lane A199 (item 3): the strip for one scheme (bPad: the pad buttons, L-STICK / R-STICK); HintStripText reads the last device used.
+	static FString HintStripTextFor(bool bPad);
+	// Lane A199: the device the human touched last (a pad button or the right stick = pad; a mouse move, a mouse button or a key = keys). The strip
+	// and the badge name that scheme's buttons.
+	static void NoteInputDevice(bool bPad);
+	static bool IsPadLast();
 	// The pause card's five lines (UJamDirectorsCallWidget::PauseControlsText).
 	static FString PauseCardText();
 	// The CONTROLS screen's rows (UJamMenuFlow::ControlRows): the two-role buttons as two rows each.
@@ -289,6 +342,9 @@ public:
 
 	// Lane A183: the two-role buttons, stepped once per sim step with the possession of that frame (JamControls::ApplyButtons calls it).
 	FJamButtonVerbs StepButtons(bool bWithPuck);
+	FJamButtonVerbs StepButtons(const FJamButtonContext& C);   // lane A199
+	// Lane A199: the last step's verbs (the badge's fill reads the hold).
+	const FJamButtonVerbs& GetLastButtons() const { return LastButtons; }
 	// Tests: a bound key's press as Enhanced Input reports it (the slot action's Started / Completed).
 	void DebugButton(const FKey& Key, bool bDown);
 
@@ -356,4 +412,5 @@ private:
 	bool bBound = false;
 	TWeakObjectPtr<APlayerController> BoundPC;
 	FJamButtonResolver Buttons;   // lane A183
+	FJamButtonVerbs LastButtons;  // lane A199
 };

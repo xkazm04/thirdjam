@@ -15,6 +15,8 @@
 #include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "HAL/FileManager.h"
+#include "Misc/CoreDelegates.h"
 #include "Internationalization/Regex.h"
 #include "HokejGameMode.h"
 #include "MenuStyle.h"
@@ -135,11 +137,13 @@ bool FJamControlsOutlivesPossession::RunTest(const FString&)
 		FJamButtonResolver R;
 		R.Press(EKeys::LeftMouseButton);
 		const FJamButtonVerbs A = R.Step(true, D);   // pressed with the puck
-		const FJamButtonVerbs B = R.Step(false, D);  // the puck is gone (stripped), the button still down
-		TestTrue(TEXT("a shot begun with the puck stays the shot's level after the puck leaves, never a cross-check"), A.bShootHeld && B.bShootHeld && !B.bLift && !B.bCrossHeld);
+		const FJamButtonVerbs B = R.Step(false, D);  // the puck is gone (stripped, out of his reach), the button still down
+		// Lane A199: the press is dead from the change: its level falls (nothing in reach to fire at) and it never becomes a cross-check.
+		TestTrue(TEXT("a shot begun with the puck dies when the puck leaves: no level, never a cross-check"), A.bShootHeld && !B.bShootHeld && !B.bLift && !B.bCrossHeld
+			&& B.DeadNow == EJamVerb::Shoot && R.ActiveVerb(EKeys::LeftMouseButton) == EJamVerb::Count);
 		R.Release(EKeys::LeftMouseButton);
 		const FJamButtonVerbs C = R.Step(false, D);
-		TestTrue(TEXT("its release ends the shot's level (the sim fires on that frame)"), !C.bShootHeld && !C.bLift);
+		TestTrue(TEXT("its release does nothing"), !C.bShootHeld && !C.bLift);
 		R.Press(EKeys::LeftMouseButton);
 		const FJamButtonVerbs E = R.Step(false, D);
 		TestTrue(TEXT("the next press, without the puck, is the cross-check"), E.bLift && E.bCrossHeld && !E.bShootHeld);
@@ -149,14 +153,15 @@ bool FJamControlsOutlivesPossession::RunTest(const FString&)
 		R.Press(EKeys::RightMouseButton);
 		const FJamButtonVerbs A = R.Step(true, D);
 		const FJamButtonVerbs B = R.Step(false, D);
-		TestTrue(TEXT("a pass begun with the puck stays the pass (the saucer's hold) after the puck leaves, never a check"), A.bPassHeld && B.bPassHeld && !B.bCheck);
+		TestTrue(TEXT("a pass begun with the puck dies when the puck leaves (lane A199), never a check"), A.bPassHeld && !B.bPassHeld && !B.bCheck && B.DeadNow == EJamVerb::Pass);
 	}
 	{
 		FJamButtonResolver R;
 		R.Press(EKeys::LeftMouseButton);
 		const FJamButtonVerbs A = R.Step(false, D);
 		const FJamButtonVerbs B = R.Step(true, D);   // the skater picked the puck up while holding the cross-check
-		TestTrue(TEXT("a cross-check begun without the puck stays a cross-check press (no shot) when the puck arrives"), A.bLift && !B.bShootHeld && !B.bShootPress && B.bCrossHeld);
+		TestTrue(TEXT("a cross-check begun without the puck is no shot when the puck arrives, and its brace ends (lane A199)"), A.bLift && !B.bShootHeld && !B.bShootPress && !B.bCrossHeld
+			&& B.DeadNow == EJamVerb::CrossCheck);
 	}
 	// The sim side: the possession the mapping reads, a staged carrier and a non-carrier.
 	FJamGameConfig Cfg;
@@ -581,6 +586,7 @@ bool FJamControlsButtonsBadge::RunTest(const FString&)
 {
 	FRestoreBindings Restore;
 	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	UJamInputMap::NoteInputDevice(false);   // lane A199: the mouse scheme's words
 	TestEqual(TEXT("with the puck"), UJamHudWidget::ButtonsBadgeLine(true), FString(TEXT("LMB  SHOOT     RMB  PASS")));
 	TestEqual(TEXT("without"), UJamHudWidget::ButtonsBadgeLine(false), FString(TEXT("LMB  CROSS-CHECK     RMB  CHECK")));
 	// Within a frame: on every frame of a staged pickup and loss the badge and an LMB press read the same possession (HasPuckForButtons of that frame).
@@ -660,6 +666,535 @@ bool FJamControlsPauseCard::RunTest(const FString&)
 	TestTrue(TEXT("the card fits 1080 high"), Size.Y > 100.f && Size.Y <= 1080.f);
 	if (C) C->OnBack.Broadcast();
 	TestFalse(TEXT("BACK returns to the pause menu"), P->IsOnControls());
+	return true;
+}
+
+// ---------------------------------------------------------------- lane A199 (evolution 3): the moment the puck changes hands, tap against hold, the screen's edges
+
+namespace JamControlsTests
+{
+	// One phase of a scripted hand: the possession facts the step reads, and whether the key is down.
+	struct FPhase { const TCHAR* Name; int32 Frames; bool bWith; bool bCarrying; bool bInReach; bool bDown; };
+	// What the press did in each phase: frames of each level, edges, and whether a level fell while the puck was ours and in reach after the first phase
+	// (the sim fires a held shot / pass on that fall when it holds a charge: "the release shoots").
+	struct FPhaseOut { int32 Shoot = 0, Pass = 0, Cross = 0, Lift = 0, Check = 0, ShootPress = 0, PassPress = 0; bool bFireOnFall = false; };
+
+	TArray<FPhaseOut> RunHand(const FKey& Key, const TArray<FPhase>& Phases, bool bRule)
+	{
+		const FJamBindings D = FJamBindings::Defaults();
+		FJamButtonResolver R;
+		TArray<FPhaseOut> Out;
+		bool bWasDown = false, bShootUp = false, bPassUp = false;
+		for (int32 P = 0; P < Phases.Num(); ++P)
+		{
+			const FPhase& Ph = Phases[P];
+			FPhaseOut O;
+			for (int32 F = 0; F < Ph.Frames; ++F)
+			{
+				if (Ph.bDown && !bWasDown) R.Press(Key);
+				if (!Ph.bDown && bWasDown) R.Release(Key);
+				bWasDown = Ph.bDown;
+				FJamButtonContext C;
+				C.bWith = Ph.bWith; C.bCarrying = Ph.bCarrying; C.bInReach = Ph.bInReach; C.bDeadAcrossChange = bRule;
+				const FJamButtonVerbs V = R.Step(C, D);
+				O.Shoot += V.bShootHeld; O.Pass += V.bPassHeld; O.Cross += V.bCrossHeld; O.Lift += V.bLift; O.Check += V.bCheck;
+				O.ShootPress += V.bShootPress; O.PassPress += V.bPassPress;
+				if (P > 0 && ((bShootUp && !V.bShootHeld) || (bPassUp && !V.bPassHeld)) && Ph.bInReach && Ph.bWith) O.bFireOnFall = true;
+				bShootUp = V.bShootHeld; bPassUp = V.bPassHeld;
+			}
+			Out.Add(O);
+		}
+		return Out;
+	}
+
+	FString Cell(const FPhaseOut& O)
+	{
+		TArray<FString> P;
+		if (O.Shoot) P.Add(FString::Printf(TEXT("shoot-level %d"), O.Shoot));
+		if (O.Pass) P.Add(FString::Printf(TEXT("pass-level %d"), O.Pass));
+		if (O.Cross) P.Add(FString::Printf(TEXT("brace-hold %d"), O.Cross));
+		if (O.Lift) P.Add(FString::Printf(TEXT("cross-check %d"), O.Lift));
+		if (O.Check) P.Add(FString::Printf(TEXT("check %d"), O.Check));
+		if (O.ShootPress) P.Add(TEXT("shot press"));
+		if (O.PassPress) P.Add(TEXT("pass press"));
+		if (O.bFireOnFall) P.Add(TEXT("RELEASE FIRES"));
+		return P.Num() ? FString::Join(P, TEXT(", ")) : FString(TEXT("nothing"));
+	}
+
+	// The staged skater carries: the puck on his stick side ahead of him at his speed until he touches it (HokejAcceptDrill's staging).
+	bool GiveTo(UJamSim* Sim, int32 Who, TArray<FJamInput>& In, UJamPlayerInput* Pi, int32 Me)
+	{
+		for (int32 F = 0; F < 40 && Sim->CarrierIndex() != Who; ++F)
+		{
+			const FJamSkaterState& T = Sim->GetSkaters()[Who];
+			Sim->SetPuck(T.Pos + T.Forward() * 0.45, T.Vel);
+			if (Pi) { In[Me] = FJamInput(); JamControls::ApplyButtons(*Pi, *Sim, Me, In[Me]); }
+			Sim->Step(In);
+		}
+		return Sim->CarrierIndex() == Who;
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsHeldAcrossChange, "Jam.Controls.HeldAcrossChange", JamControlsTests::Flags)
+bool FJamControlsHeldAcrossChange::RunTest(const FString&)
+{
+	// Item 1: scripted presses across a change of possession, per button, under main's rule (jam.ctrl.HeldAcrossChange 0) and the shipped one (1).
+	struct FScene { int32 Id; const TCHAR* Name; bool bLeft; TArray<FPhase> Phases; };
+	const TArray<FScene> Scenes = {
+		{ 1, TEXT("held braced, takes the puck in the hit, loses it, still held; then let go and pressed without"), true, {
+			{ TEXT("held without"), 20, false, false, false, true }, { TEXT("takes the puck"), 20, true, true, true, true },
+			{ TEXT("loses it, still held"), 20, false, false, false, true }, { TEXT("let go"), 2, false, false, false, false }, { TEXT("pressed again"), 3, false, false, false, true } } },
+		{ 2, TEXT("shot loading, stripped (out of reach), still held, puck back on his stick, let go"), true, {
+			{ TEXT("loading with the puck"), 20, true, true, true, true }, { TEXT("stripped, held"), 10, false, false, false, true },
+			{ TEXT("puck back, held"), 10, true, true, true, true }, { TEXT("let go"), 3, true, true, true, false } } },
+		{ 3, TEXT("shot loading, stripped but the puck still in his reach, then out of it"), true, {
+			{ TEXT("loading with the puck"), 20, true, true, true, true }, { TEXT("stripped, in reach"), 5, false, false, true, true },
+			{ TEXT("out of reach, held"), 10, false, false, false, true }, { TEXT("let go"), 3, false, false, false, false } } },
+		{ 4, TEXT("check called, passed to (our pass in flight, then on his stick), still held, let go, pressed again"), false, {
+			{ TEXT("held without"), 5, false, false, false, true }, { TEXT("our pass in flight"), 10, true, false, false, true },
+			{ TEXT("on his stick, held"), 20, true, true, true, true }, { TEXT("let go"), 2, true, true, true, false }, { TEXT("pressed again"), 3, true, true, true, true } } },
+		{ 5, TEXT("saucer loading, stripped (out of reach), still held, puck back, let go"), false, {
+			{ TEXT("loading with the puck"), 12, true, true, true, true }, { TEXT("stripped, held"), 10, false, false, false, true },
+			{ TEXT("puck back, held"), 10, true, true, true, true }, { TEXT("let go"), 3, true, true, true, false } } } };
+	for (const bool bPad : { false, true })
+	{
+		for (const FScene& Sc : Scenes)
+		{
+			const FKey Key = Sc.bLeft ? (bPad ? EKeys::Gamepad_RightTriggerAxis : EKeys::LeftMouseButton) : (bPad ? EKeys::Gamepad_RightShoulder : EKeys::RightMouseButton);
+			const TArray<FPhaseOut> Before = RunHand(Key, Sc.Phases, false), After = RunHand(Key, Sc.Phases, true);
+			const FString K = UJamInputMap::KeyName(Key);
+			AddInfo(FString::Printf(TEXT("JAMCTRL A199 table | %s | %s |"), *K, Sc.Name));
+			for (int32 P = 0; P < Sc.Phases.Num(); ++P)
+			{
+				AddInfo(FString::Printf(TEXT("JAMCTRL A199 table |  | %s | before: %s | after: %s |"), Sc.Phases[P].Name, *Cell(Before[P]), *Cell(After[P])));
+			}
+			switch (Sc.Id)
+			{
+			case 1:
+				TestTrue(*FString::Printf(TEXT("%s: main re-braced after the loss (the leak measured)"), *K), Before[2].Cross == 20);
+				TestTrue(*FString::Printf(TEXT("%s: braced while held without"), *K), After[0].Cross == 20 && After[0].Lift == 1);
+				TestTrue(*FString::Printf(TEXT("%s: taking the puck ends the brace, no shot"), *K), After[1].Cross == 0 && After[1].Shoot == 0 && After[1].ShootPress == 0);
+				TestTrue(*FString::Printf(TEXT("%s: losing it again under the same press does nothing"), *K), After[2].Cross == 0 && After[2].Lift == 0);
+				TestTrue(*FString::Printf(TEXT("%s: the next press is a cross-check again"), *K), After[4].Lift == 1 && After[4].Cross == 3);
+				break;
+			case 2:
+				TestTrue(*FString::Printf(TEXT("%s: main shot on the release with the old charge"), *K), Before[3].bFireOnFall);
+				TestTrue(*FString::Printf(TEXT("%s: stripped, the held shot does nothing (no level, no cross-check)"), *K), After[1].Shoot == 0 && After[1].Lift == 0 && After[1].Cross == 0);
+				TestTrue(*FString::Printf(TEXT("%s: the puck back under the same press: nothing, and the release fires nothing"), *K), After[2].Shoot == 0 && !After[3].bFireOnFall);
+				break;
+			case 3:
+				TestTrue(*FString::Printf(TEXT("%s: stripped with the puck in reach: the dead level is held up (its fall would fire at the loose puck)"), *K), After[1].Shoot == 5);
+				TestTrue(*FString::Printf(TEXT("%s: out of reach: the level falls and stays down"), *K), After[2].Shoot == 0 && After[3].Shoot == 0);
+				break;
+			case 4:
+				TestTrue(*FString::Printf(TEXT("%s: passed to with a check held: one check on the press, no pass in either rule"), *K), Before[0].Check == 1 && After[0].Check == 1
+					&& Before[2].Pass == 0 && After[2].Pass == 0 && After[1].Check == 0 && After[2].Check == 0 && !After[3].bFireOnFall);
+				TestTrue(*FString::Printf(TEXT("%s: the next press passes"), *K), After[4].PassPress == 1 && After[4].Pass == 3);
+				break;
+			default:
+				TestTrue(*FString::Printf(TEXT("%s: main passed on the release with the old charge"), *K), Before[3].bFireOnFall);
+				TestTrue(*FString::Printf(TEXT("%s: stripped, the held pass does nothing; the release fires nothing"), *K), After[1].Pass == 0 && After[1].Check == 0 && After[2].Pass == 0 && !After[3].bFireOnFall);
+				break;
+			}
+		}
+	}
+	IConsoleVariable* Rule = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.HeldAcrossChange"));
+	TestTrue(TEXT("jam.ctrl.HeldAcrossChange ships 1"), Rule && Rule->GetInt() == 1);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsChangeInTheSim, "Jam.Controls.HeldAcrossChangeInTheSim", JamControlsTests::Flags)
+bool FJamControlsChangeInTheSim::RunTest(const FString&)
+{
+	// Item 1 in the sim: the human loads a shot with LMB, an opponent takes the puck, it comes back to his stick, he lets go. Shots fired by the release:
+	// main's rule (0) against the shipped (1). The input goes through ApplyButtons from a real UJamPlayerInput, as both game modes send it.
+	FJamGameConfig Cfg;
+	if (!LoadRegular(*this, Cfg)) return false;
+	FRestoreBindings Restore;
+	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	IConsoleVariable* Rule = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.HeldAcrossChange"));
+	if (!TestNotNull(TEXT("jam.ctrl.HeldAcrossChange"), Rule)) return false;
+	const int32 Was = Rule->GetInt();
+	ON_SCOPE_EXIT { Rule->Set(Was, ECVF_SetByCode); };
+	int32 ShotsBy[2] = { -1, -1 };
+	for (int32 Mode = 0; Mode < 2; ++Mode)
+	{
+		Rule->Set(Mode, ECVF_SetByCode);
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		int32 Opp = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Team != Sim->GetSkaters()[Me].Team) { Opp = S.Index; break; }
+		if (!TestTrue(TEXT("an opponent"), Opp >= 0)) return false;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Index != Me && S.Index != Opp) Sim->SetSkater(S.Index, FVector2D(-25.0, -10.0 + S.Index), FVector2D::ZeroVector, 0.0);
+		Sim->SetSkater(Me, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		Sim->SetSkater(Opp, FVector2D(0.0, 8.0), FVector2D::ZeroVector, 0.0);
+		TArray<FJamInput> In;
+		In.Init(FJamInput(), Sim->GetSkaters().Num());
+		UJamPlayerInput* Pi = NewObject<UJamPlayerInput>();
+		if (!TestTrue(TEXT("the human carries"), GiveTo(Sim, Me, In, Pi, Me))) return false;
+		Pi->DebugButton(EKeys::LeftMouseButton, true);
+		auto Steps = [&](int32 N) { for (int32 F = 0; F < N; ++F) { In[Me] = FJamInput(); JamControls::ApplyButtons(*Pi, *Sim, Me, In[Me]); Sim->Step(In); } };
+		Steps(15);
+		const int32 Charge = Sim->GetSkaters()[Me].ChargeFrames;
+		const bool bTaken = GiveTo(Sim, Opp, In, Pi, Me);
+		Steps(3);
+		const bool bBack = GiveTo(Sim, Me, In, Pi, Me);
+		Steps(3);
+		const int32 Shots0 = Sim->GetSkaters()[Me].Shots;
+		Pi->DebugButton(EKeys::LeftMouseButton, false);
+		Steps(10);
+		ShotsBy[Mode] = Sim->GetSkaters()[Me].Shots - Shots0;
+		AddInfo(FString::Printf(TEXT("JAMCTRL A199 sim | rule %d | charge %d before the take | taken %d | back %d | shots by the release %d |"), Mode, Charge, bTaken ? 1 : 0, bBack ? 1 : 0, ShotsBy[Mode]));
+		TestTrue(TEXT("the staging: charged, taken, back"), Charge > 4 && bTaken && bBack);
+	}
+	TestEqual(TEXT("main's rule: the release shot the old charge"), ShotsBy[0], 1);
+	TestEqual(TEXT("the shipped rule: the release after the change shoots nothing"), ShotsBy[1], 0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsTapHold, "Jam.Controls.TapAgainstHold", JamControlsTests::Flags)
+bool FJamControlsTapHold::RunTest(const FString&)
+{
+	// Item 2: per press length, what the sim reads. The pass: the charge frames the sim counts (one per level frame with the puck in reach; a saucer from
+	// pass.saucer.half_frames). The cross-check: the frames braced in the sim (bCrossHold from the mapping; braced from UJamSim::CrossHoldTapFrames of it).
+	FJamGameConfig Cfg;
+	if (!LoadRegular(*this, Cfg)) return false;
+	FRestoreBindings Restore;
+	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	IConsoleVariable* Sau = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.SaucerHoldFrames"));
+	IConsoleVariable* Bra = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.BraceHoldFrames"));
+	if (!TestTrue(TEXT("the two cvars"), Sau && Bra)) return false;
+	TestEqual(TEXT("jam.ctrl.SaucerHoldFrames ships 13"), Sau->GetInt(), 13);
+	TestEqual(TEXT("jam.ctrl.BraceHoldFrames ships 13"), Bra->GetInt(), 13);
+	const int32 SauWas = Sau->GetInt(), BraWas = Bra->GetInt();
+	ON_SCOPE_EXIT { Sau->Set(SauWas, ECVF_SetByCode); Bra->Set(BraWas, ECVF_SetByCode); };
+	const int32 Half = Cfg.Pass.SaucerHalfFrames;
+	const int32 Lengths[] = { 1, 3, 6, 8, 9, 10, 12, 13, 16, 20 };
+	for (const int32 Shipped : { 0, 1 })
+	{
+		Sau->Set(Shipped ? 13 : 0, ECVF_SetByCode);
+		Bra->Set(Shipped ? 13 : 0, ECVF_SetByCode);
+		for (const int32 N : Lengths)
+		{
+			// The pass: the resolver with the delay ApplyButtons takes from the cvar, the puck in reach throughout.
+			FJamButtonResolver R;
+			FJamButtonContext C;
+			C.bWith = C.bCarrying = C.bInReach = true;
+			C.SaucerDelaySteps = FMath::Max(0, JamControls::SaucerHoldFrames(Half) - Half);
+			R.Press(EKeys::RightMouseButton);
+			int32 Charge = 0, Fired = -1;
+			bool bUp = false;
+			for (int32 F = 1; F <= N + 4; ++F)
+			{
+				if (F == N + 1) R.Release(EKeys::RightMouseButton);
+				const FJamButtonVerbs V = R.Step(C, FJamBindings::Defaults());
+				if (V.bPassHeld) Charge = FMath::Min(Charge + 1, FMath::Max(Half, 1));
+				if (bUp && !V.bPassHeld && Fired < 0) Fired = F;
+				bUp = V.bPassHeld;
+			}
+			const bool bSaucer = Charge >= Half;
+			// The cross-check in the sim: an isolated skater, the button held N frames through ApplyButtons.
+			UJamSim* Sim = NewObject<UJamSim>();
+			Sim->Init(Cfg, 1);
+			Sim->SkipFaceoff();
+			const int32 Me = Sim->GetHumanIndex();
+			for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Index != Me) Sim->SetSkater(S.Index, FVector2D(-25.0, -10.0 + S.Index), FVector2D::ZeroVector, 0.0);
+			Sim->SetSkater(Me, FVector2D(5.0, 0.0), FVector2D::ZeroVector, 0.0);
+			Sim->SetPuck(FVector2D(20.0, 8.0), FVector2D::ZeroVector);
+			TArray<FJamInput> In;
+			In.Init(FJamInput(), Sim->GetSkaters().Num());
+			UJamPlayerInput* Pi = NewObject<UJamPlayerInput>();
+			Pi->DebugButton(EKeys::LeftMouseButton, true);
+			int32 Lifts = 0, Braced = 0, FirstBraced = -1;
+			for (int32 F = 1; F <= N + 6; ++F)
+			{
+				if (F == N + 1) Pi->DebugButton(EKeys::LeftMouseButton, false);
+				In[Me] = FJamInput();
+				JamControls::ApplyButtons(*Pi, *Sim, Me, In[Me]);
+				Lifts += In[Me].bLift;
+				Sim->Step(In);
+				if (Sim->GetSkaters()[Me].bCrossBraced) { ++Braced; if (FirstBraced < 0) FirstBraced = F; }
+			}
+			AddInfo(FString::Printf(TEXT("JAMCTRL A199 hold | %s | %d frames | pass: charge %d, %s, fires on step %d | cross-check: presses %d, braced frames %d (from frame %d) |"),
+				Shipped ? TEXT("shipped 13/13") : TEXT("neutral 0/0 (sim 8/10)"), N, Charge, bSaucer ? TEXT("SAUCER") : TEXT("flat"), Fired, Lifts, Braced, FirstBraced));
+			const int32 SaucerFrom = Shipped ? 13 : Half, BraceFrom = Shipped ? 13 : UJamSim::CrossHoldTapFrames;
+			TestEqual(*FString::Printf(TEXT("%d frames: saucer iff held %d or more"), N, SaucerFrom), bSaucer, N >= SaucerFrom);
+			TestEqual(*FString::Printf(TEXT("%d frames: one cross-check press"), N), Lifts, 1);
+			TestEqual(*FString::Printf(TEXT("%d frames: braced iff held %d or more (from that frame)"), N, BraceFrom), FirstBraced, N >= BraceFrom ? BraceFrom : -1);
+			// A press let go inside the level's late start sends its one step on the release's step: it fires one step later (17 ms).
+			const int32 Late = C.SaucerDelaySteps > 0 && N <= C.SaucerDelaySteps ? 1 : 0;
+			TestTrue(*FString::Printf(TEXT("%d frames: the pass fires on the release's step (+%d), never before it"), N, Late), Fired == N + 1 + Late);
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsScreenEdges, "Jam.Controls.ScreenEdges", JamControlsTests::Flags)
+bool FJamControlsScreenEdges::RunTest(const FString&)
+{
+	// Item 4: a key bound twice swaps and says so; Esc cancels; a key repeat never binds; a quick second click (Slate's double-click) is a real press;
+	// RESET TO DEFAULTS asks first.
+	const FJamSettings Fresh;
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
+	FRestoreBindings Restore;
+	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	UWorld* World = nullptr;
+	if (GEngine && FSlateApplication::IsInitialized())
+	{
+		World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("JamControlsEdgesWorld"));
+		GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
+	}
+	ON_SCOPE_EXIT { if (World) { GEngine->DestroyWorldContext(World); World->DestroyWorld(false); } };
+	UJamControlsWidget* W = UJamSettingsWidget::MakeControlsScreen(World);
+	if (!TestNotNull(TEXT("the screen"), W)) return false;
+	W->AddToRoot();
+	ON_SCOPE_EXIT { W->ReleaseSlateResources(true); W->RemoveFromRoot(); };
+	TSharedRef<SWidget> Slate = W->TakeWidget();
+	W->Refresh();
+	// A key bound twice: SPRINT onto SPACE (the poke's): the poke gets SHIFT, and the line says so.
+	W->BeginListen(EJamVerb::Sprint, false);
+	TestTrue(TEXT("SPACE taken"), W->TakeListenPress(EKeys::SpaceBar, false));
+	const FJamBindings& B1 = UJamInputMap::Get()->GetBindings();
+	AddInfo(FString::Printf(TEXT("JAMCTRL A199 edges swap: %s"), *W->GetStatusLine()));
+	TestTrue(TEXT("swapped: sprint SPACE, poke SHIFT, valid"), B1[EJamVerb::Sprint].Keys[0] == EKeys::SpaceBar && B1[EJamVerb::Poke].Keys[0] == EKeys::LeftShift && B1.IsValid());
+	TestTrue(TEXT("the line says the swap"), W->GetStatusLine().Contains(TEXT("It was POKE's")) && W->GetStatusLine().Contains(TEXT("moved to SHIFT")));
+	// A repeat never binds: Enter opened the listen and is still held.
+	W->BeginListen(EJamVerb::Spin, false);
+	TestTrue(TEXT("the repeat is swallowed"), W->TakeListenPress(EKeys::Enter, true));
+	TestTrue(TEXT("still listening, the spin unchanged"), W->IsListening() && UJamInputMap::Get()->GetBindings()[EJamVerb::Spin].Keys[0] == EKeys::E);
+	TestTrue(TEXT("Esc cancels"), W->TakeListenPress(EKeys::Escape, false) && !W->IsListening() && W->GetStatusLine().Contains(TEXT("Cancelled")));
+	// The quick second click: the mouse button arrives through the double-click handler.
+	W->BeginListen(EJamVerb::Ability, false);
+	{
+		const FPointerEvent Dbl(0, FVector2D(10, 10), FVector2D(10, 10), TSet<FKey>({ EKeys::ThumbMouseButton2 }), EKeys::ThumbMouseButton2, 0.f, FModifierKeysState());
+		const FReply Rep = W->NativeOnMouseButtonDoubleClick(FGeometry(), Dbl);
+		TestTrue(TEXT("the double-click is handled"), Rep.IsEventHandled());
+	}
+	TestTrue(TEXT("mouse 5 bound by a quick second click"), !W->IsListening() && UJamInputMap::Get()->GetBindings()[EJamVerb::Ability].Keys[0] == EKeys::ThumbMouseButton2);
+	// A mouse down right after BeginListen is taken (no grace that eats it).
+	W->BeginListen(EJamVerb::Deke, false);
+	{
+		const FPointerEvent Down(0, FVector2D(10, 10), FVector2D(10, 10), TSet<FKey>({ EKeys::MiddleMouseButton }), EKeys::MiddleMouseButton, 0.f, FModifierKeysState());
+		W->NativeOnMouseButtonDown(FGeometry(), Down);
+	}
+	TestTrue(TEXT("MMB bound on the first tick of listening"), !W->IsListening() && UJamInputMap::Get()->GetBindings()[EJamVerb::Deke].Keys[0] == EKeys::MiddleMouseButton);
+	// RESET asks first.
+	const FJamBindings Changed = UJamInputMap::Get()->GetBindings();
+	W->RequestReset();
+	TestTrue(TEXT("the first press arms, changes nothing"), W->IsResetArmed() && UJamInputMap::Get()->GetBindings() == Changed && W->GetStatusLine().Contains(TEXT("CONFIRM RESET")));
+	W->BeginListen(EJamVerb::Poke, false);
+	TestFalse(TEXT("a listen disarms it"), W->IsResetArmed());
+	W->TakeListenPress(EKeys::Escape, false);
+	W->RequestReset();
+	W->RequestReset();
+	TestTrue(TEXT("the second press resets the game and the profile"), !W->IsResetArmed() && UJamInputMap::Get()->GetBindings() == FJamBindings::Defaults()
+		&& FJamBindings::FromSaved(FJamSettings::Load().Controls) == FJamBindings::Defaults());
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsAtomicSave, "Jam.Controls.AtomicSave", JamControlsTests::Flags)
+bool FJamControlsAtomicSave::RunTest(const FString&)
+{
+	// Item 4: the profile is written through a temp file and a rename. A failed write (a kill between the write and the rename) leaves the old file whole.
+	const FString Dir = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation"), TEXT("A199"));
+	const FString Path = FPaths::Combine(Dir, TEXT("Bindings.ini"));
+	IFileManager::Get().Delete(*Path, false, false, true);
+	const FString One = TEXT("[Jam.Controls]\nShoot=LeftMouseButton|Gamepad_RightTriggerAxis\n");
+	const FString Two = TEXT("[Jam.Controls]\nShoot=E|Gamepad_RightTriggerAxis\nPass=RightMouseButton|Gamepad_RightShoulder\n");
+	TestTrue(TEXT("the first write"), JamControls::SaveFileAtomically(Path, One));
+	FString Read;
+	TestTrue(TEXT("read back whole"), FFileHelper::LoadFileToString(Read, *Path) && Read == One);
+	JamControls::FailNextAtomicSaveForTest();
+	TestFalse(TEXT("a write killed before its rename reports failure"), JamControls::SaveFileAtomically(Path, Two));
+	TestTrue(TEXT("the old file is untouched"), FFileHelper::LoadFileToString(Read, *Path) && Read == One);
+	TestTrue(TEXT("a write over an existing file replaces it whole"), JamControls::SaveFileAtomically(Path, Two) && FFileHelper::LoadFileToString(Read, *Path) && Read == Two);
+	TArray<FString> Left;
+	IFileManager::Get().FindFiles(Left, *FPaths::Combine(Dir, TEXT("*.tmp")), true, false);
+	TestEqual(TEXT("no temp file left beside it"), Left.Num(), 0);
+	// The hook takes only the profile's ini: another file's save is left to the engine.
+	int32 Count = 0;
+	FCoreDelegates::TSPreSaveConfigFileDelegate().Broadcast(*Path, Two, Count);
+	TestEqual(TEXT("the pre-save hook ignores a file that is not GameUserSettings.ini"), Count, 0);
+	IFileManager::Get().DeleteDirectory(*Dir, false, true);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsPadScheme, "Jam.Controls.PadScheme", JamControlsTests::Flags)
+bool FJamControlsPadScheme::RunTest(const FString&)
+{
+	// Item 3: every action of the mouse scheme has a pad button, with the same possession rule; the strip and the badge name the pad's buttons when
+	// the pad was touched last; a stick nudge never binds; the badge shows the hold (SAUCER / BRACED).
+	FRestoreBindings Restore;
+	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	ON_SCOPE_EXIT { UJamInputMap::NoteInputDevice(false); };
+	const FJamBindings D = FJamBindings::Defaults();
+	for (int32 I = 0; I < FJamBindings::NumVerbs; ++I)
+	{
+		const EJamVerb V = static_cast<EJamVerb>(I);
+		if (V >= EJamVerb::SkateForward && V <= EJamVerb::SkateRight) continue;   // the left stick skates
+		TestTrue(*FString::Printf(TEXT("%s has a pad button (%s)"), FJamBindings::VerbId(V), *UJamInputMap::VerbKeysText(V, true)), D[V].Pads.Num() > 0);
+	}
+	// The same rule on the pad's two-role buttons as on the mouse's: the same verbs, step for step, through a pickup and a loss under a held press.
+	for (const TPair<FKey, FKey>& Pair : { TPair<FKey, FKey>(EKeys::LeftMouseButton, EKeys::Gamepad_RightTriggerAxis), TPair<FKey, FKey>(EKeys::RightMouseButton, EKeys::Gamepad_RightShoulder) })
+	{
+		FJamButtonResolver M, P;
+		M.Press(Pair.Key); P.Press(Pair.Value);
+		int32 Same = 0, N = 0;
+		const bool Script[] = { false, false, true, true, true, false, false, true };
+		for (const bool bWith : Script)
+		{
+			const FJamButtonVerbs A = M.Step(bWith, D), B = P.Step(bWith, D);
+			Same += (A.bShootHeld == B.bShootHeld && A.bPassHeld == B.bPassHeld && A.bCrossHeld == B.bCrossHeld && A.bLift == B.bLift && A.bCheck == B.bCheck) ? 1 : 0;
+			++N;
+		}
+		TestEqual(*FString::Printf(TEXT("%s and %s do the same on every step"), *UJamInputMap::KeyName(Pair.Key), *UJamInputMap::KeyName(Pair.Value)), Same, N);
+	}
+	// The words follow the scheme in use.
+	UJamPlayerInput* Pi = NewObject<UJamPlayerInput>();
+	Pi->DebugButton(EKeys::Gamepad_RightShoulder, true);
+	TestTrue(TEXT("a pad press makes the pad the last device"), UJamInputMap::IsPadLast());
+	const FString PadStrip = UJamInputMap::HintStripText();
+	AddInfo(FString::Printf(TEXT("JAMCTRL A199 pad strip: %s"), *PadStrip));
+	TestTrue(TEXT("the pad strip: L-STICK, R-STICK, RT, RB, A, R3, LT"), PadStrip.Contains(TEXT("SKATE  L-STICK")) && PadStrip.Contains(TEXT("AIM  R-STICK"))
+		&& PadStrip.Contains(TEXT("SHOOT / CROSS-CHECK  RT")) && PadStrip.Contains(TEXT("PASS / CHECK  RB")) && PadStrip.Len() <= UJamInputMap::HintStripMaxChars);
+	TestEqual(TEXT("the pad badge"), UJamHudWidget::ButtonsBadgeLine(true), FString(TEXT("RT  SHOOT     RB  PASS")));
+	FJamBindings R = D;
+	R.Rebind(EJamVerb::Poke, EKeys::Gamepad_FaceButton_Left);   // X: the pad's poke (the pass's second binding gives it up)
+	UJamInputMap::Get()->ApplyBindings(R);
+	TestTrue(TEXT("a rebound pad button shows in the strip"), UJamInputMap::HintStripText().Contains(TEXT("POKE  X")));
+	UJamInputMap::Get()->ApplyBindings(D);
+	Pi->DebugButton(EKeys::Gamepad_RightShoulder, false);
+	Pi->DebugButton(EKeys::LeftMouseButton, true);
+	TestFalse(TEXT("a mouse press gives the keys back"), UJamInputMap::IsPadLast());
+	TestEqual(TEXT("the mouse badge"), UJamHudWidget::ButtonsBadgeLine(false), FString(TEXT("LMB  CROSS-CHECK     RMB  CHECK")));
+	Pi->DebugButton(EKeys::LeftMouseButton, false);
+	// A stick nudge never binds.
+	FJamBindings S = D;
+	TestFalse(TEXT("the left stick's up is the game's own"), S.Rebind(EJamVerb::Poke, EKeys::Gamepad_LeftStick_Up));
+	TestFalse(TEXT("the right stick's left is the game's own"), S.Rebind(EJamVerb::Poke, EKeys::Gamepad_RightStick_Left));
+	// The badge shows the hold.
+	FJamButtonVerbs H;
+	H.PassHoldSteps = 12;
+	TestEqual(TEXT("a pass held 12 frames still reads PASS"), JamControls::BadgeLineHeld(true, H, 13, 13), FString(TEXT("LMB  SHOOT     RMB  PASS")));
+	H.PassHoldSteps = 13;
+	TestEqual(TEXT("from the 13th frame it reads SAUCER"), JamControls::BadgeLineHeld(true, H, 13, 13), FString(TEXT("LMB  SHOOT     RMB  SAUCER")));
+	H = FJamButtonVerbs();
+	H.CrossHoldSteps = 13;
+	TestEqual(TEXT("a cross-check held 13 frames reads BRACED"), JamControls::BadgeLineHeld(false, H, 13, 13), FString(TEXT("LMB  BRACED     RMB  CHECK")));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsSavedNeverUnbinds, "Jam.Controls.SavedEntryNeverUnbinds", JamControlsTests::Flags)
+bool FJamControlsSavedNeverUnbinds::RunTest(const FString&)
+{
+	// A198's FAULT 1: a saved entry with no usable key keeps the verb's default; a table that leaves a verb unreachable is refused whole for the defaults.
+	const FJamBindings D = FJamBindings::Defaults();
+	{
+		TMap<FString, FString> S;
+		S.Add(TEXT("Shoot"), TEXT("Mouse_Left|RightTrigger"));   // unknown name, a reserved (digital trigger) key
+		const FJamBindings B = FJamBindings::FromSaved(S);
+		TestTrue(TEXT("Shoot=Mouse_Left|RightTrigger: the shot keeps LMB / RT"), B[EJamVerb::Shoot] == D[EJamVerb::Shoot] && B.IsPlayable());
+	}
+	{
+		TMap<FString, FString> S;
+		S.Add(TEXT("Pass"), TEXT("<garbage>"));
+		TestTrue(TEXT("Pass=<garbage> (no '|'): the pass keeps its default"), FJamBindings::FromSaved(S)[EJamVerb::Pass] == D[EJamVerb::Pass]);
+	}
+	{
+		TMap<FString, FString> S;
+		for (int32 I = 0; I < FJamBindings::NumVerbs; ++I) S.Add(FJamBindings::VerbId(static_cast<EJamVerb>(I)), TEXT("|"));
+		TestTrue(TEXT("every verb saved as '|': the defaults whole"), FJamBindings::FromSaved(S) == D);
+	}
+	{
+		TMap<FString, FString> S;
+		S.Add(TEXT("Shoot"), TEXT("Escape,Mouse2D|Gamepad_DPad_Up"));   // only reserved keys
+		S.Add(TEXT("Spin"), TEXT("G|"));                                  // a usable entry beside it stays
+		const FJamBindings B = FJamBindings::FromSaved(S);
+		TestTrue(TEXT("reserved-only entry: default; the usable entry beside it is kept"), B[EJamVerb::Shoot] == D[EJamVerb::Shoot] && B[EJamVerb::Spin].Keys == TArray<FKey>({ EKeys::G })
+			&& B[EJamVerb::Spin].Pads.Num() == 0 && B.IsPlayable());
+	}
+	{
+		// A clash refuses the table whole.
+		TMap<FString, FString> S;
+		S.Add(TEXT("Poke"), TEXT("LeftMouseButton|"));
+		TestTrue(TEXT("a clash: the defaults whole"), FJamBindings::FromSaved(S) == D);
+	}
+	{
+		FJamBindings E = D;
+		E[EJamVerb::Check].Keys.Reset();
+		E[EJamVerb::Check].Pads.Reset();
+		FString Why;
+		TestFalse(TEXT("IsPlayable names a verb with nothing"), E.IsPlayable(&Why));
+		AddInfo(FString::Printf(TEXT("JAMCTRL A199 unplayable: %s"), *Why));
+		TestTrue(TEXT("the words name the verb"), Why.Contains(TEXT("Check")));
+		// Saved round trip of a table with the check unbound is refused whole.
+		TestTrue(TEXT("a saved table with a verb unbound comes back as the defaults"), FJamBindings::FromSaved(E.ToSaved()) == D);
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsRebindNeverStrips, "Jam.Controls.RebindNeverStrips", JamControlsTests::Flags)
+bool FJamControlsRebindNeverStrips::RunTest(const FString&)
+{
+	// A198's FAULT 2 and the Director's ruling: rebinding one verb of a shared pair splits the pair (the rebound verb takes the new key, its partner keeps
+	// the old one); a swap happens only with the verb that held the new key; no verb is ever left without a key or a pad button.
+	const FJamBindings D = FJamBindings::Defaults();
+	{
+		FJamBindings B = D;
+		TestTrue(TEXT("cross-check onto Down"), B.Rebind(EJamVerb::CrossCheck, EKeys::Down));
+		TestTrue(TEXT("the shot keeps LMB alone (the pair splits)"), B[EJamVerb::Shoot].Keys == TArray<FKey>({ EKeys::LeftMouseButton }) && !B.Has(EJamVerb::CrossCheck, EKeys::LeftMouseButton));
+		TestTrue(TEXT("skate back gives Down up and keeps S; LMB never skates"), B[EJamVerb::SkateBack].Keys == TArray<FKey>({ EKeys::S }));
+		TestTrue(TEXT("the cross-check: Down first, its second bindings kept"), B[EJamVerb::CrossCheck].Keys == TArray<FKey>({ EKeys::Down, EKeys::MiddleMouseButton, EKeys::ThumbMouseButton }));
+		TestTrue(TEXT("valid, playable"), B.IsValid() && B.IsPlayable());
+	}
+	{
+		// A verb whose only key is taken and to which the old key cannot go: refused, the table unchanged.
+		FJamBindings B = D;
+		B[EJamVerb::Restart].Pads.Reset();   // restart: R only
+		const FJamBindings Before = B;
+		TestFalse(TEXT("cross-check onto R would leave restart with nothing (LMB cannot go to it beside the shot): refused"), B.Rebind(EJamVerb::CrossCheck, EKeys::R));
+		TestTrue(TEXT("the table is unchanged"), B == Before);
+	}
+	// The property: every verb onto every key of a broad set, from the defaults and from 200 random valid tables.
+	const FKey Keys[] = { EKeys::LeftMouseButton, EKeys::RightMouseButton, EKeys::MiddleMouseButton, EKeys::ThumbMouseButton, EKeys::ThumbMouseButton2, EKeys::MouseScrollUp,
+		EKeys::MouseScrollDown, EKeys::Q, EKeys::E, EKeys::F, EKeys::G, EKeys::R, EKeys::W, EKeys::A, EKeys::S, EKeys::D, EKeys::X, EKeys::Z, EKeys::C, EKeys::SpaceBar,
+		EKeys::LeftShift, EKeys::LeftControl, EKeys::LeftAlt, EKeys::Tab, EKeys::Up, EKeys::Down, EKeys::Left, EKeys::Right, EKeys::Enter, EKeys::Escape, EKeys::One,
+		EKeys::Gamepad_RightTriggerAxis, EKeys::Gamepad_LeftTriggerAxis, EKeys::Gamepad_RightShoulder, EKeys::Gamepad_LeftShoulder, EKeys::Gamepad_FaceButton_Bottom,
+		EKeys::Gamepad_FaceButton_Right, EKeys::Gamepad_FaceButton_Left, EKeys::Gamepad_FaceButton_Top, EKeys::Gamepad_LeftThumbstick, EKeys::Gamepad_RightThumbstick,
+		EKeys::Gamepad_Special_Left, EKeys::Gamepad_DPad_Up, EKeys::Gamepad_LeftStick_Up };
+	const int32 NK = UE_ARRAY_COUNT(Keys);
+	int32 Tried = 0, Moved = 0, Bad = 0;
+	auto Check = [&](const FJamBindings& From, const TCHAR* Label)
+	{
+		for (int32 V = 0; V < FJamBindings::NumVerbs; ++V)
+		{
+			for (const FKey& K : Keys)
+			{
+				FJamBindings T = From;
+				const bool bOk = T.Rebind(static_cast<EJamVerb>(V), K);
+				++Tried; Moved += bOk ? 1 : 0;
+				FString Why;
+				if (!T.IsValid(&Why) || !T.IsPlayable(&Why) || (!bOk && !(T == From)))
+				{
+					if (++Bad <= 10) AddError(FString::Printf(TEXT("%s: %s onto %s: %s"), Label, FJamBindings::VerbId(static_cast<EJamVerb>(V)), *K.ToString(), bOk ? *Why : TEXT("refused but changed")));
+				}
+			}
+		}
+	};
+	Check(D, TEXT("defaults"));
+	FRandomStream Rng(199);
+	for (int32 T = 0; T < 200; ++T)
+	{
+		FJamBindings Tab = D;
+		for (int32 N = 0; N < 25; ++N) Tab.Rebind(static_cast<EJamVerb>(Rng.RandHelper(FJamBindings::NumVerbs)), Keys[Rng.RandHelper(NK)]);
+		if (!Tab.IsValid() || !Tab.IsPlayable()) { ++Bad; AddError(FString::Printf(TEXT("random table %d is not valid and playable after its own rebinds"), T)); continue; }
+		Check(Tab, *FString::Printf(TEXT("table %d"), T));
+	}
+	AddInfo(FString::Printf(TEXT("JAMCTRL A199 rebind property: %d rebinds tried (defaults + 200 random tables), %d moved, %d refused, %d faults"), Tried, Moved, Tried - Moved, Bad));
+	TestEqual(TEXT("after every rebinding every verb has a key or a pad button and no key serves two verbs outside a with / without pair"), Bad, 0);
 	return true;
 }
 

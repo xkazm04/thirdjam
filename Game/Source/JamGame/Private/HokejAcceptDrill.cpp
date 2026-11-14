@@ -419,7 +419,7 @@ void AHokejGameMode::AcceptDrillObserve()
 			break;
 		}
 		case 5:
-			ACC_LOG(TEXT("act step=5 k=%d act=pass frames=%d carrier=%d puck_dist=%.2f reach=%.2f frame=%lld"), G.K, G.K == 2 ? 0 : Cfg.Pass.SaucerHalfFrames + 6, C, PuckDist, Reach, F); break;
+			ACC_LOG(TEXT("act step=5 k=%d act=pass frames=%d carrier=%d puck_dist=%.2f reach=%.2f frame=%lld"), G.K, G.K == 2 ? 0 : JamControls::SaucerHoldFrames(Cfg.Pass.SaucerHalfFrames) + 6, C, PuckDist, Reach, F); break;
 		case 6:
 			ACC_LOG(TEXT("wait step=6 k=%d mate_carrier=%d frame=%lld"), G.K, C == G.Mate ? 1 : 0, F); G.ActFrame = -1; break;   // the act line comes with the mate's pass
 		case 8:

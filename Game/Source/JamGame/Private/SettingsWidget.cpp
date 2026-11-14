@@ -553,6 +553,8 @@ void UJamControlsWidget::Refresh()
 	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
 	ListenVerb = -1;
 	StatusLine.Reset();
+	bResetArmed = false;   // lane A199
+	if (ResetText) ResetText->SetText(FText::FromString(TEXT("RESET TO DEFAULTS")));
 	RefreshCells();
 }
 
@@ -602,7 +604,10 @@ void UJamControlsWidget::BeginListen(EJamVerb Verb, bool bPad)
 	if (Verb >= EJamVerb::Count || (bPad && IsSkate(Verb))) return;
 	ListenVerb = static_cast<int32>(Verb);
 	bListenPad = bPad;
-	ListenGraceTicks = 2;
+	// Lane A199: no grace. A cell starts listening on its click's release (NativeTick) or on a key's press (NativeOnKeyDown), so the next mouse down is a
+	// new press; the grace of two ticks ate a fast player's press. The repeat of the key that opened it is ignored instead (TakeListenPress).
+	ListenGraceTicks = 0;
+	if (bResetArmed) { bResetArmed = false; if (ResetText) ResetText->SetText(FText::FromString(TEXT("RESET TO DEFAULTS"))); }
 	StatusLine = FString::Printf(TEXT("%s: press the new %s (Esc cancels)"), *RowLabel(Verb), bPad ? TEXT("pad button") : TEXT("key or mouse button"));
 	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Visible);
 	SetKeyboardFocus();
@@ -635,7 +640,13 @@ bool UJamControlsWidget::HandleListenedKey(const FKey& InKey)
 	if (FJamBindings::IsReserved(Key)) { StatusLine = FString::Printf(TEXT("%s is the game's own (pause, the aim, the signals): pick another."), *UJamInputMap::KeyName(Key)); RefreshCells(); return false; }
 	FJamBindings B = UJamInputMap::Get()->GetBindings();
 	EJamVerb Swapped = EJamVerb::Count;
-	if (!B.Rebind(V, Key, &Swapped)) return Stop(FString::Printf(TEXT("%s is already %s's."), *UJamInputMap::KeyName(Key), *RowLabel(V)));
+	if (!B.Rebind(V, Key, &Swapped))
+	{
+		// Lane A199: Rebind refuses a move that would leave a verb with no key and no pad button (A198's FAULT 2), as well as a key already first on the row.
+		const TArray<FKey>& L = bListenPad ? B[V].Pads : B[V].Keys;
+		if (L.Num() > 0 && L[0] == Key) return Stop(FString::Printf(TEXT("%s is already %s's."), *UJamInputMap::KeyName(Key), *RowLabel(V)));
+		return Stop(FString::Printf(TEXT("Not moved: %s on %s would leave another control with no key. Free it first."), *UJamInputMap::KeyName(Key), *RowLabel(V)));
+	}
 	SaveAndApply(B);
 	FString Line = FString::Printf(TEXT("%s is now on %s."), *RowLabel(V), *UJamInputMap::KeyName(Key));
 	if (Swapped != EJamVerb::Count)
@@ -655,8 +666,34 @@ void UJamControlsWidget::SaveAndApply(const FJamBindings& B)
 	St.Save();
 }
 
+void UJamControlsWidget::RequestReset()
+{
+	// Lane A199 (item 4): a reset asks first. The first press arms it for ResetConfirmSeconds; the second resets; anything else (a listen, the time) disarms.
+	if (IsListening()) HandleListenedKey(EKeys::Escape);
+	if (!bResetArmed)
+	{
+		bResetArmed = true;
+		ResetArmedLeft = ResetConfirmSeconds;
+		StatusLine = TEXT("Every control back on its default? Press CONFIRM RESET to do it.");
+		if (ResetText) ResetText->SetText(FText::FromString(TEXT("CONFIRM RESET")));
+		RefreshCells();
+		return;
+	}
+	ResetToDefaults();
+}
+
+bool UJamControlsWidget::TakeListenPress(const FKey& Key, bool bRepeat)
+{
+	if (!IsListening()) return false;
+	if (bRepeat) return true;   // the held key that opened the listen (Enter, pad A) repeats: never bound by its own repeat
+	HandleListenedKey(Key);
+	return true;
+}
+
 void UJamControlsWidget::ResetToDefaults()
 {
+	bResetArmed = false;   // lane A199
+	if (ResetText) ResetText->SetText(FText::FromString(TEXT("RESET TO DEFAULTS")));
 	ListenVerb = -1;
 	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
 	SaveAndApply(FJamBindings::Defaults());
@@ -664,7 +701,7 @@ void UJamControlsWidget::ResetToDefaults()
 	RefreshCells();
 }
 
-void UJamControlsWidget::OnResetClicked() { ResetToDefaults(); }
+void UJamControlsWidget::OnResetClicked() { RequestReset(); }   // lane A199: asks first
 
 void UJamControlsWidget::OnBackClicked()
 {
@@ -681,6 +718,13 @@ void UJamControlsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 	if (ListenGraceTicks > 0) --ListenGraceTicks;
+	if (bResetArmed && (ResetArmedLeft -= InDeltaTime) <= 0.f)   // lane A199: the confirm lapses
+	{
+		bResetArmed = false;
+		if (ResetText) ResetText->SetText(FText::FromString(TEXT("RESET TO DEFAULTS")));
+		StatusLine = TEXT("Reset not confirmed: nothing changed.");
+		RefreshCells();
+	}
 	// The cells' clicks: a UButton's OnClicked carries no index, so the tick asks which cell went from pressed to released (the press and release
 	// both inside the button: a click).
 	CellWasPressed.SetNum(CellButtons.Num());
@@ -701,11 +745,8 @@ void UJamControlsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 FReply UJamControlsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey Key = InKeyEvent.GetKey();
-	if (IsListening())
-	{
-		HandleListenedKey(Key);
-		return FReply::Handled();
-	}
+	if (TakeListenPress(Key, InKeyEvent.IsRepeat())) return FReply::Handled();   // lane A199: a repeat never binds
+	if (InKeyEvent.IsRepeat() && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right)) return FReply::Handled();   // the Esc that cancelled, still held, does not leave
 	if (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right) { OnBack.Broadcast(); return FReply::Handled(); }
 	// The pad's A on a focused cell starts it listening.
 	if (Key == EKeys::Gamepad_FaceButton_Bottom || Key == EKeys::Enter)
@@ -717,8 +758,16 @@ FReply UJamControlsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FK
 
 FReply UJamControlsWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (IsListening() && ListenGraceTicks <= 0) { HandleListenedKey(InMouseEvent.GetEffectingButton()); return FReply::Handled(); }
+	if (TakeListenPress(InMouseEvent.GetEffectingButton(), false)) return FReply::Handled();   // lane A199: every mouse down while listening is a new press
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UJamControlsWidget::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	// Lane A199: Slate sends a quick second click as a double-click, not a mouse down: the click on the cell and the press of the new button inside the
+	// double-click time were eaten. The second click's button is the press.
+	if (TakeListenPress(InMouseEvent.GetEffectingButton(), false)) return FReply::Handled();
+	return Super::NativeOnMouseButtonDoubleClick(InGeometry, InMouseEvent);
 }
 
 FReply UJamControlsWidget::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
