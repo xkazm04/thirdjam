@@ -452,3 +452,4 @@
 - link green 06:54: main 95ae15a6 (The stop mark is a line, not a second ring; Space and F in the hint strip; one down rule f) pushed.
 - package 07:03: `Hokej_Hokej_H30.zip` from main 95ae15a6, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 07:13: main 3fa9c2e6 (H30 is the package the operator plays (R-0063): the window lane's tools and report (A155),) pushed.
+- link green 07:38: main 05c70170 (A soak baseline that is true of the package: 60 cells on ca493723, every one bit-identical) pushed.
