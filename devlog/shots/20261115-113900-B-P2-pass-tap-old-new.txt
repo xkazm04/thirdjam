@@ -1,0 +1,3 @@
+Lane P2, GPU, as the full-pass strip, but a tap: SetPassCharge 0.033 and 0.067 for 2 frames, then PlayPass(0.3) + SetPassCharge(0); the puck flies at 14 m/s. Columns call-1 to call+6.
+Top row OLD: after the puck has left, the stick swings back to his right (call+1 to +3), a wind-up seen after the pass.
+Bottom row NEW: no wind-up; the stick goes straight from the carry through in front of him on call+1, back to the carry by +6.
