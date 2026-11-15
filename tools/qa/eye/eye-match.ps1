@@ -10,7 +10,7 @@
 # The game's process id is written to out\<run>\game.json as it starts (it is stopped only by that id). Every run passes r.RDG.AsyncCompute=0.
 # Exit 0: the match was filmed. 1: the game died or no still. 2: could not run.
 param(
-    [ValidateSet('rookie', 'pro', 'allstar')][string]$Level = 'rookie',
+    [ValidateSet('rookie', 'pro', 'allstar', 'all_star')][string]$Level = 'rookie',
     [string]$Run = '',
     [int]$Port = 4811,
     [int]$Every = 20,
@@ -36,6 +36,8 @@ param(
     [string]$ExtraCVars = '',
     [int]$StartTimeoutSec = 900
 )
+# The game's level name is all_star (MenuFlow.cpp); 'allstar' is kept as an alias and passed on as the game's name (before, it played ROOKIE silently).
+if ($Level -eq 'allstar') { $Level = 'all_star' }
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 if ($root -notmatch '\\\.claude\\worktrees\\') { Write-Host "FAIL eye-match: this tool runs only from a worktree (root $root)"; exit 2 }
 . (Join-Path $root 'tools\run\common.ps1')
