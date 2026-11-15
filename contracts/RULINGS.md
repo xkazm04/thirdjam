@@ -889,3 +889,15 @@ drawn at a cross-check, tapped or held, by A or by a take of device B: only the 
 not by listing switches.
 (4) **MODES**: a list of the modes' names on the left, sorted ascending; the chosen mode's preview on the right half of the screen, its picture
 shown whole in its own proportions (never stretched), with its name and its lines; keys, pad and mouse as on the other screens.
+
+**R-0069, addition of 11:05 (which package he played).** Lane A219 read Windows' own record of what was started from the desktop
+(`tools/qa/eye2/which-exe.ps1`, read only; the Director ran it again): the last package started by hand is
+`Game\Packaged\Hokej_Hokej_H34\Windows\ThirdJam.exe` at 10:31:06 on 15 Nov, four minutes before his words; no start of H35 to H39 is recorded.
+H34 is the package of 14 Nov 19:02, from before the night. Its cross-check draws the streak across the stick (team colour, grey on a miss) and
+the bar across the chest of a held one (team colour, blue): "first gray on tap, blue on hold". H39 draws neither. So, until he says otherwise:
+- point (3) as he saw it is H34's and was gone from H35 on; what H39 still draws (the arc of dashes ahead of a held cross-check, the burst's
+  rectangles, the down rings made of rectangles, filmed by A219 in the package) goes all the same: the rule stands as written;
+- point (2) is real on main whatever he played: A218's person-hand table has 21 of 27 cases not his within 2 frames on dd441d9a;
+- point (4) stands as asked;
+- the night's work has NOT yet been played by him. Two cures so this cannot recur: `Game/Packaged/PLAY-LATEST.cmd` (written by every release)
+  starts the newest package, and HOME shows the package's name in a corner (lane A220).
