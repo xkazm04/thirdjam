@@ -32,6 +32,8 @@ namespace JamPassPowerTests
 		double PathUnderSkater = -1, PathUnder6 = -1;
 		double MinBlade = 1e9, MinBody = 1e9, VAtMin = 0, AngAtMin = 0, PathAtMin = 0;
 		int32 RecvReceivedAtStart = 0;
+		bool bBack = false;   // lane A207 (2b): back on the passer's own stick within 10 frames
+		double EventV = 0; FVector2D PasserVel0 = FVector2D::ZeroVector; int32 Carrier0 = -1, LastTouch0 = -1;
 	};
 	struct FRow
 	{
@@ -47,7 +49,7 @@ namespace JamPassPowerTests
 	struct FShotRow { bool bHuman = false; float Charge = 0.f; double V = 0; };
 	// Lane A207: every shot's fate: the shooter's team (0 = the human's), its distance to the net it attacks, and how it ended: 0 goal, 1 saved (the crease
 	// skater's save), 2 touched first by an opponent (a block), 3 touched first by a mate, 4 nothing (wide, the boards, dead) within 180 frames.
-	struct FShotFate { int32 Team = 0, TeamId = 0; bool bHuman = false; double DistM = 0; float Charge = 0.f; int32 Out = 4; };
+	struct FShotFate { int32 Team = 0, TeamId = 0; bool bHuman = false; double DistM = 0; float Charge = 0.f; int32 Out = 4; bool bKeeper = false; };
 
 	struct FTrace
 	{
@@ -60,6 +62,7 @@ namespace JamPassPowerTests
 		// The puck's integrity: frames it lay outside the boards; substeps... frames in which it moved through a standing body it never touched.
 		int32 OutFrames = 0, Through = 0, FastFrames = 0;
 		TArray<FString> ThroughRows;
+		TArray<FString> BackRows;
 		TArray<FShotFate> Fates;
 		bool bShotOpen = false;
 		int32 ShotBy = -1, ShotScore[2] = {0, 0};
@@ -156,6 +159,14 @@ namespace JamPassPowerTests
 			else
 			{
 				FFlight& F = T.F;
+				if (!F.bBack && Now - F.Start <= 10 && Sim->CarrierIndex() == F.Passer && (P.Vel - Sk[F.Passer].Vel).Size() < 4.0)
+				{
+					F.bBack = true;
+					FVector2D Nrm;
+					if (T.BackRows.Num() < 12) T.BackRows.Add(FString::Printf(TEXT("after %lld frames: release (event) %.1f m/s, at the frame's end lasttouch %d carrier %d passer v (%.1f,%.1f) | human %d v0 %.1f path %.2f | puck (%.1f,%.1f) v (%.1f,%.1f) | passer (%.1f,%.1f) v (%.1f,%.1f) | boards %.2f m | pass_frames %d recv %d"),
+						static_cast<long long>(Now - F.Start), F.EventV, F.LastTouch0, F.Carrier0, F.PasserVel0.X, F.PasserVel0.Y, Sk[F.Passer].bHuman ? 1 : 0, F.V0, F.Path, P.Pos.X, P.Pos.Y, P.Vel.X, P.Vel.Y, Sk[F.Passer].Pos.X, Sk[F.Passer].Pos.Y, Sk[F.Passer].Vel.X, Sk[F.Passer].Vel.Y,
+						-Sim->BoardDistance(P.Pos, Nrm), P.PassFrames, F.Recv));
+				}
 				F.Path += FVector2D::Distance(F.Last, P.Pos);
 				F.Last = P.Pos;
 				static const double Marks[4] = {5, 10, 20, 30};
@@ -186,21 +197,26 @@ namespace JamPassPowerTests
 				const int32 HumanTeam = Sim->GetHumanTeam();
 				FShotFate Fa; Fa.Team = S.Team == HumanTeam ? 0 : 1; Fa.TeamId = S.Team; Fa.bHuman = S.bHuman; Fa.Charge = S.LastShotCharge;
 				Fa.DistM = FVector2D::Distance(P.Pos, FVector2D(Sim->AttackGoalX(S.Team), 0.0));
+				for (const FJamSkaterState& D : Sk)   // a defender standing as the crease man (UJamSim::InCreaseStance's geometry: within 3 m of his own goal centre, able to act)
+					if (D.Team != S.Team && D.CanAct() && FVector2D::Distance(D.Pos, FVector2D(Sim->AttackGoalX(S.Team), 0.0)) <= 3.0) Fa.bKeeper = true;
 				T.Fates.Add(Fa); T.bShotOpen = true; T.ShotBy = S.Index; T.ShotAt = Now; T.ShotScore[0] = Sim->GetScore(0); T.ShotScore[1] = Sim->GetScore(1);
 			}
-			if (!S.bPassThisFrame) continue;
+			bool bPassEvent = false;   // lane A207 (2b): a flight starts on the sim's pass event (a skater who cannot act keeps last frame's one-frame flags)
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Pass && E.Who == S.Index) bPassEvent = true;
+			if (!S.bPassThisFrame || !bPassEvent) continue;
 			if (T.bOpen) Close(T, 4, V, Now, *Sim);
 			FFlight F;
 			F.Passer = S.Index; F.Team = S.Team; F.bHumanPasser = S.bHuman; F.Start = Now; F.V0 = V; F.From = P.Pos; F.Last = P.Pos; F.Dir = P.Vel.GetSafeNormal();
 			F.bSaucer = S.bSaucerThisFrame;
-			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Pass && E.Who == S.Index) F.Recv = ParseRecv(E.Kind);
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Pass && E.Who == S.Index) { F.Recv = ParseRecv(E.Kind); F.EventV = E.Strength * 30.0; }
+			F.PasserVel0 = S.Vel; F.Carrier0 = Sim->CarrierIndex(); F.LastTouch0 = P.LastTouch;
 			if (Sk.IsValidIndex(F.Recv)) { F.D0 = FVector2D::Distance(P.Pos, Sk[F.Recv].Pos); F.RecvReceivedAtStart = Sk[F.Recv].PassesReceived; }
 			T.F = F;
 			T.bOpen = true;
 		}
 	}
 
-	struct FOpt { FString Levels = TEXT("pro"), Player = TEXT("regular"), Rink = TEXT("hockey.regular"); int32 Seeds = 40, Rows = 0, From = 1; double Shot = -1; bool bPassOff = false; };
+	struct FOpt { FString Levels = TEXT("pro"), Player = TEXT("regular"), Rink = TEXT("hockey.regular"); int32 Seeds = 40, Rows = 0, From = 1; double Shot = -1; bool bPassOff = false; double ReadMps = -1, ReadMax = -1, Fade = -1; };
 	FOpt ReadOpt()
 	{
 		FOpt O;
@@ -213,6 +229,8 @@ namespace JamPassPowerTests
 			if (K == TEXT("level")) O.Levels = V; else if (K == TEXT("player")) O.Player = V; else if (K == TEXT("seeds")) O.Seeds = FCString::Atoi(*V);
 			else if (K == TEXT("rows")) O.Rows = FCString::Atoi(*V); else if (K == TEXT("from")) O.From = FCString::Atoi(*V); else if (K == TEXT("rink")) O.Rink = V;
 			else if (K == TEXT("shot")) O.Shot = FCString::Atod(*V); else if (K == TEXT("pass")) O.bPassOff = V == TEXT("off");
+			else if (K == TEXT("fade")) O.Fade = FCString::Atod(*V);
+			else if (K == TEXT("read")) { FString A, B; if (V.Split(TEXT(":"), &A, &B)) { O.ReadMps = FCString::Atod(*A); O.ReadMax = FCString::Atod(*B); } else O.ReadMps = FCString::Atod(*V); }
 		}
 		return O;
 	}
@@ -241,6 +259,9 @@ bool FJamBarPassMeasure::RunTest(const FString& Parameters)
 		{
 			UJamCartridge* M = DuplicateObject<UJamCartridge>(C, GetTransientPackage());
 			if (O.Shot > 0.0) M->Game.Shot.SpeedScale = O.Shot;
+			if (O.ReadMps >= 0.0) M->Game.Skater.GoalieReadMps = O.ReadMps;
+			if (O.Fade >= 0.0) M->Game.Shot.FadeM = O.Fade;
+			if (O.ReadMax >= 0.0) M->Game.Skater.GoalieReadMaxM = O.ReadMax;
 			if (O.bPassOff) { M->Game.Pass.PowerFullFrames = 0; M->Game.Pass.AimConeDeg = 0.0; M->Game.Pass.CatchM = 0.0; M->Game.Pass.bClearOwnBody = false; }
 			JamAI::FJamSimAdapter Sim(*M);
 			FTrace* T = new FTrace();
@@ -252,6 +273,7 @@ bool FJamBarPassMeasure::RunTest(const FString& Parameters)
 			Shots.Append(T->Shots);
 			Fates.Append(T->Fates);
 			OutFrames += T->OutFrames; Through += T->Through; FastFrames += T->FastFrames;
+			for (const FString& Row : T->BackRows) AddInfo(FString::Printf(TEXT("PASSBACK level=%s seed=%d %s"), *Level, Seed, *Row));
 			for (const FString& Row : T->ThroughRows) AddInfo(FString::Printf(TEXT("PASSTHROUGH level=%s seed=%d %s"), *Level, Seed, *Row));
 			delete T;
 		}
@@ -265,13 +287,13 @@ bool FJamBarPassMeasure::RunTest(const FString& Parameters)
 		}
 		for (int32 Cl = 0; Cl < 3; ++Cl)
 		{
-			int32 N = 0, NoMan = 0, Out[5] = {0, 0, 0, 0, 0}, Near = 0, DiedBefore = 0, Far = 0, FarCaught = 0, Ang20 = 0, Ang20Caught = 0;
+			int32 Back = 0, N = 0, NoMan = 0, Out[5] = {0, 0, 0, 0, 0}, Near = 0, DiedBefore = 0, Far = 0, FarCaught = 0, Ang20 = 0, Ang20Caught = 0;
 			TArray<double> V0, D0, MinB, Ang, U6, VMin;
 			for (const FRow& R : All)
 			{
 				if (R.Class != Cl) continue;
 				if (R.F.Recv < 0) { ++NoMan; continue; }   // a pass along the stick with no mate in the cone: counted apart
-				++N; ++Out[R.Out];
+				++N; ++Out[R.Out]; Back += R.F.bBack ? 1 : 0;
 				V0.Add(R.F.V0); D0.Add(R.F.D0); MinB.Add(R.F.MinBlade); Ang.Add(R.F.AngAtMin); VMin.Add(R.F.VAtMin);
 				if (R.F.PathUnder6 >= 0) U6.Add(R.F.PathUnder6);
 				if (R.F.MinBlade < 0.6) ++Near;
@@ -280,8 +302,8 @@ bool FJamBarPassMeasure::RunTest(const FString& Parameters)
 				if (R.F.AngAtMin <= 20.0) { ++Ang20; if (R.Out <= 1) ++Ang20Caught; }
 			}
 			const double Nn = FMath::Max(1, N);
-			AddInfo(FString::Printf(TEXT("PASSSUM level=%s class=%s n=%d no_man=%d per_match=%.1f | caught=%.1f%% touched=%.1f%% other_mate=%.1f%% opponent=%.1f%% nobody=%.1f%% | median v0=%.1f d0=%.1f minblade=%.2f ang=%.1f v_at_min=%.1f under6_at=%.1f | blade_within_0.6=%.1f%% slow_at_him(<6)=%.1f%% | d0>=15m: %d, reached %.1f%% | ang<=20: %d, reached %.1f%%"),
-				*Level, ClassName(Cl), N, NoMan, N / static_cast<double>(FMath::Max(1, O.Seeds)), 100.0 * Out[0] / Nn, 100.0 * Out[1] / Nn, 100.0 * Out[2] / Nn, 100.0 * Out[3] / Nn, 100.0 * Out[4] / Nn,
+			AddInfo(FString::Printf(TEXT("PASSSUM level=%s class=%s n=%d no_man=%d per_match=%.1f back_on_own_stick_10f=%.1f%% | caught=%.1f%% touched=%.1f%% other_mate=%.1f%% opponent=%.1f%% nobody=%.1f%% | median v0=%.1f d0=%.1f minblade=%.2f ang=%.1f v_at_min=%.1f under6_at=%.1f | blade_within_0.6=%.1f%% slow_at_him(<6)=%.1f%% | d0>=15m: %d, reached %.1f%% | ang<=20: %d, reached %.1f%%"),
+				*Level, ClassName(Cl), N, NoMan, N / static_cast<double>(FMath::Max(1, O.Seeds)), 100.0 * Back / FMath::Max(1, N), 100.0 * Out[0] / Nn, 100.0 * Out[1] / Nn, 100.0 * Out[2] / Nn, 100.0 * Out[3] / Nn, 100.0 * Out[4] / Nn,
 				Median(V0), Median(D0), Median(MinB), Median(Ang), Median(VMin), Median(U6), 100.0 * Near / Nn, 100.0 * DiedBefore / Nn, Far, 100.0 * FarCaught / FMath::Max(1, Far), Ang20, 100.0 * Ang20Caught / FMath::Max(1, Ang20)));
 		}
 		for (int32 H = 0; H < 2; ++H)
@@ -297,21 +319,23 @@ bool FJamBarPassMeasure::RunTest(const FString& Parameters)
 		}
 		// The shots' fates by the shooter's team (0 the human's side incl. the human, 1 the bots against him) and distance band.
 		{
-			static const double Bands[4] = {0, 10, 20, 35};
-			static const TCHAR* BandName[4] = {TEXT("0-10"), TEXT("10-20"), TEXT("20-35"), TEXT("35+")};
+			static const double Bands[4] = {0, 12, 25, 35};
+			static const TCHAR* BandName[4] = {TEXT("0-12"), TEXT("12-25"), TEXT("25-35"), TEXT("35+")};
 			for (int32 Tm = 0; Tm < 2; ++Tm)
 			{
 				FString Row;
 				for (int32 b = 0; b < 4; ++b)
 				{
-					int32 N = 0, Cnt[5] = {0, 0, 0, 0, 0};
+					int32 N = 0, Cnt[5] = {0, 0, 0, 0, 0}, Kept = 0, KeptGoal = 0;
 					for (const FShotFate& Fa : Fates)
 					{
 						if (Fa.Team != Tm || Fa.DistM < Bands[b] || (b < 3 && Fa.DistM >= Bands[b + 1])) continue;
 						++N; ++Cnt[FMath::Clamp(Fa.Out, 0, 4)];
+						if (Fa.bKeeper) { ++Kept; if (Fa.Out == 0) ++KeptGoal; }
 					}
 					const double Nn = FMath::Max(1, N);
-					Row += FString::Printf(TEXT(" | %s m: n=%d goal %.1f%% saved %.1f%% blocked %.1f%% mate %.1f%% nothing %.1f%%"), BandName[b], N, 100.0 * Cnt[0] / Nn, 100.0 * Cnt[1] / Nn, 100.0 * Cnt[2] / Nn, 100.0 * Cnt[3] / Nn, 100.0 * Cnt[4] / Nn);
+					Row += FString::Printf(TEXT(" | %s m: n=%d goal %.1f%% saved %.1f%% blocked %.1f%% mate %.1f%% nothing %.1f%% keeper_in_crease %.0f%% (goal %.0f%% with him, %.0f%% without)"), BandName[b], N, 100.0 * Cnt[0] / Nn, 100.0 * Cnt[1] / Nn, 100.0 * Cnt[2] / Nn, 100.0 * Cnt[3] / Nn, 100.0 * Cnt[4] / Nn,
+						100.0 * Kept / Nn, 100.0 * KeptGoal / FMath::Max(1, Kept), 100.0 * (Cnt[0] - KeptGoal) / FMath::Max(1, N - Kept));
 				}
 				AddInfo(FString::Printf(TEXT("SHOTFATE level=%s side=%s%s"), *Level, Tm == 0 ? TEXT("human_team") : TEXT("bots_against"), *Row));
 			}

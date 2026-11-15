@@ -216,6 +216,8 @@ namespace JamA214Test
 		int32 YawDiffers = 0, FlipFrames = 0, OpenIce = 0, OpenDiffers = 0, OpenNotRig = 0;
 		float MaxStepCm = 0.f, MaxPitchStep = 0.f, MaxYaw30 = 0.f, MaxOpenPx = 0.f;
 		FString WorstStep;
+		TArray<FString> AheadWhere;
+		double Seconds = 0.0;
 	};
 	// Runs a path through both cameras; the after camera's table, and what it does that the before camera does not.
 	void RunPath(const FJamCameraRink& R, const TArray<FVector2D>& Pos, const TArray<float>& Yaw, FDyn& OutBefore, FDyn& OutAfter, TArray<FString>* Strip = nullptr, int32 StripFrom = 0, int32 StripTo = 0)
@@ -233,7 +235,15 @@ namespace JamA214Test
 			const FTransform Tb = UJamFollowCamera::StepThirdPerson(Cb, Sb, F);
 			const FTransform Ta = UJamFollowCamera::StepThirdPerson(Ca, Sa, F);
 			OutBefore.Tab.Add(Look(Tb, R, Pos[i], Dir, Puck, true), true);
-			OutAfter.Tab.Add(Look(Ta, R, Pos[i], Dir, Puck, true), true);
+			const FRow RowA = Look(Ta, R, Pos[i], Dir, Puck, true);
+			OutAfter.Tab.Add(RowA, true);
+			if (!RowA.bAhead && OutAfter.AheadWhere.Num() < 12)
+			{
+				const double DirYaw = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
+				const FVector2D Fa = UJamFollowCamera::FrameFraction(Ta, Fov, Aspect, FVector((Pos[i].X + Dir.GetSafeNormal().X * 3.0) * 100.0, (Pos[i].Y + Dir.GetSafeNormal().Y * 3.0) * 100.0, 0.0));
+				OutAfter.AheadWhere.Add(FString::Printf(TEXT("f%d pos (%.1f, %.1f) board %.1f m | facing %.0f, travel %.0f (off by %.0f) | ahead point at (%.2f, %.2f) | before on %d"), i, Pos[i].X, Pos[i].Y, BoardDist(R, Pos[i]),
+					Yaw[i], DirYaw, FMath::Abs(FMath::UnwindDegrees((float)DirYaw - Yaw[i])), Fa.X, Fa.Y, Look(Tb, R, Pos[i], Dir, Puck, true).bAhead ? 1 : 0));
+			}
 			OutAfter.YawDiffers += FMath::Abs(FMath::UnwindDegrees(Ta.Rotator().Yaw - Tb.Rotator().Yaw)) > 1e-3f;
 			for (int32 k = 0; k < 2; ++k)
 			{
@@ -358,6 +368,19 @@ bool FJamCameraBoardsPaths::RunTest(const FString&)
 		TArray<FString> Strip;
 		RunPath(R, Pos, Yaw, B, A, K.Seed == 0 && K.L < 100.f ? &Strip : nullptr, 0, 240);
 		for (const FString& S : Strip) AddInfo(S);
+		for (const FString& S : A.AheadWhere) AddInfo(FString::Printf(TEXT("JAMBOARDS ahead off %s: %s"), K.Name, *S));
+		// The camera's own cost: the same path through each camera alone, timed (the frame time's share of the camera).
+		for (int32 k = 0; k < 2; ++k)
+		{
+			const FJamCameraSettings Cf = k ? After() : Before();
+			FJamCameraFilter St;
+			FTransform Sink;
+			const double T0 = FPlatformTime::Seconds();
+			for (int32 i = 0; i < Pos.Num(); ++i) Sink = UJamFollowCamera::StepThirdPerson(Cf, St, Frame(R, Pos[i], Yaw[i], Pos[i]));
+			(k ? A : B).Seconds = FPlatformTime::Seconds() - T0;
+			if (Sink.GetLocation().Z < -1e9) AddInfo(TEXT("."));
+		}
+		AddInfo(FString::Printf(TEXT("JAMBOARDS cost %s: StepThirdPerson %.2f us a frame before, %.2f us after (%d frames)"), K.Name, B.Seconds * 1e6 / Pos.Num(), A.Seconds * 1e6 / Pos.Num(), Pos.Num()));
 		for (int32 k = 0; k < 2; ++k)
 		{
 			const FDyn& D = k ? A : B;
@@ -375,8 +398,7 @@ bool FJamCameraBoardsPaths::RunTest(const FString&)
 		TestTrue(FString::Printf(TEXT("%s: 3 m ahead on screen in 95 %% (%d off)"), K.Name, A.Tab.AheadOff), A.Tab.AheadOff * 20 <= A.Tab.N);
 		TestTrue(FString::Printf(TEXT("%s: him on screen in 99.5 %% of frames (%d off; the step limit's guard catches him within a frame or two)"), K.Name, A.Tab.HimOff), A.Tab.HimOff * 200 <= A.Tab.N);
 		TestEqual(FString::Printf(TEXT("%s: open ice, frames off the open-ice rig"), K.Name), A.OpenNotRig, 0);
-		// Not yet at the bar: the guard that keeps him can move the camera up to 1.7 m in one frame in a corner turn (before: 1.0 m). Held under 2 m here.
-		TestTrue(FString::Printf(TEXT("%s: no step over 2 m (largest %.0f cm, before %.0f)"), K.Name, A.MaxStepCm, B.MaxStepCm), A.MaxStepCm <= 200.f);
+		TestTrue(FString::Printf(TEXT("%s: no pop: no step over main's bound of 1 m a frame (largest %.0f cm, before %.0f)"), K.Name, A.MaxStepCm, B.MaxStepCm), A.MaxStepCm <= FMath::Max(100.f, B.MaxStepCm));
 	}
 	return true;
 }

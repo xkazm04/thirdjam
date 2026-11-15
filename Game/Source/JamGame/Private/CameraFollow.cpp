@@ -275,7 +275,7 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	const FJamPresentationSkater& S = Frame.Skaters[Frame.HumanIndex];
 	// Lane A49: a teleport (the faceoff reset after a goal moves the skaters to the dots, 5 m and more in one frame) snaps the filter instead of lagging behind it:
 	// the human is the pivot every frame, and the 17 frames of "skater behind the camera" after a goal (packaged run bindings4) do not happen.
-	if (State.bInit && FVector2D::Distance(S.PosM, State.PivotM) > 5.0) { State.Reset(S.PosM, S.YawDeg); State.YawOffsetDeg.bInit = false; State.Lift.bInit = false; State.PitchDeg.bInit = false; State.Corner.bInit = false; State.KeepHeightM = 0.f; State.bKeepOffset = false; State.RigLead.bInit = false; State.bBound = false; for (FJamSpring& Bc : State.BoardsCorr) Bc.bInit = false; }
+	if (State.bInit && FVector2D::Distance(S.PosM, State.PivotM) > 5.0) { State.Reset(S.PosM, S.YawDeg); State.YawOffsetDeg.bInit = false; State.Lift.bInit = false; State.PitchDeg.bInit = false; State.Corner.bInit = false; State.KeepHeightM = 0.f; State.bKeepOffset = false; State.RigLead.bInit = false; State.bBound = false; for (FJamSpring& Bc : State.BoardsCorr) Bc.bInit = false; State.bBoardsLast = false; }
 	State.Step(S.PosM, S.YawDeg, C.LagFrames);
 	const FJamCameraRink Rink = FJamCameraRink::FromFrame(Frame);
 	const FVector NetCm = Frame.GetFarNetWorldCm();
@@ -549,7 +549,13 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 					for (int32 i = 0; i < 4; ++i) Cr[i] = Now[i] + (BWant[i] - Now[i]) * Mid;
 					if (Sees(Cr)) Hi = Mid; else Lo = Mid;
 				}
-				for (int32 i = 0; i < 4; ++i) { State.BoardsCorr[i].X = Now[i] + (BWant[i] - Now[i]) * Hi; }
+				// The guard's own move of the foot is bounded too (0.6 m a frame: with the step above and the rig's own motion the camera travels at most
+				// about 1 m a frame, main's bound); where that is not enough he is back within a frame or two.
+				const float GX = (BWant[0] - Now[0]) * Hi, GY = (BWant[1] - Now[1]) * Hi;
+				const float GLen = FMath::Sqrt(GX * GX + GY * GY), GK = GLen > 0.6f ? 0.6f / GLen : 1.f;
+				for (int32 i = 0; i < 4; ++i) { State.BoardsCorr[i].X = Now[i] + (BWant[i] - Now[i]) * Hi * (i < 2 ? GK : 1.f); }
+				State.BoardsCorr[2].X = Now[2] + FMath::Clamp(State.BoardsCorr[2].X - Now[2], -0.05f, 0.05f);   // and its height as the step's 5 cm
+				State.BoardsCorr[3].X = Now[3] + FMath::Clamp(State.BoardsCorr[3].X - Now[3], -2.5f, 2.5f);     // and its tilt by 2.5 deg (10 deg a frame seen at the glass)
 				bNone = false;
 			}
 		}
@@ -564,11 +570,27 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 		else
 		{
 			PosM = NearestInsideBoards(FVector2D(RigFoot.X + State.BoardsCorr[0].X, RigFoot.Y + State.BoardsCorr[1].X), Rink, C.BoardsViewMarginM);
+			// No pop: the foot travels at most max(1 m, the open-ice rig's own travel) a sim frame (main's own bound on these paths is 1.0 m); what is
+			// held back is carried in the correction and comes on the next frames.
+			if (State.bBoardsLast)
+			{
+				const FVector2D Step = PosM - State.BoardsLastFootM;
+				const double Cap = FMath::Max(0.99, FVector2D::Distance(RigFoot, State.BoardsLastRigM));   // with at most 5 cm of height: under 1 m in all
+				if (Step.Size() > Cap)
+				{
+					PosM = NearestInsideBoards(State.BoardsLastFootM + Step * (Cap / Step.Size()), Rink, C.BoardsViewMarginM);
+					State.BoardsCorr[0].X = (float)(PosM.X - RigFoot.X);
+					State.BoardsCorr[1].X = (float)(PosM.Y - RigFoot.Y);
+				}
+			}
 			HeightM = C.HeightM + State.BoardsCorr[2].X;
 			Pitch = FMath::Clamp(RigPitch + State.BoardsCorr[3].X, -89.f, 89.f);
 		}
+		State.BoardsLastFootM = PosM;
+		State.BoardsLastRigM = RigFoot;
+		State.bBoardsLast = true;
 	}
-	else State.LastBoardsWeight = 0.f;
+	else { State.LastBoardsWeight = 0.f; State.bBoardsLast = false; }
 	State.LastYawRigDeg = YawCam;
 	State.LastYawOutDeg = YawOut;
 	State.LastKeepYawDeg = FMath::UnwindDegrees(YawOut - YawCam);

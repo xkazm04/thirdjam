@@ -119,3 +119,15 @@ A button held while the puck changes hands does nothing until you let go and pre
 | list 3, 1 | a pass is praised when a mate RECEIVES it ("Tape to tape" said for a pass that never left his stick): the pass event is held until his team's PassesReceived grows (3 s at most), else dropped | `jam.comm.PassOnCatch` | gate |
 | list 3, 2 | a Director's mode plays the level lit on HOME (Glow Ice played PRO under ROOKIE): modes travel with ?level= as PLAY NOW does | `jam.menu.ModeLevel` | Jam.Menu.LevelWire (the mode step plays HOME's level) |
 | list 3, 3 | the contact line's "JUST WON IT" (his press into the other man's take grace) reads HE JUST GOT IT | `jam.hud.Words` | Jam.Hud.CarrierCues |
+
+## 7. Wave 3 (toward SCREEN READY 3)
+
+| Item | What changes | Switch (0 = before) | Proof |
+|---|---|---|---|
+| play sheet | `docs/experiments/PLAY-ME-DRAFT.md`: the game in three lines, the controls table GENERATED from the live bindings (`jam.ui.playsheet <file>`, then `node tools/qa/screen/a213/play-sheet.mjs <file>`), his three points as they stand on main, five things to try with what he should see, known limits | - | the draft (15 rows from the bindings) |
+| lines over his body | a hold's line (the shot's, and A207's pass line: its look) is drawn at 0.55 on a frame its box meets his figure's box, else at full strength. Picked over cutting the line at the figure: a cut line lost its start at the puck, which is where the eye looks | - (the hold lines' own switches) | `screen-tells/r3-01`, `r3-05`, `r3-09` |
+| double ring | 1.25 x (was 1.35), the outer ring at 0.75 of the inner's strength | `jam.hud.Possess` | `r3-09` |
+| far loose ring | past 22 m from the camera it is drawn in the HUD's yellow, not a darker ink: a dark ring vanishes on the neon rink's black ice, yellow reads on white, blue night and black | `jam.hud.Possess` | `r3-03`, `screen-tells/08` (before) |
+| own-net label | "own NN m", its diamond and arrow only while he is in his own third, and never on the radar's frame (on Glow Ice it slid under the radar: "own 8 m" inside the radar) | `jam.hud.OwnThird` | `r3-02` |
+| owed stills | the pass prompt firing (`r3-08`, a staged carry: ScriptHuman 0, drill 10, HandPuck); the pill dimmed while he is down: still owed (no knockdown of the human in the staged runs) | - | |
+| neon and night | every element read on Glow Ice and on the night look: rings, lines, the pill, the teach plate, the loose and contested rings: all read (blue rings on the night look's blue ice read by their ink edge); fixed: the own-net label under the radar | - | `r3-01`..`r3-07`, `r3-10`; runs `tools/qa/screen/out/a213-{neon1,neon2,night1,night2}/` |

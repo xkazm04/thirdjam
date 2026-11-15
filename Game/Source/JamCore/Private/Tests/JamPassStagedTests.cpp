@@ -288,6 +288,46 @@ bool FJamBarShotStaged::RunTest(const FString& Parameters)
 		}
 		++N; if (bThrough) ++Through; if (bOut) ++Out;
 	}
+	// Lane A207 (wave 2): the crease man against the shot. A defender stands 1.5 m out in front of the goal centre (the crease stance), the shooter
+	// at 12 / 25 / 30 m on the axis or 6 m to the side, tap / half / full; the save's read (game.skater.goalie.read_mps) on and off; how many score.
+	for (int32 Arm = 0; Arm < 4; ++Arm)
+	{
+		FJamGameConfig Gk = C->Game;
+		if (Arm == 0 || Arm == 2) Gk.Skater.GoalieReadMps = 0.0;
+		if (Arm >= 2) Gk.Shot.SpeedScale = 1.0;
+		FString Row;
+		for (const double D : {12.0, 25.0, 30.0})
+		{
+			int32 Goals = 0, Saves = 0, Tries = 0;
+			for (const double Side : {0.0, 6.0, -6.0})
+				for (const int32 Hold : {2, 8, 30})
+				{
+					FPassStage Sc(*C, Gk);
+					const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+					const double Gx = Sc.Sim->AttackGoalX(Team), Dir = Gx > 0 ? 1.0 : -1.0;
+					int32 Keeper = -1;
+					for (const FJamSkaterState& S : Sc.Sim->GetSkaters()) if (S.Team != Team && Keeper < 0) Keeper = S.Index;
+					for (const FJamSkaterState& S : Sc.Sim->GetSkaters()) if (S.Index != Sc.Me && S.Index != Keeper) Sc.Sim->SetSkater(S.Index, FVector2D(-Dir * 35.0, -18.0 + 0.5 * S.Index), FVector2D::ZeroVector, 0.0);
+					Sc.Sim->SetSkater(Keeper, FVector2D(Gx - Dir * 1.5, 0.0), FVector2D::ZeroVector, Dir > 0 ? UE_DOUBLE_PI : 0.0);
+					const FVector2D From(Gx - Dir * FMath::Sqrt(FMath::Max(1.0, D * D - Side * Side)), Side);
+					const FVector2D To = (FVector2D(Gx, 0.0) - From).GetSafeNormal();
+					Sc.Sim->SetSkater(Sc.Me, From, FVector2D::ZeroVector, FMath::Atan2(To.Y, To.X));
+					for (int32 i = 0; i < 2; ++i) { Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Sc.Me].BladePos, FVector2D::ZeroVector); Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(To.X, To.Y); Sc.Step(); }
+					for (int32 f = 0; f < Hold + 1; ++f) { Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(To.X, To.Y); Sc.In[Sc.Me].bShootHeld = f < Hold; Sc.Step(); }
+					const int32 S0 = Sc.Sim->GetScore(0) + Sc.Sim->GetScore(1);
+					bool bSave = false;
+					for (int32 f = 0; f < 150; ++f)
+					{
+						Sc.Clear(); Sc.Step();
+						for (const FJamSimEvent& E : Sc.Sim->GetFrameEvents()) if (E.Name == JamEvents::Save) bSave = true;
+						if (Sc.Sim->GetScore(0) + Sc.Sim->GetScore(1) > S0) { ++Goals; break; }
+					}
+					Saves += bSave ? 1 : 0; ++Tries;
+				}
+			Row += FString::Printf(TEXT(" | %.0f m: goals %d saves %d of %d"), D, Goals, Saves, Tries);
+		}
+		AddInfo(FString::Printf(TEXT("SHOTSTAGE keeper shot x%.0f read %s%s"), Gk.Shot.SpeedScale, Gk.Skater.GoalieReadMps > 0.0 ? TEXT("on") : TEXT("off"), *Row));
+	}
 	AddInfo(FString::Printf(TEXT("SHOTSTAGE tunnel: %d full shots on the ice at a body / the boards / a post from 2-20 m: through a body %d, outside the boards %d (bar 0, 0)"), N, Through, Out));
 	return true;
 }
@@ -503,6 +543,133 @@ bool FJamPassShotRows::RunTest(const FString& Parameters)
 		AddInfo(FString::Printf(TEXT("PASSSHOTROW onetimer: received %d, one-timer %d, goal %d"), bRecv ? 1 : 0, bOne ? 1 : 0, bGoal ? 1 : 0));
 		TestTrue(TEXT("onetimer: the mate's pass is received and the tap scores or is a one-timer"), bRecv && (bGoal || bOne));
 	}
+	return true;
+}
+
+// Lane A207 (wave 2b, the eye's EYE LIST 3): the tap on the move with the tree's pickup ON (A208's stick arc and body, game.stick.pickup): the human skating at
+// 4 to 9 m/s taps RMB (2 frames) with the stick on a mate standing 6 to 15 m away in the clear, ahead or to the side; the pass must reach him (bar 90 %) and must
+// never be back on the passer's own stick within 10 frames (bar under 2 %).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPassStagedTapOnTheMove, "Jam.Core.PassStaged.TapOnTheMove", JamPassStagedTests::Flags)
+bool FJamPassStagedTapOnTheMove::RunTest(const FString& Parameters)
+{
+	using namespace JamPassStagedTests;
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	AddInfo(FString::Printf(TEXT("PASSMOVE pickup.arc_m %.2f, pickup.body %d"), G.Stick.PickupArcM, G.Stick.bPickupBody ? 1 : 0));
+	int32 N = 0, Caught = 0, Retake = 0;
+	for (int32 i = 0; i < 60; ++i)
+	{
+		FPassStage Sc(*C, G);
+		const double D = 6.0 + 9.0 * (i % 4) / 3.0;
+		const double Ang = -60.0 + 120.0 * ((i / 4) % 5) / 4.0;   // the mate's bearing from the skating direction
+		const double Sp = 4.0 + 5.0 * (i / 20) / 2.0;
+		const FVector2D From(-20.0, 0.0), Fwd(1.0, 0.0);
+		const FVector2D MateAt = From + Fwd * (Sp * 0.6) + Rot(Fwd, Ang) * D;   // where he stands when the tap leaves (after 0.6 s of skating)
+		Sc.Sim->SetSkater(Sc.Mate, MateAt, FVector2D::ZeroVector, UE_DOUBLE_PI);
+		Sc.Sim->SetSkater(Sc.Me, From, Fwd * Sp, 0.0);
+		for (int32 k = 0; k < 2; ++k) { Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Sc.Me].BladePos, Fwd * Sp); Sc.Clear(); Sc.In[Sc.Me].Move = JamAI::FVec2(Sp / 11.0, 0.0); Sc.In[Sc.Me].Stick = JamAI::FVec2(1.0, 0.0); Sc.Step(); }
+		for (int32 k = 0; k < 34; ++k) { Sc.Clear(); Sc.In[Sc.Me].Move = JamAI::FVec2(Sp / 11.0, 0.0); const FVector2D To = (MateAt - Sc.Sim->GetSkaters()[Sc.Me].Pos).GetSafeNormal(); Sc.In[Sc.Me].Stick = JamAI::FVec2(To.X, To.Y); Sc.Step(); }
+		const int32 R0 = Sc.Sim->GetSkaters()[Sc.Mate].PassesReceived;
+		for (int32 k = 0; k < 3; ++k)
+		{
+			Sc.Clear(); Sc.In[Sc.Me].Move = JamAI::FVec2(Sp / 11.0, 0.0);
+			const FVector2D To = (MateAt - Sc.Sim->GetSkaters()[Sc.Me].Pos).GetSafeNormal();
+			Sc.In[Sc.Me].Stick = JamAI::FVec2(To.X, To.Y); Sc.In[Sc.Me].bPassHeld = k < 2; Sc.Step();
+		}
+		bool bCaught = false, bBack = false;
+		for (int32 f = 0; f < 180 && !bCaught; ++f)
+		{
+			Sc.Clear(); Sc.In[Sc.Me].Move = JamAI::FVec2(Sp / 11.0, 0.0);   // he skates on after the pass (onto it, if it is slow)
+			Sc.Step();
+			const FJamPuckState& P = Sc.Sim->GetPuck();
+			if (f < 10 && Sc.Sim->CarrierIndex() == Sc.Me && (P.Vel - Sc.Sim->GetSkaters()[Sc.Me].Vel).Size() < 4.0) bBack = true;
+			bCaught = Sc.Sim->GetSkaters()[Sc.Mate].PassesReceived > R0 || Sc.Sim->CarrierIndex() == Sc.Mate;
+			if (P.LastTouch != Sc.Me && P.LastTouch != Sc.Mate) break;
+		}
+		++N; Caught += bCaught ? 1 : 0; Retake += bBack ? 1 : 0;
+		if (!bCaught) AddInfo(FString::Printf(TEXT("PASSMOVE miss d=%.1f bearing=%.0f speed=%.0f back_on_his_stick=%d"), D, Ang, Sp, bBack ? 1 : 0));
+	}
+	AddInfo(FString::Printf(TEXT("PASSMOVE taps on the move to a mate 6-15 m away in the clear: caught %d of %d (%.1f %%, bar 90), back on the passer's stick within 10 frames %d (%.1f %%, bar under 2)"), Caught, N, 100.0 * Caught / N, Retake, 100.0 * Retake / N));
+	TestTrue(TEXT("the tap on the move reaches the mate 90 % of the time"), Caught * 10 >= N * 9);
+	TestTrue(TEXT("the pass is back on the passer's own stick within 10 frames under 2 % of the time"), Retake * 50 < N);
+	return true;
+}
+
+// Lane A207 (wave 2b, probe): a bot skating at 12 m/s passes (the edge) to a mate 10 m ahead, beside or behind: the puck's velocity after the release frame.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarPassBotRelease, "Bar.Pass.BotRelease", JamPassStagedTests::Flags)
+bool FJamBarPassBotRelease::RunTest(const FString& Parameters)
+{
+	using namespace JamPassStagedTests;
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) return false;
+	for (const double Bear : {0.0, 45.0, 90.0, 135.0, 180.0})
+	{
+		FPassStage Sc(*C, C->Game);
+		const int32 Bot = Sc.Mate;   // the human's mate is a bot: he passes to the human
+		const FVector2D From(-20.0, 0.0), Fwd(1.0, 0.0);
+		Sc.Sim->SetSkater(Bot, From, Fwd * 12.0, 0.0);
+		const FVector2D To = From + Fwd * 3.0 + Rot(Fwd, Bear) * 10.0;
+		Sc.Sim->SetSkater(Sc.Me, To, FVector2D::ZeroVector, UE_DOUBLE_PI);
+		for (int32 k = 0; k < 20; ++k) { if (k < 2) Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Bot].BladePos, Fwd * 12.0); Sc.Clear(); Sc.In[Bot].Move = JamAI::FVec2(1.0, 0.0); Sc.Step(); }
+		const FVector2D BV = Sc.Sim->GetSkaters()[Bot].Vel;
+		Sc.Clear(); Sc.In[Bot].Move = JamAI::FVec2(1.0, 0.0); Sc.In[Bot].bPass = true; Sc.Step();
+		const FJamSkaterState& B = Sc.Sim->GetSkaters()[Bot];
+		FString Row = FString::Printf(TEXT("BOTRELEASE bearing %.0f: carrier %d passed %d last %d | bot v (%.1f,%.1f) before (%.1f,%.1f) | puck v"), Bear, Sc.Sim->CarrierIndex(), B.bPassThisFrame ? 1 : 0, Sc.Sim->GetPuck().LastTouch, B.Vel.X, B.Vel.Y, BV.X, BV.Y);
+		for (int32 f = 0; f < 6; ++f)
+		{
+			const FJamPuckState& P = Sc.Sim->GetPuck();
+			Row += FString::Printf(TEXT(" f%d (%.1f,%.1f) d%.2f pf%d"), f, P.Vel.X, P.Vel.Y, FVector2D::Distance(P.Pos, Sc.Sim->GetSkaters()[Bot].Pos), P.PassFrames);
+			Sc.Clear(); Sc.In[Bot].Move = JamAI::FVec2(1.0, 0.0); Sc.Step();
+		}
+		AddInfo(Row);
+	}
+	return true;
+}
+
+// Lane A207 (wave 2c, the Director 02:57): a man ON the lane stops a pass. The human taps (stick on the mate) to a mate 12 m away; an opponent stands at 4 / 6 / 8 m
+// along the lane, 0 to 1 m off it, facing the passer with his stick at rest; the pass must be taken or blocked by him (or never reach the mate) at least 80 %.
+// And the open lane: the same with him 2.5 m off the lane: the pass must reach the mate (the stick is not a wall).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPassStagedOpponentInLane, "Jam.Core.PassStaged.OpponentInLane", JamPassStagedTests::Flags)
+bool FJamPassStagedOpponentInLane::RunTest(const FString& Parameters)
+{
+	using namespace JamPassStagedTests;
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	int32 InLane = 0, Stopped = 0, Open = 0, Through = 0;
+	for (int32 i = 0; i < 36; ++i)
+	{
+		FPassStage Sc(*C, G);
+		const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+		int32 Opp = -1;
+		for (const FJamSkaterState& S : Sc.Sim->GetSkaters()) if (S.Team != Team && Opp < 0) Opp = S.Index;
+		const double Along = 4.0 + 2.0 * (i % 3);
+		const bool bOpenCase = i >= 30;
+		const double Off = bOpenCase ? 2.5 * ((i % 2) ? 1.0 : -1.0) : (-1.0 + 2.0 * ((i / 3) % 5) / 4.0);   // -1 .. +1 m off the lane
+		const FVector2D From(-20.0, 0.0), Fwd(1.0, 0.0);
+		Sc.Sim->SetSkater(Sc.Mate, From + Fwd * 12.0, FVector2D::ZeroVector, UE_DOUBLE_PI);
+		Sc.Sim->SetSkater(Opp, From + Fwd * Along + FVector2D(0.0, Off), FVector2D::ZeroVector, UE_DOUBLE_PI);
+		Sc.GivePuck(From, Fwd);
+		const int32 R0 = Sc.Sim->GetSkaters()[Sc.Mate].PassesReceived;
+		Sc.Pass(2, Fwd, [] {});
+		bool bMate = false, bOpp = false;
+		for (int32 f = 0; f < 120 && !bMate && !bOpp; ++f)
+		{
+			Sc.Clear(); Sc.Step();
+			bMate = Sc.Sim->GetSkaters()[Sc.Mate].PassesReceived > R0 || Sc.Sim->CarrierIndex() == Sc.Mate;
+			bOpp = Sc.Sim->GetPuck().LastTouch == Opp;
+		}
+		if (bOpenCase) { ++Open; Through += bMate ? 1 : 0; }
+		else { ++InLane; Stopped += !bMate ? 1 : 0; }
+		if (!bOpenCase && bMate) AddInfo(FString::Printf(TEXT("PASSLANE through: opponent %.0f m along, %.2f m off"), Along, Off));
+	}
+	AddInfo(FString::Printf(TEXT("PASSLANE an opponent on the lane (0-1 m off, 4-8 m along) stops the tap %d of %d (bar 80 %%); 2.5 m off the lane the pass reaches the mate %d of %d"), Stopped, InLane, Through, Open));
+	TestTrue(TEXT("a man on the lane stops the pass at least 80 %"), Stopped * 5 >= InLane * 4);
+	TestTrue(TEXT("a man 2.5 m off the lane lets it reach the mate"), Through * 5 >= Open * 4);
 	return true;
 }
 

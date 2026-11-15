@@ -198,7 +198,11 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 			const FString Msg = FString::Printf(TEXT("%hs seed %llu: %d faceoffs, %d without a human touch inside 600 frames, worst %d frames, over %s"),
 				PresetName(P), Seed, S.Faceoffs, S.FaceoffsWithoutPlayerTouch, S.MaxFaceoffToTouch, S.bOver ? TEXT("yes") : TEXT("no (10-minute window)"));
 			// lane A3: at pro some 120 x 60 matches run the full 10-minute window; the window is the "full match" here
-			if ((S.bOver || S.Frames >= MaxFrames) && S.FaceoffsWithoutPlayerTouch == 0) { AddInfo(TEXT("PASS ") + Msg); }
+			// The Director, 15 Nov 05:00 (R-0068; lane A216's FACEOFF READY): with game.stick.faceoff the centres stand at the dot and the draw is a contest
+			// (before, they stood 20 m apart and this scripted human won every draw at +13 frames). He only forechecks a carrier, so after a lost draw on the
+			// 120 x 60 rink he can be 10 to 20 s without a touch (A216: 1 of 193 faceoffs on its tree; 2 of 38 on the merged main, worst 1,174 frames). The bar
+			// that still means "the human has something to do": at most one such faceoff a match, and none longer than 30 s (1,800 frames).
+			if ((S.bOver || S.Frames >= MaxFrames) && S.FaceoffsWithoutPlayerTouch <= 1 && S.MaxFaceoffToTouch <= 1800) { AddInfo(TEXT("PASS ") + Msg); }
 			else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 		}
 	}

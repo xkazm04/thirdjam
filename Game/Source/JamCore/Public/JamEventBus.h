@@ -52,6 +52,10 @@ namespace JamEvents
 	// Lane A84 (R-0041 point 3), proposed for C-0003: "ability": Who = the holder, Where = the holder, Kind = shotgun | hip_check | shield | slow_puck,
 	// Strength = 1 for a use (F), 0 for a grant (a mode at the drop, a boost take).
 	JAMCORE_API extern const FName Ability;
+	// Lane A208 (contracts/events.md, the R-0067 additions): "possess": a puck nobody carried becomes a skater's; Who = the new carrier, Where = the puck,
+	// Strength = the puck's speed at the take / puck.max_speed, Kind body = Variant 1 (the skates or the body), none = Variant 0 (the stick). Never for a press.
+	// shot_blocked gains Kind skater = Variant 1: a shot stopped by a skater's body or stick (Who = the shooter, Strength = the puck's speed / max).
+	JAMCORE_API extern const FName Possess;
 	// R-0013: `faceoff` gains Kind = drop (the puck is live, Who -1) | won (Who = the centre that won) | lost (Who = the centre that lost).
 }
 

@@ -428,6 +428,9 @@ struct JAMCORE_API FJamPuckState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double PrevZ = 0;
 	// Skater index that touched or shot it last, -1 after a faceoff.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LastTouch = -1;
+	// Lane A208 (game.puck.net.own_wall): the last skater who CARRIED the puck (then shot, passed or cleared it: a stick's deliberate play); a touch, a
+	// deflection or a block does not change it. Hashed while own_wall is on.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LastPlayedBy = -1;
 	// Total distance travelled this match.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double PathM = 0;
 	// Lane A84: a shotgun shot in flight (frames left, the shooter, its speed multiplier) and a slow puck (frames left, the passer or shooter, the speed share).
@@ -442,6 +445,12 @@ struct JAMCORE_API FJamPuckState
 	// skater, a shot or a placed puck ends it. A team-mate's blade within catch_m seats it (TryCatchPass). Hashed only while it runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassBy = -1;
+	// Lane A207 (wave 2): the man the pass was aimed at (-1: along the stick, any mate). Another team-mate lets the pass fly by while it is faster than
+	// DeflectMinSpeed against him (PassFliesBy); hashed with PassFrames.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassTo = -1;
+	// Lane A207 (wave 2b, game.shot.fade_m): the shot's added speed still on the puck (m/s; 0 = none). Set by TryShoot, faded with the distance travelled
+	// (StepShotFade), ended by any touch, a pass or a placed puck. Hashed while not 0.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double ShotExcess = 0;
 };
 
 // An event the step produced; the game mode hands it to UJamEventBus (converting Where to centimetres).
@@ -518,6 +527,16 @@ public:
 	// Lane A207: a pass in flight lasts at most this many frames (3 s) and ends under PassCatchMinMps; the forgiving catch takes it above that speed.
 	static constexpr int32 PassFlightFrames = 180;
 	static constexpr double PassCatchMinMps = 1.0;
+	// Lane A207 (wave 2b): a bot's pass goes to nobody nearer than this (unless BotUnderHit); the human's to nobody nearer than 2 m.
+	static constexpr double BotPassMinM = 3.0;
+	// Lane A207 (wave 2b): the shot's fade (game.shot.fade_m) starts this far from the shooter: the close shot stays 2x.
+	static constexpr double ShotFadeFromM = 8.0;
+	// Lane A207 (wave 2b): frames past the release cooldown in which the passer / shooter cannot take his own puck back (OwnPuckClears).
+	static constexpr int32 OwnReleaseLockFrames = 8;
+	// Lane A207 (wave 2b): a powered pass leaves at least this much faster than its passer along its line.
+	static constexpr double PassExitRelMps = 6.0;
+	// Lane A207 (wave 2): the crease skater's reaction before he reads a shot (game.skater.goalie.read_mps).
+	static constexpr double GoalieReadDelayS = 0.35;
 	static constexpr double CarryYawRateMax = 1.5707963; // rad/s (90 deg/s): carry assist off above it (C-0005)
 	// R-0029 point 4 (lane A39): the deke moves the puck over this many frames, a second tap inside the lockout does nothing, the puck sits this far
 	// ahead of the body while deked (so it stays inside shot reach at the full offset), the burst needs this clear corridor to the net (half-width, and
@@ -544,6 +563,11 @@ public:
 	static constexpr int32 PickupLostFrames = 15;
 	// Lane A208 (wave 2): a team-mate's pass in flight is caught within this of his blade point (lane A207's pass.catch_m 1.2), not by the whole arc.
 	static constexpr double PickupMateFlightM = 1.2;
+	// Lane A208: shot_blocked Variant 1 counts an opponent's puck at this speed or more, heading inside the net it attacks, as a shot.
+	static constexpr double ShotBlockMinMps = 12.0;
+	// Lane A208 (the lock, R-0067 point 2): with game.stick.pickup on, the carried puck closes on the blade at least at this carry assist (1: 42 % of the
+	// gap a substep, 88 % a frame; puck.carry_assist 0.6 closed 68 % a frame and lagged 15 cm and more through hard turns: 97 % of carry frames within 15 cm).
+	static constexpr double PickupLockAssist = 0.0;   // READY 2: OFF (= puck.carry_assist). Measured: 1.0 -> 98.3 % of carry frames within 15 cm (from 97.0), 2.4 (on the blade every substep) -> the A201 late hand 89 % (bar 90), the deke payoff and a lockstep coverage test red: wave 3
 	// R-0035 (lane A52): the lifted puck. The glass stops a puck under GlassHeightM at the boards (no game.rink.glass_height_m key exists: 2.4 m fixed, a real
 	// rink's 2.4 m of glass over 1.2 m of boards); above it the puck is out of play (a free faceoff at the end it left, as after a foul). A puck whose centre is
 	// within BarRingM + PostRadius of the crossbar's axis rings `post` and reflects; a puck under the bar by more scores, over it by more flies over the net
@@ -979,6 +1003,18 @@ private:
 	bool TryCatchPass(FJamSkaterState& S);
 	// Lane A207 (game.pass.clear_own_body): S's own body lets by the puck S just released (his cooldown runs, the puck fast relative to him).
 	bool OwnPuckClears(const FJamSkaterState& S) const;
+	// Lane A207 (wave 2): a team-mate who is not the pass's man lets a pass in flight by (body, blade, catch) while it is faster than DeflectMinSpeed
+	// against him: a pass aimed at the human is not taken by a mate standing in its lane. Under pass.catch_m only (PassTo is set only then).
+	bool PassFliesBy(const FJamSkaterState& S) const;
+	// Lane A207 (wave 2, game.skater.goalie.read_mps): the save reach a crease skater adds against the shot in flight at speed Sp.
+	double GoalieReadExtraM(double Sp) const;
+	// Lane A207 (wave 2b): fades the shot's added speed over the substep the puck just moved (Prev -> Pos).
+	void StepShotFade(const FVector2D& Prev);
+	// Lane A207 (wave 2b): an opponent within 2 m is closing on S (a bot about to be hit may still pass at 2 m).
+	bool BotUnderHit(const FJamSkaterState& S) const;
+	// Lane A207 (wave 2c, game.stick.pickup.pass_arc_m): an opponent takes a pass in flight only at his blade.
+	bool OppPassBladeOnly(const FJamSkaterState& S) const;
+	bool OppBladeMeetsPass(const FJamSkaterState& S, const FVector2D& At) const;
 	// Lane A207: the powered pass's release (TryPass under game.pass.power): the receiver, the aim, the speed and the auto-saucer. HoldFrames < 0 = an edge pass.
 	// StickIn = this frame's stick input (the blade moves after the pass in the step): the human's aim when |StickIn| > 0.05, else last frame's blade.
 	void TryPassPowered(FJamSkaterState& S, int32 HoldFrames, bool bSaucer, const FVector2D& StickIn = FVector2D::ZeroVector);
@@ -998,6 +1034,23 @@ private:
 	bool NetBetween(const FVector2D& A, const FVector2D& B) const;
 	// Lane A208 (pickup.body): another's carried puck inside S's body is pushed out of it; its carrier keeps it (R-0048).
 	void BlockCarried(const FJamSkaterState& S, double R);
+	// Lane A208 (contracts/events.md, R-0067 additions): the possess event at the frame's end, and shot_blocked Variant 1 from the pickup and the body.
+	void EmitPossess();
+	// Lane A208 (game.stick.faceoff): the centres at the dot (FaceoffReset), and the faceoff's no-hit time and place (a check or lift press refused).
+	void PlaceFaceoffCentres();
+	// Lane A208 (game.puck.net): the own goal mouth as a wall for the defending side's own play; the net's box entered only through the mouth.
+	void OwnNetWall(int32 Side, const FVector2D& From, double R, double E);
+	void NetBoxGuard(const FVector2D& From, double R);
+	bool FaceoffNoHit(const FJamSkaterState& S) const;
+	void EmitShotBlocked(const FJamSkaterState& S, double SpeedBefore);
+	// Frame-local read-outs of the possess event (set and read inside one Step; not state, never hashed).
+	double PossessSpeedAtTake = -1.0;
+	double PossessFrameStartSpeed = 0.0;
+	int32 PossessVariant = -1;
+	int32 PossessTaker = -1;
+	int32 PossessTouchAtStart = -1;
+	// Lane A208 (game.stick.faceoff.no_hit_frames): the frame the no-hit time after a real drop ends (-1 = none; SkipFaceoff opens none). State: hashed.
+	int64 FaceoffNoHitUntil = -1;
 	// R-0035 (lane A52): the free puck's height. StepPuckVertical integrates gravity and the ice bounce for one substep and pins a carried puck to the ice;
 	// ApplyShotLift gives the shot that just left its VZ for LiftForCharge(Charge) over the goal line; TryGoalieSave is the crease skater's save by height
 	// (the saver's index, -1 = no save this substep); OutOfPlay sends a puck over the glass to a free faceoff. All in their own blocks, away from the stick.

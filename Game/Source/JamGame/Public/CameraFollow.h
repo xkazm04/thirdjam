@@ -308,6 +308,10 @@ struct JAMGAME_API FJamCameraFilter
 	// of the last step (diagnostics: 0 = the rig's pose to the bit).
 	FJamSpring BoardsCorr[4];
 	float LastBoardsWeight = 0.f;
+	// Lane A214 (READY 2): the camera's foot and the open-ice rig's foot of the last step: the foot travels at most max(1 m, the rig's own travel) a frame.
+	FVector2D BoardsLastFootM = FVector2D::ZeroVector;
+	FVector2D BoardsLastRigM = FVector2D::ZeroVector;
+	bool bBoardsLast = false;
 
 	// alpha = 1 - exp(-1 / lag_frames), 1 when lag_frames == 0.
 	static float AlphaForLag(int32 LagFrames);

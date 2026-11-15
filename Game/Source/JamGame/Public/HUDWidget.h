@@ -376,9 +376,13 @@ public:
 	}
 	static EPossess PossessFromSim(const class UJamSim& Sim);
 	static const TCHAR* PossessName(EPossess P) { return P == EPossess::You ? TEXT("you") : P == EPossess::Mate ? TEXT("mate") : P == EPossess::Opponent ? TEXT("opponent") : TEXT("loose"); }
-	static constexpr float YouHaveRingScale = 1.35f;
+	static constexpr float YouHaveRingScale = 1.25f;   // wave 3: 1.35 read loud (the stills of READY 1); the outer ring at YouHaveRingAlpha too
+	static constexpr float YouHaveRingAlpha = 0.75f;
 	static constexpr float LooseRingRadiusM = 0.42f;
-	static constexpr float LooseRingMinPx = 40.f;   // the loose ring's least width on the screen (Slate units)
+	static constexpr float LooseRingMinPx = 40.f;
+	// Wave 3: past LooseRingFarM from the camera the loose ring is drawn in the HUD's yellow (chalk on pale ice read thin at 22 m; a dark ink would
+	// vanish on the neon rink's black ice: yellow reads on both).
+	static constexpr float LooseRingFarM = 22.f;   // the loose ring's least width on the screen (Slate units)
 	static constexpr int32 PossessPulseFrames = 14;
 	static constexpr float PossessPulseGrow = 0.6f;
 	// The pulse's size factor Age sim frames after the pickup: 1 + Grow at the pickup, easing to 1 at PossessPulseFrames; 1 before and after. Pure.
@@ -412,6 +416,10 @@ public:
 		return -1;
 	}
 	static bool OneLineOn();
+	// Wave 3: the own-net label ("own NN m", its diamond and arrow) only while the human is in his own third, and never on the radar's frame.
+	// jam.hud.OwnThird 0 = always (as before). Pure: in the own third? AttackSign: the side he attacks (+1 / -1).
+	static bool InOwnThird(float HumanXM, float AttackSign, float RinkLengthM) { return -AttackSign * HumanXM > RinkLengthM / 6.f; }
+	void ApplyOwnLabelRule(const FJamPresentationFrame& Frame);
 	void UpdateOneLine(const FJamPresentationFrame& Frame);
 	int32 OneLineShown = -1;
 	// The bark bubbles (UJamBarkWidget) yield to the HUD's one line: true while a HUD line of words stands this tick (the rule on). Wave 2.
@@ -466,6 +474,10 @@ public:
 	static constexpr float ShotLineMinM = 1.5f;
 	static constexpr float ShotLineMaxM = 4.5f;
 	static constexpr float ShotLineGapM = 0.8f;
+	// Wave 3 (the lines over his own body): a hold's line (the shot's here, the pass's in HUDPassMeter.cpp) is drawn at OverBodyAlpha on a frame its box
+	// meets the human figure's box (HumanBoxNow), else at its own strength. Chosen over cutting the line at the figure: a cut line lost its start.
+	static constexpr float OverBodyAlpha = 0.55f;
+	float HoldLineAlpha(const FVector2D& BoxMin, const FVector2D& BoxMax, float Full) const { return bHasHumanBox && BoxesMeet(BoxMin, BoxMax, HumanBoxNow.Min, HumanBoxNow.Max) ? OverBodyAlpha : Full; }
 	static float ShotLineM(int32 ChargeFrames, int32 ChargeMax) { return ChargeMax <= 0 ? ShotLineMinM : ShotLineMinM + (ShotLineMaxM - ShotLineMinM) * FMath::Clamp(static_cast<float>(ChargeFrames) / ChargeMax, 0.f, 1.f); }
 	void UpdateChargeLook(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UImage> PassTargetRing;

@@ -55,6 +55,13 @@ bool FJamFxBusForB::RunTest(const FString&)
 	TestEqual(TEXT("ability hip_check: Variant 1"), UJamEffectsBinder::VariantForPayload(JamEvents::Ability, P(1, TEXT("hip_check"))), 1.f);
 	TestEqual(TEXT("ability shield: Variant 2"), UJamEffectsBinder::VariantForPayload(JamEvents::Ability, P(1, TEXT("shield"))), 2.f);
 	TestEqual(TEXT("ability slow_puck: Variant 3"), UJamEffectsBinder::VariantForPayload(JamEvents::Ability, P(1, TEXT("slow_puck"))), 3.f);
+	// Lane A208 (contracts/events.md, R-0067 additions): possess stick 0 / body 1, shot_blocked skater 1 (a zone's refusal stays 0); possess is a known, sound-only event.
+	TestEqual(TEXT("possess by the stick: Variant 0"), UJamEffectsBinder::VariantForPayload(JamEvents::Possess, P(0.2f, TEXT(""))), 0.f);
+	TestEqual(TEXT("possess by the body: Variant 1"), UJamEffectsBinder::VariantForPayload(JamEvents::Possess, P(0.2f, TEXT("body"))), 1.f);
+	TestEqual(TEXT("shot_blocked by a skater: Variant 1"), UJamEffectsBinder::VariantForPayload(JamEvents::ShotBlocked, P(0.5f, TEXT("skater"))), 1.f);
+	TestEqual(TEXT("shot_blocked in a no_shoot zone: Variant 0"), UJamEffectsBinder::VariantForPayload(JamEvents::ShotBlocked, P(0.f, TEXT("zone_1"))), 0.f);
+	TestTrue(TEXT("possess is a known event"), UJamEventBus::IsKnownEvent(JamEvents::Possess));
+	TestTrue(TEXT("possess is sound-only (MS_possess)"), UJamEffectsBinder::IsSoundOnlyEvent(JamEvents::Possess));
 	TestTrue(TEXT("an ability grant (Strength 0) is quiet"), UJamEffectsBinder::IsQuietPayload(JamEvents::Ability, P(0, TEXT("shield"))));
 	TestFalse(TEXT("an ability use (Strength 1) plays"), UJamEffectsBinder::IsQuietPayload(JamEvents::Ability, P(1, TEXT("shield"))));
 	TestFalse(TEXT("a check with Strength 0 still plays"), UJamEffectsBinder::IsQuietPayload(JamEvents::Check, P(0, TEXT("front"), TEXT("stumble"))));

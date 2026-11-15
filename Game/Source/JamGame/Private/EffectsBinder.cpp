@@ -228,6 +228,9 @@ float UJamEffectsBinder::VariantFor(FName Event, FName Kind)
 	{
 		return Kind == FName(TEXT("sudden_death")) ? 1.f : 0.f;
 	}
+	// Lane A208 (contracts/events.md, R-0067 additions): possess Variant 1 = the skates or the body (Kind body); shot_blocked Variant 1 = a skater stopped the shot.
+	if (Event == JamEvents::Possess) return Kind == FName(TEXT("body")) ? 1.f : 0.f;
+	if (Event == JamEvents::ShotBlocked && Kind == FName(TEXT("skater"))) return 1.f;
 	return 0.f;   // shot_blocked reuses the foul assets at Variant 0 (B-to-A-0016); everything else has one kind
 }
 
@@ -260,7 +263,8 @@ bool UJamEffectsBinder::IsSoundOnlyEvent(FName Event)
 	// Director, H9.4: B makes no NS_ for these four on purpose (MS_lose, MS_bark, MS_signal, MS_announce only).
 	// B-to-A-0031 ask 2 (lane A47): period_end, clock and season_take are sound-only too (MS_period_end, MS_clock, MS_season_take).
 	return Event == JamEvents::Lose || Event == JamEvents::Bark || Event == JamEvents::Signal || Event == JamEvents::Announce
-		|| Event == JamEvents::PeriodEnd || Event == JamEvents::Clock || Event == JamEvents::SeasonTake;
+		|| Event == JamEvents::PeriodEnd || Event == JamEvents::Clock || Event == JamEvents::SeasonTake
+		|| Event == JamEvents::Possess;   // lane A208: possess is MS_possess only (contracts/events.md: no visual)
 }
 
 FLinearColor UJamEffectsBinder::ZoneKindColour(FName Kind)

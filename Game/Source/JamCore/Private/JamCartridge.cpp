@@ -1095,6 +1095,8 @@ namespace
 		{
 			ReadNumber(Gk, TEXT("reach_m"), C.Skater.GoalieReachM);
 			ReadNumber(Gk, TEXT("block_height_m"), C.Skater.GoalieBlockHeightM);
+			ReadNumber(Gk, TEXT("read_mps"), C.Skater.GoalieReadMps);   // lane A207
+			ReadNumber(Gk, TEXT("read_max_m"), C.Skater.GoalieReadMaxM);
 		}
 		// Lane A51 (R-0034): game.skater.spin { frames, cooldown_frames, speed_mult, stamina_cost }
 		if (const FJPtr Sn = Obj(Sk, TEXT("spin")))
@@ -1127,10 +1129,20 @@ namespace
 		{
 			ReadNumber(Pu, TEXT("arc_m"), C.Stick.PickupArcM);
 			ReadNumber(Pu, TEXT("arc_deg"), C.Stick.PickupArcDeg);
+			ReadNumber(Pu, TEXT("pass_arc_m"), C.Stick.PickupPassArcM);   // lane A207 (wave 2c)
+			ReadNumber(Pu, TEXT("pass_arc_deg"), C.Stick.PickupPassArcDeg);
 			ReadBool(Pu, TEXT("body"), C.Stick.bPickupBody);
 			ReadNumber(Pu, TEXT("sting_mps"), C.Stick.PickupStingMps);
 			ReadNumber(Pu, TEXT("body_catch_mps"), C.Stick.PickupBodyCatchMps);
 			ReadBool(Pu, TEXT("block_carried"), C.Stick.bPickupBlockCarried);
+		}
+		// Lane A208 (the eye's list 1): game.stick.faceoff { centre_gap_m, winner_shield_frames, no_hit_frames, no_hit_m }
+		if (const FJPtr Fo = Obj(St, TEXT("faceoff")))
+		{
+			ReadNumber(Fo, TEXT("centre_gap_m"), C.Stick.FaceoffCentreGapM);
+			ReadInteger(Fo, TEXT("winner_shield_frames"), C.Stick.FaceoffWinnerShieldFrames);
+			ReadInteger(Fo, TEXT("no_hit_frames"), C.Stick.FaceoffNoHitFrames);
+			ReadNumber(Fo, TEXT("no_hit_m"), C.Stick.FaceoffNoHitM);
 		}
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
@@ -1158,6 +1170,7 @@ namespace
 		// R-0035 (lane A52): the lifted puck
 		ReadNumber(Pk, TEXT("gravity_mps2"), C.Puck.GravityMps2);
 		ReadNumber(Pk, TEXT("ice_restitution"), C.Puck.IceRestitution);
+		if (const FJPtr Nt = Obj(Pk, TEXT("net"))) { ReadBool(Nt, TEXT("own_wall"), C.Puck.bNetOwnWall); ReadBool(Nt, TEXT("mouth_only"), C.Puck.bNetMouthOnly); }   // lane A208: game.puck.net
 
 		FJPtr Shot = Obj(G, TEXT("shot"));
 		ReadNumber(Shot, TEXT("reach_m"), C.Shot.ReachM);
@@ -1168,6 +1181,7 @@ namespace
 		ReadNumber(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
 		ReadInteger(Shot, TEXT("tap_frames"), C.Shot.TapFrames);   // R-0044 (lane A91)
 		ReadNumber(Shot, TEXT("speed_scale"), C.Shot.SpeedScale);   // lane A207
+		ReadNumber(Shot, TEXT("fade_m"), C.Shot.FadeM);   // lane A207 (wave 2b)
 		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
 		// R-0029 point 4 (lane A39): game.shot.one_timer { window_frames, cone_bonus_deg }
 		if (const FJPtr Ot = Obj(Shot, TEXT("one_timer")))

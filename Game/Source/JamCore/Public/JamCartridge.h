@@ -126,6 +126,11 @@ struct JAMCORE_API FJamSkaterConfig
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
+	// Lane A207 (track P1, wave 2; docs/experiments/PASS-SHOT.md section 4): game.skater.goalie.read_mps / read_max_m: the crease skater reads a long shot. Past
+	// UJamSim::GoalieReadDelayS (0.25 s) of the shot's flight his save reach grows by read_mps per second, to read_max_m more: the long shot that the doubled
+	// speed brings to the net is a goalie's save, the quick one from the slot is not. 0 = the neutral value (reach_m whatever the flight).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReadMps = 2.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReadMaxM = 1.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieBlockHeightM = 0.4;   // Director calibration 01:30 (R-0035): below the 0.61 bar, so a half-charged shot (0.45) clears the stance and stays under the bar; at 0.7 the stance saved everything the net could take and the novice stopped scoring in time
 	// game.skater.spin (lane A51, R-0034): E / gamepad B. A full turn over frames, cooldown_frames before the next, speed x speed_mult while it runs,
 	// stamina_cost of the sprint bar taken at the start (refused with an empty bar). frames 0 = off.
@@ -219,6 +224,12 @@ struct JAMCORE_API FJamStickConfig
 	// blade's 0.6 m disc, a pass at the body, or a body touch that pushed it).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupArcM = 1.5;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupArcDeg = 60.0;
+	// Lane A207 (wave 2c, the Director 02:57): game.stick.pickup.pass_arc_m / pass_arc_deg: an OPPONENT takes a pass in flight (Puck.PassFrames > 0) only with his
+	// blade: within pass_arc_m of the blade point and inside pass_arc_deg of his stick's line from his body; his body still blocks it (UJamSim::BodyMeetsPuck). The
+	// passer's mates keep the full arc and the catch. And a pass gets off the stick: no opponent's stick takes it in its first 6 frames (his body still blocks).
+	// Ship 1.0 m / 60 degrees (0.7 / 35 let a pass by a man 1 m off the lane: Jam.Core.PassStaged.OpponentInLane). pass_arc_m 0 = the neutral value.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupPassArcM = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupPassArcDeg = 60.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPickupBody = true;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupStingMps = 18.0;
 	// game.stick.pickup.body_catch_mps (lane A208): the body seats a loose puck (it stops at him and is his) only when it meets him slower than this (relative,
@@ -227,6 +238,15 @@ struct JAMCORE_API FJamStickConfig
 	// game.stick.pickup.block_carried (lane A208): with pickup.body, another skater's CARRIED puck is pushed out of a body it meets (no pass-through; the carrier
 	// keeps it in his reach, R-0048). false = a carried puck passes through other bodies as before (R-0048's skip).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPickupBlockCarried = true;
+	// game.stick.faceoff (lane A208, the eye's list 1 items 1 and 10; R-0068): the draw is a draw, not a hit. centre_gap_m: both centres stand at the dot
+	// this far apart, facing (each on his own side); 0 = where the formation puts them (the neutral value: ten metres apart at five a side).
+	// winner_shield_frames: the skater who wins the draw cannot be felled for this many frames (a hit that would fell him is a bump: the release grace's
+	// own state, GraceFrames). no_hit_frames / no_hit_m: nobody's body check or stick lift is pressed inside no_hit_m of the dot for no_hit_frames after the
+	// drop (refused as the carrier's is: bCheckRefused). 0 / 0 / 0 = the neutral value (the game before the lane).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FaceoffCentreGapM = 1.8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 FaceoffWinnerShieldFrames = 90;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 FaceoffNoHitFrames = 45;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FaceoffNoHitM = 6.0;
 	// Not a cartridge key (lane A163): the measurement's arm. true = a bot carrier's stop earns the grace too.
 	bool bStopGraceBots = false;
 	// Not a cartridge key (lane A163, the measurement's third arm; MOVEMENT-7.md section 3): the pickup settles. The frame a skater a person steers becomes
@@ -273,6 +293,13 @@ struct JAMCORE_API FJamPuckConfig
 	// R-0035 (lane A52): the lifted puck's gravity (m/s^2) and the bounce on the ice (a hop under 2 cm dies).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GravityMps2 = 9.81;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double IceRestitution = 0.3;
+	// game.puck.net (lane A208; the eye's list 2 item 12 and A212's FAULT 01:17): own_wall: nobody scores on himself with his own play: a puck carried, or last
+	// played (carried, then shot, passed or cleared) by the defending side does not enter that side's net: the goal mouth is a wall for it (it rebounds as off
+	// the boards; a carried one stays at the line); an opponent's puck that touches a defender on the way still scores. mouth_only: a goal is a puck that
+	// crossed the goal mouth (between the posts, from the front) on its path; a puck moved into the net's box any other way (a seat, a pull across a wall)
+	// is put back where it was. false / false = the neutral value (the game before the lane).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bNetOwnWall = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bNetMouthOnly = true;
 };
 
 USTRUCT(BlueprintType)
@@ -310,6 +337,10 @@ struct JAMCORE_API FJamShotConfig
 	// Lane A207 (track P1, the night of 14 Nov; the operator: "shoot speed should double"): game.shot.speed_scale multiplies the shot's speed (shot.speed and
 	// the charge bonus) and the puck's speed cap (puck.max_speed) alike: 2 = a tap 36, a full charge 52 m/s. 1 = the neutral value (the game before the lane).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpeedScale = 2.0;
+	// Lane A207 (wave 2b; the eye: "a goal from 28 m, unpressed"): game.shot.fade_m: the shot's added speed (what speed_scale put on top of the 1x shot) fades
+	// with the distance the puck travels, e^(-x / fade_m): off the stick the full 2x, full 2x for the first 8 m (UJamSim::ShotFadeFromM), then about 1.5x by 12 m and 1.0x by 30 m (fade_m 6; measured at pro: 25 and 12 left the long shot at 35-45 %). 0 = the neutral
+	// value (no fade: 2x all the way).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FadeM = 6.0;
 };
 
 // Lane A77 (R-0036): game.pass. The saucer pass: a pass held saucer.half_frames or more lifts saucer.lift_m at its apex, flies over a blade in the lane and lands

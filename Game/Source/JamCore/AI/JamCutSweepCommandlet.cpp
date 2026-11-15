@@ -93,7 +93,7 @@ namespace JamCutSweepLocal
 			{
 				if (E.Name == JamEvents::Period) { ++Count.Periods; }
 				else if (E.Name == JamEvents::Announce) { ++Count.Announces; }
-				else if (E.Name == JamEvents::ShotBlocked) { ++Count.ShotsBlocked; }
+				else if (E.Name == JamEvents::ShotBlocked && E.Kind != FName(TEXT("skater"))) { ++Count.ShotsBlocked; }   // lane A208: the zone's refusals only (Kind skater = a shot a body or a stick stopped)
 				else if (E.Name == JamEvents::Check) { ++Count.Checks; }
 				else if (E.Name == JamEvents::Knockdown) { ++Count.Knockdowns; }
 				else if (E.Name == JamEvents::Foul) { ++Count.Fouls; }

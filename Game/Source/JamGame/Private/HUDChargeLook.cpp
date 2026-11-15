@@ -93,7 +93,7 @@ void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 			{
 				const bool bFull = Max > 0 && Charge >= Max;
 				const FLinearColor Col = bFull ? FJamUiStyle::Yellow() : FJamUiStyle::Paper();
-				Bar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, 0.92f));
+				Bar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, HoldLineAlpha(BoxMin, BoxMax, 0.92f)));
 				Bar->SetRenderTransformAngle(AngleDeg);
 				Bar->SetVisibility(ESlateVisibility::HitTestInvisible);
 				if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Bar->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }

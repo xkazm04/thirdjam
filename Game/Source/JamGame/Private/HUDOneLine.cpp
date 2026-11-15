@@ -10,17 +10,37 @@
 #include "HAL/IConsoleManager.h"
 #include "HokejGameMode.h"
 #include "JamSim.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudOneLine(TEXT("jam.hud.OneLine"), 1,
 	TEXT("Lane A213: 1 (default) at most one line of the HUD's words over the play at a time (contact line, prompt, controls strip, faceoff hint, caption, in that order) and the kept-puck prompt only while the human carries; 0 = the screen of before."), ECVF_Default);
 
 bool UJamHudWidget::OneLineOn() { return CVarJamHudOneLine.GetValueOnGameThread() != 0; }
+static TAutoConsoleVariable<int32> CVarJamHudOwnThird(TEXT("jam.hud.OwnThird"), 1,
+	TEXT("Lane A213 (wave 3): 1 (default) the own-net label (own NN m, its diamond and arrow) shows only while the human is in his own third and never on the radar's frame; 0 = always (as before)."), ECVF_Default);
+
+void UJamHudWidget::ApplyOwnLabelRule(const FJamPresentationFrame& F)
+{
+	if (CVarJamHudOwnThird.GetValueOnGameThread() == 0 || !F.Skaters.IsValidIndex(F.HumanIndex)) return;
+	bool bHide = !InOwnThird(F.Skaters[F.HumanIndex].PosM.X, F.AttackSign, F.RinkLengthM);
+	if (!bHide && OwnText && Radar)
+	{
+		// The radar's frame: bottom right, CornerFurnitureW x CornerFurnitureH (the ability plate's band included): the label slid under it (the neon stills).
+		FBox2D B(ForceInit);
+		const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this) / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+		if (WidgetBoxOnScreen(OwnText.Get(), B) && BoxesMeet(B.Min, B.Max, FVector2D(VS.X - CornerFurnitureW, VS.Y - CornerFurnitureH), VS, 4.f)) bHide = true;
+	}
+	if (!bHide) return;
+	UWidget* const Own[] = { OwnText.Get(), OwnDiamond.Get(), OwnArrow.Get(), OwnPlate.Get() };
+	for (UWidget* W : Own) if (W) W->SetVisibility(ESlateVisibility::Collapsed);
+}
 uint64 UJamHudWidget::OneLineTick = 0;
 bool UJamHudWidget::bOneLineUp = false;
 bool UJamHudWidget::OneLineUpNow() { return OneLineOn() && bOneLineUp && GFrameCounter <= OneLineTick + 1; }
 
 void UJamHudWidget::UpdateOneLine(const FJamPresentationFrame& F)
 {
+	ApplyOwnLabelRule(F);   // wave 3: its own switch (jam.hud.OwnThird)
 	if (!OneLineOn()) { OneLineShown = -1; return; }
 	auto Up = [](const UWidget* W) { return W && W->GetVisibility() != ESlateVisibility::Collapsed && W->GetRenderOpacity() > 0.f; };
 	// The kept-puck prompt says "the puck is yours": not on a frame it is not (the sim's carrier, never the figure's flag).

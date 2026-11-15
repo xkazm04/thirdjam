@@ -75,7 +75,7 @@ void UJamHudWidget::UpdatePassMeter(const FJamPresentationFrame& F)
 			if (bAll && StopBarLayout(Px[0], Px[1], Px[2], Px[3], 3.f, C, Sz, AngleDeg, BoxMin, BoxMax))
 			{
 				const FLinearColor Col = Target >= 0 ? F.GetTeamColour(Hu.Team) : FJamUiStyle::Paper();
-				Bar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, 0.9f));
+				Bar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, HoldLineAlpha(BoxMin, BoxMax, 0.9f)));   // lane A213 (the look): fainter over his own body
 				Bar->SetRenderTransformAngle(AngleDeg);
 				Bar->SetVisibility(ESlateVisibility::HitTestInvisible);
 				if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Bar->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }

@@ -12,6 +12,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamEventBus.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
 #include "JamPlaytester.h"
@@ -58,6 +59,7 @@ namespace JamPossessionTests
 		EOut Out = EOut::Short;
 		int32 Inside = 0;            // frames with the puck's centre inside his body circle
 		int32 FirstHis = -1;         // the frame he became the carrier
+		int32 OnBlade = -1;          // the first frame from then on with the puck within 15 cm of his blade point
 		double Closest = 1e9;        // the path's nearest approach to his centre
 		double EndSpeed = 0.0;
 	};
@@ -72,7 +74,7 @@ namespace JamPossessionTests
 
 	// One staged arrival on its own sim: the skater V (the human's figure) at the origin facing +X, everyone else parked far away; the source skater
 	// touches the puck first (it is the last toucher), then the puck starts at V + PuckAt with PuckVel. 75 frames, no input (he stands or glides).
-	FResult Play(const FJamGameConfig& G, const FScene& Sc, int32 Frames = 75)
+	FResult Play(const FJamGameConfig& G, const FScene& Sc, int32 Frames = 75, TArray<FJamSimEvent>* Events = nullptr, bool bAtNet = false, bool bAim = true)
 	{
 		UJamSim* Sim = NewObject<UJamSim>();
 		Sim->Init(G, 7);
@@ -99,7 +101,10 @@ namespace JamPossessionTests
 		Sim->SetSkater(V, FVector2D::ZeroVector, Sc.VVel, 0);
 		Sim->Step(In);   // one more frame for the blade at the origin
 		const FVector2D Origin = Sim->GetSkaters()[V].Pos;
-		Sim->SetPuck(Origin + Sc.PuckAt, Sc.PuckVel);
+		{   // bAtNet: the scene mirrored so the puck moves toward the net its last toucher attacks (a shot)
+			const double Sx = (bAtNet && Src >= 0 && Sim->AttackGoalX(Sim->GetSkaters()[Src].Team) < 0.0) ? -1.0 : 1.0;
+			Sim->SetPuck(Origin + FVector2D(Sc.PuckAt.X * Sx, Sc.PuckAt.Y), FVector2D(Sc.PuckVel.X * Sx, Sc.PuckVel.Y));
+		}
 		const double R = Sim->GetConfig().Puck.RadiusM;
 		FResult Res;
 		bool bTouched = false;
@@ -109,15 +114,16 @@ namespace JamPossessionTests
 			const FVector2D From = Sim->GetPuck().Pos;
 			{   // he looks at the puck: the blade aimed its way at rest length (as a person's mouse, as a bot's blade near a puck)
 				const FVector2D ToP = From - Sim->GetSkaters()[V].Pos;
-				In[V].Stick = (ToP.Size() < 4.0 && ToP.Size() > 1e-3) ? ToP.GetSafeNormal() * 0.5 : FVector2D::ZeroVector;
+				In[V].Stick = (bAim && ToP.Size() < 4.0 && ToP.Size() > 1e-3) ? ToP.GetSafeNormal() * 0.5 : FVector2D::ZeroVector;
 			}
 			Sim->Step(In);
+			if (Events) for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Possess || E.Name == JamEvents::ShotBlocked || E.Name == JamEvents::Poke) Events->Add(E);
 			const FJamSkaterState& S = Sim->GetSkaters()[V];
 			const FVector2D P = Sim->GetPuck().Pos;
 			Res.Closest = FMath::Min(Res.Closest, SegDist(From, P, S.Pos));
 			if (FVector2D::Distance(P, S.Pos) < UJamSim::SkaterRadius + R - 0.02) ++Res.Inside;
 			if (Sim->GetPuck().LastTouch == V) bTouched = true;
-			if (Sim->CarrierIndex() == V) { if (Res.FirstHis < 0) Res.FirstHis = F + 1; ++HisRun; } else HisRun = 0;
+			if (Sim->CarrierIndex() == V) { if (Res.FirstHis < 0) Res.FirstHis = F + 1; ++HisRun; if (Res.OnBlade < 0 && FVector2D::Distance(P, S.BladePos) <= 0.15) Res.OnBlade = F + 1; } else HisRun = 0;
 			if (Sim->GetPuck().LastTouch != V && Sim->GetPuck().LastTouch != Src && Sim->GetPuck().LastTouch >= 0) { Res.Out = EOut::Other; return Res; }
 		}
 		Res.EndSpeed = (Sim->GetPuck().Vel - Sim->GetSkaters()[V].Vel).Size();
@@ -211,7 +217,7 @@ bool FJamPossessionStaged::RunTest(const FString& Parameters)
 		if (B.Out == EOut::Through) ++ThroughR;
 		if (A.Out == EOut::His) ++HisN;
 		if (B.Out == EOut::His) ++HisR;
-		AddInfo(FString::Printf(TEXT("POSSTAGE %-36s | neutral %-7s inside %2d his@%3d | rule %-7s inside %2d his@%3d"), *Sc.Name, OutName(A.Out), A.Inside, A.FirstHis, OutName(B.Out), B.Inside, B.FirstHis));
+		AddInfo(FString::Printf(TEXT("POSSTAGE %-36s | neutral %-7s inside %2d his@%3d blade@%3d | rule %-7s inside %2d his@%3d blade@%3d"), *Sc.Name, OutName(A.Out), A.Inside, A.FirstHis, A.OnBlade, OutName(B.Out), B.Inside, B.FirstHis, B.OnBlade));
 		const bool bSting = Sc.Src == 1 && Sc.PuckVel.Size() > G.Stick.PickupStingMps;
 		const bool bOk = B.Out == EOut::His || (bSting && B.Out == EOut::Bounce);
 		if (!bOk) { ++Bad; AddError(FString::Printf(TEXT("the rule: %s ends %s (want his%s)"), *Sc.Name, OutName(B.Out), bSting ? TEXT(" or a bounce") : TEXT(""))); }
@@ -333,6 +339,242 @@ bool FJamPossessionLock::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A208 (contracts/events.md, R-0067 additions): possess and shot_blocked Variant 1. A loose puck taken by the stick: one possess, Who him, no Kind;
+// taken at his body from behind: Kind body; a shot into his body: shot_blocked Kind skater, Who the shooter; a clean poke off a carrier: no possess.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPossessionEvents, "Jam.Core.Possession.Events", JamPossessionTests::Flags)
+bool FJamPossessionEvents::RunTest(const FString& Parameters)
+{
+	using namespace JamPossessionTests;
+	FJamGameConfig G;
+	if (!LoadGame(*this, G)) return false;
+	auto Count = [](const TArray<FJamSimEvent>& Ev, FName Name, FName Kind, int32& Who, float& Strength)
+	{
+		int32 N = 0;
+		for (const FJamSimEvent& E : Ev) if (E.Name == Name && E.Kind == Kind) { ++N; Who = E.Who; Strength = E.Strength; }
+		return N;
+	};
+	int32 Who = -2; float Str = -1.f;
+	{
+		FScene Sc; Sc.Src = 1; Sc.PuckAt = FVector2D(3.0, 0.0); Sc.PuckVel = FVector2D(-6.0, 0.0);
+		TArray<FJamSimEvent> Ev;
+		const FResult R = Play(G, Sc, 75, &Ev);
+		TestEqual(TEXT("a loose puck at 6 m/s from the front is his"), (int32)R.Out, (int32)EOut::His);
+		TestEqual(TEXT("... with one possess by the stick (Variant 0)"), Count(Ev, JamEvents::Possess, NAME_None, Who, Str), 1);
+		TestEqual(TEXT("... Who is him (the human's figure)"), Who, 0);
+		TestTrue(*FString::Printf(TEXT("... Strength = speed at the take / max (%.3f)"), Str), Str > 0.1f && Str < 0.4f);
+		TestEqual(TEXT("... and none by the body"), Count(Ev, JamEvents::Possess, FName(TEXT("body")), Who, Str), 0);
+		// possess is the take, not the rule: it fires at the neutral value too wherever a loose puck becomes somebody's.
+	}
+	{
+		FScene Sc; Sc.Src = 1; Sc.PuckAt = FVector2D(-3.0, 0.2); Sc.PuckVel = FVector2D(6.0, 0.0);
+		TArray<FJamSimEvent> Ev;
+		Play(G, Sc, 75, &Ev, false, false);   // the blade at rest ahead: the puck from behind meets his body
+		TestEqual(TEXT("from behind at the body: one possess by the body (Variant 1)"), Count(Ev, JamEvents::Possess, FName(TEXT("body")), Who, Str), 1);
+	}
+	{
+		FScene Sc; Sc.Src = 1; Sc.PuckAt = FVector2D(-5.0, 0.1); Sc.PuckVel = FVector2D(25.0, 0.0);
+		TArray<FJamSimEvent> Ev;
+		Play(G, Sc, 30, &Ev, true);
+		TestEqual(TEXT("a 25 m/s shot into his body: one shot_blocked Variant 1 (Kind skater)"), Count(Ev, JamEvents::ShotBlocked, FName(TEXT("skater")), Who, Str), 1);
+		TestNotEqual(TEXT("... Who is the shooter, not him"), Who, 0);
+		TestTrue(*FString::Printf(TEXT("... Strength = speed / max (%.3f)"), Str), Str > 0.3f);
+	}
+	{
+		// A clean poke off a carrier: poke, never possess.
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(G, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		int32 O = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) { if (O < 0 && S.Team != Sim->GetSkaters()[Me].Team) O = S.Index; if (S.Index != Me) Sim->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.5, 18.0), FVector2D::ZeroVector, 0); }
+		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Me, FVector2D(2.6, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);
+		TArray<FJamInput> In = NoInput(Sim);
+		Sim->SetPuck(FVector2D(0.45, 0), FVector2D::ZeroVector);
+		Sim->Step(In);
+		In[Me].Stick = FVector2D(-1, 0);
+		In[Me].bPoke = true;
+		int32 Pokes = 0, Possess = 0;
+		for (int32 F = 0; F < 20; ++F)
+		{
+			Sim->Step(In);
+			In[Me].bPoke = false;
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) { if (E.Name == JamEvents::Poke && E.Kind == FName(TEXT("clean")) && E.Who == Me) ++Pokes; if (E.Name == JamEvents::Possess && E.Who == Me) ++Possess; }
+		}
+		TestEqual(TEXT("the poke takes it cleanly"), Pokes, 1);
+		TestEqual(TEXT("a puck taken off a carrier by a press is no possess"), Possess, 0);
+	}
+	return true;
+}
+
+// Lane A208 (game.stick.faceoff; the eye's list 1 items 1 and 10): the centres stand at the dot a stick length apart, facing; the draw's winner cannot be
+// felled for winner_shield_frames (GraceFrames: a hit is a bump); nobody's check press inside no_hit_m of the dot is taken for no_hit_frames after the drop.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPossessionFaceoff, "Jam.Core.Possession.Faceoff", JamPossessionTests::Flags)
+bool FJamPossessionFaceoff::RunTest(const FString& Parameters)
+{
+	using namespace JamPossessionTests;
+	FJamGameConfig G;
+	if (!LoadGame(*this, G)) return false;
+	TestEqual(TEXT("stick.faceoff.centre_gap_m default 1.8"), G.Stick.FaceoffCentreGapM, 1.8);
+	for (int32 Arm = 0; Arm < 2; ++Arm)
+	{
+		FJamGameConfig Cfg = G;
+		if (Arm == 0) { Cfg.Stick.FaceoffCentreGapM = 0.0; Cfg.Stick.FaceoffWinnerShieldFrames = 0; Cfg.Stick.FaceoffNoHitFrames = 0; }
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 1);
+		const int32 Me = Sim->GetHumanIndex();
+		int32 C[2] = { -1, -1 };
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.bCentre) C[S.Team] = S.Index;
+		if (!TestTrue(TEXT("two centres"), C[0] >= 0 && C[1] >= 0)) return false;
+		TArray<FJamInput> In = NoInput(Sim);
+		Sim->Step(In);   // the countdown's first frame: the centres step to the dot
+		const double Gap = FVector2D::Distance(Sim->GetSkaters()[C[0]].Pos, Sim->GetSkaters()[C[1]].Pos);
+		for (int32 F = 1; F < UJamSim::FaceoffCountdownFrames; ++F) Sim->Step(In);
+		In[Me].bPoke = true;   // the human centre takes the draw at once
+		Sim->Step(In);
+		In[Me].bPoke = false;
+		const int32 Opp = C[1 - Sim->GetSkaters()[Me].Team];
+		const int32 Grace = Sim->GetSkaters()[Me].GraceFrames;
+		In[Opp].bCheck = true;   // the other centre presses a check at once, next to the dot
+		Sim->Step(In);
+		const bool bRefused = Sim->GetSkaters()[Opp].bCheckRefused;
+		AddInfo(FString::Printf(TEXT("POSFACEOFF %s: centres %.2f m apart, the winner's grace %d frames, the other centre's check at the dot refused %d"), Arm == 0 ? TEXT("neutral") : TEXT("rule"), Gap, Grace, bRefused ? 1 : 0));
+		if (Arm == 1)
+		{
+			TestTrue(*FString::Printf(TEXT("the centres stand a stick length apart at the dot (%.2f m)"), Gap), FMath::Abs(Gap - 1.8) < 0.05);
+			TestTrue(*FString::Printf(TEXT("the draw's winner cannot be felled for 90 frames (grace %d)"), Grace), Grace >= 88);
+			TestTrue(TEXT("a check pressed at the dot in the first 45 frames is refused"), bRefused);
+		}
+		else TestTrue(*FString::Printf(TEXT("neutral: the formation puts them apart (%.2f m)"), Gap), Gap > 3.0);
+	}
+	return true;
+}
+
+// Bar.Possession.FaceoffStrip (not in the gate): env JAM_POSS "level=rookie;player=novice;seeds=5;arm=rule|neutral": the first five faceoffs of each match:
+// who has the puck 120 frames after the drop, and whether anybody (the human) went down in them.
+	struct FStrip { JamAI::FJamSimAdapter* Sim = nullptr; int64 LastFrame = -1; int64 Drop = -1; int32 Seen = 0; int32 Rows = 0; bool bDown = false, bHumanDown = false; FString Out; int32 Faceoffs = 0, HumanDown = 0, AnyDown = 0, Ours = 0, Theirs = 0, Loose = 0; };
+	void StripTrace(void* Ctx, const JamAI::FJamAIWorld&, const JamAI::FJamAIInput*, const JamAI::FJamBrain&, int64_t, bool)
+	{
+		FStrip& T = *static_cast<FStrip*>(Ctx);
+		const UJamSim* Sim = T.Sim->GetSim();
+		if (!Sim || Sim->GetFrame() == T.LastFrame) return;
+		T.LastFrame = Sim->GetFrame();
+		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Faceoff && E.Kind == FName(TEXT("drop")) && T.Seen < 5) { T.Drop = Sim->GetFrame(); T.bDown = T.bHumanDown = false; ++T.Seen; }
+		if (T.Drop < 0) return;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.IsDown()) { T.bDown = true; if (S.bHuman) T.bHumanDown = true; }
+		if (Sim->GetFrame() - T.Drop == 120 || Sim->GetPhase() != EJamSimPhase::Playing)
+		{
+			int32 Me = -1; for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.bHuman) Me = S.Index;
+			const int32 Ci = Sim->CarrierIndex();
+			const TCHAR* Who = Ci < 0 ? TEXT("loose") : (Ci == Me ? TEXT("HUMAN") : (Sim->GetSkaters()[Ci].Team == Sim->GetSkaters()[Me].Team ? TEXT("mate") : TEXT("opponent")));
+			++T.Faceoffs; if (T.bHumanDown) ++T.HumanDown; if (T.bDown) ++T.AnyDown;
+			if (Ci < 0) ++T.Loose; else if (Sim->GetSkaters()[Ci].Team == Sim->GetSkaters()[Me].Team) ++T.Ours; else ++T.Theirs;
+			T.Out += FString::Printf(TEXT(" [%d: %s%s%s]"), T.Seen, Who, T.bHumanDown ? TEXT(", HE WENT DOWN") : TEXT(""), (T.bDown && !T.bHumanDown) ? TEXT(", someone down") : TEXT(""));
+			T.Drop = -1;
+		}
+	}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarPossessionFaceoffStrip, "Bar.Possession.FaceoffStrip", JamPossessionTests::Flags)
+bool FJamBarPossessionFaceoffStrip::RunTest(const FString& Parameters)
+{
+	using namespace JamPossessionTests;
+	FString Level = TEXT("rookie"), Player = TEXT("novice"), Arm = TEXT("rule");
+	int32 Seeds = 5;
+	{
+		TArray<FString> Parts;
+		FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_POSS")).ParseIntoArray(Parts, TEXT(";"));
+		for (const FString& Part : Parts) { FString K, V; if (!Part.Split(TEXT("="), &K, &V)) continue; if (K == TEXT("level")) Level = V; else if (K == TEXT("player")) Player = V; else if (K == TEXT("arm")) Arm = V; else if (K == TEXT("seeds")) Seeds = FCString::Atoi(*V); }
+	}
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) return false;
+	const JamAI::EPlaytester Kind = Player == TEXT("novice") ? JamAI::EPlaytester::Novice : (Player == TEXT("good") ? JamAI::EPlaytester::Good : JamAI::EPlaytester::Regular);
+	FStrip Sum;
+	for (int32 Seed = 1; Seed <= Seeds; ++Seed)
+	{
+		UJamCartridge* M = DuplicateObject<UJamCartridge>(C, GetTransientPackage());
+		if (Arm == TEXT("neutral")) { M->Game.Stick.FaceoffCentreGapM = 0.0; M->Game.Stick.FaceoffWinnerShieldFrames = 0; M->Game.Stick.FaceoffNoHitFrames = 0; }
+		JamAI::FJamSimAdapter Sim(*M);
+		FStrip T; T.Sim = &Sim;
+		const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(*M, *Level);
+		JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64>(Seed), Kind, 36000, M->Game.Shot.ChargeFramesMax, false, &StripTrace, &T, 1);
+		AddInfo(FString::Printf(TEXT("POSSTRIP arm=%s level=%s seed=%d:%s"), *Arm, *Level, Seed, *T.Out));
+		Sum.Faceoffs += T.Faceoffs; Sum.HumanDown += T.HumanDown; Sum.AnyDown += T.AnyDown; Sum.Ours += T.Ours; Sum.Theirs += T.Theirs; Sum.Loose += T.Loose;
+	}
+	AddInfo(FString::Printf(TEXT("POSSTRIP sum arm=%s level=%s | faceoffs %d: 120 frames after the drop ours %d, theirs %d, loose %d | the human went down in %d, anybody in %d"), *Arm, *Level, Sum.Faceoffs, Sum.Ours, Sum.Theirs, Sum.Loose, Sum.HumanDown, Sum.AnyDown));
+	return true;
+}
+
+// Lane A208 (game.puck.net; the eye's list 2 item 12): nobody scores on himself with his own play. Each case at the default and at the neutral value:
+// (1) the human carries the puck into his own net; (2) he shoots (clears) it into his own net from 4 m; (3) an opponent's 25 m/s shot that grazes the
+// human's body on the way in still scores; (4) an opponent's own shot into the net scores.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPossessionOwnNet, "Jam.Core.Possession.OwnNet", JamPossessionTests::Flags)
+bool FJamPossessionOwnNet::RunTest(const FString& Parameters)
+{
+	using namespace JamPossessionTests;
+	FJamGameConfig G;
+	if (!LoadGame(*this, G)) return false;
+	TestTrue(TEXT("game.puck.net own_wall and mouth_only ship on"), G.Puck.bNetOwnWall && G.Puck.bNetMouthOnly);
+	// Returns the goals against the human's team in Frames frames of the scene.
+	auto Run = [&](bool bRule, int32 Case) -> int32
+	{
+		FJamGameConfig Cfg = G;
+		if (!bRule) { Cfg.Puck.bNetOwnWall = false; Cfg.Puck.bNetMouthOnly = false; }
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 3);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 MyTeam = Sim->GetSkaters()[Me].Team;
+		int32 Opp = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) { if (Opp < 0 && S.Team != MyTeam) Opp = S.Index; if (S.Index != Me) Sim->SetSkater(S.Index, FVector2D(0.0 + S.Index * 2.5, 18.0), FVector2D::ZeroVector, 0); }
+		const double Side = Sim->AttackGoalX(MyTeam) > 0.0 ? -1.0 : 1.0;   // the human's own net
+		const double GL = Sim->GetConfig().Rink.GoalLineX();
+		const double Yaw = Side > 0 ? 0.0 : UE_DOUBLE_PI;   // facing his own net
+		TArray<FJamInput> In = NoInput(Sim);
+		const int32 Against = Sim->GetScore(1 - MyTeam);
+		if (Case == 1 || Case == 2)
+		{
+			Sim->SetSkater(Me, FVector2D(Side * (GL - 4.0), 0.0), FVector2D::ZeroVector, Yaw);
+			Sim->SetPuck(FVector2D(Side * (GL - 3.2), 0.0), FVector2D::ZeroVector);
+			for (int32 F = 0; F < 10; ++F) { In[Me].Stick = FVector2D(Side, 0.0) * 0.5; Sim->Step(In); }
+			for (int32 F = 0; F < 120; ++F)
+			{
+				In[Me] = FJamInput();
+				In[Me].Stick = FVector2D(Side, 0.0) * 0.5;
+				if (Case == 1) In[Me].Move = FVector2D(Side, 0.0);
+				if (Case == 2 && F == 0) In[Me].bShoot = true;
+				Sim->Step(In);
+				if (Sim->GetPhase() != EJamSimPhase::Playing) break;
+			}
+		}
+		else
+		{
+			// An opponent carries, then the puck flies from 6 m out at his shot's speed; in case 3 the human stands 0.42 m off its line, 2 m in front.
+			Sim->SetSkater(Opp, FVector2D(Side * (GL - 7.0), -0.42), FVector2D::ZeroVector, Yaw);
+			Sim->SetSkater(Me, Case == 3 ? FVector2D(Side * (GL - 2.0), 0.0) : FVector2D(Side * (GL - 2.0), 6.0), FVector2D::ZeroVector, Yaw + UE_DOUBLE_PI);
+			Sim->SetPuck(FVector2D(Side * (GL - 6.6), -0.42), FVector2D::ZeroVector);
+			for (int32 F = 0; F < 8; ++F) Sim->Step(In);   // the opponent carries it (his play; past the catch's settle frames)
+			Sim->SetPuck(FVector2D(Side * (GL - 6.0), -0.42), FVector2D(Side * 25.0, 0.0));
+			for (int32 F = 0; F < 40; ++F) { Sim->Step(In); if (Sim->GetPhase() != EJamSimPhase::Playing) break; }
+		}
+		return Sim->GetScore(1 - MyTeam) - Against;
+	};
+	const TCHAR* Names[] = { TEXT(""), TEXT("carried into his own net"), TEXT("his own clear into his own net"), TEXT("an opponent's shot off his body"), TEXT("an opponent's shot") };
+	for (int32 Case = 1; Case <= 4; ++Case)
+	{
+		const int32 N = Run(false, Case), Y = Run(true, Case);
+		AddInfo(FString::Printf(TEXT("POSOWNNET %s: goals against at the neutral value %d, with the rule %d"), Names[Case], N, Y));
+		if (Case <= 2)
+		{
+			TestEqual(*FString::Printf(TEXT("the neutral value scores it (the scene is real): %s"), Names[Case]), N, 1);
+			TestEqual(*FString::Printf(TEXT("the rule: no goal on himself: %s"), Names[Case]), Y, 0);
+		}
+		else if (Case == 3) TestEqual(*FString::Printf(TEXT("the rule changes nothing for %s (a touch is not a play)"), Names[Case]), Y, N);
+		else TestEqual(*FString::Printf(TEXT("the rule: still a goal: %s"), Names[Case]), Y, 1);
+	}
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPossessionNeutral, "Jam.Core.Possession.Neutral", JamPossessionTests::Flags)
 bool FJamPossessionNeutral::RunTest(const FString& Parameters)
 {
@@ -370,6 +612,7 @@ bool FJamPossessionNeutral::RunTest(const FString& Parameters)
 		int64 Episodes = 0, Taken = 0, ByOther = 0, NotTaken = 0;
 		int64 Why[12] = {};
 		int64 CarryFrames = 0, CarryNear = 0, CarryBehind = 0, CarryPlain = 0, CarryPlainNear = 0;
+		int64 FarWhy[6] = {};   // carry frames over 15 cm: spin or deke, braking, turning over 0.06 rad a frame, sprinting, contact or no control, other
 		double CarryWorst = 0.0;
 		int64 Through = 0;   // frames a loose puck's centre sat inside a standing body
 		TArray<int32> CarrierRun;
@@ -453,6 +696,11 @@ bool FJamPossessionNeutral::RunTest(const FString& Parameters)
 				const double D = FVector2D::Distance(P.Pos, C.BladePos);
 				T.CarryWorst = FMath::Max(T.CarryWorst, D);
 				if (D <= 0.15) ++T.CarryNear;
+				else
+				{
+					const double Turn = FMath::Abs(FMath::FindDeltaAngleRadians(C.PrevYaw, C.Yaw));
+					if (C.SpinFrames > 0 || C.DekeFrames > 0) ++T.FarWhy[0]; else if (C.bReverseBraking || C.bBraking) ++T.FarWhy[1]; else if (Turn > 0.06) ++T.FarWhy[2]; else if (C.bSprinting) ++T.FarWhy[3]; else if (!C.CanAct() || C.ContactOutcome != 0) ++T.FarWhy[4]; else ++T.FarWhy[5];
+				}
 				if (C.SpinFrames == 0 && C.DekeFrames == 0) { ++T.CarryPlain; if (D <= 0.15) ++T.CarryPlainNear; }
 				if (FVector2D::DotProduct(P.Pos - C.Pos, C.Forward()) < -UJamSim::SkaterRadius) ++T.CarryBehind;
 			}
@@ -548,6 +796,7 @@ bool FJamBarPossessionTrace::RunTest(const FString& Parameters)
 		Sum.Episodes += T.Episodes; Sum.Taken += T.Taken; Sum.ByOther += T.ByOther; Sum.NotTaken += T.NotTaken; Sum.Through += T.Through;
 		for (int32 w = 0; w < 12; ++w) Sum.Why[w] += T.Why[w];
 		for (const TPair<FString, int64>& H : T.Hands) Sum.Hands.FindOrAdd(H.Key) += H.Value;
+		for (int32 w = 0; w < 6; ++w) Sum.FarWhy[w] += T.FarWhy[w];
 		Sum.LongShots += T.LongShots; Sum.LongBlocked += T.LongBlocked; Sum.LongCrease += T.LongCrease; Sum.LongGoal += T.LongGoal; Sum.LongOther += T.LongOther;
 		Sum.CarryFrames += T.CarryFrames; Sum.CarryNear += T.CarryNear; Sum.CarryPlain += T.CarryPlain; Sum.CarryPlainNear += T.CarryPlainNear; Sum.CarryBehind += T.CarryBehind; Sum.CarryWorst = FMath::Max(Sum.CarryWorst, T.CarryWorst);
 	}
@@ -563,6 +812,7 @@ bool FJamBarPossessionTrace::RunTest(const FString& Parameters)
 			(long long)Sum.CarryPlain, Sum.CarryPlain ? 100.0 * Sum.CarryPlainNear / Sum.CarryPlain : 0.0));
 	}
 	AddInfo(FString::Printf(TEXT("POSTRACE longshots arm=%s level=%s | opponents' shots from 20-35 m %lld: blocked by a body or stick of ours %lld, the crease man %lld, goals %lld, other (wide, the boards, their own) %lld"), *Arm, *Level, (long long)Sum.LongShots, (long long)Sum.LongBlocked, (long long)Sum.LongCrease, (long long)Sum.LongGoal, (long long)Sum.LongOther));
+	AddInfo(FString::Printf(TEXT("POSTRACE far arm=%s level=%s | carry frames over 15 cm of the blade: spin or deke %lld, braking %lld, turning %lld, sprinting %lld, contact %lld, other %lld"), *Arm, *Level, (long long)Sum.FarWhy[0], (long long)Sum.FarWhy[1], (long long)Sum.FarWhy[2], (long long)Sum.FarWhy[3], (long long)Sum.FarWhy[4], (long long)Sum.FarWhy[5]));
 	Sum.Hands.KeySort(TLess<FString>());
 	for (const TPair<FString, int64>& H : Sum.Hands) AddInfo(FString::Printf(TEXT("POSTRACE hands arm=%s level=%s %s %lld"), *Arm, *Level, *H.Key, (long long)H.Value));
 	for (int32 w = 0; w < 12; ++w) if (Sum.Why[w]) AddInfo(FString::Printf(TEXT("POSTRACE why-not arm=%s level=%s %s %lld"), *Arm, *Level, WhyName(w), (long long)Sum.Why[w]));

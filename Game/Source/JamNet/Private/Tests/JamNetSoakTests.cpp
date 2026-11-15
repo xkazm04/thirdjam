@@ -1054,7 +1054,13 @@ bool FJamNetSoakPassState::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("%s: found at its exact frame"), Kind), M.FirstDiffFrame, M.InjectedAt);
 			TestTrue(*FString::Printf(TEXT("%s: named %s (got '%s')"), Kind, *Want, *M.FirstDiffField), M.FirstDiffField.StartsWith(Want));
 			TestEqual(*FString::Printf(TEXT("%s: the lockstep hash differs from the same frame"), Kind), M.FirstLockHashDiff, M.InjectedAt);
-			TestTrue(*FString::Printf(TEXT("%s: the driver raised DESYNC at the next checkpoint (%lld, got %lld)"), Kind, Checkpoint, M.DriverDesyncFrame), M.bDesyncDriver && M.DriverDesyncFrame == Checkpoint);
+			// The Director, 15 Nov 05:00 (the sixth landing of the night: the faceoff at the dot): a pass may now be caught before the next checkpoint, and both
+			// sides then clear the pass state: the injected difference heals (final_equal) and the driver rightly sees equal hashes there. What must hold: a
+			// difference that still stands is called at the next checkpoint; one that healed was seen by the lockstep hash on its own frame (asserted above).
+			const bool bHealed = !M.bDesyncDriver && M.bFinalEqual;
+			if (bHealed) AddInfo(FString::Printf(TEXT("JAMHARD passstate %s: the difference healed before checkpoint %lld (the pass ended); no DESYNC is owed"), Kind, Checkpoint));
+			TestTrue(*FString::Printf(TEXT("%s: the driver raised DESYNC at the next checkpoint (%lld, got %lld), or the difference healed before it"), Kind, Checkpoint, M.DriverDesyncFrame),
+				bHealed || (M.bDesyncDriver && M.DriverDesyncFrame == Checkpoint));
 		}
 		TestTrue(*FString::Printf(TEXT("%s: a pass flew in one of seeds 1 to 8 (1,800 frames each)"), Kind), bRan);
 	}

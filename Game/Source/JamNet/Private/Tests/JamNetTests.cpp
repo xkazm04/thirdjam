@@ -423,6 +423,7 @@ bool FJamNetLockstepHashCovers::RunTest(const FString& Parameters)
 {
 	UJamCartridge* C = Load(*this, TEXT("hockey.regular"));
 	if (!C) return false;
+	C->Game.Stick.FaceoffCentreGapM = 0.0; C->Game.Stick.FaceoffWinnerShieldFrames = 0; C->Game.Stick.FaceoffNoHitFrames = 0;   // lane A208: at game.stick.faceoff's neutral: the probes stage on the formation of the first 240 frames (this test measures the hash's coverage)
 	TStrongObjectPtr<UJamSim> Sim(NewObject<UJamSim>());
 	if (!TestTrue(TEXT("sim inits"), Sim->Init(C->Game, 1))) return false;
 	TArray<FJamInput> In;

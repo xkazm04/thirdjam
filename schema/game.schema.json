@@ -395,6 +395,18 @@
               "minimum": 0,
               "maximum": 2,
               "description": "A shot at or above this height passes the crease skater, in metres."
+            },
+            "read_mps": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Lane A207 (track P1): the crease skater reads a long shot: past a quarter second of the shot's flight his save reach and his block height grow by this many metres a second. Default 2.5; 0 = reach_m whatever the flight (the game before)."
+            },
+            "read_max_m": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3,
+              "description": "Lane A207: the most the read adds to reach_m and to block_height_m, in metres. Default 1.0."
             }
           }
         },
@@ -528,6 +540,17 @@
           "maximum": 3,
           "description": "Lane A46: a teammate's pass that reaches the body within this radius (metres) at 6-14 m/s is seated on the blade with a 4-frame settle; faster passes bounce off the body unless the blade meets them. 0 = only the blade receives."
         },
+        "faceoff": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A208 (the eye's list 1, R-0068): the draw is a draw, not a hit. Leave the key out for the defaults; centre_gap_m 0, winner_shield_frames 0 and no_hit_frames 0 = the neutral value (the game before the lane).",
+          "properties": {
+            "centre_gap_m": { "type": "number", "minimum": 0, "maximum": 6, "description": "Both centres stand at the dot this far apart, facing, each on his own side (default 1.8); 0 = where the formation puts them." },
+            "winner_shield_frames": { "type": "integer", "minimum": 0, "maximum": 300, "description": "The skater who wins the draw cannot be felled for this many physics frames: a hit that would fell him is a bump (default 90); 0 = off." },
+            "no_hit_frames": { "type": "integer", "minimum": 0, "maximum": 300, "description": "For this many physics frames after the drop nobody's body check or stick lift is pressed inside no_hit_m of the dot: the press is refused (default 45); 0 = off." },
+            "no_hit_m": { "type": "number", "minimum": 0, "maximum": 30, "description": "The radius around the dot of no_hit_frames, in metres (default 6)." }
+          }
+        },
         "pickup": {
           "type": "object",
           "additionalProperties": false,
@@ -544,6 +567,18 @@
               "minimum": 0,
               "maximum": 180,
               "description": "The arc's half-angle either side of the blade's direction and of the body's facing, in degrees (default 60); the blade's own 0.6 m disc always counts."
+            },
+            "pass_arc_m": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Lane A207 (wave 2c): an opponent takes a pass in flight only with his blade: within this many metres of the blade point (default 1.0), never in its first 6 frames; his body still blocks it. 0 = the loose puck's arc against a pass too (the game before)."
+            },
+            "pass_arc_deg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 180,
+              "description": "Lane A207 (wave 2c): ... and inside this many degrees of his stick's line from his body (default 60)."
             },
             "body": {
               "type": "boolean",
@@ -623,6 +658,15 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "net": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A208 (the eye's list 2 item 12; A212's fault of 01:17): the nets' honesty. Leave the key out for the defaults; own_wall false and mouth_only false = the neutral value (the game before the lane).",
+          "properties": {
+            "own_wall": { "type": "boolean", "description": "true or absent = nobody scores on himself with his own play: a puck carried, or last played (carried, then shot, passed or cleared), by the defending side does not enter that side's net (the mouth is a wall for it); an opponent's puck that touches a defender on the way still scores." },
+            "mouth_only": { "type": "boolean", "description": "true or absent = a goal is a puck that crossed the goal mouth (between the posts, from the front) on its path; a puck moved into the net's box any other way is put back where it was." }
+          }
+        },
         "radius_m": {
           "type": "number",
           "minimum": 0.06,
@@ -723,6 +767,12 @@
           "minimum": 0.25,
           "maximum": 4,
           "description": "Lane A207 (track P1): multiplies the shot's speed (speed and the charge bonus) and the puck's speed cap (puck.max_speed) alike. Default 2 (a tap 36, a full charge 52 m/s on the regular cut); 1 = the game before the lane."
+        },
+        "fade_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Lane A207 (wave 2b): the shot's added speed (what speed_scale put on top) fades with the distance the puck travels, e^(-x / fade_m): the full 2x for the first 8 m, then about 1.5x by 12 m and 1.0x by 30 m at 6. Default 6; 0 = no fade."
         },
         "deflect": {
           "type": "boolean",

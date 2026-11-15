@@ -25,6 +25,9 @@ namespace JamBaseline
 	inline void PassShotNeutral(FJamGameConfig& G)
 	{
 		G.Pass.PowerFullFrames = 0; G.Pass.AimConeDeg = 0.0; G.Pass.CatchM = 0.0; G.Pass.bClearOwnBody = false; G.Shot.SpeedScale = 1.0;
+		G.Skater.GoalieReadMps = 0.0;   // wave 2: game.skater.goalie.read_mps (ships 2.5)
+		G.Shot.FadeM = 0.0;             // wave 2b: game.shot.fade_m (ships 6)
+		G.Stick.PickupPassArcM = 0.0;   // wave 2c: game.stick.pickup.pass_arc_m (ships 0.7)
 	}
 
 	inline void MakeNeutral(FJamGameConfig& G)
@@ -63,6 +66,8 @@ namespace JamBaseline
 		G.Contact.CheckPullM = 0.0; G.Contact.bCrossAnyMan = false;   // lane A209 (track F1, the night): game.contact.check_pull_m, cross_any_man (ship 1.0, true)
 		PassShotNeutral(G);                      // lane A207 (track P1): game.pass.power / aim / catch_m / clear_own_body (ship 30, 25, 1.2, true), game.shot.speed_scale (ships 2)
 		G.Stick.PickupArcM = 0.0; G.Stick.bPickupBody = false;   // lane A208 (track F0, R-0067 point 2): game.stick.pickup.arc_m, pickup.body (default 1.5 and true)
+		G.Stick.FaceoffCentreGapM = 0.0; G.Stick.FaceoffWinnerShieldFrames = 0; G.Stick.FaceoffNoHitFrames = 0;   // lane A208 (the eye's list 1): game.stick.faceoff (default 1.8 / 90 / 45)
+		G.Puck.bNetOwnWall = false; G.Puck.bNetMouthOnly = false;   // lane A208 (the eye's list 2 item 12; A212 01:17): game.puck.net (default true / true)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

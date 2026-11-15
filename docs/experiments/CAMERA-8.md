@@ -75,3 +75,23 @@ hits at the boards, two faceoffs), `camera-8/02-flagged-stills-before-after-rook
 - **3 m ahead**: 1.2 to 1.5 % of the A135 path's frames, 8 % of a person's board stills (he skates straight at the boards).
 - **The puck**: the bar counts a puck within 20 m; behind him it is off screen in 10 to 17 % of stills, before and after alike (not a boards matter).
 - The net between eye and chest: 28 frames of the staged path, all of them the path walking him through the net box (the same before).
+
+## READY 2 (the Director's 03:28 list)
+
+- **The guard's step**: the foot now travels at most max(0.99 m, the open-ice rig's own travel) a sim frame and the guard's height at most 5 cm
+  (`FJamCameraFilter::BoardsLastFootM`, `BoardsLastRigM`); what is held back comes on the next frames.
+- **Cost** (`Jam.Camera.BoardsPaths`, the same path through each camera alone, timed): `StepThirdPerson` 0.59 to 0.67 us a frame before, 0.85 to 0.97 us
+  after: 0.3 us a sim frame, nothing against a 16.7 ms frame.
+- **"3 m ahead" off** (where, from the test's dump): on the A135 path all but five frames are him travelling backwards or sideways, 107 to 179 degrees off
+  his facing (he turned and is still sliding the old way); main's camera misses the same frames (no camera that does not turn can show a direction
+  behind it). Five frames (large rink, f3314-3318) he slides into a corner 0.4 to 0.9 m from the boards. Not changed.
+- **The puck behind him** (`tools/qa/camera/puck.py` over the person-hand runs): a loose puck 2 to 15 m from him is off screen in 37 of 164 stills
+  (rookie), 36 of 178 (pro), 19 of 167 (large); 75 of those 92 are behind his facing. A pull back along the yaw that would show it: median 3.0 to 5.5 m,
+  p90 10 to 14.5 m, max 21 m; a 2 m pull back shows 26 of the 92, 3 m shows 36. Cost: the camera backing off by metres whenever a loose puck is behind
+  him (a correction he did not cause) and the skater a third to a half smaller. **Not changed**; the radar already carries the puck behind him.
+- **The strips** (every-frame JAMCAM of the real game, `tools/qa/camera/strip.py`; old script, rookie, the same seed before and after):
+  open ice into the corner and out (f560-680): before 24 frames past 55 degrees, ice min 0.22; after 0 frames, ice min 0.58, largest step 1.00 m
+  (before 0.88), largest tilt 7.5 deg a frame (before 9.9), yaw step 5.0 deg = his own turn (no flip). Behind the -x net with the puck on his stick
+  (f2380-2520): ice mean 0.43 -> 0.68, min 0.23 -> 0.57, steps 17 cm, tilt 0.7 deg. Stills: `camera-8/03-strip-open-ice-into-corner-and-out-f480-660.jpg`
+  (the driver's every-frame window caught 21 frames of the first run; the second run's windows came late, so the numbers are from the log).
+- The guard's tilt is now bounded too (2.5 deg over the step's 5): one frame of 10 deg at the glass in the first strip run.

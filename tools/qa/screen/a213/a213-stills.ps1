@@ -15,6 +15,8 @@ param(
     [string]$At1080 = '1,4,9,14,20,27,35',
     [string]$At720 = '3,8,14,22',
     [string[]]$Before = @(),
+    [string]$StartCmd = 'jam.menuscreen play',   # wave 3: e.g. 'jam.menuscreen choose modes/hockey.mode.glass-house' (Glow Ice)
+    [string]$LaunchCut = '',   # wave 3: -cut=<this> on the command line (a look tier's proof cut, e.g. tools/qa/screen/u1-cut-night.json)
     [string]$Between = '',   # a console command sent after the 1080 stills, before the 720 ones (e.g. 'jam.ctrl.EndMatch 0': real goals for the player's side)
     [int]$TailSec = 20,
     [int]$StartTimeoutSec = 900
@@ -37,6 +39,7 @@ $cvars = "r.RDG.AsyncCompute=0,jam.screen.FadeSeconds=0,jam.ScriptHuman=$ScriptH
 if ($ExtraCVars) { $cvars += ",$ExtraCVars" }
 $a = "`"$uproject`" /Game/Maps/Menu -game -RenderOffScreen -Multiprocess -ResX=1920 -ResY=1080 -ForceRes -unattended -nosplash -nosound -log -abslog=`"$log`" -ForceLogFlush " +
      "-dpcvars=$cvars -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
+if ($LaunchCut) { $a += " -cut=`"$((Join-Path $root $LaunchCut).Replace([char]92, [char]47))`"" }
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $p = Start-Process -FilePath $exe -ArgumentList $a -PassThru -WindowStyle Hidden
 $start = $p.StartTime
@@ -94,7 +97,7 @@ if (-not $up) { Finish 2 'the menu never answered its console' }
 Start-Sleep -Seconds 6
 [void](Console "jam.menuscreen level $Level"); Start-Sleep -Milliseconds 500
 foreach ($cmd in $Before) { [void](Console $cmd); Start-Sleep -Milliseconds 300 }
-[void](Console 'jam.menuscreen play')
+[void](Console $StartCmd)
 if (-not (WaitLog 'JAMMATCH level=' 90)) { Finish 2 'PLAY NOW did not start a match (no JAMMATCH line)' }
 $m0 = $sw.Elapsed.TotalSeconds
 Note 'the match started'

@@ -37,6 +37,7 @@ namespace JamEvents
 	const FName SeasonTake(TEXT("season_take"));
 	const FName Deke(TEXT("deke"));   // lane A39
 	const FName Ability(TEXT("ability"));   // lane A84
+	const FName Possess(TEXT("possess"));   // lane A208 (R-0067 additions)
 }
 
 TArray<FName> UJamEventBus::GetKnownEvents()
@@ -49,7 +50,8 @@ TArray<FName> UJamEventBus::GetKnownEvents()
 		// Lane A32 (B-to-A-0026): the commentator's seven, proposed for C-0003.
 		JamEvents::Save, JamEvents::Post, JamEvents::Breakaway, JamEvents::Carry, JamEvents::PeriodEnd, JamEvents::Clock, JamEvents::SeasonTake,
 		JamEvents::Deke,   // lane A39 (R-0029 point 4)
-		JamEvents::Ability };   // lane A84 (R-0041 point 3)
+		JamEvents::Ability,   // lane A84 (R-0041 point 3)
+		JamEvents::Possess };   // lane A208 (contracts/events.md, the R-0067 additions)
 }
 
 bool UJamEventBus::IsKnownEvent(FName Event)

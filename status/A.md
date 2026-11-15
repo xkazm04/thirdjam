@@ -499,3 +499,4 @@
 - link green 02:17: main 8cb7e104 (The drill is green in a window again; the screen says who has the puck; the hardening suit) pushed.
 - package 02:40: `Hokej_Hokej_H35.zip` from main 8cb7e104, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 03:40: main 9e6815a0 (Merge dev-b at 29dd86bc; the carried puck is seen; the brain's wave 3; the screen teaches;) pushed.
+- link green 04:01: main b3284ba0 (Near the boards he sees ice and the play: the camera slides in and comes down instead of r) pushed.

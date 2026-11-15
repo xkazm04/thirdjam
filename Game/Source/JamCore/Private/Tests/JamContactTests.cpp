@@ -1364,7 +1364,7 @@ bool FJamContactGraceMatch::RunTest(const FString& Parameters)
 		for (uint64 Seed = 1; Seed <= 10; ++Seed)
 		{
 			FContactCount C;
-			const JamAI::FJamPlaytestStats S = Match(*this, TEXT("pro"), Seed, C, [Grace](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = Grace; }, FString(), 6000);
+			const JamAI::FJamPlaytestStats S = Match(*this, TEXT("pro"), Seed, C, [Grace](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = Grace; G.Stick.FaceoffWinnerShieldFrames = 0; }, FString(), 6000);   // lane A208: the faceoff winner's shield is the release grace's state: off here, this test measures the release grace
 			AddInfo(FString::Printf(TEXT("JAMGRACE 100s pro seed %llu grace %d: frames %lld hash %016llx goals %d:%d | %s"), static_cast<unsigned long long>(Seed), Grace, static_cast<long long>(S.Frames),
 				static_cast<unsigned long long>(S.Hash), S.GoalsFor, S.GoalsAgainst, *GraceLine(C)));
 			HumanDowns += C.Downs[1]; HumanMax = FMath::Max(HumanMax, C.Downs[1]); BotDowns += C.Downs[0];
@@ -1828,6 +1828,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Skater.bChargeDiesOnLoss = false;   // lane A203 (track K1): and before the charge that dies with the puck
 		JamBaseline::PassShotNeutral(C->Game);   // lane A207 (track P1): and before the pass by power, aimed and caught, and the doubled shot
 		C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false;   // lane A208 (track F0): and before the loose puck is his who touches it
+		C->Game.Stick.FaceoffCentreGapM = 0.0; C->Game.Stick.FaceoffWinnerShieldFrames = 0; C->Game.Stick.FaceoffNoHitFrames = 0; C->Game.Puck.bNetOwnWall = false; C->Game.Puck.bNetMouthOnly = false;   // lane A208: and before the faceoff and the nets' rules
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;

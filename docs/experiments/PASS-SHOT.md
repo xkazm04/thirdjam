@@ -87,3 +87,61 @@ Passes the human receives a match: 3.3 -> 6.1 (rookie regular), 4.2 -> 6.4 (pro 
 
 **Law 3** (200 seeds a number, the game as it ships): rookie 100 / 100 / 100 / 100 / straight 0; pro 94.0 / 99.5 / 93.0 / 83.5 / straight 0; all_star
 99.5 / 99.5 / 99.0 / 93.0 / straight 0: the same rows as before the lane (A202): the drill has no pass or shot in it.
+
+## 4. Wave 2 (14 Nov 22:17 onwards)
+
+**Which half moves the ladder (600 a cell, the same instrument):**
+
+| cell | neutral | pass rules only | shot x2 only | both (READY 1) |
+|---|---|---|---|---|
+| pro regular | 48.0 | 62.7 | 33.2 | 44.8 |
+| all_star regular | 9.8 | 14.5 | 4.3 | 3.8 |
+| pro large | 50.8 | 58.2 | 26.0 | 31.3 |
+
+**What the doubled shot breaks** (`Bar.Pass.Measure` SHOTFATE, 100 matches at pro): the bots shoot at the human's net from 20-35 m about 4.4 times a
+match (the scripted human 0.2). At 1x those shots die on the way or are collected (in: 6.5 % regular, 20.8 % large); at 2x they reach the net (44-48 %,
+77 %). A defender stands in the crease for only 4 % (regular) to 18 % (large) of them. Not tunnelling (0 frames through a body or out of the rink in 300
+matches; the goal counts at 52 m/s), not the lift. **The crease man reads a long shot** (`game.skater.goalie.read_mps` 2.5, `read_max_m` 1.0; neutral 0; `UJamSim::GoalieReadExtraM`): past 0.35 s of
+the shot's flight (estimated from the shooter's place now and the puck's speed, no new state) his save reach and his block height grow by 2.5 m a second,
+to 1 m more: the glove goes up for the shot he sees coming, the quick shot from the slot is not read. Staged net (`Bar.Shot.Staged`, a defender 1.5 m
+in front of the goal, shots from 12 / 25 / 30 m, on the axis and 6 m to each side, tap / half / full, 9 each): doubled shot, read off: 5 / 6 / 6 goals of
+9; read on: 5 / 0 / 0. At a 0.25 s reaction it also took the 12 m shot (2 of 9): 0.35. In matches it moves little (the bots' 25-35 m shots in: regular
+48.5 %, large 64.2 % at pro), because a defender stands in the crease at 3 % (regular) to 17 % (large) of those shots: the read cannot save a shot with
+nobody there. What else must give: a crease man (the brain), the bots' long-shot choice (the brain), then, only if both fall short, a shot speed that
+falls off with the distance at release (keeps "double" from the slot).
+
+**The pass aimed at a man flies by the others:** `Puck.PassTo` (hashed with `PassFrames`) and `UJamSim::PassFliesBy`: a team-mate who is not the pass's
+man lets it by while it moves faster than 6 m/s against him and is clear of his body (his body stays solid); under 6 m/s any mate's blade within
+`catch_m` takes it. `Jam.Bot.PassesToHuman`: pro 7.05, rookie 4.70 passes received a match (bar 1.0).
+
+**The acceptance rows** (`HokejAcceptDrill.cpp` step 5, `accept.mjs`): the held row `saucer` is now `pass_power` (36 frames, the mate 28 m ahead, full
+power, caught). `Jam.Core.PassShotRows` replays steps 4 to 6 headless: all six rows pass (shots 35.7 / 39.9 / 51.6 m/s score from 10 m).
+
+**The power line** (`HUDPassMeter.cpp`): stills off screen from the game camera (`tools/perf/results/a207/meterstill.ps1`: -RenderOffScreen, the scripted human,
+`jam.hud.PassMeterDemo 20` draws the line as a 20-frame hold while he carries, `jam.hud.PassMeterStills 10`): `pass-shot/u1-passmeter-f000135.png`
+(at the draw: the line from the puck along the stick, 22.9 m), `pass-shot/u1-passmeter-f000640.png` (in the corner). White with an ink edge, on the ice under
+every HUD element; his team's colour when a mate is in the cone. Read by eye only: the operator's eye on a package is the real proof.
+
+## 5. Wave 2b on the merged tree (main 015f1618: the brain's evolution 9, A208's pickup and bodies, A209's contact)
+
+**The long shot, merged, before the fade** (100 matches at pro; the bots' shots at the human from 25-35 m): regular 46.4 % in (blocked 27.7 %, saved 10.9 %,
+a crease man at 4 % of them); large 53.1 % (blocked 3.1 %, saved 19.4 %, crease man 15 %).
+
+**The shot fades** (`game.shot.fade_m` 12; neutral 0): the added speed (what `speed_scale` put on top of the 1x shot) fades as e^(-x / 12 m) over the
+distance the puck travels (`FJamPuckState::ShotExcess`, hashed while not 0; any touch ends it): 2x off the stick, about 1.4x after 10 m, 1.1x after 30 m.
+
+| bots' shots at the human, pro | under 12 m | 12-25 m | 25-35 m |
+|---|---|---|---|
+| regular, no fade | 35.0 % | 34.9 % | 46.4 % |
+| regular, fade 25 | 42.2 | 31.1 | 34.8 |
+| regular, fade 12 (ships) | 46.2 | 33.5 | 21.4 |
+| large, no fade | 32.7 | 34.4 | 53.1 |
+| large, fade 25 | 30.2 | 33.2 | 44.8 |
+| large, fade 12 (ships) | 35.5 | 23.6 | 34.7 |
+
+The close shot keeps its danger (under 12 m: 46 % / 36 % in). The long one falls but not to the bar (15 % at pro): at 1x the large rink's long shot already
+went in 20.8 %: the shot's speed alone cannot get it under 15 % while the crease is empty at 84-98 % of those shots. What else must give: the crease man
+(A206 wave 2), the human's side in the lane (A208's bodies block 41.6 % on the regular rink, 5 % on the large one).
+
+**A bot passes to nobody nearer than 3 m** (`UJamSim::BotPassMinM`; 2 m when an opponent within 2 m closes on him; the human keeps 2 m): no key (the Director's
+ruling 01:12).

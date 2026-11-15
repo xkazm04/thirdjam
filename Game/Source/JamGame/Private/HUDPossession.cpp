@@ -112,7 +112,7 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 		Grow(YouRing, Pulse);
 		if (const UCanvasPanelSlot* RS = Cast<UCanvasPanelSlot>(YouRing->Slot))
 		{
-			Recolour(YouHaveRing, Team, A);
+			Recolour(YouHaveRing, Team, A * YouHaveRingAlpha);
 			YouHaveRing->SetVisibility(ESlateVisibility::HitTestInvisible);
 			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouHaveRing->Slot)) { CS->SetPosition(RS->GetPosition()); CS->SetSize(RS->GetSize() * YouHaveRingScale); }
 			bYouHave = true;
@@ -141,7 +141,7 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 			const FVector2D Min = C - Size * 0.5f, Max = C + Size * 0.5f;
 			if (!(ClearDownOn() && BoxMeetsAny(Min, Max, DownBoxesNow)))
 			{
-				Recolour(LooseRing, FJamUiStyle::Paper(), 0.9f);
+				Recolour(LooseRing, DistM > LooseRingFarM ? FJamUiStyle::Yellow() : FJamUiStyle::Paper(), 0.9f);
 				LooseRing->SetVisibility(ESlateVisibility::HitTestInvisible);
 				if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(LooseRing->Slot)) { CS->SetPosition(C); CS->SetSize(Size); }
 				bLoose = true;
