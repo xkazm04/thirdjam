@@ -1,0 +1,8 @@
+{
+  "m-front":       { "level": "rookie", "menu": "landing>fe-landing;start>fe-home;modes>fe-modes-0;key arrowdown>fe-modes-1;key arrowdown>fe-modes-2;key arrowdown>fe-modes-3;key arrowdown>fe-modes-4;key arrowdown>fe-modes-5;key arrowdown>fe-modes-6;key arrowdown>fe-modes-7;key arrowdown>fe-modes-8;settings>fe-settings;controls>fe-controls;main>fe-main2" },
+  "f-clay-rookie": { "level": "rookie", "every": 30, "frames": 8700, "dense": "0:140:5,520:720:3,1035:1160:3,1690:1780:2,1855:1960:2,2015:2100:3,2165:2260:3,2530:2620:3,2990:3080:3,3100:6380:60,6400:6600:3,6620:8280:60,8300:8700:4" },
+  "f-glow":        { "level": "rookie", "choose": "modes/hockey.mode.glass-house", "every": 40, "frames": 6400, "dense": "0:140:5,430:620:4,6040:6260:3" },
+  "f-fog":         { "level": "rookie", "choose": "modes/hockey.mode.fog-of-war", "every": 20, "frames": 3900, "dense": "380:560:4,1075:1130:3,1770:1930:4,3040:3100:3" },
+  "f-pond":        { "level": "rookie", "choose": "modes/hockey.mode.pond", "every": 20, "frames": 2200, "dense": "0:140:5,330:480:4,1950:2100:4" },
+  "f-clay-pro":    { "level": "pro", "every": 60, "frames": 7300, "dense": "0:140:5,5240:5460:4,6230:6330:2,6400:6600:4,7170:7260:3" }
+}
