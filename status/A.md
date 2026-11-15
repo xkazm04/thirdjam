@@ -528,3 +528,4 @@
 - package 18:14: `Hokej_Hokej_H44.zip` from main bd655dc0, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.
 - link green 18:43: main c7057ed0 (The evening's three (R-0072): the match HUD in one look, an illustration for every mode, t) pushed.
 - package 18:49: `Hokej_Hokej_H45.zip` from main c7057ed0, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.
+- link green 19:04: main bcbd1287 (The neon rig scaled per axis on a rink that is not 2 : 1: the Cage's edge line sits evenly) pushed.

@@ -1562,7 +1562,7 @@ void UJamMenuWidget::RefreshModes()
 		E.Payload = TEXT("cuts");
 		E.Display = TEXT("ALL RINKS");
 		E.Lines = TEXT("Every shipped rink, a rink you saved, the takes you played.");
-		E.Facts = TEXT("the regular rink and its variants   /   your saved game   /   the season's takes you played");
+		E.Facts = TEXT("the regular rink and its variants   /   your saved game   /   the season's takes");   // lane A235 (W4): "played" was alone on a second line
 		E.Picture = TEXT("Modes/T_UI_Mode_rinks");
 		E.Kind = EJamMenuRowKind::Open;
 		ModeEntries.Add(E);
@@ -1977,6 +1977,8 @@ void UJamMenuWidget::RefreshDirect()
 			UWidgetTree* T = WidgetTree;
 			TArray<FString> Sentences = D->GetCachedSentences();
 			for (const FJamCutInfo& I : D->ListCuts()) if (I.bSaved && !I.Sentence.IsEmpty()) Sentences.AddUnique(I.Sentence);
+			// Lane A235 (the walk's W3): the list's lower edge cut the fifth sentence through its letters: four fit whole, the rest are not shown.
+			if (Sentences.Num() > MaxSentencesShown) Sentences.SetNum(MaxSentencesShown);
 			for (const FString& Sentence : Sentences)
 			{
 				UJamMenuRowButton* B = T->ConstructWidget<UJamMenuRowButton>(UJamMenuRowButton::StaticClass());

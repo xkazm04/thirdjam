@@ -364,6 +364,8 @@ FString UJamSettingsWidget::VoiceStatus() const
 {
 	UWorld* W = GetWorld();
 	UJamSignalSystem* Sig = W ? W->GetSubsystem<UJamSignalSystem>() : nullptr;
+	// Lane A235 (the walk's W2): with the voice off the button already says VOICE: OFF; the grey "off" beside it said it twice. Nothing beside it then.
+	if (!UJamSignalSystem::IsVoiceSignalsEnabled()) return FString();
 	return Sig ? Sig->GetVoiceStatus() : FString(TEXT("no signal system in this world"));
 }
 

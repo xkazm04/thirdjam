@@ -1163,13 +1163,22 @@ void JamHitEdge::Outline(const FJamEdgeArrow& A, TArray<FVector2f>& Out)
 static TAutoConsoleVariable<int32> CVarJamHudEdgeArrowOffPanel(TEXT("jam.hud.EdgeArrowOffPanel"), 1,
 	TEXT("Lane A227: 1 (default) a man-down edge arrow stands over the controls panel, never on it (as the puck arrow and the net chevrons); 0 = before."), ECVF_Default);
 
+// Lane A235 (the walk of H45, W15): the man-down arrow stood in the picture beside the man just sent flying (Sniper f849) or alone on the ice (Power Play f800):
+// lane A227's lift over the controls panel moves an arrow at the left edge up into the frame, and a man who has just gone off its edge is still on the camera's
+// way. A mark at a hit (R-0069, R-0070), and the camera shows the man anyway: 0 (default) the arrow is not drawn (the radar's down marks stay with jam.hit.OffScreen);
+// 1 = before (drawn as jam.hit.OffScreen says).
+static TAutoConsoleVariable<int32> CVarJamHitEdgeArrow(TEXT("jam.hit.EdgeArrow"), 0,
+	TEXT("Lane A235: 0 (default) no man-down arrow at the screen's edge (UJamHitEdgeWidget); 1 = before (drawn when jam.hit.OffScreen is 1). The radar's down marks follow jam.hit.OffScreen alone."), ECVF_Default);
+
+bool UJamHitEdgeWidget::EdgeArrowOn() { return CVarJamHitEdgeArrow.GetValueOnGameThread() != 0; }
+
 void UJamHitEdgeWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 	Arrows.Reset();
 	AJamHitRead* H = Source.Get();
 	APlayerController* PC = GetOwningPlayer();
-	if (!H || !PC || !AJamHitRead::OffScreenOn() || !PC->PlayerCameraManager) return;
+	if (!H || !PC || !AJamHitRead::OffScreenOn() || !EdgeArrowOn() || !PC->PlayerCameraManager) return;
 	const FVector2D Size = MyGeometry.GetLocalSize();
 	if (Size.X < 10.0 || Size.Y < 10.0) return;
 	const FVector CamLoc = PC->PlayerCameraManager->GetCameraLocation();

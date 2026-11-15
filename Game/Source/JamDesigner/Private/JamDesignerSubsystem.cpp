@@ -13,6 +13,8 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Containers/Ticker.h"
+#include "HAL/IConsoleManager.h"
+#include "HAL/PlatformProperties.h"
 
 DEFINE_LOG_CATEGORY(LogJamDesigner);
 
@@ -359,6 +361,10 @@ FString UJamDesignerSubsystem::ResolveKey() const
 	return K;
 }
 
+// Lane A235: the CLI route in a cooked game, for development only.
+static TAutoConsoleVariable<int32> CVarJamDesignerCliInCooked(TEXT("jam.designer.CliInCooked"), 0,
+	TEXT("Lane A235: 0 (default) a cooked game never uses an assistant's command-line tool found on PATH: MAKE YOUR OWN is live only with a key the player typed, else it answers from the saved games. 1 = the CLI route as before (development only)."), ECVF_Default);
+
 FString UJamDesignerSubsystem::ResolveCliExe() const
 {
 	if (bCliOverride)
@@ -366,9 +372,10 @@ FString UJamDesignerSubsystem::ResolveCliExe() const
 		if (!bCliOverrideEnabled) return FString();
 		return CliExeOverride.IsEmpty() ? FJamCliTransport::FindClaudeOnPath() : CliExeOverride;
 	}
-	bool bAllowed = !UE_BUILD_SHIPPING;
 	bool bConfig = false;
-	if (GConfig && GConfig->GetBool(ConfigSection, TEXT("bAllowCliTransport"), bConfig, GGameIni) && bConfig) bAllowed = true;
+	if (GConfig) GConfig->GetBool(ConfigSection, TEXT("bAllowCliTransport"), bConfig, GGameIni);
+	// Lane A235: never in a cooked game unless jam.designer.CliInCooked 1 (development).
+	const bool bAllowed = CliRouteAllowed(FPlatformProperties::RequiresCookedData(), UE_BUILD_SHIPPING != 0, bConfig, CVarJamDesignerCliInCooked.GetValueOnAnyThread() != 0);
 	return bAllowed ? FJamCliTransport::FindClaudeOnPath() : FString();
 }
 

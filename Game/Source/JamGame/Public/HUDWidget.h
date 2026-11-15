@@ -1172,4 +1172,20 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UVerticalBox> EndStatsTable;
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> EndStatsLabels;
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> EndStatsValues;
+	// ---- Lane A235 (the walk of H45; HUDFaults.cpp): two HUD parts that met in the candidate.
+	//   W6  jam.hud.PromptWaitsForCard 1 (default): while a card is up (the test HideLabelsUnderCards uses: the MATCH card, the GOAL banner, the pause card,
+	//       the end card) the yellow teaching prompt is not drawn and its clock stands still; it comes back whole when the card leaves. 0 = before.
+	//   W7  jam.hud.FaceoffCueInBox 0 (default): while the human sits in the penalty box the faceoff's dial (the digit, HOLD, DROP, the draw's result) and its
+	//       hint (PRESS SHOOT AT THE DROP) are not drawn for him. 1 = before.
+public:
+	static bool PromptWaitsForCard(bool bOn, bool bCardUp) { return bOn && bCardUp; }
+	static bool FaceoffCueHiddenInBox(bool bCueInBoxOn, int32 PenaltyFrames) { return !bCueInBoxOn && PenaltyFrames > 0; }
+	// W11: the way to his own net in the HUD's label capitals under jam.hud.OneLook 1 (OWN  24 M); 0 = the words of before (own 24 m).
+	static FString OwnLabelText(int32 DistanceM, bool bOneLook) { return bOneLook ? FString::Printf(TEXT("OWN  %d M"), DistanceM) : FString::Printf(TEXT("own %d m"), DistanceM); }
+	static bool PromptWaitsForCardOn();
+	static bool FaceoffCueInBoxOn();
+private:
+	bool bCardUpForPrompt = false;   // written by HideLabelsUnderCards each frame
+	bool HoldPromptUnderCard(bool bSimAdvanced, int64 SimFrame);   // one call in UpdatePrompts: true = the prompt is hidden this frame
+	void HideFaceoffCueInBox(const FJamPresentationFrame& Frame);   // one call in RefreshFromFrame after the faceoff ring's visibility
 };

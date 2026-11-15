@@ -6,7 +6,7 @@ Director fills it at 22:30 (R-0073). Nothing in a slot is a guess. Before pastin
 
 **What this describes.** The game on main (`81dbe14e` when this was written) and the package the Director cuts at 22:30 from the last green landing (R-0073). **DLSS is back**: the
 operator fetched the plugin again at 17:14 and every package from H44 on carries it (the Director's word), so each DLSS sentence below is the "with DLSS" version of `TRUTH.md` 5.6.
-**Windows 10 or 11 (DirectX 12) only. No web build.** (A232: NO-GO; R-0074.) Rows named `P5-..` are in `TRUTH.md` pass 5 (true of H43, the last package read sentence by
+**Windows 10 or 11 (DirectX 12) only. No web build.** (A232: NO-GO; R-0074.) Rows named `P6-..` are in `TRUTH.md` pass 6 (the candidate H45 and lane A235's fixes, 21:00); rows named `P5-..` are in pass 5 (true of H43, the last package read sentence by
 sentence); nothing below says more than those rows and the ledger.
 
 The jam's deadline: Mon 16 Nov 02:59 CET (A232: "Nov 15 5:59 PM PST"). He submits about midnight (R-0073).
@@ -15,10 +15,10 @@ The jam's deadline: Mon 16 Nov 02:59 CET (A232: "Nov 15 5:59 PM PST"). He submit
 
 ## 1. The game file (zip, named TeamName_GameName, under 1 GB)
 
-> `Hokej_Hokej.zip` [the final package: about 271 MiB]
+> `Hokej_Hokej.zip` [the final package: about 283 MiB]
 
 - Made by `tools/run/package.ps1 -Submission` from the final package: top folder `Windows/`, start `ThirdJam.exe`, `README.txt` beside it (`submission/package/README.txt`).
-- Size with DLSS: about 271 MiB zipped, 421 MB unpacked (H41: 284,254,514 bytes; P5-FM05, TRUTH 5.6). Well under 1 GB. The Director writes the real byte count at 22:30.
+- Size with DLSS: about 283 MiB zipped, 432 MB unpacked (the candidate H45: 296,480,940 bytes; P6-FM01). Well under 1 GB. The Director writes the real byte count at 22:30.
 - Windows 10 or 11 (DirectX 12) only. No web build.
 - Not yet done on any package: the clean-machine test on the second machine (`[O7]`; the page says "not tested").
 
@@ -59,7 +59,7 @@ publicly and paste that link. What is in it, what is not (device B's transcripts
 
 > - Unreal Engine 5.9: C++ gameplay, Blueprint visuals, Niagara, MetaSounds.
 > - Claude Code with Claude models (Opus, Sonnet, Fable): planning, all C++ and tooling, the tests, the measured playtests, the Designer's prompts, the dev log builder.
-> - Codex CLI image generation (OpenAI): menu and HUD art, in-game textures, the concept sheets the skater figures were built from.
+> - Codex CLI image generation (OpenAI): menu and HUD art, the fourteen MODES illustrations, in-game textures, the concept sheets the skater figures were built from.
 > - Hyper3D Rodin: 3D generation of the skater figures and their textures. Meshy: rigging of the figures (its text-to-3D and text-to-motion were tried, not shipped). Tripo3D through fal.ai: 3D generation tried, not shipped.
 > - ElevenLabs: the commentator's and crowd's voices, sound effects and music.
 > - NVIDIA DLSS 4.5 (Unreal plugin v8.9.0, Super Resolution and DLAA, ported to 5.9): on by default on RTX GPUs, set by the game itself (no switch in SETTINGS).
@@ -68,14 +68,14 @@ publicly and paste that link. What is in it, what is not (device B's transcripts
 > - ffmpeg: capture and video encoding.
 > - Anthropic API: the in-game Designer (MAKE YOUR OWN) turns a player's sentence into a game; the player types their own key, none is bundled.
 
-Proof: `submission/credits.md` (16:21) and `ASSETS.md`: Codex rows 62 (50 shipped); Rodin rows 70 (44 shipped, among them the shipped figure built from a Codex concept and
+Proof: `submission/credits.md` (16:21) and `ASSETS.md`: Codex rows 76 (64 shipped); Rodin rows 70 (44 shipped, among them the shipped figure built from a Codex concept and
 rigged by Meshy); Meshy-only rows 81 (0 shipped); Tripo3D 10 (0 shipped); ElevenLabs 519 (477 shipped); P5-FM10; the DLSS line is P5-FM11 with DLSS; Gemini: R-0024 and
 `tools/eyes/` (lane A27). The page itself names no vendor (`[O5]`); this field asks for tools, so it names them (R-0006: partner prizes depend on it).
 
 ## 8. NVIDIA questions
 
-A232 did not copy the questions' wording from the page. The answers below follow the draft of `docs/experiments/DLSS.md` section 3, corrected where the game differs (lane A225's
-FAULT: there is no DLSS row in SETTINGS, and the CREDITS screen does not name DLSS). Match each answer to the question the page asks.
+A232 did not copy the questions' wording from the page. The answers below follow the draft of `docs/experiments/DLSS.md` section 3, corrected where the game differs (there is no DLSS row in SETTINGS;
+the CREDITS screen names NVIDIA DLSS as text since H45). Match each answer to the question the page asks.
 
 > **Which NVIDIA technology does the game use?** NVIDIA DLSS 4.5 Super Resolution and DLAA, through NVIDIA's DLSS Unreal Engine plugin v8.9.0, rebuilt for Unreal Engine 5.9 (NVIDIA ships it for 5.8; the port needed ten one-line format-string fixes).
 >
@@ -86,25 +86,22 @@ FAULT: there is no DLSS row in SETTINGS, and the CREDITS screen does not name DL
 > **Not used:** Frame Generation, Ray Reconstruction, Reflex. Kept out for size and latency in a 60 Hz arcade game.
 
 Proof: `docs/experiments/DLSS.md` sections 1.1, 2.3 to 2.5 (measured with other editors on the same GPU: "trends only"); `DlssJam.cpp` (`UJamDlssSubsystem`); P5-FM11.
-Open (FAULT in `status/A233.md`): the plugin's licence asks for a text credit (DLSS.md 1.4); the game's CREDITS screen (`MenuWidget.cpp:1175`) has none.
+Closed: the plugin's licence asks for a text credit (DLSS.md 1.4); the CREDITS screen reads "Uses NVIDIA DLSS technology, (c) NVIDIA Corporation." (`MenuWidget.cpp:1207`; lane A234's walk of H45: "the DLSS line"; P6-FM04).
 
 ## 9. OpenAI Awards (optional): which OpenAI models or products you used, and how
 
-> We used [O: the model / product name as your account shows it] through the Codex CLI's image generation (the `codex exec` command with its built-in image tool, one picture a run, every prompt kept in a job list in the repository). It made the game's 2D art. 62 generated pictures went into the asset ledger, and 50 of them ship in the game:
+> We used [O: the model / product name as your account shows it] through the Codex CLI's image generation (the `codex exec` command with its built-in image tool, one picture a run, every prompt kept in a job list in the repository). It made the game's 2D art. 76 generated pictures went into the asset ledger, and 64 of them ship in the game:
 > - **Menu and HUD art (32):** the title slate, the button plates (normal, hovered, pressed), the panel, the opening match card, the pause card's frame, the countdown ring, the film-strip row frame, six game-type card backgrounds and seventeen icons (game types, pickups, team signals, settings, voice, barks, upscaling).
 > - **In-game textures (15):** the two team crests and the jersey number atlas (each with a copy for the scoreboard), five pickup glyphs, the fast-ice zone tile, a felt fibre mask, a clay thumb-dent normal map made from a generated height map, and the painted hills backdrop behind the stands.
 > - **The skater figure (3):** the concept sheet the shipped skater was built from by a 3D-generation service (its mesh, skeleton and base colour are ledgered with that concept).
-> - IF LANDED (lane A231): fourteen illustrations for the MODES screen, one per mode, each drawn in the look its mode plays, made the same way on the last evening.
+> - **The MODES screen (14):** one illustration for each mode, drawn in the look that mode plays (four on the neon arena), made the same way on the last evening, in place of screenshots.
 >
 > Nothing in the game calls an OpenAI model while you play; the pictures are files in the package.
 
-Proof: `ASSETS.md` rows with tool "Codex image generation" or "Codex concept sheet + ..." (62 rows; `shipped` y on 50: device A's UI 32, device B's textures 15, the P2C figure 3);
+Proof: `ASSETS.md` rows with tool "Codex image generation" or "Codex concept sheet + ..." (76 rows; `shipped` y on 64: device A's UI 32, the MODES illustrations 14 (`Game/Content/UI/Modes/T_UI_ModeArt_*`, lane A231, landed on main c7057ed0), device B's textures 15, the P2C figure 3);
 `tools/images/gen.mjs` (header: "codex exec with the built-in image_gen tool"); `status/B-images-n1.md`, `status/B-skater-skc.md` (the concept sheets). The ledger counts imported
-pictures, not every try: rejected tries are not in it, so 62 is not the number of images ever generated. The status files show no other OpenAI use in development.
-**IF LANDED:** lane A231 (`.claude/worktrees/clean-main/status/A231.md`, read at 17:51) has all fourteen imported, 14 ledger rows, its stills seen at 17:46 and its gate running;
-no `MODE ART READY` line yet, and R-0072 lands it after 19:20. Keep the bullet only if the final package shows the fourteen pictures (then the counts read 76 in the ledger, 64 shipped,
-once the Director confirms the rows landed); delete it otherwise. Three of the fourteen (Arsenal, Marathon, Cage) are drawn on the neon arena and are right only if lane A230's
-neon modes land too (A231's own note).
+pictures, not every try: rejected tries are not in it, so 76 is not the number of images ever generated. The status files show no other OpenAI use in development.
+The fourteen are landed (main c7057ed0) and seen in the candidate H45: lane A234's walk, MODES: "each illustration whole in 16:9 ... Arsenal, Cage, Marathon show the neon arena and play it" (P6-FM02, P6-FM03).
 
 ## 10. Modifier categories
 

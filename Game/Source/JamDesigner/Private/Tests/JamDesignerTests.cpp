@@ -1,6 +1,7 @@
 // Lane A7 tests (headless, no world, no network): Jam.Designer.*. Run:
 //   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Designer; Quit" -unattended -nullrhi -nosplash -log
 #include "Misc/AutomationTest.h"
+#include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
@@ -417,6 +418,29 @@ bool FJamDesignerCliTransportParsesResult::RunTest(const FString& Parameters)
 
 	FPlatformMisc::SetEnvironmentVar(TEXT("PATH"), *OldPath);
 	IFileManager::Get().DeleteDirectory(*Dir, false, true);
+	return true;
+}
+
+// Lane A235: a cooked game (any configuration) never takes the CLI route; only jam.designer.CliInCooked 1 opens it. Pure: no PATH read, no process, no request.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamDesignerCliNeverInCooked, "Jam.Designer.CliNeverInCooked", JamDesignerTests::Flags)
+bool FJamDesignerCliNeverInCooked::RunTest(const FString& Parameters)
+{
+	IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.designer.CliInCooked"));
+	TestTrue(TEXT("jam.designer.CliInCooked exists"), V != nullptr);
+	if (V) TestEqual(TEXT("jam.designer.CliInCooked ships 0"), V->GetInt(), 0);
+	TestFalse(TEXT("cooked Development: no CLI"), UJamDesignerSubsystem::CliRouteAllowed(true, false, false, false));
+	TestFalse(TEXT("cooked Development, config allows: still no CLI"), UJamDesignerSubsystem::CliRouteAllowed(true, false, true, false));
+	TestFalse(TEXT("cooked Shipping: no CLI"), UJamDesignerSubsystem::CliRouteAllowed(true, true, true, false));
+	TestTrue(TEXT("cooked with the development switch: the CLI as before"), UJamDesignerSubsystem::CliRouteAllowed(true, false, false, true));
+	TestTrue(TEXT("uncooked Development (the editor): as before"), UJamDesignerSubsystem::CliRouteAllowed(false, false, false, false));
+	TestFalse(TEXT("uncooked Shipping without the config: as before"), UJamDesignerSubsystem::CliRouteAllowed(false, true, false, false));
+	// With no key and the CLI route off, the Designer is not live and starts no process (the fake: SetCliForTest(false), the cooked game's answer).
+	UJamDesignerSubsystem* S = Make(nullptr, FString());
+	S->SetCliForTest(false);
+	const int32 CliBefore = FJamCliTransport::GetProcessesStarted();
+	TestFalse(TEXT("not live"), S->IsLiveAvailable());
+	RunSync(S, TEXT("make it faster"), FString());
+	TestEqual(TEXT("no CLI process started"), FJamCliTransport::GetProcessesStarted(), CliBefore);
 	return true;
 }
 

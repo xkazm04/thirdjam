@@ -161,6 +161,10 @@ public:
 	void SetCliForTest(bool bEnable, const FString& Exe = FString()) { bCliOverride = true; bCliOverrideEnabled = bEnable; CliExeOverride = Exe; }
 	// The claude executable the CLI transport would use; empty when the CLI route is off.
 	FString ResolveCliExe() const;
+	// Lane A235 (the walk of H45: a Development twin started from a shell with the CLI on PATH said "Live" on MAKE YOUR OWN): whether the CLI route may be
+	// looked for at all. A cooked game (any configuration) never uses it: a key the player typed, else the saved games; jam.designer.CliInCooked 1 opens it
+	// for development. Uncooked (the editor binary): as before (not in Shipping unless [JamDesigner] bAllowCliTransport). Pure: no PATH is read here.
+	static bool CliRouteAllowed(bool bCooked, bool bShipping, bool bConfigAllows, bool bCookedDevSwitch) { return bCooked ? bCookedDevSwitch : (!bShipping || bConfigAllows); }
 	void SetEventBusForTest(UJamEventBus* Bus) { BusOverride = Bus; }
 	void SetSavedCutsDirForTest(const FString& Dir) { SavedCutsDirOverride = Dir; }
 	FString GetSavedCutsDir() const;

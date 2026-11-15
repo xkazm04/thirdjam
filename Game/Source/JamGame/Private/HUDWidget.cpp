@@ -1059,6 +1059,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	FaceoffWord->SetVisibility(bCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	CountdownBox->SetVisibility(bCount || bDrop || bResult ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	FaceoffHintPlate->SetVisibility(bCount && FaceoffsThisSession <= FaceoffHintCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	HideFaceoffCueInBox(F);   // lane A235 (W7): not for a man in the box
 
 	bCountingThisFrame = bCount;
 	bSimAdvancedThisFrame = bSimAdvanced;
@@ -1209,6 +1210,7 @@ void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCounting
 	}
 	// Lane A135: a prompt on screen changes its words when the player takes the other device.
 	if (PromptNow == EPrompt::Brake && !PromptTextBlock->GetText().ToString().Equals(LivePromptText(PromptNow))) PromptTextBlock->SetText(FText::FromString(LivePromptText(PromptNow)));
+	if (HoldPromptUnderCard(bSimAdvanced, F.SimFrame)) return;   // lane A235 (W6): not under a card
 	const float Alpha = (PromptNow != EPrompt::None && F.Phase == EJamPhase::Play) ? PromptOpacity(PromptShown, F.SimFrame) : 0.f;
 	PromptPlate->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (Alpha <= 0.f) return;
@@ -1957,7 +1959,7 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 		DistM = FVector2D::Distance(F.Skaters[F.HumanIndex].PosM, FVector2D(Own.X / 100.f, 0.f));
 	}
 	OwnMarker.DistanceM = FMath::RoundToInt32(DistM);
-	OwnMarker.Text = FString::Printf(TEXT("own %d m"), OwnMarker.DistanceM);
+	OwnMarker.Text = OwnLabelText(OwnMarker.DistanceM, OneLookOn());   // lane A235 (W11): OWN  24 M in the one look
 	const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
 	const float Scale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
 	const float VW = VS.X / Scale, VH = VS.Y / Scale;

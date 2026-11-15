@@ -205,6 +205,7 @@ class JAMGAME_API UJamMenuWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	static constexpr int32 MaxSentencesShown = 4;   // lane A235 (W3): MAKE YOUR OWN lists four saved sentences, whole
 	static UJamMenuWidget* CreateAndAdd(APlayerController* PC);
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") void ShowScreen(EJamMenuScreen Screen);

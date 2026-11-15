@@ -161,6 +161,9 @@ public:
 	// CallFigure: true when Figure has a function of that name whose parameters are exactly Args.Num() numbers or booleans; each is written by the parameter's
 	// own type (bool, any integer, float or double: a Blueprint event's "float" is a double), then the function is called.
 	static bool CallFigure(UObject* Figure, FName Function, TConstArrayView<double> Args);
+	// Lane A235 (W10, jam.fx.SlideTrail 0): hides the figure's NS_slide_trail components; returns how many. Pure name test beside it.
+	static int32 HideSlideTrail(UObject* Visual);
+	static bool IsSlideTrailAsset(const FString& AssetName) { return AssetName.Equals(TEXT("NS_slide_trail"), ESearchCase::IgnoreCase); }
 	// The frames for PlayStumble on this sim frame, 0 = no stumble began by a hit (a bump, a knockdown, a mistimed poke's own stumble: PlayPoke(false) has it).
 	static int32 StumbleFramesFor(const FJamSkaterState& S);
 	// The deceleration for SetBraking(true, ...): the sim speed lost since the frame before, per second; 0 when the sim does not reverse-brake this frame.

@@ -564,6 +564,11 @@ static TAutoConsoleVariable<int32> CVarJamHudReadyHintBrief(TEXT("jam.hud.ReadyH
 static constexpr float ReadyHintRowPx = 52.f;
 static constexpr int64 ReadyHintBriefFrames = 240;
 namespace { int64 GReadyHintSince = -1; bool GReadyHintWas = false; int64 GCardUntilSeen = -2; bool GCardCountSeen = false; }
+// Lane A235 (the walk's W9): in the clock modes the period's turn put up "PERIOD 2 - FACEOFF" while play ran on with no faceoff (Marathon f8160, Cage f4560).
+// 0 (default, taken out at 20:17: not filmed on a clock mode in time): its own time, as before. 1 = the rule below.
+static TAutoConsoleVariable<int32> CVarJamHudCardOnlyAtFaceoff(TEXT("jam.hud.CardOnlyAtFaceoff"), 0,
+	TEXT("Lane A235 (W9), NOT SHIPPED ON: 0 (default) the card keeps its own time (as before). 1 = with no faceoff countdown in 30 play frames after it went up it goes; not filmed on a clock mode tonight, so it stays 0."), ECVF_Default);
+namespace { int64 GCardPlayNoCount = 0; int64 LastCardTickFrame = -1; }   // frames in play with no faceoff countdown since the card went up
 static TAutoConsoleVariable<int32> CVarJamHudCardAtDrop(TEXT("jam.hud.CardAtDrop"), 1,
 	TEXT("Lane A213 (EYE 10): 1 (default) the MATCH / FACEOFF card goes at the drop (the end of the faceoff countdown it was shown over); 0 = its own time (it stood two seconds into play)."), ECVF_Default);
 // Pure: shown this frame? Age = sim frames since it became due.
@@ -720,9 +725,12 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
 	// Lane A213 (EYE 10, A211's list): the card says FACEOFF; it stood two seconds into play. With jam.hud.CardAtDrop 1 it goes at the drop: the
 	// first frame the faceoff countdown, once seen under this card, is over.
-	if (TakeUntil != GCardUntilSeen) { GCardUntilSeen = TakeUntil; GCardCountSeen = false; }
+	if (TakeUntil != GCardUntilSeen) { GCardUntilSeen = TakeUntil; GCardCountSeen = false; GCardPlayNoCount = 0; }   // lane A235: + the count of play frames
 	if (F.FaceoffCountdownFrames > 0) GCardCountSeen = true;
 	else if (GCardCountSeen && CVarJamHudCardAtDrop.GetValueOnGameThread() != 0 && TakeUntil > F.SimFrame) { TakeUntil = F.SimFrame; GCardUntilSeen = TakeUntil; }
+	if (F.Phase == EJamPhase::Play && F.FaceoffCountdownFrames <= 0 && F.SimFrame != LastCardTickFrame) ++GCardPlayNoCount;   // lane A235 (W9)
+	LastCardTickFrame = F.SimFrame;
+	if (CardWithoutFaceoffGoes(CVarJamHudCardOnlyAtFaceoff.GetValueOnGameThread() != 0, GCardCountSeen, F.Phase == EJamPhase::Play, GCardPlayNoCount) && TakeUntil > F.SimFrame) { TakeUntil = F.SimFrame; GCardUntilSeen = TakeUntil; }   // lane A235 (W9)
 	const bool bTake = !bEnd && TakeUntil >= 0 && F.SimFrame < TakeUntil;
 	TakeCard->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	TakeSub->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);

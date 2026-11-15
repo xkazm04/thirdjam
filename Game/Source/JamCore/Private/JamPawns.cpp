@@ -343,10 +343,33 @@ UObject* AJamSkater::CreateVisual(UClass* VisualClass)
 	return Visual;
 }
 
+// Lane A235 (the walk of H45, W10): device B's figure (BP_SkaterVisual_TB1, _TB1_P3) carries a Niagara component SlideFx (NS_slide_trail) that its knockdown
+// activates: the streak a downed man's slide leaves on the ice (grey on neon, soot on the day look). A mark at a hit (R-0069, R-0070): 0 (default) the figure's
+// NS_slide_trail components are hidden in game when the figure is made (the figure's own Activate and SetVisibility leave that flag alone); 1 = before.
+static TAutoConsoleVariable<int32> CVarJamFxSlideTrail(TEXT("jam.fx.SlideTrail"), 0,
+	TEXT("Lane A235: 0 (default) the downed man's slide streak (the figure's NS_slide_trail component) is not drawn; 1 = before (drawn). Presentation only."), ECVF_Default);
+
+int32 AJamSkater::HideSlideTrail(UObject* Visual)
+{
+	AActor* Figure = Cast<AActor>(Visual);
+	if (!Figure || CVarJamFxSlideTrail.GetValueOnGameThread() != 0) return 0;
+	int32 Hidden = 0;
+	TInlineComponentArray<UNiagaraComponent*> Fx(Figure);
+	for (UNiagaraComponent* C : Fx)
+	{
+		if (!C || !(IsSlideTrailAsset(C->GetAsset() ? C->GetAsset()->GetName() : FString()) || C->GetName().StartsWith(TEXT("SlideFx")))) continue;
+		C->SetHiddenInGame(true);
+		++Hidden;
+	}
+	if (Hidden > 0) UE_LOG(LogJamSim, Log, TEXT("JAMVIS slidetrail hidden=%d figure=%s (jam.fx.SlideTrail 0)"), Hidden, *Figure->GetClass()->GetName());
+	return Hidden;
+}
+
 void AJamSkater::SetupVisual(UObject* Visual, const FLinearColor& Colour, int32 Number)
 {
 	// C-0001: SetTeam and SetNumber once at spawn (B-to-A-0021 point 2: no number is drawn until SetNumber is called), then the resting state.
 	VisualObject = Visual;
+	HideSlideTrail(Visual);   // lane A235 (jam.fx.SlideTrail)
 	IJamSkaterVisual::Execute_SetTeam(Visual, Team, Colour);
 	IJamSkaterVisual::Execute_SetNumber(Visual, FMath::Clamp(Number, 0, 99));
 	IJamSkaterVisual::Execute_SetHasPuck(Visual, false);

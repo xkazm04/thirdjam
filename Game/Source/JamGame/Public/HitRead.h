@@ -254,6 +254,7 @@ public:
 		int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	TMap<int32, int64> Logged;   // skater -> the down's first frame already logged
+	static bool EdgeArrowOn();   // lane A235: jam.hit.EdgeArrow (0 default: no arrow)
 };
 
 UCLASS()

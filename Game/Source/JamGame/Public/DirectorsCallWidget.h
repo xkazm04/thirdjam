@@ -197,6 +197,9 @@ public:
 	FString GetTakeSubText() const { return TakeSub ? TakeSub->GetText().ToString() : FString(); }
 	static FString LevelLabel(const FString& Level);
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetAnnouncementText() const;
+	// Lane A235 (W9): a card that has seen no faceoff countdown and has stood CardFaceoffWaitFrames sim frames of play without one, goes (jam.hud.CardOnlyAtFaceoff 1).
+	static constexpr int64 CardFaceoffWaitFrames = 30;
+	static bool CardWithoutFaceoffGoes(bool bOn, bool bCountSeen, bool bInPlay, int64 FramesUp) { return bOn && !bCountSeen && bInPlay && FramesUp >= CardFaceoffWaitFrames; }
 	bool IsTakeCardVisible() const;
 	// Lane A123 (track U1, evolution 2): the "ESC / START   CALL READY" pill shows when a call is ready by the HUD's own rule (UJamHudWidget::ShowDirectorsCall:
 	// after the first goal), not from the first faceoff of a 0:0 match. bAfterGoalOnly false (jam.hud.CallPillAfterGoal 0) is the pill of before. Pure (tests call it).

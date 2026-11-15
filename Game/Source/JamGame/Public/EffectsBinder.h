@@ -86,7 +86,9 @@ public:
 	// their sounds stay, as do the goal's, the puck trail's, the ability's and the pickups' effects. 1 = before. Pure for the tests.
 	static bool IsHitBurst(FName Event, const FJamEventPayload& Payload);
 	static bool HitEffectsOn();
-	static bool SkipsBurst(FName Event, const FJamEventPayload& Payload, bool bHitEffectsOn) { return !bHitEffectsOn && IsHitBurst(Event, Payload); }
+	// Lane A235 (the walk's W13): a stick or puck meeting a skater (a poke, a lift, a shot blocked by a body) is the same family: no burst under jam.fx.HitEffects 0.
+	static bool IsContactBurst(FName Event, const FJamEventPayload& Payload);
+	static bool SkipsBurst(FName Event, const FJamEventPayload& Payload, bool bHitEffectsOn) { return !bHitEffectsOn && (IsHitBurst(Event, Payload) || IsContactBurst(Event, Payload)); }
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Fx")
 	void HandleEvent(FName Event, const FJamEventPayload& Payload);

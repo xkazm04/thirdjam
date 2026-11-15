@@ -1,6 +1,7 @@
 # HOKEJ
 
 <!--
+  Pass 6 (lane A225, Sun 15 Nov 21:00): re-read against the candidate H45 (main c7057ed0) and lane A235's fixes (main bcbd1287); rows P6-.. at the top of TRUTH.md.
   Page text v5 (lane A225, track D1, Sun 15 Nov 2026 16:40, main a12ead1b = the game of package H43, cut without the DLSS plugin). Every sentence has a row in
   submission/TRUTH.md: pass 5 at its top (P5-PG.. rows); the IDs in the margin comments (N.., PG..) are passes 2 to 4, kept below it.
   DLSS: one sentence below depends on the DLSS plugin being in the package. Lane A233 (15 Nov 17:54) switched it to its "with DLSS" version: the plugin is back from 17:14 and every package from H44 on carries it (TRUTH.md 5.6). Platform: Windows only; the web build is NO-GO (A232, R-0074).
@@ -116,11 +117,11 @@ A booth with a line for most things that happen to you, shown as captions on the
 
 ### How it was made
 
-Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSounds). The code, the tests, the build gate and the dev log were written and run by AI coding agents directed by the team; the rules on this page were measured in thousands of simulated matches, and the limits below are those measurements. The dev log (Glass Box) is the whole story, turn by turn. [O8: where the dev log is hosted, and whether the second machine's transcripts are in it] AI-generated content is declared as such and is not claimed as sourced: concept and menu images from an image-generation model, skater figures and some animation from 3D-generation services, the commentator and sound effects from a voice-and-audio service. [O5: whether this page may name the tool vendors; today it does not] Original: the rink and its dressing, the materials, the effects, every MetaSound and everything procedural. [O6: this "original" list holds only once the asset ledger's gate has passed on the tree that ships] Sourced (not ours, not scored): the engine's own content, its font among it, and one shipped graphics-upscaling library. <!-- A233, 15 Nov 17:54: the "with DLSS" version of TRUTH.md 5.6 (P5-PG62): the plugin was fetched again at 17:14 and every package from H44 on carries it (the Director's word). Without it the sentence would end at "its font among it." --> Vendors, licences and every row: `credits.md` and the dev log. <!-- PG51 to PG56 -->
+Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSounds). The code, the tests, the build gate and the dev log were written and run by AI coding agents directed by the team; the rules on this page were measured in thousands of simulated matches, and the limits below are those measurements. The dev log (Glass Box) is the whole story, turn by turn. [O8: where the dev log is hosted, and whether the second machine's transcripts are in it] AI-generated content is declared as such and is not claimed as sourced: concept, menu and mode pictures from an image-generation model, skater figures and some animation from 3D-generation services, the commentator and sound effects from a voice-and-audio service. [O5: whether this page may name the tool vendors; today it does not] Original: the rink and its dressing, the materials, the effects, every MetaSound and everything procedural. [O6: this "original" list holds only once the asset ledger's gate has passed on the tree that ships] Sourced (not ours, not scored): the engine's own content, its font among it, and one shipped graphics-upscaling library. <!-- A233, 15 Nov 17:54: the "with DLSS" version of TRUTH.md 5.6 (P5-PG62): the plugin was fetched again at 17:14 and every package from H44 on carries it (the Director's word). Without it the sentence would end at "its font among it." --> Vendors, licences and every row: `credits.md` and the dev log. <!-- PG51 to PG56 -->
 
 ### Known limits, said plainly
 
-[O15: this list is true of package H43; if a later package is submitted, each line is re-read against it and the lines its changes cured are deleted]
+[O15: this list is true of the candidate H45; if a later package is submitted, each line is re-read against it and the lines its changes cured are deleted]
 
 - Your carry is short: about a second before the puck leaves you, often by your own shot or pass, sometimes off your own blade with nobody near. The rule keeps your puck from a stick that only brushes it. It does not yet make the puck stick. <!-- N15 -->
 - Space is a gamble: about one jab in ten. <!-- N16 -->
@@ -131,9 +132,11 @@ Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSound
 - On the big rinks you can skate half a minute without touching the puck. <!-- R3:154 -->
 - A skater can stand at a downed body and push it along the ice. <!-- PM:82 -->
 - A bot can lean on a net's frame for a second or two before it goes round. <!-- P5-PG72: PLAY-ME known limits -->
+- After a steal, a carried puck can sit inside another skater for a few frames. <!-- P6-PG06: PLAY-ME H45 known limits (hardening) -->
+- When orange scores on the neon ice, the goal's burst reads more like smoke than light. <!-- P6-PG07: PLAY-ME H45 known limits -->
 - The season is a school and then a wall, with no step between for someone who has played before. <!-- N12 -->
 - Bruisers and Cage play closer to the regular game than their cards promise. <!-- N21 -->
-- On Glow Ice the camera can jump to the ice beside a boost beacon after your cross-check lands. <!-- P5-PG75: PLAY-ME known limits -->
+- At the side boards the camera goes steep and close, and you can lose the rink. <!-- P6-PG05: PLAY-ME H45 known limits; walk W8 -->
 - The pad is mapped. No person has play-tested it. <!-- PG28 -->
 - Cancel on the firewall prompt: we expect it to be fine for solo play, and it is not tested. The prompt is there because PLAY WITH A FRIEND opens a socket. [O7: the clean-machine test on the second machine settles this line] <!-- PG59 -->
 - The joined match is played on one machine, never yet across two. <!-- N13 -->
@@ -144,4 +147,4 @@ Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSound
 
 ### How to run
 
-Unzip [the final package: about 271 MiB] (the Director names the zip at 22:30, R-0073), run `ThirdJam.exe` (the game's internal project name; the game is HOKEJ). Windows 10 or 11 (DirectX 12) only. No web build. First launch compiles shaders for a few seconds. Windows may ask about the firewall the first time: solo play does not need network access, so we expect Cancel to be fine (not tested), and PLAY WITH A FRIEND needs Allow. If it will not start, run `Engine\Extras\Redist\en-us\vc_redist.x64.exe` once. `README.txt` in the zip says the same, with the controls. <!-- PG58 to PG60, N14 -->
+Unzip [the final package: about 283 MiB] (the Director names the zip at 22:30, R-0073), run `ThirdJam.exe` (the game's internal project name; the game is HOKEJ). Windows 10 or 11 (DirectX 12) only. No web build. First launch compiles shaders for a few seconds. Windows may ask about the firewall the first time: solo play does not need network access, so we expect Cancel to be fine (not tested), and PLAY WITH A FRIEND needs Allow. If it will not start, run `Engine\Extras\Redist\en-us\vc_redist.x64.exe` once. `README.txt` in the zip says the same, with the controls. <!-- PG58 to PG60, N14 -->

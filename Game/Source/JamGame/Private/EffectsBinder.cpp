@@ -254,7 +254,7 @@ bool UJamEffectsBinder::IsSound2D(FName Event)
 
 // Lane A227: a hit shows only in the figures (R-0070); 1 gives back the bursts.
 static TAutoConsoleVariable<int32> CVarJamFxHitEffects(TEXT("jam.fx.HitEffects"), 0,
-	TEXT("Lane A227: 0 (default) no Niagara burst at a check, cross-check, knockdown, foul or a skater's board hit (their sounds stay); 1 = before."), ECVF_Default);
+	TEXT("Lane A227: 0 (default) no Niagara burst at a check, cross-check, knockdown, foul or a skater's board hit, nor (lane A235) at a poke, a lift, the draw's won / lost or a shot blocked by a skater (their sounds stay); 1 = before."), ECVF_Default);
 
 bool UJamEffectsBinder::HitEffectsOn() { return CVarJamFxHitEffects.GetValueOnGameThread() != 0; }
 
@@ -262,6 +262,16 @@ bool UJamEffectsBinder::IsHitBurst(FName Event, const FJamEventPayload& Payload)
 {
 	if (Event == JamEvents::Check || Event == JamEvents::Knockdown || Event == JamEvents::Foul) return true;
 	return Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater"));
+}
+
+// Lane A235 (the walk of H45, W13): the coloured balls at the opening faceoff's scrum were the poke's burst (PLAY NOW rookie f109: "poke who=0 kind=clean"),
+// the draw's won / lost burst on the same frame, and the chips under a skater a shot blocked by his body (Bruisers f838: "shot_blocked kind=skater"). Contact with a skater: the figure only (R-0070).
+bool UJamEffectsBinder::IsContactBurst(FName Event, const FJamEventPayload& Payload)
+{
+	if (Event == JamEvents::Poke || Event == JamEvents::Lift) return true;
+	// The draw's won / lost burst at the two centres' sticks (f109 "faceoff who=0 kind=won": the blue balls that stayed after the poke's were gone); the drop keeps its puff.
+	if (Event == JamEvents::Faceoff && (Payload.Kind == FName(TEXT("won")) || Payload.Kind == FName(TEXT("lost")))) return true;
+	return Event == JamEvents::ShotBlocked && Payload.Kind == FName(TEXT("skater"));
 }
 
 bool UJamEffectsBinder::IsSilentEvent(FName Event)

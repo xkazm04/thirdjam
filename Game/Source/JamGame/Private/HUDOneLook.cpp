@@ -94,7 +94,7 @@ void UJamHudWidget::ApplyOneLook()
 	// ---- The distance labels (far net, own net, the puck off screen): the panel's fill and corner behind a line-size label (was a third size, outlined).
 	for (UBorder* B : { NetPlate.Get(), OwnPlate.Get(), PuckPlate.Get() }) if (B) B->SetBrush(L::FillBrush(JamOneLook::OLFill(LabelPlateOpacity + 0.18f), false));
 	JamOneLook::OLType(NetText, HudLinePt, FName("Bold"), 0, L::Text());
-	JamOneLook::OLType(OwnText, HudLabelPt, FName("Bold"), 0, L::TextDim());
+	JamOneLook::OLType(OwnText, HudLinePt, FName("Bold"), 0, L::Text());   // lane A235 (W11): the far net's line size and ink (was HudLabelPt, TextDim: read as a debug line)
 	JamOneLook::OLType(PuckText, HudLinePt, FName("Bold"), 0, L::Text());
 	// ---- The YOU tag (shown at a faceoff's count only): its word in the menu's face at the line size (was 22, outlined); its plate takes the menu's
 	// corner where UpdateYours paints it (YouTagBrush).
@@ -286,6 +286,7 @@ void UJamHudWidget::HideLabelsUnderCards(const FJamPresentationFrame& F)
 	const bool bBanner = GoalBannerPlate && GoalBannerPlate->GetVisibility() != ESlateVisibility::Collapsed;
 	const bool bPause = (GetWorld() && GetWorld()->IsPaused()) || (CPanelPause.IsValid() && CPanelPause->IsOpen());
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose || (CardPlate && CardPlate->GetVisibility() != ESlateVisibility::Collapsed);
+	bCardUpForPrompt = bMatch || bBanner || bPause || bEnd;   // lane A235 (W6): the teaching prompt waits under the same test
 	bMarkersStoodDown = LabelsStandDown(OneLookOn(), bMatch, bBanner, bPause, bEnd);
 	if (!bMarkersStoodDown) return;
 	for (UWidget* W : { (UWidget*)NetDiamond.Get(), (UWidget*)NetText.Get(), (UWidget*)NetArrow.Get(), (UWidget*)OwnDiamond.Get(), (UWidget*)OwnText.Get(),
