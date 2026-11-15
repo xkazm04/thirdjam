@@ -22,8 +22,8 @@ What the License does NOT cover (third-party material, under its own terms)
   Unreal Engine End User License Agreement.
 - Epic template content. The files that ASSETS.md and submission/credits.md
   list as "sourced" from Unreal Engine template content (template character
-  assets and animation clips, and copies or retargets of them, under
-  Game/Content/P4/) are Epic content under the Unreal Engine End User License
+  assets and animation clips, and copies or retargets of them: 61 files under
+  Game/Content/Characters/Mannequins/ and Game/Content/P4/) are Epic content under the Unreal Engine End User License
   Agreement. They are not shipped in the packaged game, and the Apache License
   grants no rights in them.
 - Roboto. The font faces under Game/Plugins/JamAssets/Content/UI/Fonts/ are
