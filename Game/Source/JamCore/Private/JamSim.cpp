@@ -702,6 +702,9 @@ void UJamSim::FaceoffReset()
 		S.TakeGraceLeft = 0;               // lane A121: and the take grace (the draw's winner wins the puck anew)
 		S.TakeShieldLeft = 0;              // lane A177: and the take shield
 		S.CheckWindupLeft = S.LiftWindupLeft = 0; S.bCrossBraced = false;   // lane A184: and the wind-ups and the brace (a hold still down counts on)
+		// Lane A209 (the fault of 23:50): the hold's count too. StepCrossHold does not run in the goal pause or the faceoff, so a brace held into a goal kept
+		// CrossHoldFrames at 10 through a release it never saw, and a tap pressed in the countdown braced on the first frame of play. A hold still down counts again from the drop.
+		if (Config.Contact.bHoldResetAtFaceoff) S.CrossHoldFrames = 0;
 		S.bBurstEarned = false;            // lane A121: at a faceoff everybody merely stands
 		S.RestFrames = Config.Skater.BurstFrames > 0 ? FMath::Max(0, Config.Skater.BurstRestFrames) : 0;   // lane A128: and has stood long enough: the draw starts with the first step
 		S.SpinRecoverLeft = 0;
@@ -1071,7 +1074,9 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 
 	for (FJamSkaterState& S : Skaters)
 	{
-		const FJamInput& In = Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput();
+		FJamInput InBuf = Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput();
+		StepPressBuffer(S, InBuf);   // lane A209 wave 3: a press made in the last frames of the stick's recovery or the lift's cooldown is kept (the human, the pull on)
+		const FJamInput& In = InBuf;
 		// Lane A113: a window that runs out on nobody is a whiff (the read-out counter behind the HUD's MISSED); a skater that took the puck inside its window did not miss.
 		if (S.CheckWindow > 0 && --S.CheckWindow == 0 && !CarrierMayNotHit(S)) ++S.ChecksMissed;
 		if (S.LateFrames > 0) --S.LateFrames;   // lane A151: the late press's frames run out (set to late_press_frames + 1 by the contact, which is stepped after this loop)
@@ -1982,7 +1987,7 @@ double UJamSim::CrossPullFor(const FJamSkaterState& S) const
 
 bool UJamSim::CrossMeets(const FJamSkaterState& X, const FJamSkaterState& O) const
 {
-	return PullsHuman(X) && X.LiftWindupLeft > 0 && X.CrossTarget == O.Index && !X.bCrossBraced && X.CanAct() && Config.Contact.CrossWindupFor(X.bHuman) > 0;
+	return PullsHuman(X) && X.LiftWindupLeft > 0 && Config.Contact.CrossWindupFor(X.bHuman) - X.LiftWindupLeft >= PullMinMeetFrames && X.CrossTarget == O.Index && !X.bCrossBraced && X.CanAct() && Config.Contact.CrossWindupFor(X.bHuman) > 0;
 }
 
 bool UJamSim::LandCrossOnMeeting(FJamSkaterState& X)
@@ -1993,16 +1998,43 @@ bool UJamSim::LandCrossOnMeeting(FJamSkaterState& X)
 	return Skaters.IsValidIndex(T) && Skaters[T].ContactBy == X.Index && Skaters[T].ContactOutcome >= ContactStumble;
 }
 
+void UJamSim::StepPressBuffer(FJamSkaterState& S, FJamInput& In)
+{
+	if (!PullsHuman(S)) return;
+	if (!S.CanAct() || S.InBox() || CarrierIndex() == S.Index) { S.CheckBufferLeft = 0; S.LiftBufferLeft = 0; return; }
+	// the check: pressed while the stick's recovery has PressBufferFrames or fewer to run; fires when it has run out
+	if (In.bCheck) S.CheckBufferLeft = (S.StickLockLeft > 0 && S.StickLockLeft <= PressBufferFrames) ? PressBufferFrames + 1 : 0;
+	else if (S.CheckBufferLeft > 0)
+	{
+		if (S.StickLockLeft <= 0) { In.bCheck = true; S.CheckBufferLeft = 0; }
+		else --S.CheckBufferLeft;
+	}
+	// the cross-check: pressed in the lift's cooldown's last PressBufferFrames; fires on its first free frame
+	const int64 Wait = S.LiftReadyFrame - Frame;
+	if (In.bLift) S.LiftBufferLeft = (Wait > 0 && Wait <= PressBufferFrames) ? PressBufferFrames + 1 : 0;
+	else if (S.LiftBufferLeft > 0)
+	{
+		if (Wait <= 0 && S.StickLockLeft <= 0) { In.bLift = true; S.LiftBufferLeft = 0; }
+		else --S.LiftBufferLeft;
+	}
+}
+
 void UJamSim::EndWindupOnContact(FJamSkaterState& S)
 {
-	if (PullsHuman(S)) S.CheckWindupLeft = 0;
+	if (CheckPullFor(S) > 0.0) S.CheckWindupLeft = 0;
+}
+
+double UJamSim::CheckPullFor(const FJamSkaterState& S) const
+{
+	if (PullsHuman(S)) return Config.Contact.CheckPullM;
+	return !S.bHuman && Config.Contact.BotCheckPullM > 0.0 && Config.Contact.bMomentum && Config.Skater.bCheckEnabled ? Config.Contact.BotCheckPullM : 0.0;
 }
 
 void UJamSim::StepCheckPull(FJamSkaterState& S)
 {
-	if (!PullsHuman(S) || !S.CanAct() || CarrierMayNotHit(S)) return;
+	const double PullM = CheckPullFor(S);
+	if (PullM <= 0.0 || !S.CanAct() || CarrierMayNotHit(S)) return;
 	const double R2 = SkaterRadius * 2.0;
-	const double PullM = Config.Contact.CheckPullM;
 	// The pull toward O: what S's own closing will not cover in Left frames, spread over them, at most Cap a frame.
 	auto Pull = [&](const FJamSkaterState& O, int32 Left, double Cap, double GoalGap)
 	{
@@ -2024,7 +2056,7 @@ void UJamSim::StepCheckPull(FJamSkaterState& S)
 		const int32 Left = bWound ? S.CheckWindupLeft : 1;
 		const double Cap = bWound ? PullM / CheckWu : 0.5 * PullM / HumanCheckWindowFrames;
 		const int32 T = PullTarget(S, bWound ? Cap * Left + S.Vel.Size() * Left * DT : 0.5 * PullM + S.Vel.Size() * FMath::Max(1, S.CheckWindow) * DT);
-		if (T >= 0)
+		if (T >= 0 && (S.bHuman || Skaters[T].Vel.Size() >= BotPullMinMps))   // a bot's pull never reaches a man who stopped (law 3: the stop beats the charge)
 		{
 			const FJamSkaterState& O = Skaters[T];
 			// in the wind-up the speed is turned onto the collision course as the open window's bend does (StepCheckReach), none added
@@ -2039,6 +2071,7 @@ void UJamSim::StepCheckPull(FJamSkaterState& S)
 			Pull(O, Left, Cap, PullGoalGapM);
 		}
 	}
+	if (!PullsHuman(S)) return;   // a bot: the body check's pull only
 	const int32 CrossWu = Config.Contact.CrossWindupFor(S.bHuman);
 	if (CrossWu > 0 && S.LiftWindupLeft > 0 && Skaters.IsValidIndex(S.CrossTarget) && !S.bCrossBraced)
 	{
@@ -2213,7 +2246,7 @@ void UJamSim::CollideSkaters()
 				auto Can = [&](const FJamSkaterState& Checker, const FJamSkaterState& Victim)
 				{
 					// The carrier cannot hit, also with a window opened before the puck arrived; an armed hip check (lane A84's ability) keeps its rule.
-					return (Checker.CheckWindow > 0 || (Checker.CheckWindupLeft > 0 && PullsHuman(Checker))) && Checker.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && (Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker));   // lane A209: or inside the human's wind-up
+					return (Checker.CheckWindow > 0 || (Checker.CheckWindupLeft > 0 && CheckPullFor(Checker) > 0.0 && Config.Contact.CheckWindupFor(Checker.bHuman) - Checker.CheckWindupLeft >= PullMinMeetFrames)) && Checker.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && (Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker));   // lane A209: or inside the human's wind-up
 				};
 				const bool bA = Can(A, B), bB = Can(B, A);
 				// Lane A184 (game.contact.cross_hold): a braced skater (never one with the key off) whose body meets an opponent delivers the cross-check by the
@@ -4201,6 +4234,7 @@ uint64 UJamSim::StateHash() const
 		// Lane A184: the hold and the brace once they are up, the wind-ups while they run, behind tags (cross_hold false and the wind-ups at 0: never).
 		if (S.CrossHoldFrames != 0 || S.bCrossBraced || S.bCrossSpent) { H.AddI(-1841); H.AddI(S.CrossHoldFrames); H.AddI(S.bCrossBraced ? 1 : 0); H.AddI(S.bCrossSpent ? 1 : 0); }
 		if (S.CheckWindupLeft != 0 || S.LiftWindupLeft != 0) { H.AddI(-1842); H.AddI(S.CheckWindupLeft); H.AddI(S.LiftWindupLeft); }
+		if (S.CheckBufferLeft != 0 || S.LiftBufferLeft != 0) { H.AddI(-2093); H.AddI(S.CheckBufferLeft); H.AddI(S.LiftBufferLeft); }   // lane A209 wave 3: the buffered presses
 		if (S.LiftWindupLeft != 0) { H.AddI(S.CrossTarget); H.AddI(S.bCrossTargetStickOnly ? 1 : 0); }   // lane A192: the deferred shove's man
 		if (S.StickLockLeft != 0) { H.AddI(0x152A); H.AddI(S.StickLockLeft); }   // lane A152: the miss's recovery only while it runs (stick.miss_recovery_frames 0 hashes as before)
 		// Lane A128: the rest counter and the spin's recovery only while they are up (burst.rest_frames 0 and spin.recovery_frames 0 hash as before).

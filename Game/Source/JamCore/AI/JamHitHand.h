@@ -46,7 +46,10 @@ namespace JamAI
 		HB_Contact25, HC_Contact25,   // of the presses inside 2.5 m: any contact (a bump included)
 		HC25_Base,   // 12 slots: the cross-check misses of the presses inside 2.5 m by reason, HC_NoPuck..HC_Cooldown then HC_LFar..HC_LDown
 		HC25_End = HC25_Base + 12,
-		Hand_Count = HC25_End
+		// lane A209 wave 3: the hits TAKEN: every bot's pressed body check / cross-check whose man (the nearest opponent in front within 4 m) is the human
+		HT_BPress = HC25_End, HT_BLanded, HT_BDown, HT_BBump, HT_BEarly, HT_BGap03, HT_BGap06, HT_BGapFar, HT_BOther,
+		HT_CPress, HT_CLanded, HT_CBump, HT_CMiss, HT_BLate,
+		Hand_Count
 	};
 	inline int HC25Slot(int Reason) { return Reason >= HC_NoPuck && Reason <= HC_Cooldown ? HC25_Base + (Reason - HC_NoPuck) : Reason >= HC_LFar && Reason <= HC_LDown ? HC25_Base + 8 + (Reason - HC_LFar) : -1; }
 	inline const char* HandKeyName(int i)
@@ -60,7 +63,9 @@ namespace JamAI
 			"c_press25", "c_landed25",
 			"h_holds", "h_landed", "h_bump", "h_none",
 			"n_press", "n_landed", "x_elsewhere", "c_l_far", "c_l_cone", "c_l_back", "c_l_down", "c_accepted", "b_contact25", "c_contact25",
-			"c25_nopuck", "c25_reach", "c25_cone", "c25_arm", "c25_back", "c25_shield", "c25_moved", "c25_cooldown", "c25_l_far", "c25_l_cone", "c25_l_back", "c25_l_down" };
+			"c25_nopuck", "c25_reach", "c25_cone", "c25_arm", "c25_back", "c25_shield", "c25_moved", "c25_cooldown", "c25_l_far", "c25_l_cone", "c25_l_back", "c25_l_down",
+			"t_b_press", "t_b_landed", "t_b_down", "t_b_bump", "t_b_early", "t_b_gap03", "t_b_gap06", "t_b_gapfar", "t_b_other",
+			"t_c_press", "t_c_landed", "t_c_bump", "t_c_miss", "t_b_late" };
 		return (i >= 0 && i < Hand_Count) ? Names[i] : "?";
 	}
 
@@ -115,6 +120,62 @@ namespace JamAI
 		bool bC = false; int32 CT = -1; int64 CFrame = 0; int CWu = 0; int CReason = -1; bool bC25 = false;
 		// the held brace
 		int HoldRun = 0; bool bHoldCounted = false; bool bHoldResolved = false;
+		// lane A209 wave 3: one open press per bot at the human (the hits taken)
+		struct FBot { int64 B = -1; double MinWin = 1e9; bool bMetWu = false; bool bOpened = false; int64 Closed = -1; int64 C = -1; int CWu = 0; };
+		FBot Bots[kMaxSkaters];
+		void StepTaken(const UJamSim& Sim, int32 Pi, int* H)
+		{
+			const TArray<FJamSkaterState>& Sk = Sim.GetSkaters();
+			const FJamSkaterState& Me = Sk[Pi];
+			const int64 F = Sim.GetFrame();
+			const double R2 = UJamSim::SkaterRadius * 2.0;
+			const bool bOnMe = Me.ContactBy >= 0 && Me.ContactOutcome > 0;
+			for (int32 k = 0; k < Sk.Num() && k < kMaxSkaters; ++k)
+			{
+				const FJamSkaterState& O = Sk[k];
+				if (O.Team == Me.Team) continue;
+				FBot& Bt = Bots[k];
+				const bool bHitMe = bOnMe && Me.ContactBy == k;
+				if (Bt.B >= 0)
+				{
+					const double D = FVector2D::Distance(O.Pos, Me.Pos);
+					if (bHitMe && !Me.bContactCross) { ++H[Me.ContactOutcome >= UJamSim::ContactStumble ? HT_BLanded : HT_BBump]; if (Me.ContactOutcome == UJamSim::ContactDown) ++H[HT_BDown]; Bt.B = -1; }
+					else
+					{
+						bool bOther = false;
+						for (const FJamSkaterState& V : Sk) if (V.Index != Pi && V.ContactBy == k && V.ContactOutcome > 0 && !V.bContactCross) bOther = true;
+						if (bOther) { ++H[HT_BOther]; Bt.B = -1; }
+						else
+						{
+							if (O.CheckWindow > 0) { Bt.bOpened = true; Bt.MinWin = FMath::Min(Bt.MinWin, D); }
+							else if (O.CheckWindupLeft > 0) { if (D < R2 + 0.02) Bt.bMetWu = true; }
+							else if (Bt.bOpened && Bt.Closed < 0) Bt.Closed = F;
+							if ((Bt.Closed >= 0 && F - Bt.Closed > 10) || F - Bt.B > 40 || (!Bt.bOpened && O.CheckWindupLeft <= 0 && O.CheckWindow <= 0 && F > Bt.B))
+							{
+								const double G = Bt.MinWin - R2;
+								++H[Bt.bMetWu ? HT_BEarly : !Bt.bOpened ? HT_BLate : G < 0.3 ? HT_BGap03 : G < 0.6 ? HT_BGap06 : HT_BGapFar];
+								Bt.B = -1;
+							}
+						}
+					}
+				}
+				if (O.bCheckThisFrame && Bt.B < 0 && !O.bHuman && HandTarget(Sim, k, 4.0, 90.0) == Pi)
+				{
+					++H[HT_BPress]; Bt = FBot(); Bt.B = F; Bt.bOpened = O.CheckWindow > 0; if (Bt.bOpened) Bt.MinWin = FVector2D::Distance(O.Pos, Me.Pos);
+					if (bHitMe && !Me.bContactCross) { ++H[Me.ContactOutcome >= UJamSim::ContactStumble ? HT_BLanded : HT_BBump]; Bt.B = -1; }
+				}
+				if (Bt.C >= 0)
+				{
+					if (bHitMe && Me.bContactCross) { ++H[Me.ContactOutcome >= UJamSim::ContactStumble ? HT_CLanded : HT_CBump]; Bt.C = -1; }
+					else if (F - Bt.C > Bt.CWu + 2) { ++H[HT_CMiss]; Bt.C = -1; }
+				}
+				if (O.bLiftThisFrame && Bt.C < 0 && !O.bHuman && ((O.LiftWindupLeft > 0 && O.CrossTarget == Pi) || (bHitMe && Me.bContactCross)))
+				{
+					++H[HT_CPress]; Bt.C = F; Bt.CWu = Sim.GetConfig().Contact.CrossWindupFor(false);
+					if (bHitMe && Me.bContactCross) { ++H[Me.ContactOutcome >= UJamSim::ContactStumble ? HT_CLanded : HT_CBump]; Bt.C = -1; }
+				}
+			}
+		}
 
 		static bool Playing(const UJamSim& Sim) { return Sim.GetPhase() == EJamSimPhase::Playing && !Sim.IsDrawOpen(); }
 
@@ -253,6 +314,7 @@ namespace JamAI
 					for (const FJamSimEvent& E : Sim.GetFrameEvents()) if (E.Name == JamEvents::Lift && E.Who == Pi && E.Strength > 0.5f) ++H[HC_Strip];
 				}
 			}
+			StepTaken(Sim, Pi, H);   // lane A209 wave 3: the hits taken
 			// ---- the held brace
 			if (Sent.bCrossHold && Playing(Sim)) { ++HoldRun; } else { if (bHoldCounted && !bHoldResolved) ++H[HH_None]; HoldRun = 0; bHoldCounted = bHoldResolved = false; }
 			if (HoldRun >= 13 && !bHoldCounted) { bHoldCounted = true; ++H[HH_Holds]; }

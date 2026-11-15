@@ -443,6 +443,8 @@ struct JAMCORE_API FJamContactConfig
 	// man in front of him with or without the puck (without: the shove's momentum rule, as on a carrier; the strip stays the carrier's).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckPullM = 1.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossAnyMan = true;
+	bool bHoldResetAtFaceoff = true;   // lane A209: the faceoff resets the held cross-check's count (a fault fix; a rule, no key; seam hold_reset 0 = the old count)
+	double BotCheckPullM = 0.0;   // lane A209 wave 3: the bots' body-check pull (UJamSim::CheckPullFor); a rule with no key yet (measurement seam bot_pull); 0 = off
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

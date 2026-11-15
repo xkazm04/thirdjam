@@ -99,6 +99,97 @@ bool FJamHitFindsMan::RunTest(const FString& Parameters)
 		TestTrue(*FString::Printf(TEXT("shipped: on the wind-up's last frame (frame %d, wind-up %d)"), S.ContactFrame, S.Wu), S.ContactFrame == S.Wu);
 		TestTrue(*FString::Printf(TEXT("neutral: no shove on a man without the puck (outcome %d cross %d)"), Nn.Outcome, Nn.bCross ? 1 : 0), !(Nn.bCross && Nn.Outcome > 0));
 	}
+	// 5. Lane A209 wave 3: the press buffered. LMB at nobody on frame 0 (the lift's 30-frame cooldown starts), LMB again on frame 25 (5 frames before it
+	// ends): shipped, the cross-check swings on frame 30 (the first free frame, LiftBufferLeft); neutral, the second press is dropped.
+	for (int32 Arm = 0; Arm < 2; ++Arm)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+		if (!C) return false;
+		FJamGameConfig Cfg = C->Game;
+		if (Arm == 1) { Cfg.Contact.CheckPullM = 0.0; Cfg.Contact.bCrossAnyMan = false; Cfg.Contact.CheckReachM = 0.0; }
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 7);
+		Sim->SkipFaceoff();
+		const int32 A = Sim->GetHumanIndex();
+		Sim->SetPuck(FVector2D(-20.0, 12.0), FVector2D::ZeroVector);
+		Sim->SetSkater(A, FVector2D(0.0, -8.0), FVector2D::ZeroVector, 0.0);
+		int32 SecondSwing = -1;
+		for (int32 F = 0; F < 40; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(Sim->GetSkaters().Num());
+			In[A].bLift = F == 0 || F == 25;
+			Sim->Step(In);
+			if (F > 0 && SecondSwing < 0 && Sim->GetSkaters()[A].bLiftThisFrame) SecondSwing = F;
+		}
+		AddInfo(FString::Printf(TEXT("JAMHIT buffer %s: the second swing on frame %d"), Arm == 0 ? TEXT("shipped") : TEXT("neutral"), SecondSwing));
+		if (Arm == 0) TestTrue(*FString::Printf(TEXT("shipped: the press inside the cooldown's last frames swings when it ends (frame %d)"), SecondSwing), SecondSwing >= 29 && SecondSwing <= 31);
+		else TestTrue(*FString::Printf(TEXT("neutral: the press inside the cooldown is dropped (frame %d)"), SecondSwing), SecondSwing < 0);
+	}
+	return true;
+}
+
+// Lane A209 (the fault of 23:50, Jam.Controls.FirstFiveMinutes seed 3): a short LMB tap never braces. The mapping sends the brace's level from its 4th
+// step; the sim braces after 10 frames of it. Before the fix a brace held into a goal kept its count (StepCrossHold does not run in the pause or the
+// faceoff), the release was never seen, and a tap pressed in the countdown braced on the first frame of play.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamTapNeverBraces, "Jam.Core.Contact.TapNeverBraces", JamHitLandsTests::Flags)
+bool FJamTapNeverBraces::RunTest(const FString& Parameters)
+{
+	for (int32 Arm = 0; Arm < 3; ++Arm)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+		if (!C) return false;
+		FJamGameConfig Cfg = C->Game;
+		Cfg.Rules.bPenalties = false;
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 11);
+		Sim->SkipFaceoff();
+		const int32 A = Sim->GetHumanIndex();
+		const int32 Team = Sim->GetSkaters()[A].Team;
+		Sim->SetSkater(A, FVector2D(0.0, -10.0), FVector2D::ZeroVector, 0.0);
+		bool bBracedBefore = false, bBracedOnTap = false, bSawPause = false;
+		int32 TapLeft = -1, TapFrames = 0;
+		for (int32 F = 0; F < 900 && TapLeft != 0; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(Sim->GetSkaters().Num());
+			const EJamSimPhase Ph = Sim->GetPhase();
+			if (Arm == 0)
+			{
+				// a brace held into a goal: held 30 frames, the goal scored on frame 20, released in the pause; a 6-frame level on the first frames of play
+				if (F == 20) { const double Gx = Sim->AttackGoalX(Team); Sim->SetPuck(FVector2D(Gx - FMath::Sign(Gx) * 1.0, 0.0), FVector2D(FMath::Sign(Gx) * 20.0, 0.0)); }
+				if (Ph != EJamSimPhase::Playing) bSawPause = true;
+				if (TapLeft < 0 && bSawPause && Ph == EJamSimPhase::Playing) TapLeft = 6;
+				In[A].bCrossHold = F < 30 || TapLeft > 0;
+			}
+			else if (Arm == 2)
+			{
+				// a change of possession under the hold: held 20 frames (braced), the puck on his blade frames 20 to 40 (he carries: the brace ends), let go
+				// on frame 40 with the puck taken away, a 6-frame level from frame 45
+				if (F >= 20 && F < 40) Sim->SetPuck(Sim->GetSkaters()[A].BladePos, Sim->GetSkaters()[A].Vel);
+				if (F == 40) Sim->SetPuck(FVector2D(-20.0, 12.0), FVector2D::ZeroVector);
+				if (F >= 45 && TapLeft < 0) TapLeft = 6;
+				In[A].bCrossHold = F < 40 || (F >= 45 && TapLeft > 0);
+			}
+			else
+			{
+				// a release, then a tap: held 20 frames (braced), let go 5, a 6-frame level
+				if (F >= 25 && TapLeft < 0) TapLeft = 6;
+				In[A].bCrossHold = F < 20 || (F >= 25 && TapLeft > 0);
+			}
+			Sim->Step(In);
+			const FJamSkaterState& H = Sim->GetSkaters()[A];
+			if (TapLeft > 0) { if (H.bCrossBraced) bBracedOnTap = true; --TapLeft; ++TapFrames; }
+			else if (TapLeft < 0 && H.bCrossBraced) bBracedBefore = true;
+		}
+		const TCHAR* Name = Arm == 0 ? TEXT("a brace held into a goal, a tap after the faceoff") : Arm == 2 ? TEXT("a brace through a change of possession, let go, a tap 5 frames later") : TEXT("a brace let go, a tap 5 frames later");
+		AddInfo(FString::Printf(TEXT("JAMBRACE %s: braced before %d, tap frames %d, braced on the tap %d"), Name, bBracedBefore ? 1 : 0, TapFrames, bBracedOnTap ? 1 : 0));
+		TestTrue(*FString::Printf(TEXT("%s: the long hold braced (the scene is real)"), Name), bBracedBefore);
+		TestTrue(*FString::Printf(TEXT("%s: the tap ran its 6 frames"), Name), TapFrames == 6);
+		TestFalse(*FString::Printf(TEXT("%s: a tap never braces"), Name), bBracedOnTap);
+	}
 	return true;
 }
 

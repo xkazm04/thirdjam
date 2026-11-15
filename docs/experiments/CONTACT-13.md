@@ -188,3 +188,41 @@ test-guards PASS; schema 99 / 99. The six cells at 600: rookie 86.7 / 91.0, pro 
 3. **The carrier's back**: the human's cross-check into a carrier's back is a shove when he closes (as on a man without the puck: the thrust as far as
    he closes) and stays the strip when he only reaches; with law 3's drill and the brain's steal measured. Proving number: the cross-check inside 2.5 m
    at pro from 56 % to 65 % or more, law 3's gate rows unchanged.
+
+## 10. Wave 3 on the merged game (d0d132bf: brain 9, A207's pass and shot, A210's presentation)
+
+- **The landing table on the merged game** (person hand, 100 a cell): rookie body 13.5 presses a match, 85.5 % landed, inside 2.5 m 87.7 (93.1 with the
+  bumps); cross-check 19.2 a match, 51.5 % (inside 2.5 m 62.0); brace 38.3. Pro: body **5.0 presses a match** (8.0 on the H34 tree: the bots pass around
+  him), 79.6 %, inside 2.5 m 83.7 (87.0); cross 7.9 a match, 49.9 (55.9); brace 29.3. The human on his back 2.2 / 5.9 % of play.
+- **The hits taken** (the audit turned on every bot press whose man is the human): the bots' body checks at him land (stumble or down) **35 % at
+  rookie, 30 % at pro, 22 % at all_star** (8.4 / 13.0 / 11.4 presses a match); the misses: met in the wind-up 16 to 19 %, by under 0.3 m 11 to 16,
+  farther 17 to 24. Their cross-checks at him: 0 to 0.2 a match. The scripted dodge changes nothing (pro 29.2 against 29.3 %): the bots miss by themselves.
+- **The bots' short reach, measured and NOT shipped** (`FJamContactConfig::BotCheckPullM`, a rule with no key: seam `bot_pull`; ships 0):
+
+| arm | bots' checks at him land (pro / all_star) | human on his back, % of play (pro / all_star) | law 3 pro 8 / 8.5 / 9 / 9.5 m | all_star |
+|---|---|---|---|---|
+| none (shipped) | 29.6 / 21.8 | 5.9 / 7.4 | 94.0 / 99.5 / 93.0 / 83.5 | 99.5 / 99.5 / 99.0 / 93.0 |
+| 0.5 m | 64.9 / 74.4 | 11.9 / 17.8 | **70.0** / 67.5 / 52.0 / 54.0 | 79.5 / 75.0 / 72.0 / 60.5 |
+| 0.3 m, only toward a man at 4 m/s or more | 60.8 / 71.9 | 11.1 / 16.6 | **89.0** / 88.5 / 77.5 / 75.0 | 99.5 / 99.5 / 97.0 / 89.0 |
+
+  The straight charge is stopped in every arm. A reach for the bots breaks law 3's gate row and puts the human past 8 % on his back: the bots' 30 % is
+  the brain's aim to fix (A206), not a rule's reach.
+- **A210's wish (a minimum of 3 frames before a meeting counts): measured and NOT taken**: with `UJamSim::PullMinMeetFrames` 3 the human's body check
+  inside 2.5 m fell from 87.5 to 71.2 % landed at rookie (84.0 -> 71.0 at pro): a touch on frames 0 to 2 bounces, the bounce takes the closing speed, the
+  re-met hit is a bump. The constant stays in the code at 0; A210's `jam.hit.Retime 1` is the answer for the early contacts.
+- **The press buffered** (new hashed fields `FJamSkaterState::CheckBufferLeft`, `LiftBufferLeft`; `UJamSim::StepPressBuffer`, `PressBufferFrames` 8):
+  the human's check pressed in the last 8 frames of the stick's recovery, or his cross-check in the last 8 frames of the lift's 30-frame cooldown, fires
+  on the first frame it is taken again. Test: `Jam.Core.Contact.HitFindsMan` 5 (pressed on frame 25 of the cooldown: the swing on frame 30; neutral:
+  dropped). In the table it moves nothing measurable (those presses were 1 to 3 %).
+- **The cross-check's "out of reach when the shove is due"** (pro 12.5 % inside 2.5 m on the merged game): not changed in wave 3.
+- **The fault "a short LMB tap reads as a brace"** (the Director, 23:50; `Jam.Controls.FirstFiveMinutes` seed 3): the sim kept the count.
+  `FaceoffReset` cleared `bCrossBraced` but not `CrossHoldFrames`, and `StepCrossHold` does not run in the goal pause or the faceoff, so a brace held
+  into a goal kept its count of 10 through a release the sim never saw; the next tap, pressed in the countdown (the mapping's level is up from its 4th
+  step), braced on the first frame of play. The mapping (`InputMapping.cpp`, `FJamButtonResolver::Press` line 322 and `Step` lines 351 to 404) keeps nothing
+  between presses: unchanged. Fix: one line in the faceoff reset (`CrossHoldFrames = 0` behind `FJamContactConfig::bHoldResetAtFaceoff`, a rule with no key,
+  ships true; seam `hold_reset=0` = the old count). Test `Jam.Core.Contact.TapNeverBraces` (three arms: held into a goal then a 6-frame tap after the faceoff;
+  let go then a tap; through a change of possession then a tap): **fails with `hold_reset=0`** (the goal arm braces on the tap), passes with the fix.
+- Wave 3's proof (m5 = everything but the fault's fix): neutral 100 / 100 hash-identical to d0d132bf with the keys neutral, all six cells; law 3 identical
+  (pro 94.0 / 99.5 / 93.0 / 83.5, straight 0; all_star 99.5 / 99.5 / 99.0 / 93.0, straight 0); the full `Jam` filter 333 / 0 in a cleared environment
+  (`gate4`); six cells at 600: rookie 84.2 / 94.5, pro 62.8 / 50.2, all_star 28.3 / 63.2 (regular / large: the merged game's; the curve lane's to read).
+  m6 (+ the fix): `Jam.Core.Contact` 37 / 37.

@@ -950,7 +950,7 @@ namespace JamAI
 		const FName KindOneTimer(TEXT("one_timer"));
 		int64_t LastPayoff = -100000;   // R-0029 point 4 (lane A39): the frame of the human's last one-timer, burst or deke
 		// Lane A209 (measurement only): JAM_PLAYTESTER_HAND=person = the person-like hand presses the human's hits (JamHitHand.h); the audit runs always.
-		static_assert(Hand_Count <= 64, "FJamPlaytestStats::Hand");
+		static_assert(Hand_Count <= 96, "FJamPlaytestStats::Hand");
 		const char* HandEnv = std::getenv("JAM_PLAYTESTER_HAND");
 		const bool bPersonHand = HandEnv && std::strcmp(HandEnv, "person") == 0;
 		FJamHitHand PersonHand; PersonHand.Seed = Seed ^ 0xA209ull;

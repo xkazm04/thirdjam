@@ -370,6 +370,9 @@ struct JAMCORE_API FJamSkaterState
 	// Lane A192: since evolution 10 LiftWindupLeft counts down to the cross-check's deferred SHOVE (the strip is the press's): CrossTarget, the man it lands on;
 	// bCrossTargetStickOnly, a stick-only shield had widened it at the press (from behind too). RULE STATE, hashed while LiftWindupLeft runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossTarget = -1;
+	// Lane A209 wave 3: RULE STATE, hashed when not 0: frames left of a buffered check press / cross-check press (UJamSim::StepPressBuffer).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CheckBufferLeft = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LiftBufferLeft = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossTargetStickOnly = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceHits = 0;
@@ -784,8 +787,20 @@ public:
 	// added. PullTarget: the nearest opponent on his feet, out of the box, inside CheckReachConeDeg of S's facing, going or stick, gap at most MaxGap; -1 none.
 	// PullsHuman: the rule applies to S (a human, the key on, momentum on). EndWindupOnContact: a body check that met its man inside the wind-up is spent.
 	static constexpr double PullGoalGapM = -0.01;
-	static constexpr double BracePullGapM = 0.5;   // lane A209 wave 2: the braced human is drawn onto a man in front within this gap   // the bodies just overlap at the wind-up's end, so the meeting registers on that frame
+	static constexpr double BracePullGapM = 0.5;
+	// Lane A209 wave 3 (A210's wish): a meeting inside the human's wind-up counts from this many frames after the press (a contact on the press frame left
+	// the figure no coil); an earlier touch is the ordinary collision and the pull brings them together again.
+	static constexpr int32 PullMinMeetFrames = 0;   // wave 3: 3 measured: the human's body check inside 2.5 m fell 87.5 -> 71.2 % landed (the early touch's bounce kills the hit): off
+	// Lane A209 wave 3: the press buffered. A pulled human's check pressed in the last PressBufferFrames of the stick's recovery, or his cross-check in the
+	// last PressBufferFrames of the lift's 30-frame cooldown, is kept (FJamSkaterState::CheckBufferLeft / LiftBufferLeft) and fires on the first frame it
+	// is taken again. StepPressBuffer runs on the skater's input before its step (Step's input loop, one line).
+	static constexpr int32 PressBufferFrames = 8;
+	void StepPressBuffer(FJamSkaterState& S, FJamInput& In);   // lane A209 wave 2: the braced human is drawn onto a man in front within this gap   // the bodies just overlap at the wind-up's end, so the meeting registers on that frame
 	bool PullsHuman(const FJamSkaterState& S) const;
+	// Lane A209 wave 3: the body check's pull for S: the human's check_pull_m (PullsHuman), a bot's FJamContactConfig::BotCheckPullM (a rule, no key yet:
+	// the seam's bot_pull; 0 = off, as shipped); 0 = none. Only the body check's pull and its wind-up meeting read it for a bot.
+	double CheckPullFor(const FJamSkaterState& S) const;
+	static constexpr double BotPullMinMps = 4.0;   // lane A209 wave 3: a bot's pull only toward a man skating this fast or faster
 	int32 PullTarget(const FJamSkaterState& S, double MaxGap) const;
 	void StepCheckPull(FJamSkaterState& S);
 	void EndWindupOnContact(FJamSkaterState& S);

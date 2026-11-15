@@ -1277,6 +1277,8 @@ namespace
 					else if (Name == TEXT("check_reach")) C.Contact.CheckReachM = V;   // lane A209: the arms of tonight (measurement only)
 					else if (Name == TEXT("check_pull")) C.Contact.CheckPullM = V;
 					else if (Name == TEXT("cross_any")) C.Contact.bCrossAnyMan = V != 0.0;
+					else if (Name == TEXT("bot_pull")) C.Contact.BotCheckPullM = V;   // lane A209 wave 3
+					else if (Name == TEXT("hold_reset")) C.Contact.bHoldResetAtFaceoff = V != 0.0;   // lane A209: the brace fault's fix off (the neutral proof)
 					// A151-SEAM-MORE
 				}
 			}
