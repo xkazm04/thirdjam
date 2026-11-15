@@ -177,8 +177,12 @@ public:
 	float LeanFor(int32 I, double FrameF) const;
 	// Lane A210 (jam.hit.Pop): the hit's coil and drive for skater I this render frame, -1 (sunk) .. +1 (sprung); 0 = his own size. CheckPop is the curve (pure).
 	static constexpr float PopSettleFrames = 8.f;
-	static float CheckPop(float Since, int32 Windup, float End, bool bLanded);
-	float PopFor(int32 I, double FrameF) const;
+	// Wave 4 (the eye's EYE 7: a miss must look like a miss): WhiffDip > 0: after a miss the figure does not just settle: it tips into a dip of -WhiffDip
+	// WhiffDipFrames after the end (he overbalanced on air) and is back at his own size WhiffFrames after it. 0 = the plain settle.
+	static constexpr float WhiffDipFrames = 4.f;
+	static constexpr float WhiffFrames = 14.f;
+	static float CheckPop(float Since, int32 Windup, float End, bool bLanded, float WhiffDip = 0.f);
+	float PopFor(int32 I, double FrameF, float WhiffDip = 0.f) const;
 
 	const TArray<FHitLog>& GetFrameLogs() const { return FrameLogs; }
 	const TArray<FPress>& GetPresses() const { return Presses; }
@@ -305,6 +309,7 @@ public:
 	// short of its contact pose (the figure is then run forward Windup - PressToContact frames in one), -1 when it is within a frame already. Pure.
 	// The drawn figure's scale for a pop of P (-1 sunk: a tenth lower, 6 % wider; +1 sprung: 7 % taller, 4 % narrower). Pure.
 	static FVector PopScale(float P) { const float A = FMath::Clamp(P, -2.f, 2.f); return A >= 0.f ? FVector(1.f - 0.04f * A, 1.f - 0.04f * A, 1.f + 0.07f * A) : FVector(1.f - 0.06f * A, 1.f - 0.06f * A, 1.f + 0.10f * A); }
+	static constexpr int32 WhiffAimFrames = 30;   // wave 4: frames the stick is sent to the front after a cross-check that met nobody
 	static constexpr int32 RetimeLeadFrames = 2;
 	static int32 RetimeFor(int32 PressToContact, int32 Windup);
 	static constexpr float BraceSetFrames = 6.f;

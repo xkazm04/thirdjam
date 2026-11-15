@@ -4,6 +4,7 @@
 //                        the puck and the blade's reach to it, so it never covers the puck; the double ring is wider than the ring it doubles.
 //   Jam.Hud.Words        the pause card, the CONTROLS rows and the binding table say tonight's rules (no saucer, hold for power, hold to brace), and the
 //                        words of before with jam.hud.Words 0; the badge never says SAUCER under the pass's power.
+//   Jam.Hud.Teach        the pill's teaching pulses (three at most, never after he did it), the end card's wait, the shot line's growth.
 //   Jam.Hud.OneLine      at most one line of the HUD's words at a time, by its order (contact, prompt, strip, faceoff hint, caption).
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
@@ -142,6 +143,63 @@ bool FJamHudOneLine::RunTest(const FString& Parameters)
 		const int32 Win = W::OneLineWinner(!!(M & 1), !!(M & 2), !!(M & 4), !!(M & 8), !!(M & 16));
 		TestTrue(TEXT("one line, and one that was due"), Win >= 0 && Win < 5 && (M & (1 << Win)) != 0);
 	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudTeach, "Jam.Hud.Teach", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudTeach::RunTest(const FString& Parameters)
+{
+	using W = UJamHudWidget;
+	// Due on every frame of a long match: at most TeachMaxShows showings, each TeachShowFrames long, TeachGapFrames apart.
+	{
+		W::FTeachState S;
+		int32 Frames = 0, Starts = 0;
+		bool bWas = false;
+		for (int64 F = 0; F < 20000; ++F)
+		{
+			const bool bOn = W::TeachStep(S, true, false, F);
+			if (bOn) ++Frames;
+			if (bOn && !bWas) ++Starts;
+			bWas = bOn;
+		}
+		TestEqual(TEXT("a prompt shows at most three times a session"), Starts, W::TeachMaxShows);
+		TestEqual(TEXT("each showing lasts TeachShowFrames"), Frames, W::TeachMaxShows * W::TeachShowFrames);
+		AddInfo(FString::Printf(TEXT("A213 teach: due for 20000 frames: %d showings, %d frames on"), Starts, Frames));
+	}
+	{
+		// He does the thing during the first showing: it ends at once and never comes back.
+		W::FTeachState S;
+		TestTrue(TEXT("first showing"), W::TeachStep(S, true, false, 100));
+		TestFalse(TEXT("he did it: the pulse ends"), W::TeachStep(S, true, true, 110));
+		bool bAny = false;
+		for (int64 F = 111; F < 20000; ++F) bAny |= W::TeachStep(S, true, false, F);
+		TestFalse(TEXT("never again after he has done it"), bAny);
+	}
+	{
+		// He did it before it was ever due: it never shows.
+		W::FTeachState S;
+		W::TeachStep(S, false, true, 5);
+		bool bAny = false;
+		for (int64 F = 6; F < 5000; ++F) bAny |= W::TeachStep(S, true, false, F);
+		TestFalse(TEXT("done before due: never shown"), bAny);
+	}
+	{
+		// A new match (the frame count goes back) keeps the session's count but not the old match's gap.
+		W::FTeachState S;
+		W::TeachStep(S, true, false, 5000);
+		for (int64 F = 5001; F < 5100; ++F) W::TeachStep(S, false, false, F);
+		TestTrue(TEXT("after a restart the second showing may come"), W::TeachStep(S, true, false, 10) && S.Shows == 2);
+	}
+	TestTrue(TEXT("the pass's words name the button"), W::TeachLine(W::ETeach::Pass, TEXT("RMB")).StartsWith(TEXT("RMB  PASS")));
+	TestTrue(TEXT("the check's words name the button"), W::TeachLine(W::ETeach::Hit, TEXT("RMB")).StartsWith(TEXT("RMB  CHECK")));
+	TestTrue(TEXT("the pill's words fit the pill (32 characters at most)"), W::TeachLine(W::ETeach::Pass, TEXT("RMB")).Len() <= 32);
+	// The end card waits for the goal to be seen; the shot's line grows with the hold.
+	TestTrue(TEXT("the end card waits on the goal's frame"), W::EndCardWaits(true, true, 0.0));
+	TestFalse(TEXT("the end card stands after the wait"), W::EndCardWaits(true, true, W::EndCardWaitSec + 0.01));
+	TestFalse(TEXT("jam.hud.EndWait 0: no wait"), W::EndCardWaits(false, true, 0.0));
+	TestTrue(TEXT("the wait is the GOAL banner's time (1.5 to 2.5 s)"), W::EndCardWaitSec >= 1.5 && W::EndCardWaitSec <= 2.5);
+	for (int32 C = 1; C <= 30; ++C) TestTrue(TEXT("the shot's line only grows with the hold"), W::ShotLineM(C, 30) > W::ShotLineM(C - 1, 30));
+	TestEqual(TEXT("the shot's line at a full charge"), W::ShotLineM(30, 30), W::ShotLineMaxM);
 	return true;
 }
 

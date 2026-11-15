@@ -79,3 +79,15 @@ Switch: `brain9=0` (and every older `brainN=0`) = evolution 8 as shipped; `JamBa
   check / cross-check winding up at it) steps off the line (`FJamBrain::DodgeHit`, one call line in Think), never against the human carrier (that first
   version emptied all_star's large rink: 59 -> 86.5 for the good player). Pro: bots felled by the human 6.70 -> 4.95 a match (my instrument).
 - Not shipped: the mates' reach 24.5 m (no shot gained). Why the mates stay near 1 shot a minute: they carry inside 22 m about 3 times a match.
+
+## 7. Wave 3 (R-0068, the eye's lists; main 015f1618 with A208's pickup)
+- The pickup alone (READY 2's brain): bot passes completed fell to 42-58 %; at pro the opponents keep the puck (41 % possession) and shoot 5.8 times a
+  minute; the human's pro wins fell 78 -> 42 of 100; the mates' shots a minute at rookie rose 0.69 -> 1.43.
+- `hk_pass_care9` (EYE 8, item 12): no pass to a mate nearer than 5 m, none in the carrier's first 20 frames, none straight back inside 60 frames unless
+  he is nearer the net, none through the own crease; a man on the carrier (2 m) lets the pass out. Re-passed within 15 frames 14-36 -> 3-4 %; straight
+  back 7-18 -> 3-11 %.
+- `hk_drop_no_hit9_frames` (EYE 1): no body check or cross-check press for 90 frames after a drop at rookie, 45 at pro and all_star.
+- `hk_defend_team9` (EYE 2, EYE 3; the opponents only as shipped): the human is not his side's presser unless goal-side within 6 m; a defending clump
+  splits at 3 m after 20 frames; a carrier inside 35 m alone over 30 frames gets the nearest bot (`NoCarrierAlone`); the crease man steps onto a shot's
+  line; the guard back stands in the crease (1.5 m) while an opposing carrier is inside 35 m. On the human's side it raised goals against (pro 2.38 ->
+  2.70 a match): off there; the mates' defence and the far-shot crease bar (60 %) are open.

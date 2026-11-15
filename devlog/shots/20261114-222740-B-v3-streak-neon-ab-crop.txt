@@ -1,0 +1,3 @@
+Lane V3, device B, 20261114-222740. The puck's streak on l3_neon (neon mode) from the game camera (PIE, hockey.regular with "l3_neon (neon mode)" set to l3_neon (neon mode), the human's camera 3.5 m up, pitch -17.65 deg, the drop moment of a fresh match, the same camera position in every row).
+Four test trails cross the view at once, nearest to farthest: 8 m/s (slow pass), 20 m/s (full pass), 22 m/s (today's shot), 44 m/s (doubled shot); the farthest runs along the red line. Off clay the streak takes User.Colour (device A sets none: the default yellow-green) x 2.5 at opacity 0.8 (unchanged by V3); V3 changed width, brightness by speed and length guard only.
+Rows: BEFORE (the trail as at 27a0ba99) / AFTER (User.Carried default) 

@@ -53,7 +53,8 @@ bool FJamHudCarrierCues::RunTest(const FString& Parameters)
 	for (int32 L = 30; L > 0; --L) TestTrue(TEXT("the ring only closes"), UJamHudWidget::TakeGraceRingScale(L - 1, 30) < UJamHudWidget::TakeGraceRingScale(L, 30));
 	// The contact line.
 	TestEqual(TEXT("the stick lock"), UJamHudWidget::CarrierCueLine(true, false), FString(TEXT("STICK LOCKED")));
-	TestEqual(TEXT("a press into a carrier's grace"), UJamHudWidget::CarrierCueLine(false, true), FString(TEXT("JUST WON IT")));
+	// Lane A213: tonight's words (jam.hud.Words 1) say who won it; the words of before at 0.
+	TestEqual(TEXT("a press into a carrier's grace"), UJamHudWidget::CarrierCueLine(false, true), FString(UJamHudWidget::HudWordsTonight() ? TEXT("HE JUST GOT IT") : TEXT("JUST WON IT")));
 	TestEqual(TEXT("both: the lock (it is the one that costs him)"), UJamHudWidget::CarrierCueLine(true, true), FString(TEXT("STICK LOCKED")));
 	TestTrue(TEXT("neither: no line"), UJamHudWidget::CarrierCueLine(false, false).IsEmpty());
 	TestTrue(TEXT("the cue's words are not one of the contact line's own"), UJamHudWidget::ContactLineFor(true, true, true, true, true) != UJamHudWidget::CarrierCueLine(true, false)

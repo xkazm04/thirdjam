@@ -348,6 +348,8 @@ void UJamBarkWidget::Layout()
 				}
 			}
 		}
+		// Lane A213 (wave 2, the Director's ruling of 01:36): a bubble yields to the HUD's one line of words (jam.hud.OneLine); the voice still plays.
+		if (bOn && UJamHudWidget::OneLineUpNow()) bOn = false;
 		// Off-screen speakers are heard, not seen (the strip is the commentator's).
 		B.Box->SetRenderOpacity(bOn ? Alpha : 0.f);
 		if (!bOn) B.Box->SetVisibility(ESlateVisibility::Collapsed);

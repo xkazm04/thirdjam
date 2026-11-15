@@ -1,0 +1,1 @@
+E3 GPU, clay: old Pass (export39) against Pass_Snap (export43) at frames 3/6/9: row 1 game camera old, row 2 new, row 3 20 m NEW LEFT, old right (label reversed). From behind the new snap keeps the stick behind the body (the old Pass showed it to the left on 6); at 20 m the new follow-through points at the target.

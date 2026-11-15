@@ -417,6 +417,14 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 	}
 	float Variant = VariantForPayload(Event, Payload);   // lane A143: a stumble's check is Variant 4
 	if (Event == JamEvents::Goal) Variant = GoalVariantFor(Payload);   // R-0033 point 4 (lane A50): 0 the human's team scored, 1 it conceded
+	// Lane A210 (wave 4; device B's H55.6): a shot over 30 m/s or a one-timer is Variant 1. The event's Strength is speed / (puck.max_speed x the cap's scale).
+	if (Event == JamEvents::Shot)
+	{
+		const AHokejGameMode* ShotGM = World->GetAuthGameMode<AHokejGameMode>();
+		const UJamSim* ShotSim = ShotGM ? ShotGM->GetSim() : nullptr;
+		const float ExitMps = ShotSim ? static_cast<float>(Payload.Strength * ShotSim->GetConfig().Puck.MaxSpeed * ShotSim->PuckCapScale()) : 0.f;
+		Variant = ShotVariant(ExitMps, Payload.Kind == FName(TEXT("one_timer")));
+	}
 	// Lane A45 (R-0031 point 4): a skater into the boards wobbles the glass for GlassWobbleFrames when B's glass carries HitWobble.
 	if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater"))) StartGlassWobble(Payload);
 	if (const TObjectPtr<UNiagaraSystem>* N = Niagara.Find(Event))

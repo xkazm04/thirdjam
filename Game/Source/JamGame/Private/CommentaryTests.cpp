@@ -4,6 +4,8 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Misc/ScopeExit.h"
+#include "HAL/IConsoleManager.h"
 #include "CommentarySystem.h"
 #include "JamCommentaryData.h"
 #include "HUDWidget.h"
@@ -631,6 +633,32 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryCrossCheck, "Jam.Commentary.Cross
 bool FJamCommentaryCrossCheck::RunTest(const FString&)
 {
 	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	// Lane A213: tonight a lift (the human's cross-check) offers only check.cross (jam.comm.LiftIsCross 1): a clean one is called a cross-check or
+	// nothing, a missed one plays nothing. The rest of this test is the commentary of before (jam.comm.LiftIsCross 0), set explicitly.
+	IConsoleVariable* LiftIsCross = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.comm.LiftIsCross"));
+	TestNotNull(TEXT("jam.comm.LiftIsCross exists"), LiftIsCross);
+	if (!LiftIsCross) return false;
+	const int32 LiftWas = LiftIsCross->GetInt();
+	{
+		LiftIsCross->Set(1, ECVF_SetByCode);
+		FJamCommentaryPicker Tonight(Bank, 7);
+		FJamCommentaryPick T;
+		int32 Called = 0;
+		for (int32 i = 0; i < 6; ++i)
+		{
+			if (Step(Tonight, 1000 + i * 300, JamEvents::Lift, Payload(4, FVector2D(-10, 0), 1.f, TEXT("clean")), T))
+			{
+				++Called;
+				TestEqual(TEXT("tonight a clean cross-check is called a cross-check"), T.Situation, FName(TEXT("check.cross")));
+			}
+		}
+		TestTrue(TEXT("tonight the cross-check is called"), Called >= 1);
+		const bool bMissTonight = Step(Tonight, 9000, JamEvents::Lift, Payload(4, FVector2D(-10, 0), 0.f, TEXT("miss")), T);
+		TestFalse(TEXT("tonight a missed cross-check plays no lift line"), bMissTonight && T.Situation.ToString().StartsWith(TEXT("lift.")));
+		AddInfo(FString::Printf(TEXT("A213 tonight: %d of 6 clean cross-checks called check.cross, the miss played %s"), Called, bMissTonight ? *T.Situation.ToString() : TEXT("nothing")));
+	}
+	LiftIsCross->Set(0, ECVF_SetByCode);
+	ON_SCOPE_EXIT { LiftIsCross->Set(LiftWas, ECVF_SetByCode); };
 	FJamCommentaryPicker Picker(Bank, 7);
 	FJamCommentaryPick P;
 	// check.cross (3) ties lift.clean (3): over clean lifts 800 frames apart (both cooldowns spent) the cross-check is called, always under the lift event,

@@ -8,6 +8,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "JamSim.h"
 #include "InputMapping.h"   // lane A191: FJamAimAnchor
+#include "PuckRead.h"   // lane A210
 #include "HokejGameMode.generated.h"
 
 class UJamCartridge;
@@ -221,6 +222,7 @@ private:
 	// Lane A188: the equipped look, one per skater that has held an ability (AJamBoostAura, JamPickupActor.h).
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamBoostAura>> BoostAuras;
 	UPROPERTY(Transient) TObjectPtr<AJamHitRead> HitRead;   // lane A196: the hits read (HitRead.h), made on the first sim step
+	FJamPuckShow PuckShow;   // lane A210 (wave 4): the carrier the screen shows, the drawn puck, the play calls (PuckRead.h); presentation only
 	TArray<FName> LastBoost;
 	// Lane A31 (B-to-A-0024 point 3): the goalie stance last sent per skater: -2 off, else the side (-1, 0, +1); SetGoalieStance goes out on a change.
 	TArray<int8> LastGoalie;

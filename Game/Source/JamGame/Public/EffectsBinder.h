@@ -49,6 +49,9 @@ public:
 	static constexpr float StumbleCheckVariant = 4.f;
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
 	static float VariantForPayload(FName Event, const FJamEventPayload& Payload);
+	// Lane A210 (wave 4; device B's H55.6): `shot` Variant 1 (MS_shot's crack) when the puck leaves at over ShotCrackMps or the shot is a one-timer. Pure.
+	static constexpr float ShotCrackMps = 30.f;
+	static float ShotVariant(float ExitMps, bool bOneTimer) { return (bOneTimer || ExitMps > ShotCrackMps) ? 1.f : 0.f; }
 	// Lane A143 (B-answer-0024 ask a): an `ability` grant (Strength 0: the ability is given, not used) plays nothing; only a use (Strength 1) bursts and sounds.
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
 	static bool IsQuietPayload(FName Event, const FJamEventPayload& Payload);

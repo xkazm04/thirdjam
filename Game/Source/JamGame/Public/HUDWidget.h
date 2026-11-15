@@ -341,7 +341,10 @@ public:
 	}
 	// The stick lock (game.stick.miss_recovery_frames: after a person's missed poke Space and RMB do nothing while it runs) and the press a carrier's grace
 	// refuses: the contact line says which. The lock wins (it is the one that costs him).
-	static FString CarrierCueLine(bool bStickLocked, bool bPressIntoGrace) { return bStickLocked ? TEXT("STICK LOCKED") : bPressIntoGrace ? TEXT("JUST WON IT") : TEXT(""); }
+	// Lane A213 (A211's EYE LIST 3 item 3: "JUST WON IT under HIS ring when the other man won it"): with jam.hud.Words 1 the press into a grace reads
+	// HE JUST GOT IT (who won it: the other man); 0 = JUST WON IT.
+	static bool HudWordsTonight();
+	static FString CarrierCueLine(bool bStickLocked, bool bPressIntoGrace) { return bStickLocked ? TEXT("STICK LOCKED") : bPressIntoGrace ? (HudWordsTonight() ? TEXT("HE JUST GOT IT") : TEXT("JUST WON IT")) : TEXT(""); }
 	// STICK LOCKED stands for the lock's length: when the lock ends, the line is put at the start of its fade (ContactFadeFrames).
 	static int64 CarrierCueFadeStart(int64 SimFrame) { return SimFrame - (ContactLineFrames - ContactFadeFrames); }
 	void UpdateCarrierCues(const FJamPresentationFrame& Frame);
@@ -411,6 +414,62 @@ public:
 	static bool OneLineOn();
 	void UpdateOneLine(const FJamPresentationFrame& Frame);
 	int32 OneLineShown = -1;
+	// The bark bubbles (UJamBarkWidget) yield to the HUD's one line: true while a HUD line of words stands this tick (the rule on). Wave 2.
+	static bool OneLineUpNow();
+	static uint64 OneLineTick;
+	static bool bOneLineUp;
+	// ---- Lane A213, wave 2 (brief item 5): the first minute teaches without a tutorial screen. One function (UpdateTeach, HUDTeach.cpp; called after
+	// UpdateOneLine): the buttons' pill pulses (yellow plate, ink type) with the word for the moment:
+	//   Pass: he carries and a mate is open ahead (UJamSim::HumanPassTarget along his facing finds a mate 6 to 30 m off): "RMB  PASS: A MATE IS OPEN";
+	//   Hit:  he has no puck and an opposing carrier is in reach in front (within TeachHitRangeM, inside 60 degrees of his facing): "RMB  CHECK HIM".
+	// Each kind shows at most TeachMaxShows times a session (process), TeachShowFrames each, TeachGapFrames apart, and never again once he has done the
+	// thing (a pass of his; a check of his). jam.hud.Teach 0 = none.
+	enum class ETeach : uint8 { Pass, Hit, Count };
+	static constexpr int32 TeachMaxShows = 3;
+	static constexpr int32 TeachShowFrames = 90;
+	static constexpr int32 TeachGapFrames = 900;
+	static constexpr float TeachHitRangeM = 2.6f;
+	struct FTeachState { int32 Shows = 0; bool bDone = false; int64 ShownAt = -1; int64 LastEnd = -1000000; };
+	// One sim frame of a kind's rule: true while its pulse shows this frame. bDue: the moment applies; bDidIt: he did the thing this frame. Pure.
+	static bool TeachStep(FTeachState& S, bool bDue, bool bDidIt, int64 Frame)
+	{
+		if (bDidIt) S.bDone = true;
+		if (Frame < S.LastEnd || (S.ShownAt >= 0 && Frame < S.ShownAt)) { S.LastEnd = -1000000; S.ShownAt = -1; }   // a new match: the frame count went back
+		if (S.ShownAt >= 0)
+		{
+			if (!S.bDone && Frame >= S.ShownAt && Frame < S.ShownAt + TeachShowFrames) return true;
+			S.LastEnd = Frame; S.ShownAt = -1;
+		}
+		if (S.bDone || !bDue || S.Shows >= TeachMaxShows || Frame - S.LastEnd < TeachGapFrames) return false;
+		S.ShownAt = Frame; ++S.Shows;
+		return true;
+	}
+	static FString TeachLine(ETeach K, const FString& Key) { return K == ETeach::Pass ? Key + TEXT("  PASS: A MATE IS OPEN") : Key + TEXT("  CHECK HIM"); }
+	static bool TeachOn();
+	static void ResetTeachForTest();
+	static FTeachState& TeachStateFor(ETeach K);
+	void UpdateTeach(const FJamPresentationFrame& Frame);
+	int32 TeachShown = -1;
+	int32 TeachPassesSeen = -1;
+	bool bTeachPainted = false;
+	// ---- Lane A213, wave 2 (EYE 11, A211's list): the end card waits for the match-ending goal to be seen. One function (UpdateEndWait,
+	// HUDEndWait.cpp; called after UpdateTeach): the win / loss card and its keys stay hidden for EndCardWaitSec (the GOAL banner's time) from the first
+	// frame of the end phase. jam.hud.EndWait 0 = the card on the goal's own frame (the screen of before).
+	static constexpr double EndCardWaitSec = 1.9;
+	static bool EndCardWaits(bool bOn, bool bEnd, double SinceEndSec) { return bOn && bEnd && SinceEndSec >= 0.0 && SinceEndSec < EndCardWaitSec; }
+	void UpdateEndWait(const FJamPresentationFrame& Frame);
+	double EndSeenAt = -1.0;
+	// ---- Lane A213, wave 2 (brief item 3): one language for the two holds (HUDChargeLook.cpp, UpdateChargeLook; called after UpdatePassMeter's line,
+	// in UpdatePossession's place in the order): while the pass is held the mate it would go to gets a ring in the team's colour (the pass's line ends on
+	// him); while the shot is held a line on the ice from the puck along the stick grows with the charge (ShotLineMinM at a tap to ShotLineMaxM at a full
+	// charge), chalk, the HUD's yellow when full (it lifts). jam.hud.ChargeLook 0 = neither.
+	static constexpr float ShotLineMinM = 1.5f;
+	static constexpr float ShotLineMaxM = 4.5f;
+	static constexpr float ShotLineGapM = 0.8f;
+	static float ShotLineM(int32 ChargeFrames, int32 ChargeMax) { return ChargeMax <= 0 ? ShotLineMinM : ShotLineMinM + (ShotLineMaxM - ShotLineMinM) * FMath::Clamp(static_cast<float>(ChargeFrames) / ChargeMax, 0.f, 1.f); }
+	void UpdateChargeLook(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UImage> PassTargetRing;
+	UPROPERTY(Transient) TObjectPtr<UBorder> ShotMeterBar;
 	int32 BraceSeenGiven = 0, BraceSeenTaken = 0;
 	bool bCueStickLocked = false, bCuePressIntoGrace = false;
 	int32 CueGraceCarrier = -1;

@@ -20,6 +20,7 @@
 #include "HAL/IConsoleManager.h"
 #include "HokejGameMode.h"
 #include "JamSim.h"
+#include "InputMapping.h"
 #include "UnrealClient.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudPossess(TEXT("jam.hud.Possess"), 1,
@@ -28,6 +29,7 @@ static TAutoConsoleVariable<int32> CVarJamHudPossessStills(TEXT("jam.hud.Possess
 	TEXT("Proof: N > 0 takes a still (with the HUD) N sim frames into each possession (you / mate / opponent / loose), at most 24: a213-possess-<state>-f<frame>.png. 0 off."), ECVF_Default);
 
 bool UJamHudWidget::PossessOn() { return CVarJamHudPossess.GetValueOnGameThread() != 0; }
+bool UJamHudWidget::HudWordsTonight() { return UJamInputMap::WordsTonight(); }
 
 UJamHudWidget::EPossess UJamHudWidget::PossessFromSim(const UJamSim& Sim)
 {

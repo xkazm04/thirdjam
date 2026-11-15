@@ -27,9 +27,17 @@ void UJamMenuFlow::StartMatch(UObject* WorldContext, const FString& CutNameOrPat
 	StartMatchAtLevel(WorldContext, CutNameOrPath, FString());
 }
 
+// Lane A213 (A211's EYE LIST 3 item 2, the Director's ruling of 01:52: "Glow Ice plays PRO with ROOKIE lit on HOME and nothing says so"): the level
+// lit on HOME is the level he plays, in every mode. A Director's mode ("modes/<name>") now travels with HOME's level as PLAY NOW does.
+// jam.menu.ModeLevel 0 = a mode plays its cartridge's own level (the menu of before).
+static TAutoConsoleVariable<int32> CVarJamMenuModeLevel(TEXT("jam.menu.ModeLevel"), 1,
+	TEXT("Lane A213: 1 (default) a Director's mode plays the level lit on HOME; 0 = its cartridge's own level (Glow Ice played pro under ROOKIE)."), ECVF_Default);
+bool UJamMenuFlow::ModeLevelFromHome() { return CVarJamMenuModeLevel.GetValueOnAnyThread() != 0; }
+
 FString UJamMenuFlow::PlayerLevelFor(const FString& CutName, bool bSavedOrTake, const FJamSettings& Settings)
 {
 	if (bSavedOrTake) return FString();
+	if (ModeLevelFromHome() && CutName.StartsWith(TEXT("modes/"))) return FirstMatchLevel(Settings);
 	// A shipped cut is a plain name; a mode is "modes/<name>", a take or a preview is a path.
 	if (CutName.Contains(TEXT("/")) || CutName.Contains(TEXT("\\")) || CutName.Contains(TEXT(":"))) return FString();
 	return FirstMatchLevel(Settings);

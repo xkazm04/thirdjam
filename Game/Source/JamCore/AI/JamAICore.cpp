@@ -148,6 +148,8 @@ namespace JamAI
 		MeantBrakes = 0;
 		Carves = 0;
 		for (int i = 0; i < kMaxSkaters; ++i) { DownNear[i] = 0; DownNearFrame[i] = -10; bDownLeaving[i] = false; ClumpRun[i] = 0; ClumpFrame[i] = -10; bClumpSplit[i] = false; }   // lane A202
+		DropFrame9 = -100000; bWasDrawOpen9 = false; LastPassBy9 = -1; AloneRun9[0] = AloneRun9[1] = 0;   // lane A206 wave 3
+		for (int i = 0; i < kMaxSkaters; ++i) { ReceivedFrom9[i] = -1; ReceivedFrame9[i] = -100000; }
 	}
 
 	// Lane A51 (R-0034): one entry per frame: the puck's offset from the carrier's body (the carrier's index, -1 loose).
@@ -259,6 +261,31 @@ namespace JamAI
 		for (int i = 0; i < W.NumSkaters; ++i)
 		{
 			CarryFrames[i] = W.bFrozen ? 0 : (W.CarrierOrHolder() == i ? CarryFrames[i] + 1 : (W.PuckLastTouch == i ? CarryFrames[i] : 0));
+		}
+		// Lane A206 wave 3: bookkeeping only (nothing steers here): the drop's frame, who passed the puck to whom, how long an opposing carrier near each net
+		// has been alone
+		if (W.bDrawOpen && !bWasDrawOpen9) { DropFrame9 = W.Frame; }
+		bWasDrawOpen9 = W.bDrawOpen;
+		for (int i = 0; i < W.NumSkaters; ++i)
+		{
+			if (CarryFrames[i] == 1)
+			{
+				const bool bMate = LastPassBy9 >= 0 && LastPassBy9 < W.NumSkaters && LastPassBy9 != i && W.Skaters[LastPassBy9].Team == W.Skaters[i].Team;
+				ReceivedFrom9[i] = bMate ? LastPassBy9 : -1; ReceivedFrame9[i] = W.Frame;
+			}
+		}
+		if (W.PuckPassBy >= 0) { LastPassBy9 = W.PuckPassBy; }
+		else if (W.CarrierOrHolder() >= 0 && CarryFrames[W.CarrierOrHolder()] > 1) { LastPassBy9 = -1; }
+		for (int Tm = 0; Tm < 2; ++Tm)
+		{
+			const int Cc = W.Carrier;
+			bool bAlone = false;
+			if (!W.bFrozen && Cc >= 0 && Cc < W.NumSkaters && W.Skaters[Cc].Team != Tm && W.Skaters[Cc].Pos.DistTo(W.OwnGoal(Tm)) < 35.0)
+			{
+				bAlone = true;
+				for (int o = 0; o < W.NumSkaters; ++o) { if (W.Skaters[o].Team == Tm && !W.Skaters[o].bDown && W.Skaters[o].Pos.DistTo(W.Skaters[Cc].Pos) < 3.0) { bAlone = false; break; } }
+			}
+			AloneRun9[Tm] = bAlone ? AloneRun9[Tm] + 1 : 0;
 		}
 		AssignJobs(W);
 		TeamIntent = FJamAIIntent();
@@ -398,6 +425,8 @@ namespace JamAI
 			In.bPass = bPass;   // lane A46: the pass to the human
 			StickPlay(W, i, In);
 			if (SkillOf(W, i).Hk.LongPassM > 0.0) { LongShotToPass(W, i, In); }   // lane A202 (evolution 8): no shot from far with a mate open nearer
+			if (SkillOf(W, i).Hk.bPassCare9) { PassCare(W, i, In); }   // lane A206 (wave 3): a pass for where it puts the puck
+			if (SkillOf(W, i).Hk.DropNoHit9Frames > 0 && W.Frame - DropFrame9 < SkillOf(W, i).Hk.DropNoHit9Frames) { In.bCheck = false; In.bLift = false; In.bCrossHold = false; }   // lane A206 (wave 3): the puck after a drop, not the man
 			// Lane A77 (R-0036): the saucer. A carrier that charges its shots (pro, all_star; rookie's window is 0) whose pass has no flat lane but a saucer lane
 			// (W.CarrierBestPass < 0, W.CarrierBestSaucer >= 0) holds pass for W.SaucerHalfFrames and releases it: the sim lifts the puck over the blade in the lane.
 			// While it holds, StickPlay keeps the puck inside shot reach (A66's cap). The puck gone, the hold is dropped (the sim fires nothing out of reach).
@@ -614,8 +643,13 @@ namespace JamAI
 			if (Dd < Md) { Md = Dd; Mate = o; }
 		}
 		const bool bIKeep = Ch == Id || (Mate >= 0 && !W.IsHumanSeat(Mate) && Mate != Ch && Id < Mate);
-		if (Mate < 0 || bIKeep || Md > (bClumpSplit[Id] ? 3.0 : 1.5)) { ClumpRun[Id] = 0; bClumpSplit[Id] = false; return Dir; }
-		if (!bClumpSplit[Id] && ++ClumpRun[Id] < SkillOf(W, Id).Hk.ClumpFrames) { return Dir; }
+		// lane A206 wave 3 (bDefendTeam9): defending (an opposing carrier), a bot gives way inside 3 m after 20 frames unless both play the puck
+		const bool bDef9 = SkillOf(W, Id).Hk.bDefendTeam9 && Ch >= 0 && Ch < W.NumSkaters && W.Skaters[Ch].Team != S.Team
+			&& !(Mate >= 0 && W.PuckPos.DistTo(S.Pos) < 3.0 && W.PuckPos.DistTo(W.Skaters[Mate].Pos) < 3.0);
+		const double NearM = bDef9 ? 3.0 : 1.5, FarM = bDef9 ? 4.5 : 3.0;
+		const int RunF = bDef9 ? 20 : SkillOf(W, Id).Hk.ClumpFrames;
+		if (Mate < 0 || bIKeep || Md > (bClumpSplit[Id] ? FarM : NearM)) { ClumpRun[Id] = 0; bClumpSplit[Id] = false; return Dir; }
+		if (!bClumpSplit[Id] && ++ClumpRun[Id] < RunF) { return Dir; }
 		bClumpSplit[Id] = true;
 		FVec2 Away = S.Pos - W.Skaters[Mate].Pos;
 		Away = Away.Length() > 1e-3 ? Away.Normalized() : FVec2(0.0, S.Pos.Y > 0.0 ? -1.0 : 1.0);
@@ -678,6 +712,48 @@ namespace JamAI
 		double Side = S.Vel.Dot(Across);
 		if (std::fabs(Side) < 0.5) { Side = Across.Dot(FVec2(0.0, 0.0) - S.Pos); }
 		return Across * (Side >= 0.0 ? 1.0 : -1.0) + U * 0.3;
+	}
+	// Lane A206 (track Q2, evolution 9, wave 3; BRAIN-9.md): PassCare (bPassCare9). The pass of this frame (an edge or a saucer's hold) by the carrier is not
+	// made when it goes to a mate nearer than 5 m, or in the carrier's first 20 frames with the puck, or straight back to the mate it came from inside 60
+	// frames while he is no nearer the net than the carrier, or along a line that runs within 3 m of its own net; unless an opposing skater on its feet is
+	// within 2 m (the pass out of pressure stays). The receiver is the sim's (CarrierBestPass / HolderBestPass). The carrier carries on.
+	void FJamBrain::PassCare(const FJamAIWorld& W, int Id, FJamAIInput& In) const
+	{
+		if (!(In.bPass || In.bPassHeld) || W.CarrierOrHolder() != Id) { return; }
+		const FJamAISkater& S = W.Skaters[Id];
+		for (int o = 0; o < W.NumSkaters; ++o) { if (W.Skaters[o].Team != S.Team && !W.Skaters[o].bDown && W.Skaters[o].Pos.DistTo(S.Pos) < 2.0) { return; } }
+		const int To = W.Carrier == Id ? W.CarrierBestPass : W.HolderBestPass;
+		bool bVeto = CarryFrames[Id] < 20;
+		if (To >= 0 && To < W.NumSkaters)
+		{
+			const FVec2 G = W.OppGoal(S.Team), Own = W.OwnGoal(S.Team), Rp = W.Skaters[To].Pos;
+			if (Rp.DistTo(S.Pos) < 5.0) { bVeto = true; }
+			if (To == ReceivedFrom9[Id] && W.Frame - ReceivedFrame9[Id] < 60 && Rp.DistTo(G) >= S.Pos.DistTo(G)) { bVeto = true; }
+			const FVec2 L = Rp - S.Pos;
+			const double Ll = L.Length();
+			if (Ll > 1e-3)
+			{
+				const double Along = Clamp((Own - S.Pos).Dot(L) / Ll, 0.0, Ll);
+				if ((S.Pos + L * (Along / Ll)).DistTo(Own) < 3.0) { bVeto = true; }   // item 12: never through the own crease
+			}
+		}
+		if (bVeto) { In.bPass = false; In.bPassHeld = false; }
+	}
+	// Lane A206 (wave 3): NoCarrierAlone (bDefendTeam9). An opposing carrier inside 35 m of this bot's net has had nobody of its team within 3 m for more
+	// than 30 frames: the bot of its team nearest him (the human aside) goes at him (Attack: the chase, the stick, the body as its level plays them).
+	bool FJamBrain::NoCarrierAlone(const FJamAIWorld& W, int Id) const
+	{
+		const FJamAISkater& S = W.Skaters[Id];
+		if (S.Team < 0 || S.Team > 1 || AloneRun9[S.Team] <= 30 || W.Carrier < 0 || W.Carrier >= W.NumSkaters) { return false; }
+		const FVec2 Cp = W.Skaters[W.Carrier].Pos;
+		int Best = -1; double Bd = 1e18;
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			if (W.Skaters[o].Team != S.Team || W.IsHumanSeat(o) || W.Skaters[o].bDown) { continue; }
+			const double D = W.Skaters[o].Pos.DistTo(Cp);
+			if (D < Bd) { Bd = D; Best = o; }
+		}
+		return Best == Id;
 	}
 	void FJamBrain::LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const
 	{
@@ -834,6 +910,13 @@ namespace JamAI
 		// Lane A94 (R-0045 law 2): a bot with a shape job plays it (AssignJobs); the stall, the hunt and a yield to the human's puck keep the old roles
 		// Lane A134: bPressInHunt keeps the presser on its job inside the hunt radius (off as shipped: the hunt takes it off, as before)
 		// Lane A167: ... until the carrier is inside PressCommitM, where the presser commits as a hunting bot does (0 = it never does)
+		// Lane A206 wave 3 (bDefendTeam9): an opposing carrier near our net alone for over 30 frames: the nearest bot goes at him
+		if (Hk.Hk.bDefendTeam9 && !bYield && W.CarrierOrHolder() != Id && NoCarrierAlone(W, Id))
+		{
+			Used[Id] = ERole::Chaser;
+			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass);
+			return Out + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
+		}
 		const bool bPressKeeps = Hk.Hk.bPressInHunt && Job[Id] == EJob::Press && !(Hk.Hk.bSecondManHunts && bSecondMan[Id])   // lane A181: a second man hunts
 			&& !(Hk.Hk.PressCommitM > 0.0 && W.Carrier >= 0 && W.Carrier < W.NumSkaters && W.Skaters[W.Carrier].Pos.DistTo(Me) < Hk.Hk.PressCommitM);
 		if (Job[Id] != EJob::None && !bStalled && (!bHunt || bPressKeeps) && W.CarrierOrHolder() != Id && !(bYield && Job[Id] == EJob::Puck))
@@ -903,6 +986,19 @@ namespace JamAI
 				bGoalieNow[Id] = true;
 				const double Cy = C.Y;
 				GoalieSideNow[Id] = std::fabs(Cy) < 1.0 ? 0 : static_cast<int>(Sign(Cy)) * (S.Team == 0 ? 1 : -1);
+				// Lane A206 wave 3 (bDefendTeam9): the man in the crease plays a shot: onto its line (his body blocks), not standing on his post
+				const double Pv9 = W.PuckVel.Length();
+				if (SkillOf(W, Id).Hk.bDefendTeam9 && Pv9 > 6.0 && W.PuckVel.Dot(OwnGoal - Pp) > 0.0)
+				{
+					const FVec2 Dv = W.PuckVel * (1.0 / Pv9);
+					const double Tg = std::fabs(Dv.X) > 1e-6 ? (OwnGoal.X - Pp.X) / Dv.X : -1.0;
+					if (Tg > 0.0 && std::fabs(Pp.Y + Dv.Y * Tg) < W.GoalHalfWidth + 1.0)
+					{
+						double Along = (Me - Pp).Dot(Dv);
+						Along = Along < 0.0 ? 0.0 : (Along > Tg ? Tg : Along);
+						Out = Arrive(Me, Pp + Dv * Along - S.Vel * 0.25, 1.0);
+					}
+				}
 			}
 			else
 			{
@@ -914,7 +1010,9 @@ namespace JamAI
 					// GuardRadiusM from the goal centre, so a long shot meets a body (no goalies in this game)
 					const FVec2 ToPuck = Pp - OwnGoal;
 					const double L = ToPuck.Length();
-					const double R = L * 0.5 < Gk.GuardRadiusM ? L * 0.5 : Gk.GuardRadiusM;
+					double R = L * 0.5 < Gk.GuardRadiusM ? L * 0.5 : Gk.GuardRadiusM;
+					// lane A206 wave 3 (bDefendTeam9, EYE 3): an opposing carrier inside 35 m: the guard stands in the crease (1.5 m out), not on a post 5-10 m out
+					if (Gk.Hk.bDefendTeam9 && W.Carrier >= 0 && W.Carrier < W.NumSkaters && W.Skaters[W.Carrier].Team != S.Team && L < 35.0 && R > 1.5) { R = 1.5; }
 					T = OwnGoal + ToPuck.Normalized() * R;
 					if (std::fabs(T.X) > W.GoalX) { T.X = OwnGoal.X; }
 				}
@@ -2158,6 +2256,19 @@ namespace JamAI
 				{
 					if (PressCarrier[Team] != C) { PressCarrier[Team] = C; PressFirst[Team] = Fw[Kp]; }
 					bSecondMan[Fw[Kp]] = Fw[Kp] != PressFirst[Team];
+				}
+				// Lane A206 wave 3 (bDefendTeam9): the human is not his side's presser unless he is on the carrier (goal-side within 6 m): the nearest bot goes
+				if (H.bDefendTeam9 && Kp >= 0 && W.IsHumanSeat(Fw[Kp]) && bTheirs
+					&& !(W.Skaters[Fw[Kp]].Pos.DistTo(Cp) < 6.0 && (W.Skaters[Fw[Kp]].Pos - Cp).Dot(OwnGoal - Cp) > 0.0))
+				{
+					int Bk = -1; double Bd = 1e18;
+					for (int k = 0; k < NF; ++k)
+					{
+						if (W.IsHumanSeat(Fw[k])) { continue; }
+						const double D = W.Skaters[Fw[k]].Pos.DistTo(Cp) + ((W.Skaters[Fw[k]].Pos - Cp).Dot(OwnGoal - Cp) > 0.0 ? 0.0 : 6.0);
+						if (D < Bd) { Bd = D; Bk = k; }
+					}
+					if (Bk >= 0) { Kp = Bk; }
 				}
 				if (Kp >= 0) { Give(Take(Kp), EJob::Press); }
 				if (bTheirs && NF > 0)

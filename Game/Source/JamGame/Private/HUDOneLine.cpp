@@ -15,6 +15,9 @@ static TAutoConsoleVariable<int32> CVarJamHudOneLine(TEXT("jam.hud.OneLine"), 1,
 	TEXT("Lane A213: 1 (default) at most one line of the HUD's words over the play at a time (contact line, prompt, controls strip, faceoff hint, caption, in that order) and the kept-puck prompt only while the human carries; 0 = the screen of before."), ECVF_Default);
 
 bool UJamHudWidget::OneLineOn() { return CVarJamHudOneLine.GetValueOnGameThread() != 0; }
+uint64 UJamHudWidget::OneLineTick = 0;
+bool UJamHudWidget::bOneLineUp = false;
+bool UJamHudWidget::OneLineUpNow() { return OneLineOn() && bOneLineUp && GFrameCounter <= OneLineTick + 1; }
 
 void UJamHudWidget::UpdateOneLine(const FJamPresentationFrame& F)
 {
@@ -54,6 +57,8 @@ void UJamHudWidget::UpdateOneLine(const FJamPresentationFrame& F)
 			}
 		}
 	}
+	bOneLineUp = Win >= 0;
+	OneLineTick = GFrameCounter;
 	if (Win != OneLineShown)
 	{
 		static const TCHAR* Names[5] = { TEXT("contact"), TEXT("prompt"), TEXT("strip"), TEXT("faceoff_hint"), TEXT("caption") };

@@ -37,6 +37,8 @@ static TAutoConsoleVariable<int32> CVarJamHitBTakes(TEXT("jam.hit.BTakes"), 2,
 	TEXT("Device B's wind-up takes: SetWindupTakes(true, 8) by name on 2 (default from lane A210: every figure, the human's too: the figure does the hitting; at a 4-frame wind-up B's take starts inside its coil and still shows the drive and the follow-through), 1 the bots' figures only (package H34: the human on A's stand-in lean), 0 none. A's lean stands down exactly on the figures told."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitCaptureBots(TEXT("jam.hit.CaptureBots"), 0,
 	TEXT("With jam.hit.Capture: 1 = a bot's check or cross-check pressed inside the distance band (jam.hit.CaptureBotsMinM .. CaptureBotsM from the human) is a strip too (botcheck / botcross), and a hit between two bots that lands (bothit, from the contact); 2 = the same, only when the man is inside the picture (20 % in from every edge). Lane A210."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitCaptureBoards(TEXT("jam.hit.CaptureBoards"), 0,
+	TEXT("With jam.hit.Capture: 1 = each of the human's board hits is a strip of 24 frames (kind board): the board caps' flash and the board take. Lane A210."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitCaptureBotsM(TEXT("jam.hit.CaptureBotsM"), 14.f,
 	TEXT("With jam.hit.CaptureBots 1: a bot's press is filmed when it is between jam.hit.CaptureBotsMinM and this many metres from the human (14: near; 40 with a minimum of 18: the hits at 20 and 35 m). Lane A210."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitCaptureBotsMinM(TEXT("jam.hit.CaptureBotsMinM"), 0.f,
@@ -45,6 +47,8 @@ static TAutoConsoleVariable<float> CVarJamHitBraceSet(TEXT("jam.hit.BraceSet"), 
 	TEXT("The braced figure sets itself (lane A210: a bridge on the FIGURE while device B's hold cannot be seen from behind; set it to 0 when B's pose reads): the drawn figure (never the sim) sinks and widens over 6 frames while the cross-check is held and rises again over 6: height x (1 - 0.10 x this), width x (1 + 0.06 x this). 1 (default); 0 = off (package H34)."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitBraceLean(TEXT("jam.hit.BraceLean"), 12.f,
 	TEXT("With the braced figure's set: degrees the drawn figure pitches forward into the hold, on top of device B's take (12 by default; 0 = none)."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitWhiff(TEXT("jam.hit.Whiff"), 0.8f,
+	TEXT("A miss looks like a miss (lane A210, the eye's EYE 7): with jam.hit.Pop, after a check or a cross-check that met nobody the drawn figure tips into a dip (this share of the coil's depth) 4 frames after the miss and is back at its own size 14 frames after it; the figure is also told PlayWhiff(Kind) by name (device B's take, when it exists). 0.8 (default); 0 = the plain settle (READY 3)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitRetimeTest(TEXT("jam.hit.RetimeTest"), 0,
 	TEXT("Proof only (lane A210): N > 0 sends PlayCheckWindup(1) to the human's figure N frames after each of his check presses, as jam.hit.Retime would on a contact inside the wind-up (to see what device B's running take does with it before lane A209's sim is here). 0 = off."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitPop(TEXT("jam.hit.Pop"), 1.f,
@@ -578,7 +582,7 @@ float FJamHitReadModel::LeanFor(int32 I, double FrameF) const
 // wind-up; End = the frame it ended (the contact, the miss) or would at the latest; bLanded: the contact came (the drive whatever the frame: lane A209's
 // rule lets a body meet inside the wind-up). Sinks over the wind-up (eased, fully sunk three frames before its end), springs from -1 to +1 over the two
 // frames up to the window (sprung on the frame it opens), holds to End, settles over PopSettleFrames.
-float FJamHitReadModel::CheckPop(float Since, int32 Windup, float End, bool bLanded)
+float FJamHitReadModel::CheckPop(float Since, int32 Windup, float End, bool bLanded, float WhiffDip)
 {
 	if (Since < 0.f) return 0.f;
 	const float W = static_cast<float>(FMath::Max(Windup, 1));
@@ -590,10 +594,17 @@ float FJamHitReadModel::CheckPop(float Since, int32 Windup, float End, bool bLan
 	};
 	if (Since <= End) return Shape(Since);
 	const float At = bLanded ? 1.f : Shape(End);
+	if (!bLanded && WhiffDip > 0.f)
+	{
+		// A miss: from where the lunge ended down into the dip, then up to his own size.
+		const float U = Since - End;
+		if (U <= WhiffDipFrames) return FMath::Lerp(At, -WhiffDip, U / WhiffDipFrames);
+		return -WhiffDip * (1.f - FMath::Clamp((U - WhiffDipFrames) / (WhiffFrames - WhiffDipFrames), 0.f, 1.f));
+	}
 	return At * (1.f - FMath::Clamp((Since - End) / PopSettleFrames, 0.f, 1.f));
 }
 
-float FJamHitReadModel::PopFor(int32 I, double FrameF) const
+float FJamHitReadModel::PopFor(int32 I, double FrameF, float WhiffDip) const
 {
 	if (Down.IsValidIndex(I) && Down[I]) return 0.f;
 	for (int32 k = Presses.Num() - 1; k >= 0; --k)
@@ -605,7 +616,7 @@ float FJamHitReadModel::PopFor(int32 I, double FrameF) const
 		// A miss holds the drive four frames into the window at most (the lunge on air), a cross-check one frame past its shove.
 		const float Latest = static_cast<float>(FMath::Max(P.Windup, 1) + (P.bCross ? 1 : FMath::Min(P.Window, 4)));
 		const float End = P.EndFrame >= 0 ? FMath::Min(static_cast<float>(P.EndFrame - P.PressFrame), bLanded ? 1e6f : Latest) : Latest;
-		return CheckPop(static_cast<float>(FrameF - static_cast<double>(P.PressFrame)), P.Windup, End, bLanded) * (P.bCross ? 0.7f : 1.f);
+		return CheckPop(static_cast<float>(FrameF - static_cast<double>(P.PressFrame)), P.Windup, End, bLanded, WhiffDip) * (P.bCross ? 0.7f : 1.f);
 	}
 	return 0.f;
 }
@@ -767,6 +778,21 @@ void AJamHitRead::RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSk
 		for (const FJamHitReadModel::FPress& P : Model.GetPresses())
 			if (P.bHuman && !P.bCross && Sim->GetFrame() - P.PressFrame == TestAt && P.Windup > TestAt) Send(P.Skater, P.Windup - TestAt, TEXT("test"), P.Windup, TestAt);
 	}
+	// Wave 4: a miss is told to the figure by name (device B's PlayWhiff(Kind): 0 a body check, 1 a cross-check; a figure without it gets nothing).
+	if (CVarJamHitWhiff.GetValueOnGameThread() > 0.f)
+	{
+		static const FName NameWhiff(TEXT("PlayWhiff"));
+		for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
+		{
+			if (L.Result != EJamHitResult::Miss) continue;
+			for (AJamSkater* Sk : Skaters) if (Sk && Sk->GetSimIndex() == L.Checker)
+			{
+				const bool bSent = AJamSkater::CallFigure(Sk->GetVisualObject(), NameWhiff, { L.Kind == TEXT("cross") ? 1.0 : 0.0 });
+				if (L.Kind == TEXT("cross")) Sk->SetAimRecover(WhiffAimFrames);   // the stick back to the front while the take runs out
+				if (L.bHuman) UE_LOG(LogJamHit, Log, TEXT("JAMHIT whiff frame=%lld checker=%d kind=%s call=%s"), Sim->GetFrame(), L.Checker, *L.Kind, bSent ? TEXT("PlayWhiff") : TEXT("none"));
+			}
+		}
+	}
 	if (Mode == 0) return;
 	for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
 	{
@@ -848,6 +874,7 @@ void AJamHitRead::Capture(const UJamSim* Sim)
 		FString Kind;
 		int64 Until = F;
 		if (S.bCheckThisFrame) { Kind = TEXT("check"); Until = F + FMath::Max(S.WindupFrames, 0) + UJamSim::HumanCheckWindowFrames + 30; }
+		else if (S.bBoardHitThisFrame && CVarJamHitCaptureBoards.GetValueOnGameThread() != 0) { Kind = TEXT("board"); Until = F + 24; }   // lane A210: his own board hits
 		else if (S.bLiftThisFrame) { Kind = TEXT("cross"); Until = F + FMath::Max(S.WindupFrames, 0) + 30; }
 		else if (S.bCrossBraced && !bWasBraced) { Kind = TEXT("brace"); Until = F + 240; }
 		else for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs()) if (L.Victim == H && (L.Result == EJamHitResult::Down || L.Result == EJamHitResult::Stumble)) { Kind = TEXT("taken"); Until = F + 40; }
@@ -960,7 +987,7 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 			if (!Sk || !BraceSetK.IsValidIndex(Sk->GetSimIndex())) continue;
 			const int32 I = Sk->GetSimIndex();
 			const float K = SetAmt > 0.f ? FMath::InterpEaseInOut(0.f, 1.f, BraceSetK[I], 2.f) : 0.f;
-			if (!Sk->IsHitStopped()) PopHeld[I] = PopAmt > 0.f ? Model.PopFor(I, FrameF) * PopAmt : 0.f;
+			if (!Sk->IsHitStopped()) PopHeld[I] = PopAmt > 0.f ? Model.PopFor(I, FrameF, FMath::Clamp(CVarJamHitWhiff.GetValueOnGameThread(), 0.f, 1.5f)) * PopAmt : 0.f;
 			const FVector Scale = BraceSetScale(K, SetAmt) * PopScale(PopHeld[I]);
 			if (!Scale.Equals(FVector::OneVector, 1e-4)) { Sk->SetActorScale3D(Scale); BraceScaled[I] = true; }
 			else if (BraceScaled[I]) { Sk->SetActorScale3D(FVector::OneVector); BraceScaled[I] = false; }
@@ -1416,6 +1443,12 @@ bool FJamHitQuiet::RunTest(const FString&)
 	TestEqual(TEXT("a frame before the window: half sprung"), FJamHitReadModel::CheckPop(7.f, 8, 12.f, false), 0.f, 1e-6f);
 	TestEqual(TEXT("the frame the window opens: fully sprung"), FJamHitReadModel::CheckPop(8.f, 8, 12.f, false), 1.f, 1e-6f);
 	TestEqual(TEXT("settled 8 frames after the end"), FJamHitReadModel::CheckPop(12.f + FJamHitReadModel::PopSettleFrames, 8, 12.f, false), 0.f, 1e-6f);
+	// Wave 4 (EYE 7): a miss with the whiff's dip: down to -0.8 four frames after it, his own size 14 frames after it; a landed hit is untouched by it.
+	TestEqual(TEXT("ships: the whiff dips"), CVarJamHitWhiff.GetValueOnGameThread(), 0.8f, 1e-6f);
+	TestEqual(TEXT("a miss: in the dip 4 frames after"), FJamHitReadModel::CheckPop(12.f + FJamHitReadModel::WhiffDipFrames, 8, 12.f, false, 0.8f), -0.8f, 1e-5f);
+	TestTrue(TEXT("a miss: on the way down 2 frames after"), FJamHitReadModel::CheckPop(14.f, 8, 12.f, false, 0.8f) < 0.5f && FJamHitReadModel::CheckPop(14.f, 8, 12.f, false, 0.8f) > -0.8f);
+	TestEqual(TEXT("a miss: his own size 14 frames after"), FJamHitReadModel::CheckPop(12.f + FJamHitReadModel::WhiffFrames, 8, 12.f, false, 0.8f), 0.f, 1e-6f);
+	TestEqual(TEXT("a landed hit: the dip does not touch it"), FJamHitReadModel::CheckPop(11.f, 8, 9.f, true, 0.8f), FJamHitReadModel::CheckPop(11.f, 8, 9.f, true, 0.f), 1e-6f);
 	TestEqual(TEXT("a contact inside the wind-up: the drive from that frame"), FJamHitReadModel::CheckPop(3.5f, 8, 3.f, true), 1.f - 0.5f / FJamHitReadModel::PopSettleFrames, 1e-5f);
 	TestTrue(TEXT("sunk: lower and wider"), AJamHitRead::PopScale(-1.f).Z < 1.f && AJamHitRead::PopScale(-1.f).X > 1.f);
 	TestTrue(TEXT("sprung: taller and narrower"), AJamHitRead::PopScale(1.f).Z > 1.f && AJamHitRead::PopScale(1.f).X < 1.f);

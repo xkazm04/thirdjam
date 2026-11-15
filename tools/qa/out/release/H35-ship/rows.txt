@@ -1,0 +1,6 @@
+unzip = 4 s, C:\Users\kazda\kiro\thirdjam\tools\qa\out\release\H35-ship\unz\Windows\ThirdJam.exe
+menu = {"lit":0.4634,"mean":27.3}
+home = {"lit":0.7464,"mean":37.4}
+match_9s = {"lit":0.9637,"mean":147.2}
+play = 6 stills, lowest lit 0.9541, alive True
+close = exited by close, code 0

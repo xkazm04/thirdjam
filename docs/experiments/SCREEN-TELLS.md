@@ -106,3 +106,16 @@ A button held while the puck changes hands does nothing until you let go and pre
 | 9, list 2 | four ring systems round one pair; five kinds of ring | the contested puck is one ring (the loose puck's place, the opponent's colour): its inner ring and the ring under the coming opponent go; the grace's yellow goes (the carrier's colour); kinds left: your ring (doubled with the puck), the carrier's ring, the puck's ring, the stop's line | READY 1 stills |
 | list 2 | the caption under the scoreboard lay on the far net's distance label | the caption is not drawn on a frame its box meets a net, own-net or puck label or the prompt (`jam.hud.OneLine`) | gate; stills |
 | 11 | the end card covers the match-ending goal on its own frame | READY 2 | |
+
+## 6. Wave 2 (toward SCREEN READY 2)
+
+| Item | What changes | Switch (0 = before) | Proof |
+|---|---|---|---|
+| EYE 11 | the win / loss card waits 1.9 s after the match-ending goal (by the clock: the sim's frame stands still in the end phase); the goal's celebration is seen first, then BEATEN / YOU WIN with its keys | `jam.hud.EndWait` | `tools/qa/screen/out/a213-w2b/a213-end-wait-*.png` (no card, the scorers' arms up), `a213-end-card-*.png`; Jam.Hud.Teach (EndCardWaits) |
+| 3 | the held pass's target mate gets a ring in the team's colour; the held shot lays a line on the ice from the puck along the stick, 1.5 m at a tap to 4.5 m at the full charge, chalk, yellow when full: the same make as the pass line (0.22 m) | `jam.hud.ChargeLook` (proof `jam.hud.ShotLookDemo N`) | stills `a213-w2*`; Jam.Hud.Teach (the line only grows) |
+| 5 | the pill teaches: "RMB  PASS: A MATE IS OPEN" when he carries and a full pass along his facing finds a mate 6 to 30 m ahead; "RMB  CHECK HIM" when an opposing carrier is within 2.6 m inside 60 degrees of his facing; yellow plate, ink type, a slow breath; three times a session each, 900 frames apart, never after he passed / checked | `jam.hud.Teach` (`jam.ui.teachreset`; proof `jam.hud.TeachStills`) | Jam.Hud.Teach (counts, never after, restart) |
+| ruling 2 | the bark bubbles yield to the HUD's one line (a bubble is not drawn while a HUD line of words stands; the voice plays) | `jam.hud.OneLine` | BarkWidget.cpp, one line |
+| ruling 1 / EYE 12 | the commentator never calls the cross-check a lift: the sim's lift event offers only the cross-check's lines (check.cross on a clean one; a miss plays nothing until B voices `check.cross_miss`) | `jam.comm.LiftIsCross` | Jam.Commentary.CrossCheck (tonight and before) |
+| list 3, 1 | a pass is praised when a mate RECEIVES it ("Tape to tape" said for a pass that never left his stick): the pass event is held until his team's PassesReceived grows (3 s at most), else dropped | `jam.comm.PassOnCatch` | gate |
+| list 3, 2 | a Director's mode plays the level lit on HOME (Glow Ice played PRO under ROOKIE): modes travel with ?level= as PLAY NOW does | `jam.menu.ModeLevel` | Jam.Menu.LevelWire (the mode step plays HOME's level) |
+| list 3, 3 | the contact line's "JUST WON IT" (his press into the other man's take grace) reads HE JUST GOT IT | `jam.hud.Words` | Jam.Hud.CarrierCues |

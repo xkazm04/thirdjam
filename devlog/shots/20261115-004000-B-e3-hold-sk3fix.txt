@@ -1,0 +1,1 @@
+E3 GPU, the held cross-check from A's game camera after gating SK3Fix off during the hold (row 1: clay x3 moments of the loop, night), against before the fix (row 2, 00:23): now both stick ends show past the gloves, left and right. Measured: StickRot and StickOff 0.0 on every read during the hold, back to the usual correction after it.

@@ -1,0 +1,1 @@
+E3 GPU, the same skater at full pass charge (SetPassCharge 1.0): SK3Fix stood down (StickRot/StickOff 0.0), the Pass_Charge pose as authored.

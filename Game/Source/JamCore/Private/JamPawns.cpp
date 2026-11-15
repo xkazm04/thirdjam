@@ -106,6 +106,8 @@ namespace
 // Lane A168 flattened device B's puck disc (jam.puck.Post 0: world scale z 0.01) to hide the upright far-puck marker it carried. Lane A188 (R-0064 point
 // 7): device B's push removed the marker from /JamAssets/Props/SM_PuckDisc (dev-b 46bdb717, on main), so the disc keeps its own scale; the cvar is gone.
 
+static TAutoConsoleVariable<int32> CVarJamBoardBumpTake(TEXT("jam.board.BumpTake"), 0,
+	TEXT("PlayBoardHit on a plain run into the boards (lane A210): 0 (default) only when the skater was checked into them or goes down; 1 = on every skater board event (package H34: the take throws the stick up on a bump)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
 	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
 
@@ -511,7 +513,10 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	LastSimSpeed = S.Vel.Size();
 	if (S.bBoardHitThisFrame)
 	{
-		IJamSkaterVisual::Execute_PlayBoardHit(V);
+		// Lane A210 (wave 4, the eye's EYE 12: a board bump throws his stick up): device B's board take plays only when he was CHECKED into the boards
+		// (bContactBoard) or is going down; a plain run into them keeps the stick where it is. jam.board.BumpTake 1 = every board event (package H34).
+		const bool bTake = CVarJamBoardBumpTake.GetValueOnGameThread() != 0 || S.bContactBoard || S.IsDown();
+		if (bTake) IJamSkaterVisual::Execute_PlayBoardHit(V);
 		// Lane A101: also on a landed check that pushed the skater into boards within 1.5 m (bContactBoard; the `board` event then carries the check's strength).
 		UE_LOG(LogJamSim, Log, TEXT("JAMVIS board frame=%lld skater=%d team=%d checked=%d outcome=%d ratio=%.2f (PlayBoardHit: the skater board event: 4 m/s and up into the boards, or checked into them)"),
 			SimFrameForLog(), S.Index, S.Team, S.bContactBoard ? 1 : 0, S.ContactOutcome, S.ContactRatio);
@@ -566,9 +571,11 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		UE_LOG(LogJamSim, Log, TEXT("JAMVIS stickhit frame=%lld skater=%d team=%d lifted=%d (PlayStickHit: the carrier lost the puck to a clean %s)"),
 			SimFrameForLog(), S.Index, S.Team, S.StickHitResult == 2 ? 1 : 0, S.StickHitResult == 2 ? TEXT("lift") : TEXT("poke"));
 	}
-	if (S.bHasPuck != bHadPuck)
+	// Lane A210 (wave 4): the flag follows the carrier the screen shows when the game mode told it (SetShownCarrier), else the state's bHasPuck.
+	const bool bHasPuckNow = ShownCarrier >= 0 ? ShownCarrier == 1 : S.bHasPuck;
+	if (bHasPuckNow != bHadPuck)
 	{
-		bHadPuck = S.bHasPuck;
+		bHadPuck = bHasPuckNow;
 		IJamSkaterVisual::Execute_SetHasPuck(V, bHadPuck);
 	}
 	// Lane A73: while held, the continuous calls (UpdateMotion, SetStickAim, SetShotCharge) stay away: the figure keeps the hit frame's motion state.
@@ -601,7 +608,10 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		LastAimDeg = AimDeg;
 		LastAimReach = Reach;
 		const float Prev = SentAimDeg;
-		SentAimDeg = SmoothAimDeg(AimDeg, SentAimDeg, AimSide, bAimInit);
+		// Lane A210 (wave 4): the human's carried stick stays out of the zone his own hips hide (CarryAimDeg); the raw aim is logged and kept as it was.
+		float AimForFigure = CarryAimDeg(AimDeg, SentAimDeg, S.bHuman && bHadPuck, CarryAimFloorDeg());
+		if (AimRecoverLeft > 0) { --AimRecoverLeft; if (!bHadPuck) AimForFigure = 0.f; }   // wave 4: after a whiff the stick comes back to the front
+		SentAimDeg = SmoothAimDeg(AimForFigure, SentAimDeg, AimSide, bAimInit);
 		SentReachM = FMath::IsNearlyZero(SentReachM) ? Reach : SentReachM + (Reach - SentReachM) * 0.35f;
 		if (bLogAim)
 		{
@@ -634,6 +644,22 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	if (S.bFoulThisFrame) IJamSkaterVisual::Execute_PlayFoulReaction(V);
 }
 
+static TAutoConsoleVariable<float> CVarJamPuckCarryAim(TEXT("jam.puck.CarryAim"), 30.f,
+	TEXT("The human's carried stick on the figure (lane A210): never closer than this many degrees to his line, so the stick and the puck show past his hips at his camera (a puck carried dead ahead is hidden behind him). The sim's blade and puck are untouched. 30 (default); 0 = off (package H34)."), ECVF_Default);
+
+float AJamSkater::CarryAimFloorDeg() { return FMath::Clamp(CVarJamPuckCarryAim.GetValueOnGameThread(), 0.f, 60.f); }
+
+float AJamSkater::CarryAimDeg(float RawRelDeg, float PrevSentDeg, bool bCarrying, float FloorDeg)
+{
+	const float Raw = FMath::UnwindDegrees(RawRelDeg);
+	if (!bCarrying || FloorDeg <= 0.f) return RawRelDeg;
+	const float Fore = FloorDeg * CarryForehandK, Back = FloorDeg;
+	if (Raw >= Fore || Raw <= -Back || FMath::Abs(Raw) > 90.f) return RawRelDeg;
+	// Inside the floors: the side the stick is on is kept until the raw aim is past 0.4 of the floor on the other; from the middle: the side it leans to.
+	const bool bBackhand = PrevSentDeg < -1.f ? Raw < 0.4f * Fore : PrevSentDeg > 1.f ? Raw < -0.4f * Back : Raw < 0.f;
+	return bBackhand ? -Back : Fore;
+}
+
 float AJamSkater::SmoothAimDeg(float RawRelDeg, float Prev, int32& Side, bool& bInit)
 {
 	const float Raw = FMath::UnwindDegrees(RawRelDeg);
@@ -656,9 +682,11 @@ float AJamSkater::SmoothAimDeg(float RawRelDeg, float Prev, int32& Side, bool& b
 	return FMath::Abs(Gap) < 0.05f ? Target : Prev + Step;
 }
 
-bool AJamSkater::GetPuckSocketWorld(FVector& Out) const
+// Lane A210 (wave 4): the one search both readers use (GetPuckSocketWorld, and the puck's follow after the animation).
+USceneComponent* AJamSkater::FindPuckSocket(bool& bOutIsSocket) const
 {
-	if (!VisualObject) return false;
+	bOutIsSocket = false;
+	if (!VisualObject) return nullptr;
 	TArray<USceneComponent*> Candidates;
 	if (USceneComponent* SC = Cast<USceneComponent>(VisualObject))
 	{
@@ -670,15 +698,18 @@ bool AJamSkater::GetPuckSocketWorld(FVector& Out) const
 		A->GetComponents<USceneComponent>(Candidates);
 	}
 	// A mesh socket first (B's figures), then a scene component named puck_socket (the toy figure).
-	for (USceneComponent* C : Candidates)
-	{
-		if (C && C->DoesSocketExist(JamSkaterSockets::Puck)) { Out = C->GetSocketLocation(JamSkaterSockets::Puck); return true; }
-	}
-	for (USceneComponent* C : Candidates)
-	{
-		if (C && C->GetFName() == JamSkaterSockets::Puck) { Out = C->GetComponentLocation(); return true; }
-	}
-	return false;
+	for (USceneComponent* C : Candidates) if (C && C->DoesSocketExist(JamSkaterSockets::Puck)) { bOutIsSocket = true; return C; }
+	for (USceneComponent* C : Candidates) if (C && C->GetFName() == JamSkaterSockets::Puck) return C;
+	return nullptr;
+}
+
+bool AJamSkater::GetPuckSocketWorld(FVector& Out) const
+{
+	bool bIsSocket = false;
+	const USceneComponent* C = FindPuckSocket(bIsSocket);
+	if (!C) return false;
+	Out = bIsSocket ? C->GetSocketLocation(JamSkaterSockets::Puck) : C->GetComponentLocation();
+	return true;
 }
 
 TFunction<bool(const AJamSkater&, FVector&, FRotator&)> AJamSkater::BoxSeat;   // lane A127 (track F3): set by ARinkActor
@@ -709,7 +740,10 @@ void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
 
 AJamPuck::AJamPuck()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	// Lane A210 (wave 4): the puck ticks after the frame's animation, only to follow the carrier's blade (SetFollow); with no follow the tick does nothing.
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.TickGroup = TG_PostUpdateWork;
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	RootComponent = Mesh;
 	Mesh->SetMobility(EComponentMobility::Movable);
@@ -792,6 +826,44 @@ void AJamPuck::ApplyRender(const FJamPuckState& P, float Alpha)
 void AJamPuck::ApplyRenderAt(const FVector& WorldCm)
 {
 	Place(FVector(WorldCm.X, WorldCm.Y, HalfHeightM * 100.0), 1.f);
+}
+
+// Lane A210 (wave 4): see JamPawns.h.
+FVector AJamPuck::LiveRenderCm(const FJamPuckState& P, float Alpha) const
+{
+	return Lerp2D(P.PrevPos, P.Pos, Alpha, RenderHeightM(P, Alpha, HalfHeightM));
+}
+
+void AJamPuck::ApplyRenderBlend(const FVector& WorldCm, float Alpha)
+{
+	Place(WorldCm, Alpha);
+}
+
+void AJamPuck::SetFollow(USceneComponent* Comp, bool bIsSocket, bool bCorrect)
+{
+	FollowComp = Comp;
+	bFollowIsSocket = bIsSocket;
+	bFollowCorrect = bCorrect;
+	if (!Comp) LastLagCm = -1.0;
+}
+
+void AJamPuck::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	const USceneComponent* C = FollowComp.Get();
+	if (!C || HoldLeft > 0 || CatchUpLeft > 0) { LastLagCm = -1.0; return; }   // no follow, or the hit-stop holds the puck where the hit was
+	const FVector Socket = bFollowIsSocket ? C->GetSocketLocation(JamSkaterSockets::Puck) : C->GetComponentLocation();
+	LastLagCm = FVector::Dist2D(Socket, GetActorLocation());
+	if (!bFollowCorrect) return;
+	const FVector Loc(Socket.X, Socket.Y, HalfHeightM * 100.0);
+	LastPlaced = Loc;
+	SetActorLocation(Loc);
+	PlaceDiscOnIce(Loc);
+}
+
+void AJamPuck::SetTrailCarried(bool bCarried)
+{
+	if (Trail) Trail->SetVariableFloat(FName(TEXT("User.Carried")), bCarried ? 1.f : 0.f);
 }
 
 void AJamPuck::BeginHitStop(int32 Frames)

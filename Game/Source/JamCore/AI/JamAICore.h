@@ -291,6 +291,18 @@ namespace JamAI
 		// reads the human's hit coming (the human within 4.5 m closing on it at 3 m/s or more, or his check / cross-check winding up at it) steps off the line
 		// of the hit at full stride, as a player does. 0 = it takes the hit (rookie). A level's number (the profile's).
 		double Dodge9Share = 0.0;
+		// Lane A206 wave 3 (R-0068, the eye's lists: EYE 1, EYE 8, EYE 2, EYE 3, item 12):
+		// DropNoHit9Frames: > 0 = for this many frames after a faceoff's drop the bot plays the puck only: no body check, no cross-check (rookie 90; pro and
+		// all_star 45). The losing centre charged and felled the human 40 frames after every drop.
+		int DropNoHit9Frames = 0;
+		// bPassCare9: a carrier passes for where the pass puts the puck: no pass to a mate nearer than 5 m, none in its first 20 frames with the puck, none
+		// straight back to the mate it came from inside 60 frames while he is no nearer the net, none whose line runs through its own crease (3 m of the
+		// own net); unless an opponent is on it (within 2 m). EYE 8: 41 of 81 passes re-passed within 15 frames, 18 of 58 straight back.
+		bool bPassCare9 = false;
+		// bDefendTeam9: the human's side defends without him (the human is not its presser unless he is goal-side within 6 m of the carrier); a defending bot
+		// gives way to a team-mate inside 3 m after 20 frames unless both play the puck; and an opposing carrier inside 35 m of the net is never left alone
+		// for more than 30 frames (nobody within 3 m): the nearest bot goes at him; the man in the crease steps onto a shot's line (EYE 2, EYE 3).
+		bool bDefendTeam9 = false;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -415,6 +427,8 @@ namespace JamAI
 	constexpr bool kEvo9MarkMan = true;    // wave 2
 	constexpr bool kEvo9ShotLane = true;   // wave 2
 	constexpr bool kEvo9DriveFirst = true; // wave 2
+	constexpr bool kEvo9PassCare = true;   // wave 3
+	constexpr bool kEvo9DefendTeam = true; // wave 3
 	constexpr double kEvo9MatePressureS = 0.6;      // the opposing side's at rookie and pro
 	inline void SetEvolution9(FJamHockeySense& H, bool bOn, bool bMate)
 	{
@@ -430,7 +444,9 @@ namespace JamAI
 		H.bDriveFirst9 = bOn && kEvo9DriveFirst;
 		H.DriveNet9M = bOn ? kEvo9DriveNetM : 0.0;
 		H.Pressure9S = (bOn && bMate) ? kEvo9MatePressureS : 0.0;
-		if (!bOn) { H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; H.Dodge9Share = 0.0; }
+		H.bPassCare9 = bOn && kEvo9PassCare;
+		H.bDefendTeam9 = bOn && kEvo9DefendTeam && !bMate;   // wave 3: the opponents only (on the human's side it raised goals against, 2.38 -> 2.70 a match at pro)
+		if (!bOn) { H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; H.Dodge9Share = 0.0; H.DropNoHit9Frames = 0; }
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -903,6 +919,8 @@ namespace JamAI
 		void LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const;
 		bool DriveNet(const FJamAIWorld& W, int Id, const FVec2& Aim, double Dgoal) const;   // lane A206 (evolution 9)
 		FVec2 DodgeHit(const FJamAIWorld& W, int Id, const FVec2& Dir) const;   // lane A206 (evolution 9, wave 2)
+		void PassCare(const FJamAIWorld& W, int Id, FJamAIInput& In) const;   // lane A206 (evolution 9, wave 3)
+		bool NoCarrierAlone(const FJamAIWorld& W, int Id) const;   // lane A206 (evolution 9, wave 3)
 	private:
 		int DownNear[kMaxSkaters] = {};
 		int64_t DownNearFrame[kMaxSkaters] = {};
@@ -919,6 +937,9 @@ namespace JamAI
 		int Faceoffs = 0;             // faceoff countdowns seen
 		int64_t FaceoffStart = 0;     // frame the current faceoff countdown began (the draw knobs hash on it, so they vary per match)
 		bool bWasFaceoff = false;
+		int64_t DropFrame9 = -100000; bool bWasDrawOpen9 = false;   // lane A206 wave 3: the frame of the last faceoff drop (DropNoHit9Frames)
+		int LastPassBy9 = -1; int ReceivedFrom9[kMaxSkaters] = {}; int64_t ReceivedFrame9[kMaxSkaters] = {};   // lane A206 wave 3 (bPassCare9)
+		int AloneRun9[2] = {};   // lane A206 wave 3 (bDefendTeam9): frames an opposing carrier inside 35 m of this team's net has had nobody of it within 3 m
 
 		const FJamBotSkill& SkillOf(const FJamAIWorld& W, int Id) const;
 		// bAimed (lane A31): the shot is the lined-up shot on the net (the one worth charging), not a board chip, a dump or a pass-by-shot.

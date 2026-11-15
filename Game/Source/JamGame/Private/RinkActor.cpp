@@ -17,6 +17,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "JamPawns.h"
 #include "Engine/StaticMeshSocket.h"
+#include "HokejGameMode.h"   // lane A210: the sim, to tell a man checked into the boards from one who ran into them
 
 // Lane A25: the construction layer's switch. 0 hides the kick plate, glass rail, net frame extras, goal lights, benches and the extra markings on every rink
 // actor (the "before" of the ProfileGPU pair); 1 shows them. Read at Build and on every change.
@@ -57,9 +58,16 @@ static TAutoConsoleVariable<int32> CVarRinkReactLoud(TEXT("jam.rink.react.loud")
 // 0 = no flash: the quiet hit of evolution 4. The tint: 0 warm white, 1 the half's team colour (blue on x < 0, orange on x > 0), 2 the lamps' red.
 // 300 cd inside a 4.5 m radius from two sweeps of off-screen stills from the game camera 12 m off the boards (ARENA.md section 40): at a 9 m radius
 // 1,500 cd washed 15 to 23 % of the picture; 300 cd in 4.5 m changes 4.0 % at Strength 0.45 and 5.0 % at 0.8 on p3_clay, a pool at the hit.
-static TAutoConsoleVariable<float> CVarRinkReactHit(TEXT("jam.rink.react.hit"), 300.f,
+// Lane A210 (wave 4; the eye's EYE 12: "skating into the boards turns his whole figure pale blue for six frames"): 300 cd in the half's team colour stood
+// 0.6 m from the man who hit the boards: from the game camera 7 m behind him his figure went blue-white over the hit's follow-through. 90 cd, warm white:
+// the boards and the ice at the hit still answer, the figure keeps its colours (stills: docs/experiments/img/a210). 300 / tint 1 = package H34.
+static TAutoConsoleVariable<float> CVarRinkReactHit(TEXT("jam.rink.react.hit"), 90.f,
 	TEXT("Candelas of the flash a hard skater board hit throws on the boards and the ice at the hit, at Strength 1 (l2_night takes a fifth); 0 = no flash. Lane A145."));
-static TAutoConsoleVariable<int32> CVarRinkReactHitTint(TEXT("jam.rink.react.hit.tint"), 1,
+// Lane A210 (wave 4): no flash at all for a plain run into the boards (still seen at 90 cd: the light stands 0.6 m from the man and his figure goes
+// pale): the flash is a HIT's: a man checked into the boards, or going down there. 1 = every hard board hit flashes (package H34).
+static TAutoConsoleVariable<int32> CVarRinkReactHitBump(TEXT("jam.rink.react.hit.bump"), 0,
+	TEXT("The hit flash on a plain run into the boards: 0 (default) none (the cap still rocks); 1 = as for a hit (package H34). Lane A210."));
+static TAutoConsoleVariable<int32> CVarRinkReactHitTint(TEXT("jam.rink.react.hit.tint"), 0,
 	TEXT("The hit flash's colour: 0 warm white, 1 the team colour of the half (blue on x < 0, orange on x > 0), 2 the goal lamps' red. Lane A145."));
 // Lane A160 (evolution 6): the box seen from the ice. Candelas of the light inside a penalty box while its penalty runs (p3_clay; every other tier takes
 // a fifth: the same share as the hit flash). 0 = the dark box of evolution 5. The door hides behind the boards and the clock's hand is 20 pixels from the
@@ -1769,6 +1777,14 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 				Light->SetRelativeLocation(FVector((X + In.X * HitLightInM) * UU, (Y + In.Y * HitLightInM) * UU, HitLightHeightM * UU));
 				const int32 Tint = CVarRinkReactHitTint.GetValueOnGameThread();
 				Light->SetLightColor(Tint == 0 ? FLinearColor(1.f, 0.84f, 0.58f) : Tint == 2 ? FLinearColor(1.f, 0.017f, 0.005f) : X < 0.0 ? FLinearColor(0.05f, 0.30f, 1.f) : FLinearColor(1.f, 0.36f, 0.03f));
+				// Lane A210: a plain bump lights nothing (the light's colour goes black: its candelas, the cap's rock and the tests' read-outs stay). Without
+				// a sim to ask (a test, a preview) it is a hit.
+				if (CVarRinkReactHitBump.GetValueOnGameThread() == 0)
+				{
+					const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+					const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+					if (Sim && Sim->GetSkaters().IsValidIndex(Payload.Who) && !Sim->GetSkaters()[Payload.Who].bContactBoard && !Sim->GetSkaters()[Payload.Who].IsDown()) Light->SetLightColor(FLinearColor::Black);
+				}
 			}
 			LastCapIndex = Cap;
 			LastCapDistM = static_cast<float>(FMath::Sqrt(BestSq));

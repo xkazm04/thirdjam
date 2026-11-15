@@ -64,7 +64,7 @@ static FAutoConsoleCommand GJamScreenStill(TEXT("jam.screen.Still"), TEXT("Take 
 static TAutoConsoleVariable<FString> CVarJamCut(TEXT("jam.Cut"), TEXT("hockey.regular"),
 	TEXT("Cartridge the Hokej game mode loads at start (name in Content/Cartridges or a path). The -cut=<name> launch argument wins."));
 static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0,
-	TEXT("1: the human's skater plays itself (skate behind the puck, shoot when lined up). For PIE proofs through MCP."));
+	TEXT("1: the human's skater plays itself (skate behind the puck, shoot when lined up). For PIE proofs through MCP. 2 (lane A211, capture only): the headless playtester's decision with lane A209's person hand, its presses through the button resolver (ScriptHuman2.h; jam.ScriptHumanKind / Hand / Buttons / Sprint / Seed)."));
 // Lane A135 (track U1, evolution 4; ScriptedHumanInput by the Director's order): the scripted human steers as a hand does, through the camera.
 static TAutoConsoleVariable<int32> CVarJamScriptHumanCam(TEXT("jam.ScriptHumanCam"), 0,
 	TEXT("N > 0 (with jam.ScriptHuman 1): the script's move is turned into held keys (W A S D, eight ways) in the camera's frame, re-decided every N sim frames (12 = a hand's 200 ms), and read back through the live camera's yaw every frame as ReadHumanInput reads the keys: a camera that turns turns the skater. JAMSCREEN hand lines every 600 frames. 0 = the script writes its move on the ice directly (as before). Proofs only."));
@@ -818,6 +818,13 @@ void AHokejGameMode::RestartMatch()
 // far, and charges its shot (holds shoot up to charge_frames_max, then releases) when lined up inside 30 m. Deterministic: sim state only.
 FJamInput AHokejGameMode::ScriptedHumanInput()
 {
+	// Lane A211 (track E1, the eye; the Director's ruling of 15 Nov 01:12): jam.ScriptHuman 2 = the measured hand in the rendered game, capture only
+	// (ScriptHuman2.h / .cpp). Values 0 and 1 never reach this branch; the function is declared here so the edit stays inside this one function.
+	if (CVarJamScriptHuman.GetValueOnGameThread() == 2 && Sim)
+	{
+		extern FJamInput JamScriptHuman2Step(const UJamSim& Sim, const FName& Level, uint64 CutSeed);   // ScriptHuman2.cpp
+		return JamScriptHuman2Step(*Sim, Brain ? Brain->Difficulty : FName(TEXT("pro")), Cartridge ? static_cast<uint64>(Cartridge->Seed) : 1ull);
+	}
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
 	const FVector2D PuckPos = Sim->GetPuck().Pos;
@@ -1578,6 +1585,7 @@ void AHokejGameMode::StepOnce()
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 6 || bKdWasDown) KdObserve();   // lane A73
 	DeliverEvents();
 	HitStopRoute();   // lane A73: before the pawns apply the frame
+	PuckShow.StepSim(Sim, Skaters, Puck);   // lane A210 (wave 4): the carrier the screen shows, told to the pawns before they apply the frame; the play calls
 	// Lane A15 (C-0005): ShrinkRink / GrowRink changed the geometry at this faceoff; rebuild the rink actor from the sim's config.
 	if (Rink && Sim->GetRinkRevision() != BuiltRinkRevision)
 	{
@@ -1646,12 +1654,8 @@ void AHokejGameMode::Tick(float DeltaSeconds)
 	const float Alpha = static_cast<float>(FMath::Clamp(Accumulator / UJamSim::DT, 0.0, 1.0));
 	for (AJamSkater* A : Skaters) A->ApplyRender(Sim->GetSkaters()[A->GetSimIndex()], Alpha);
 	// C-0001 v3: a carried puck is drawn at the carrier visual's puck_socket when the visual exposes one (cosmetic; the sim keeps its own position).
-	{
-		FVector SocketCm;
-		const int32 Carrier = Sim->CarrierIndex();
-		if (Skaters.IsValidIndex(Carrier) && Skaters[Carrier] && Skaters[Carrier]->GetPuckSocketWorld(SocketCm)) Puck->ApplyRenderAt(SocketCm);
-		else Puck->ApplyRender(Sim->GetPuck(), Alpha);
-	}
+	// Lane A210 (wave 4): FJamPuckShow draws it (the shown carrier's socket with a blend at a change of hands; jam.puck.Show 0 = the block of before).
+	PuckShow.Render(Sim, Skaters, Puck, Alpha);
 	{
 		// Lane A14; lane A188: the beacons stay low over the skaters and the puck, the held abilities are drawn on their skaters, and the probe measures.
 		TArray<FVector2D> KeepClear;

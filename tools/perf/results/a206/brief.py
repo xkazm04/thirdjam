@@ -35,3 +35,10 @@ for f in sys.argv[1:]:
         for i in range(5): c[i+1]+=int(m.group(i+2))
     for k,c in cells.items():
         n=c[0]; print(f"{f.split('/')[-1]:10} {k:7} HITS a match: bots felled by the human {c[1]/n:.2f}, his checks landed {c[2]/n:.2f} of {c[3]/n:.2f} presses ({100*c[2]/max(1,c[3]):.0f} %), cross-checks landed {c[4]/n:.2f}, the human knocked down {c[5]/n:.2f}")
+# wave 3: pass quality, defence, far shots (per side)
+for f in sys.argv[1:]:
+    for L in open(f,encoding='utf-8',errors='ignore'):
+        if 'INTEREST cell' not in L: continue
+        cell=_re.search(r'@(\w+) player',L).group(1)
+        for tag,m in zip(('MATES','OPPS'),_re.finditer(r'PASSQ re-passed within 15 f (\d+) % back to the passer (\d+) % done over 6 m (\d+) % of passes \| DEF \(defending\) frames (\d+) on-carrier (\d+) % crease (\d+) % receiver (\d+) % clump (\d+) % \| far shots against (\d+) crease held (\d+) %',L)):
+            g=m.groups(); print(f"{f.split('/')[-1]:10} {cell:7} {tag:5} quick-repass {g[0]} % back-pass {g[1]} % done>6m {g[2]} % | defending: on carrier {g[4]} % crease {g[5]} % receiver {g[6]} % clump {g[7]} % | far shots against {g[8]}, crease held {g[9]} %")

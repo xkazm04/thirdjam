@@ -50,11 +50,21 @@ namespace JamHockeyBrain9Interest
 		int64 Poss[2] = {}, HumanCarry = 0, HumanPressed = 0, AttFrames[2] = {}, NetFront[2] = {};
 		int32 Passes[2] = {}, PassDone[2] = {};
 		int32 Aimed[2][4] = {};
-		int32 ShotsAll[2] = {}, ShotBack[2] = {};   // bot shots; of them, the shooter is the carrier again within 30 frames (his own stick took his shot back)   // shots whose puck leaves within 12 deg of the net (the rest: chips, dumps, clears)
+		int32 ShotsAll[2] = {}, ShotBack[2] = {};
+		// lane A206 wave 3 (EYE 8, EYE 2, EYE 3): pass quality by passing side; defence by defending side (0 the human's side, 1 the opponents)
+		int32 QuickRepass[2] = {}, BackPass[2] = {}, LongDone[2] = {};
+		int64 DefFrames[2] = {}, DefOnCarrier[2] = {}, DefCrease[2] = {}, DefReceiver[2] = {}, DefClump[2] = {};
+		int32 FarShotsAgainst[2] = {}, FarShotsCrease[2] = {};   // bot shots; of them, the shooter is the carrier again within 30 frames (his own stick took his shot back)   // shots whose puck leaves within 12 deg of the net (the rest: chips, dumps, clears)
 		void Add(const FAcc& O)
 		{
 			for (int32 s = 0; s < 2; ++s) for (int32 b = 0; b < 4; ++b) Aimed[s][b] += O.Aimed[s][b];
 			for (int32 s = 0; s < 2; ++s) { ShotsAll[s] += O.ShotsAll[s]; ShotBack[s] += O.ShotBack[s]; }
+			for (int32 s = 0; s < 2; ++s)
+			{
+				QuickRepass[s] += O.QuickRepass[s]; BackPass[s] += O.BackPass[s]; LongDone[s] += O.LongDone[s];
+				DefFrames[s] += O.DefFrames[s]; DefOnCarrier[s] += O.DefOnCarrier[s]; DefCrease[s] += O.DefCrease[s]; DefReceiver[s] += O.DefReceiver[s]; DefClump[s] += O.DefClump[s];
+				FarShotsAgainst[s] += O.FarShotsAgainst[s]; FarShotsCrease[s] += O.FarShotsCrease[s];
+			}
 			HumanCarry += O.HumanCarry; HumanPressed += O.HumanPressed;
 			for (int32 s = 0; s < 2; ++s) { Poss[s] += O.Poss[s]; AttFrames[s] += O.AttFrames[s]; NetFront[s] += O.NetFront[s]; Passes[s] += O.Passes[s]; PassDone[s] += O.PassDone[s]; }
 			PlayFrames += O.PlayFrames;
@@ -89,6 +99,7 @@ namespace JamHockeyBrain9Interest
 		int32 CarryWho = -1; int64 CarryStart = 0; double CarryD0 = 0, CarryDMin = 0, CarrySpeedSum = 0; bool bCarryShot = false;
 		int32 PrevCarrier = -1;
 		int32 PassBy = -1; int64 PassAt = 0;
+		FVector2D PassPos0; int64 RecvFrame[MaxSk] = {}; int32 RecvFrom[MaxSk] = {}; bool bRecvInit = false;
 		bool bCarryLog = false, bEvery = false; int32 Seed = 0; FString Cell; double CarryOpp0 = 0; FVector2D CarryP0;
 		int64 ShotF[MaxSk] = {}; bool bShotOpen[MaxSk] = {};
 		int32 ShotSide = -1, ShotBand = 0, ShotTeam = 0; int64 ShotAt = -10;
@@ -130,6 +141,15 @@ namespace JamHockeyBrain9Interest
 			for (int32 i = 0; i < N; ++i)
 			{
 				if (!Sk[i].bShotThisFrame) continue;
+				{
+					const FVector2D G(Sim->AttackGoalX(Sk[i].Team), 0.0);
+					if (FVector2D::Distance(Sk[i].Pos, G) > 15.0)
+					{
+						const int32 Def = 1 - SideOf(i);
+						++T.A.FarShotsAgainst[Def];
+						for (int32 j = 0; j < N; ++j) if (Sk[j].Team != Sk[i].Team && Sk[j].CanAct() && FVector2D::Distance(Sk[j].Pos, G) < 3.0) { ++T.A.FarShotsCrease[Def]; break; }
+					}
+				}
 				if (Sk[i].bHuman) { ++T.A.HumanShots; continue; }
 				++T.A.Shots[SideOf(i)][Band(GoalD(i))];
 				++T.A.ShotsAll[SideOf(i)]; T.ShotF[i] = Now; T.bShotOpen[i] = true;
@@ -205,11 +225,49 @@ namespace JamHockeyBrain9Interest
 		// passes by bots: complete when the next carrier is a team-mate within 2 s
 		if (T.PassBy >= 0 && (Ci >= 0 && Ci != T.PassBy))
 		{
-			if (Sk[Ci].Team == Sk[T.PassBy].Team) ++T.A.PassDone[SideOf(T.PassBy)];
+			if (Sk[Ci].Team == Sk[T.PassBy].Team)
+			{
+				const int32 Ps = SideOf(T.PassBy);
+				++T.A.PassDone[Ps];
+				if (FVector2D::Distance(Sk[Ci].Pos, T.PassPos0) > 6.0) ++T.A.LongDone[Ps];
+				if (T.RecvFrom[T.PassBy] == Ci && T.PassAt - T.RecvFrame[T.PassBy] <= 60) ++T.A.BackPass[Ps];   // straight back to the man it came from
+				T.RecvFrame[Ci] = Now; T.RecvFrom[Ci] = T.PassBy;
+			}
 			T.PassBy = -1;
 		}
 		if (T.PassBy >= 0 && Now - T.PassAt > 120) T.PassBy = -1;
-		for (int32 i = 0; i < N; ++i) if (!Sk[i].bHuman && Sk[i].bPassThisFrame) { ++T.A.Passes[SideOf(i)]; T.PassBy = i; T.PassAt = Now; }
+		if (!T.bRecvInit) { for (int32 i = 0; i < MaxSk; ++i) { T.RecvFrame[i] = -1000; T.RecvFrom[i] = -1; } T.bRecvInit = true; }
+		for (int32 i = 0; i < N; ++i) if (!Sk[i].bHuman && Sk[i].bPassThisFrame)
+		{
+			++T.A.Passes[SideOf(i)]; T.PassBy = i; T.PassAt = Now; T.PassPos0 = Sk[i].Pos;
+			if (Now - T.RecvFrame[i] <= 15) ++T.A.QuickRepass[SideOf(i)];   // touched again within 15 frames of receiving it
+		}
+		// defence: the carrier's opponents while the puck is in their own half
+		if (Ci >= 0)
+		{
+			const int32 Att = SideOf(Ci), Def = 1 - Att;
+			const int32 DefTeam = Sk[Ci].Team == 0 ? 1 : 0;
+			const FVector2D Own(Sim->AttackGoalX(Sk[Ci].Team), 0.0);   // the defenders' own net
+			if (Puck.Pos.X * FMath::Sign(Own.X) > 0.0)
+			{
+				++T.A.DefFrames[Def];
+				const FVector2D Cp = Sk[Ci].Pos;
+				bool bOn = false, bCrease = false, bRecv = false, bClump = false;
+				int32 Rv = -1; double Rd = 1e9;
+				for (int32 j = 0; j < N; ++j) if (j != Ci && Sk[j].Team == Sk[Ci].Team && Sk[j].CanAct()) { const double D = FVector2D::Distance(Sk[j].Pos, Own); if (D < Rd) { Rd = D; Rv = j; } }
+				for (int32 j = 0; j < N; ++j)
+				{
+					if (Sk[j].Team != DefTeam || !Sk[j].CanAct()) continue;
+					if (FVector2D::Distance(Sk[j].Pos, Cp) < 3.0 && FVector2D::DotProduct(Sk[j].Pos - Cp, Own - Cp) > 0.0) bOn = true;
+					if (FVector2D::Distance(Sk[j].Pos, Own) < 4.0) bCrease = true;
+					if (Rv >= 0 && FVector2D::Distance(Sk[j].Pos, Sk[Rv].Pos) < 3.0) bRecv = true;
+					for (int32 k = j + 1; k < N; ++k)
+						if (Sk[k].Team == DefTeam && Sk[k].CanAct() && !Sk[j].bHuman && !Sk[k].bHuman && FVector2D::Distance(Sk[j].Pos, Sk[k].Pos) < 3.0
+							&& FVector2D::Distance(Sk[j].Pos, Puck.Pos) > 3.0 && FVector2D::Distance(Sk[k].Pos, Puck.Pos) > 3.0) bClump = true;
+				}
+				if (bOn) ++T.A.DefOnCarrier[Def]; if (bCrease) ++T.A.DefCrease[Def]; if (bRecv) ++T.A.DefReceiver[Def]; if (bClump) ++T.A.DefClump[Def];
+			}
+		}
 		// the human carrying: an opponent within 4 m of him
 		if (Me >= 0 && Ci == Me)
 		{
@@ -352,13 +410,16 @@ namespace JamHockeyBrain9Interest
 		for (int32 s = 0; s < 2; ++s)
 		{
 			const int32 Sh = A.Shots[s][0] + A.Shots[s][1] + A.Shots[s][2] + A.Shots[s][3];
-			L += FString::Printf(TEXT(" | %s: fast %.1f %% close %.1f %% idle %.1f %% (in runs > 1 s %.1f %%) drift %.1f %% mean-idle/skater %.1f %% | shots/min %.2f (<10 %d, 10-20 %d, 20-30 %d, >30 %d; aimed %d / %d / %d / %d) | att-third s/match %.1f | carries %d: shot %.0f %% pass %.0f %% lost %.0f %% other %.0f %%; to-net %.0f %% back %.0f %% slow %.0f %%; mean %.1f s | possession %.1f %% | passes %d done %.0f %% | net front in att third %.0f %% | shots taken back by the shooter %d of %d"),
+			L += FString::Printf(TEXT(" | %s: fast %.1f %% close %.1f %% idle %.1f %% (in runs > 1 s %.1f %%) drift %.1f %% mean-idle/skater %.1f %% | shots/min %.2f (<10 %d, 10-20 %d, 20-30 %d, >30 %d; aimed %d / %d / %d / %d) | att-third s/match %.1f | carries %d: shot %.0f %% pass %.0f %% lost %.0f %% other %.0f %%; to-net %.0f %% back %.0f %% slow %.0f %%; mean %.1f s | possession %.1f %% | passes %d done %.0f %% | net front in att third %.0f %% | shots taken back by the shooter %d of %d | PASSQ re-passed within 15 f %.0f %% back to the passer %.0f %% done over 6 m %.0f %% of passes | DEF (defending) frames %lld on-carrier %.0f %% crease %.0f %% receiver %.0f %% clump %.0f %% | far shots against %d crease held %.0f %%"),
 				s == 0 ? TEXT("MATES") : TEXT("OPPS"), Pc(A.Fast[s], A.BotFrames[s]), Pc(A.Close[s], A.BotFrames[s]), Pc(A.Idle[s], A.BotFrames[s]), Pc(A.IdleLong[s], A.BotFrames[s]), Pc(A.Drift[s], A.BotFrames[s]),
 				A.NShare[s] > 0 ? 100.0 * A.SumIdleShare[s] / A.NShare[s] : 0.0,
 				Sh / Min, A.Shots[s][0], A.Shots[s][1], A.Shots[s][2], A.Shots[s][3], A.Aimed[s][0], A.Aimed[s][1], A.Aimed[s][2], A.Aimed[s][3], A.AttThird[s] / 60.0 / Mn,
 				A.Carries[s], Pc(A.CarryShot[s], A.Carries[s]), Pc(A.CarryPass[s], A.Carries[s]), Pc(A.CarryLost[s], A.Carries[s]), Pc(A.CarryOther[s], A.Carries[s]),
 				Pc(A.CarryToNet[s], A.Carries[s]), Pc(A.CarryBack[s], A.Carries[s]), Pc(A.CarrySlow[s], A.Carries[s]), A.Carries[s] > 0 ? A.CarryFr[s] / 60.0 / A.Carries[s] : 0.0,
-				Pc(A.Poss[s], A.PlayFrames), A.Passes[s], Pc(A.PassDone[s], A.Passes[s]), Pc(A.NetFront[s], A.AttFrames[s]), A.ShotBack[s], A.ShotsAll[s]);
+				Pc(A.Poss[s], A.PlayFrames), A.Passes[s], Pc(A.PassDone[s], A.Passes[s]), Pc(A.NetFront[s], A.AttFrames[s]), A.ShotBack[s], A.ShotsAll[s],
+				Pc(A.QuickRepass[s], A.Passes[s]), Pc(A.BackPass[s], A.Passes[s]), Pc(A.LongDone[s], A.Passes[s]),
+				static_cast<long long>(A.DefFrames[s]), Pc(A.DefOnCarrier[s], A.DefFrames[s]), Pc(A.DefCrease[s], A.DefFrames[s]), Pc(A.DefReceiver[s], A.DefFrames[s]), Pc(A.DefClump[s], A.DefFrames[s]),
+				A.FarShotsAgainst[s], Pc(A.FarShotsCrease[s], A.FarShotsAgainst[s]));
 		}
 		L += FString::Printf(TEXT(" | skaters over 10 %% idle %d of %d (max %.1f %%) | loose %d: bot within 15 m %d, a bot on it within 1.5 s %.1f %%, human first %d, mean to first bot touch %.2f s, bots going (first 0.75 s) %.2f | human shots/min %.2f | human carries in att half %.1f s/match, open mate ahead %.1f %% | mates skating away %.1f %% | mates' idle under the yield %.1f %% of their idle | human carry pressed (opp within 4 m) %.1f %% | play min/match %.2f"),
 			A.SkaterOver10, A.SkaterShares, 100.0 * A.MaxIdleShare, A.Loose, A.LooseBotNear, Pc(A.LooseBotIn90, A.LooseBotNear), A.LooseHumanFirst, A.LooseFirstN > 0 ? A.LooseFirstSum / A.LooseFirstN : 0.0,
@@ -452,7 +513,7 @@ namespace JamHockeyBrain9TestsLocal
 	bool Off9(const FJamHockeySense& H)
 	{
 		return H.ShootExtra9M == 0.0 && !H.bAimCone9 && H.OppPace9 == 0.0 && H.AimError9Deg == 0.0 && H.React9Frames == 0 && !H.bNetFront9 && !H.bChipUp9
-			&& H.DriveNet9M == 0.0 && H.Pressure9S == 0.0 && H.ShotCharge9Frames == 0 && !H.bOneTimer9 && H.Poke9Frames == 0 && !H.bMeetPass9 && !H.bAheadWeak9 && !H.bMarkMan9 && !H.bShotLane9 && !H.bDriveFirst9 && H.Dodge9Share == 0.0;
+			&& H.DriveNet9M == 0.0 && H.Pressure9S == 0.0 && H.ShotCharge9Frames == 0 && !H.bOneTimer9 && H.Poke9Frames == 0 && !H.bMeetPass9 && !H.bAheadWeak9 && !H.bMarkMan9 && !H.bShotLane9 && !H.bDriveFirst9 && H.Dodge9Share == 0.0 && H.DropNoHit9Frames == 0 && !H.bPassCare9 && !H.bDefendTeam9;
 	}
 	// 5 v 5 on 90 x 45: the human is skater 0 (team 0, attacks +x); team 1 (attacks -x) skaters 5-9.
 	FJamAIWorld Five()

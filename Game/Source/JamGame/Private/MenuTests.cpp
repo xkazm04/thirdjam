@@ -705,7 +705,9 @@ bool FJamMenuFirstMatchLevel::RunTest(const FString&)
 		// THE RULE: the regular cuts play the player's level; a mode, a take, a saved cut and a path play their own (an empty level).
 		TestEqual(*FString::Printf(TEXT("%s: PLAY NOW's cut plays the player's level"), *Level), UJamMenuFlow::PlayerLevelFor(UJamMenuFlow::FirstCut, false, Picked), Level);
 		TestEqual(*FString::Printf(TEXT("%s: a cut card plays the player's level"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("hockey.raw"), false, Picked), Level);
-		TestEqual(*FString::Printf(TEXT("%s: a Director's mode keeps its own"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("modes/hockey.mode.sudden-death"), false, Picked), FString());
+		// Lane A213: a Director's mode plays HOME's level (jam.menu.ModeLevel 1); its own with the switch at 0.
+		TestEqual(*FString::Printf(TEXT("%s: a Director's mode plays HOME's level (keeps its own at jam.menu.ModeLevel 0)"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("modes/hockey.mode.sudden-death"), false, Picked),
+			UJamMenuFlow::ModeLevelFromHome() ? Level : FString());
 		TestEqual(*FString::Printf(TEXT("%s: a saved cut or a played take keeps its own"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("My Director's Cut"), true, Picked), FString());
 		TestEqual(*FString::Printf(TEXT("%s: a path (a season take) keeps its own"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("C:/x/ladder/take-1.cartridge.json"), false, Picked), FString());
 		// The option the rink reads back.
@@ -825,6 +827,12 @@ public:
 			Test->TestEqual(*FString::Printf(TEXT("%s: the brain's profile"), S.What), Brain, FString(S.Expect));
 			Test->TestTrue(*FString::Printf(TEXT("%s: the level is the player's"), S.What), GM->IsLevelFromSettings());
 			Test->TestEqual(*FString::Printf(TEXT("%s: it is the regular cut"), S.What), GM->GetCartridge()->Id, FString(TEXT("hockey-regular")));
+		}
+		else if (S.Kind == 3 && UJamMenuFlow::ModeLevelFromHome())
+		{
+			// Lane A213: a Director's mode plays the level lit on HOME.
+			Test->TestEqual(*FString::Printf(TEXT("%s: the mode plays HOME's level"), S.What), Brain, FJamSettings::DifficultyString(S.Picked));
+			Test->TestTrue(*FString::Printf(TEXT("%s: the level is the player's"), S.What), GM->IsLevelFromSettings());
 		}
 		else
 		{

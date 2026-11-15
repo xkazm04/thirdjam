@@ -108,6 +108,8 @@ public:
 	// THE RULE (Director, 14 Nov): the player's level wins over the cartridge's for the regular cuts: the shipped cuts of Content/Cartridges, which
 	// is what PLAY NOW and the cut cards of CHOOSE YOUR CUT start. The cartridge's own level stays (this returns empty) for a Director's mode
 	// (modes/...), a season take, a played take listed as a cut, and a saved Director's cut: their level is their design.
+	// Lane A213: jam.menu.ModeLevel (1 default): a Director's mode plays the level lit on HOME.
+	static bool ModeLevelFromHome();
 	static FString PlayerLevelFor(const FString& CutName, bool bSavedOrTake, const FJamSettings& Settings);
 
 	// Unpauses and opens the menu map.

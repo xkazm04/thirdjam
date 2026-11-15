@@ -18,6 +18,25 @@
 #include "UObject/UObjectGlobals.h"
 #include "Misc/PackageName.h"
 
+// Lane A213: the lift's lines are not played for the cross-check (see Observe). 0 = they are (the commentary of before).
+static TAutoConsoleVariable<int32> CVarJamCommLiftIsCross(TEXT("jam.comm.LiftIsCross"), 1,
+	TEXT("Lane A213: 1 (default) the sim's lift event (the human's cross-check) offers only the cross-check's lines, never lift.*; 0 = the lift's lines as before."), ECVF_Default);
+static bool JamCommentaryLiftIsCross() { return CVarJamCommLiftIsCross.GetValueOnAnyThread() != 0; }
+// Lane A213 (A211's EYE LIST 3 item 1, "Tape to tape" for a pass that never left his stick): a pass is narrated when a mate RECEIVES it (the passer's
+// team's PassesReceived grows within PassCatchWaitFrames of the pass event), never on the press or the pass event alone. 0 = on the pass event.
+static TAutoConsoleVariable<int32> CVarJamCommPassOnCatch(TEXT("jam.comm.PassOnCatch"), 1,
+	TEXT("Lane A213: 1 (default) a pass's line plays when a team-mate receives it (within 3 s), never on the press; 0 = on the pass event (the commentary of before)."), ECVF_Default);
+namespace JamCommentaryPassCatch
+{
+	constexpr int64 PassCatchWaitFrames = 180;
+	bool bPending = false;
+	FJamEventPayload Payload;
+	int64 Frame = 0;
+	int32 Team = -1;
+	int32 Received = 0;
+	int32 TeamReceived(const UJamSim& Sim, int32 T) { int32 N = 0; for (const FJamSkaterState& K : Sim.GetSkaters()) if (K.Team == T) N += K.PassesReceived; return N; }
+}
+
 namespace JamCommentary
 {
 	const FName IntensityQuiet(TEXT("quiet"));
@@ -390,6 +409,10 @@ void FJamCommentaryPicker::Observe(FName Event, const FJamEventPayload& Payload,
 		Candidates(X, W, C);
 		for (int32 I : C) if (Bank.Lines[I].Situation == SitCheckCross) E.Candidates.Add(I);
 	}
+	// Lane A213 (A211's EYE 12, the Director's ruling of 01:36): the sim's lift IS the human's cross-check (LMB without the puck, R-0064), so the
+	// lift's own lines ("Reached for the lift, nothing there") call it by the wrong name. With jam.comm.LiftIsCross 1 a lift offers only the
+	// cross-check's lines (check.cross, on a clean one); a missed cross-check plays nothing until device B voices its own lines (FOR B in status/A213.md).
+	if (Event == JamEvents::Lift && JamCommentaryLiftIsCross()) E.Candidates.RemoveAll([&](int32 I) { return Bank.Lines[I].Situation.ToString().StartsWith(TEXT("lift.")); });
 	// board.bank is a goal-time line of event "board": a goal within a second of a board hit.
 	if (Event == JamEvents::Goal && E.Frame - LastBoardFrame <= JamCommentary::BankWindowFrames && W.bPause)
 	{
@@ -721,6 +744,19 @@ void UJamCommentarySystem::HandleBusEvent(FName Event, const FJamEventPayload& P
 	if (W.Teams.Num() == 0) return;
 	if (Event == JamEvents::Bark) { Picker->ObserveBark(W.Frame, IsBarkAtHuman(Payload, W)); return; }
 	if (Event == JamEvents::Signal) return;   // the human's own voice: the booth does not narrate the bench
+	if (Event == JamEvents::Pass && CVarJamCommPassOnCatch.GetValueOnGameThread() != 0)
+	{
+		// Lane A213: held until a mate receives it (HandleSimFrame).
+		const AHokejGameMode* PGM = GameMode();
+		const UJamSim* PSim = PGM ? PGM->GetSim() : nullptr;
+		if (PSim && PSim->GetSkaters().IsValidIndex(Payload.Who))
+		{
+			namespace PC = JamCommentaryPassCatch;
+			PC::bPending = true; PC::Payload = Payload; PC::Frame = W.Frame; PC::Team = PSim->GetSkaters()[Payload.Who].Team;
+			PC::Received = PC::TeamReceived(*PSim, PC::Team);
+		}
+		return;
+	}
 	Picker->Observe(Event, Payload, FVector2D(Payload.Where.X / 100.0, Payload.Where.Y / 100.0), W);
 }
 
@@ -735,6 +771,16 @@ void UJamCommentarySystem::HandleSimFrame(const FJamPresentationFrame& F)
 	UpdateLoops(*Sim, GM);
 	FJamCommentaryWorld W;
 	BuildWorld(W);
+	{
+		// Lane A213: a pass held for its reception is narrated on the frame a mate receives it; dropped when nobody of his team does in time.
+		namespace PC = JamCommentaryPassCatch;
+		if (PC::bPending && (W.Frame < PC::Frame || W.Frame - PC::Frame > PC::PassCatchWaitFrames)) PC::bPending = false;
+		if (PC::bPending && PC::TeamReceived(*Sim, PC::Team) > PC::Received && W.Teams.Num() > 0)
+		{
+			PC::bPending = false;
+			Picker->Observe(JamEvents::Pass, PC::Payload, FVector2D(PC::Payload.Where.X / 100.0, PC::Payload.Where.Y / 100.0), W);
+		}
+	}
 	FJamCommentaryPick P;
 	FString Skip;
 	const bool bStart = Picker->Resolve(W, P, &Skip);
