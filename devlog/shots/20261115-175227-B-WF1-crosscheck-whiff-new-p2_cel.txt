@@ -1,0 +1,1 @@
+Lane WF1, GPU, game camera, cel test figure at 6 m/s. PlayCrossCheck(8) then PlayWhiff(1): the new CrossCheck_Whiff (export52), the miss frame then +2 to +16. Same picture as the clay figure.
