@@ -81,6 +81,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
 	static bool IsSoundOnlyEvent(FName Event);
 
+	// Lane A227 (R-0070: "the player animation should reflect the crosscheck movement and that should be all"): a hit's burst is not spawned. With
+	// jam.fx.HitEffects 0 (default) check (tapped, held, body), knockdown, foul (a check that was a foul) and a skater's board hit spawn no Niagara;
+	// their sounds stay, as do the goal's, the puck trail's, the ability's and the pickups' effects. 1 = before. Pure for the tests.
+	static bool IsHitBurst(FName Event, const FJamEventPayload& Payload);
+	static bool HitEffectsOn();
+	static bool SkipsBurst(FName Event, const FJamEventPayload& Payload, bool bHitEffectsOn) { return !bHitEffectsOn && IsHitBurst(Event, Payload); }
+
 	UFUNCTION(BlueprintCallable, Category = "Jam|Fx")
 	void HandleEvent(FName Event, const FJamEventPayload& Payload);
 

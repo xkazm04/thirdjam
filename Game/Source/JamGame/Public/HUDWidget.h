@@ -131,7 +131,25 @@ public:
 		int64 SimFrame = 0;
 		bool bPress = false;         // a two-role button (LMB / RMB, RT / RB) is down this frame
 		FControlsPanelHeld Held;
+		bool bLegsSpent = false;     // lane A227 (jam.hud.SprintOnIce 0): the SPRINT word dims while the legs are spent
+		bool bBoxed = false;         // lane A227 (jam.cam.BoxFollowsPlay 1): he sits in the penalty box: no row lit, the panel dims as when he is down
 	};
+	// Lane A227 (R-0069 point 3, lane A226's F5): the stamina bar is not drawn on the ice by default; the panel's SPRINT row carries it: lit while he
+	// sprints, its word dimmed while the legs are spent (below SprintSpentBelow of the bar and not sprinting). jam.hud.SprintOnIce 1 = the bar as before.
+	static constexpr float SprintSpentBelow = 0.25f;
+	static bool LegsSpent(float Stamina01, bool bSprinting) { return !bSprinting && Stamina01 < SprintSpentBelow; }
+	static bool SprintOnIceOn();
+	// Lane A227 (lane A226's F3): jam.cam.BoxFollowsPlay (1; 0 = before): while the human sits in the box the camera follows the play and one plate
+	// centre top under the score says IN THE BOX  <seconds>. Pure: the plate's text for the frames left (empty when none).
+	static bool BoxFollowsPlayOn();
+	static constexpr float BoxPlateW = 300.f;
+	static constexpr float BoxPlateH = 44.f;
+	static FString BoxPlateText(int32 FramesLeft) { return FramesLeft > 0 ? FString::Printf(TEXT("IN THE BOX  %d"), (FramesLeft + 59) / 60) : FString(); }
+	// Lane A227 (lane A226's F8): an effect's slot in the front end's type and case, "SPEED  2.8"; jam.hud.EffectWords 0 = "speed 2.8s" as before.
+	static FString EffectSlotText(FName EffectId, int32 FramesLeft, bool bWords) { return bWords
+		? FString::Printf(TEXT("%s  %.1f"), *EffectId.ToString().Replace(TEXT("_"), TEXT(" ")).ToUpper(), FramesLeft / 60.0)
+		: FString::Printf(TEXT("%s %.1fs"), *EffectId.ToString().Replace(TEXT("_"), TEXT(" ")), FramesLeft / 60.0); }
+	static bool EffectWordsOn();
 	// Wave 2 (the Director, 13:26: "the possession half must not blink"): the half shown is not possession frame by frame. Gaining the puck swaps
 	// to WITH on that frame; losing it swaps to WITHOUT once "without" has held PanelHoldFrames sim frames in a row, or at once on a frame he presses
 	// a two-role button (LMB / RMB) while without it; after a swap no other swap for PanelHoldFrames unless such a press forces it. So a lit row and its
@@ -937,6 +955,12 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CountdownText;
 	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> EffectsRow;
 	UPROPERTY(Transient) TObjectPtr<UBorder> EffectsPlate;
+	UPROPERTY(Transient) TObjectPtr<UBorder> BoxPlate;        // lane A227
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> BoxText;      // lane A227
+	void UpdateBoxPlate(const FJamPresentationFrame& F);
+public:
+	FString GetBoxPlateText() const;
+private:
 
 	FJamNetMarker Marker;
 	FJamNetMarker OwnMarker;

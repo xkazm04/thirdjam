@@ -59,6 +59,16 @@ bool UJamHudWidget::BoxedRingOn() { return CVarJamHudBoxedRing.GetValueOnGameThr
 static TAutoConsoleVariable<int32> CVarJamHudChevronsOffPanel(TEXT("jam.hud.ChevronsOffPanel"), 1,
 	TEXT("Lane A224: 1 (default) the far-net and own-net badges and their edge chevrons stand over the controls panel, never on it (lane A222's clamp of the puck arrow); 0 = main 94bb5b48."), ECVF_Default);
 bool UJamHudWidget::ChevronsOffPanelOn() { return CVarJamHudChevronsOffPanel.GetValueOnGameThread() != 0; }
+// Lane A227 (the last lane): what a judge sees first. Each switch's other value is the screen before it.
+static TAutoConsoleVariable<int32> CVarJamHudSprintOnIce(TEXT("jam.hud.SprintOnIce"), 0,
+	TEXT("Lane A227: 0 (default) no stamina bar on the ice (it read as a bar under the skater, R-0069): the controls panel's SPRINT row lights while he sprints and its word dims while the legs are spent; 1 = the bar as before."), ECVF_Default);
+bool UJamHudWidget::SprintOnIceOn() { return CVarJamHudSprintOnIce.GetValueOnGameThread() != 0; }
+static TAutoConsoleVariable<int32> CVarJamCamBoxFollowsPlay(TEXT("jam.cam.BoxFollowsPlay"), 1,
+	TEXT("Lane A227: 1 (default) while the human sits in the penalty box the camera follows the puck (its carrier or the loose puck), eased over 20 frames, and a plate IN THE BOX <s> stands under the score; 0 = before."), ECVF_Default);
+bool UJamHudWidget::BoxFollowsPlayOn() { return CVarJamCamBoxFollowsPlay.GetValueOnGameThread() != 0; }
+static TAutoConsoleVariable<int32> CVarJamHudEffectWords(TEXT("jam.hud.EffectWords"), 1,
+	TEXT("Lane A227: 1 (default) an effect's slot under the score in the front end's type and case (SPEED  2.8); 0 = speed 2.8s as before."), ECVF_Default);
+bool UJamHudWidget::EffectWordsOn() { return CVarJamHudEffectWords.GetValueOnGameThread() != 0; }
 static TAutoConsoleVariable<int32> CVarJamHudMarkerAnchor(TEXT("jam.hud.MarkerAnchor"), 1,
 	TEXT("The human's marker: 1 its tip on the figure's head (the visual's head_socket, else the top of its bounds) and a ghost while the puck is under it (default); 0 the point 1.8 m over the skater's feet."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHudMarkerLiftCm(TEXT("jam.hud.MarkerLiftCm"), UJamHudWidget::YouMarkerHeadLiftCm,
@@ -395,6 +405,9 @@ namespace
 			{
 				FString Icon, Label;
 				if (!I.Split(TEXT(":"), &Icon, &Label)) { Icon = I; Label = I; }
+				// Lane A227: a label "#<effect id>#<frames left>" is written as the live feed writes it (UJamHudWidget::EffectSlotText, jam.hud.EffectWords).
+				FString Id, Frames;
+				if (Label.StartsWith(TEXT("#")) && Label.Mid(1).Split(TEXT("#"), &Id, &Frames)) Label = UJamHudWidget::EffectSlotText(FName(*Id), FCString::Atoi(*Frames), UJamHudWidget::EffectWordsOn());
 				Slots.Emplace(Icon, Label);
 			}
 			for (TObjectIterator<UJamHudWidget> It; It; ++It) if (It->GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) It->SetEffectSlots(Slots);
@@ -562,6 +575,15 @@ void UJamHudWidget::BuildTree()
 	EffectsPlate->SetContent(EffectsRow);
 	// Under the scoreboard line's slot (lane A8's overlay pill at y 112).
 	Place(Root, EffectsPlate, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 158));
+	// Lane A227: the box's plate, centre top under the score: IN THE BOX  <seconds> in the front end's label type (jam.cam.BoxFollowsPlay 1).
+	BoxPlate = S::Plate(T, S::Panel(0.85f), FMargin(14, 6));
+	BoxPlate->SetVisibility(ESlateVisibility::Collapsed);
+	BoxText = MakeText(T, TEXT("BoxText"), S::Font(S::Label, FName("Bold")), S::Paper());   // the label size and face, untracked: the plate measures it whole
+	BoxText->SetJustification(ETextJustify::Center);
+	BoxPlate->SetContent(BoxText);
+	BoxPlate->SetHorizontalAlignment(HAlign_Center);
+	BoxPlate->SetVerticalAlignment(VAlign_Center);
+	Place(Root, BoxPlate, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 122), FVector2D(BoxPlateW, BoxPlateH));   // a fixed box: the text never outgrows it
 	EffectsText = MakeText(T, TEXT("EffectsText"), S::CaptionFont(true), S::Yellow());
 	EffectsText->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, EffectsText, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 158));
@@ -798,7 +820,7 @@ void UJamHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 				TArray<TPair<FString, FString>> Slots;
 				for (const FJamEffectHudEntry& R : GM->GetEffects()->GetHudFeedFor(P->GetFrame().HumanIndex))
 				{
-					Slots.Emplace(R.Icon.ToString(), FString::Printf(TEXT("%s %.1fs"), *R.EffectId.ToString().Replace(TEXT("_"), TEXT(" ")), R.FramesLeft / 60.0));
+					Slots.Emplace(R.Icon.ToString(), EffectSlotText(R.EffectId, R.FramesLeft, EffectWordsOn()));   // lane A227: SPEED  2.8
 				}
 				// The feed owns the row while it has rows; an empty feed clears only what the feed put there (a preview stays).
 				if (Slots.Num()) { SetEffectSlots(Slots); bEffectsFromFeed = true; }
@@ -806,6 +828,19 @@ void UJamHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 			}
 		}
 	}
+}
+
+FString UJamHudWidget::GetBoxPlateText() const { return BoxPlate && BoxText && BoxPlate->GetVisibility() != ESlateVisibility::Collapsed ? BoxText->GetText().ToString() : FString(); }
+
+void UJamHudWidget::UpdateBoxPlate(const FJamPresentationFrame& F)
+{
+	if (!BoxPlate || !BoxText) return;
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	const int32 Left = (BoxFollowsPlayOn() && F.Phase == EJamPhase::Play && Sim && Sim->GetSkaters().IsValidIndex(F.HumanIndex)) ? Sim->GetSkaters()[F.HumanIndex].PenaltyFrames : 0;
+	const FString Text = BoxPlateText(Left);
+	BoxPlate->SetVisibility(Text.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	if (!Text.IsEmpty() && BoxText->GetText().ToString() != Text) BoxText->SetText(FText::FromString(Text));
 }
 
 FString UJamHudWidget::FormatEffects(const TArray<FJamEffectHudEntry>& Rows)
@@ -831,9 +866,9 @@ void UJamHudWidget::SetEffectSlots(const TArray<TPair<FString, FString>>& Slots)
 			UHorizontalBox* Cell = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 			UImage* Icon = S::Icon(WidgetTree, Slots[i].Key, 28.f);
 			S::AddH(Cell, Icon, FMargin(0, 0, 6, 0));
-			UTextBlock* Label = S::Text(WidgetTree, Slots[i].Value, S::CaptionFont(), S::Paper(), false);
+			UTextBlock* Label = S::Text(WidgetTree, Slots[i].Value, EffectWordsOn() ? S::Font(S::Label, FName("Bold")) : S::CaptionFont(), S::Paper(), false);   // lane A227: the front end's label type
 			Label->SetVisibility(ESlateVisibility::HitTestInvisible);
-			S::AddH(Cell, Label, FMargin(0));
+			S::AddH(Cell, Label, EffectWordsOn() ? FMargin(4.f, 0, 14.f, 0) : FMargin(0));   // lane A227: the label face measured short of its ink (filmed: the 8 cut by the plate)
 			S::AddH(EffectsRow, Cell, FMargin(i ? 14.f : 0.f, 0, 0, 0));
 		}
 	}
@@ -888,7 +923,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	// Lane A49: the stamina bar shows while the sprint runs or the bar is not full; yellow while sprinting, chalk while it refills.
 	if (StaminaBack && StaminaFill)
 	{
-		const bool bShow = F.bHumanSprinting || F.HumanStamina01 < 0.999f;
+		const bool bShow = SprintOnIceOn() && (F.bHumanSprinting || F.HumanStamina01 < 0.999f);   // lane A227: off the ice by default
 		StaminaBack->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		StaminaFill->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		StaminaFill->SetBrushColor(F.bHumanSprinting ? S::Yellow() : S::Chalk());
@@ -1041,6 +1076,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateTeach(F);   // lane A213 (track U3): the pill teaches pass and check, three times at most (HUDTeach.cpp)
 	UpdateEndWait(F);   // lane A213 (track U3): the end card waits for the last goal to be seen (HUDEndWait.cpp)
 	UpdateControlsPanel(F);   // lane A222 (track U3): the controls panel (HUDControlsPanel.cpp)
+	UpdateBoxPlate(F);   // lane A227: IN THE BOX  <s>
 	UpdateEndStats(F);   // lane A213 (track U3): the end card says what happened (HUDEndStats.cpp)
 }
 

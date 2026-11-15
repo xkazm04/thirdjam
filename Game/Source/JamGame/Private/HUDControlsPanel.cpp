@@ -294,7 +294,7 @@ void UJamHudWidget::ApplyControlsPanel(const FControlsPanelInput& In)
 	CPanelRowsShown = ControlsPanelRows(UJamInputMap::Get()->GetBindings(), bPad, bShowWith, In.bAbility, In.Held);
 	CPanelSwapAlpha = FMath::Clamp(static_cast<float>(Since + 1) / static_cast<float>(ControlsPanelFadeFrames), 0.f, 1.f);
 	CPanelPossBox->SetRenderOpacity(CPanelSwapAlpha);
-	CPanelPlate->SetRenderOpacity(In.bDown && UJamInputMap::WordsTonight() ? BadgeDownOpacity : 1.f);   // the pill's rule: he lies on the ice, the buttons do nothing
+	CPanelPlate->SetRenderOpacity((In.bDown && UJamInputMap::WordsTonight()) || In.bBoxed ? BadgeDownOpacity : 1.f);   // lane A227: boxed dims too   // the pill's rule: he lies on the ice, the buttons do nothing
 	const FString Head = bShowWith ? TEXT("WITH THE PUCK") : TEXT("WITHOUT THE PUCK");
 	if (CPanelHead->GetText().ToString() != Head) CPanelHead->SetText(FText::FromString(Head));
 	CPanelDot->SetBrushColor(In.TeamColour);
@@ -315,7 +315,7 @@ void UJamHudWidget::ApplyControlsPanel(const FControlsPanelInput& In)
 		}
 		const FControlsPanelRow& R = CPanelRowsShown[RowIx];
 		const bool bTeach = (In.Teach == 0 && R.Verb == EJamVerb::Pass) || (In.Teach == 1 && R.Verb == EJamVerb::Check);
-		const int32 Look = R.bLit ? 2 : bTeach ? 1 : 0;
+		const int32 Look = R.bLit ? 2 : bTeach ? 1 : (R.Verb == EJamVerb::Sprint && In.bLegsSpent) ? 3 : 0;   // lane A227: 3 = the spent legs' dimmed word
 		const FString Paint = FString::Printf(TEXT("%s|%s|%d"), *R.Key, *R.Word, Look);
 		Logged += FString::Printf(TEXT("%s%s=%s%s"), Logged.IsEmpty() ? TEXT("") : TEXT(","), *R.Key, *R.Word, R.bLit ? TEXT("*") : TEXT(""));
 		if (CPanelRowW[I]->GetVisibility() == ESlateVisibility::Collapsed) CPanelRowW[I]->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -327,7 +327,7 @@ void UJamHudWidget::ApplyControlsPanel(const FControlsPanelInput& In)
 		const FLinearColor Fill = Look == 2 ? L::Focus() : Look == 1 ? FJamUiStyle::Yellow() : CapFill();
 		CPanelCap[I]->SetBrush(L::FillBrush(Fill, false));
 		CPanelCapText[I]->SetColorAndOpacity(FSlateColor(Look == 2 ? L::TextOnFocus() : L::Ink()));
-		CPanelWord[I]->SetColorAndOpacity(FSlateColor(Look == 2 ? L::TextOnFocus() : Look == 1 ? FJamUiStyle::Yellow() : L::Text()));
+		CPanelWord[I]->SetColorAndOpacity(FSlateColor(Look == 2 ? L::TextOnFocus() : Look == 1 ? FJamUiStyle::Yellow() : Look == 3 ? L::TextDim() : L::Text()));
 	}
 	if (Logged != CPanelLogged)
 	{
@@ -397,6 +397,15 @@ void UJamHudWidget::UpdateControlsPanel(const FJamPresentationFrame& F)
 		}
 	}
 	if (bSkate) In.Held.Set(EJamVerb::SkateForward);
+	// Lane A227: the SPRINT row carries the stamina (jam.hud.SprintOnIce 0): lit while he sprints, dimmed while the legs are spent.
+	if (!SprintOnIceOn())
+	{
+		In.Held.DownMask &= ~(1u << static_cast<uint32>(EJamVerb::Sprint));
+		if (F.bHumanSprinting) In.Held.Set(EJamVerb::Sprint);
+		In.bLegsSpent = LegsSpent(F.HumanStamina01, F.bHumanSprinting);
+	}
+	// Lane A227: in the box no row is lit and the panel dims (jam.cam.BoxFollowsPlay 1).
+	if (BoxFollowsPlayOn() && Sim->GetSkaters()[F.HumanIndex].InBox()) { In.bBoxed = true; In.Held = FControlsPanelHeld(); }
 	const uint32 LitBefore = [this]() { uint32 M = 0; for (const FControlsPanelRow& R : CPanelRowsShown) if (R.bLit) M |= 1u << static_cast<uint32>(R.Verb); return M; }();
 	const int32 WithBefore = CPanelWith;
 	ApplyControlsPanel(In);

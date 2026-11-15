@@ -252,6 +252,18 @@ bool UJamEffectsBinder::IsSound2D(FName Event)
 		|| Event == JamEvents::PeriodEnd || Event == JamEvents::Clock || Event == JamEvents::SeasonTake;
 }
 
+// Lane A227: a hit shows only in the figures (R-0070); 1 gives back the bursts.
+static TAutoConsoleVariable<int32> CVarJamFxHitEffects(TEXT("jam.fx.HitEffects"), 0,
+	TEXT("Lane A227: 0 (default) no Niagara burst at a check, cross-check, knockdown, foul or a skater's board hit (their sounds stay); 1 = before."), ECVF_Default);
+
+bool UJamEffectsBinder::HitEffectsOn() { return CVarJamFxHitEffects.GetValueOnGameThread() != 0; }
+
+bool UJamEffectsBinder::IsHitBurst(FName Event, const FJamEventPayload& Payload)
+{
+	if (Event == JamEvents::Check || Event == JamEvents::Knockdown || Event == JamEvents::Foul) return true;
+	return Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater"));
+}
+
 bool UJamEffectsBinder::IsSilentEvent(FName Event)
 {
 	// carry fires constantly and has nothing to show or play (B-to-A-0031 ask 1, lane A47).
@@ -431,7 +443,7 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 	}
 	// Lane A45 (R-0031 point 4): a skater into the boards wobbles the glass for GlassWobbleFrames when B's glass carries HitWobble.
 	if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater"))) StartGlassWobble(Payload);
-	if (const TObjectPtr<UNiagaraSystem>* N = Niagara.Find(Event))
+	if (const TObjectPtr<UNiagaraSystem>* N = SkipsBurst(Event, Payload, HitEffectsOn()) ? nullptr : Niagara.Find(Event))   // lane A227
 	{
 		if (UNiagaraSystem* Sys = N->Get())
 		{

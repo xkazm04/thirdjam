@@ -18,6 +18,8 @@
 #include "Rendering/DrawElements.h"
 #include "RadarWidget.h"
 #include "HUDFeed.h"
+#include "HUDWidget.h"   // lane A227: KeepOffPanel
+#include "MenuStyle.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamHit, Log, All);
 
@@ -1158,6 +1160,9 @@ void JamHitEdge::Outline(const FJamEdgeArrow& A, TArray<FVector2f>& Out)
 	}
 }
 
+static TAutoConsoleVariable<int32> CVarJamHudEdgeArrowOffPanel(TEXT("jam.hud.EdgeArrowOffPanel"), 1,
+	TEXT("Lane A227: 1 (default) a man-down edge arrow stands over the controls panel, never on it (as the puck arrow and the net chevrons); 0 = before."), ECVF_Default);
+
 void UJamHitEdgeWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
@@ -1185,6 +1190,8 @@ void UJamHitEdgeWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 		const FVector2D Way(FVector::DotProduct(V, Rt), -FVector::DotProduct(V, Up));
 		FJamEdgeArrow A;
 		A.PosPx = JamHitEdge::EdgePlace(Size, bInFront ? (P - Size * 0.5) : Way, JamHitEdge::EdgeInsetPx);
+		// Lane A227 (lane A226's F7): the arrow stands over the controls panel, never on it (the clamp of the puck arrow and the chevrons).
+		if (CVarJamHudEdgeArrowOffPanel.GetValueOnGameThread() != 0) A.PosPx = UJamHudWidget::KeepOffPanel(A.PosPx, static_cast<float>(Size.Y), UJamHudWidget::ControlsPanelTopNow(), 40.f, FJamUiStyle::EdgePx);
 		const FVector2D Pt = bInFront ? (P - A.PosPx) : Way;
 		A.AngleRad = static_cast<float>(FMath::Atan2(Pt.Y, Pt.X));
 		const int32 Team = M.TeamOf(D.Skater);

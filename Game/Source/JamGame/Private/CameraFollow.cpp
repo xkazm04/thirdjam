@@ -9,6 +9,7 @@
 #include "LookTierSwitcher.h"
 #include "HokejGameMode.h"   // lane A101: the kick reads the outcome and the ratio of the hit from the sim
 #include "JamSim.h"
+#include "HUDWidget.h"   // lane A227: jam.cam.BoxFollowsPlay
 
 // A40: 1 = the H11 camera (pull in along the arm to 0.3 m inside a rectangle, no lift, no yaw rule, no far-net lead). Presentation only; the before stills of CAMERA.md use it.
 static TAutoConsoleVariable<int32> CVarJamCameraLegacy(TEXT("jam.camera.Legacy"), 0,
@@ -1227,7 +1228,29 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 				const FIntPoint Sz = GEngine->GameViewport->Viewport->GetSizeXY();
 				if (Sz.X > 0 && Sz.Y > 0) Live.KeepAspect = (float)Sz.X / (float)Sz.Y;
 			}
-			PoseCurrent = StepThirdPerson(Live, Filter, Frame);
+			// Lane A227 (jam.cam.BoxFollowsPlay 1): while the human sits in the box the rig follows the puck (its carrier, or the loose puck) from the usual
+			// height and angle, eased in over BoxEaseFrames and back to him as he steps out. The rig is the same; only the point it follows moves.
+			const AHokejGameMode* BoxGM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+			const UJamSim* BoxSim = BoxGM ? BoxGM->GetSim() : nullptr;
+			const bool bBoxed = UJamHudWidget::BoxFollowsPlayOn() && BoxSim && BoxSim->GetSkaters().IsValidIndex(Frame.HumanIndex) && BoxSim->GetSkaters()[Frame.HumanIndex].InBox();
+			BoxBlend = FMath::Clamp(BoxBlend + (bBoxed ? 1.f : -1.f) / static_cast<float>(BoxEaseFrames), 0.f, 1.f);
+			if (BoxBlend > 0.f)
+			{
+				FJamPresentationFrame Follow = Frame;
+				FJamPresentationSkater& H = Follow.Skaters[Frame.HumanIndex];
+				const int32 Carrier = BoxSim ? BoxSim->CarrierIndex() : -1;
+				const bool bCarried = Frame.Skaters.IsValidIndex(Carrier) && Carrier != Frame.HumanIndex;
+				const FVector2D PlayM = bCarried ? Frame.Skaters[Carrier].PosM : Frame.PuckM;
+				const float PlayYaw = bCarried ? Frame.Skaters[Carrier].YawDeg : Filter.YawDeg;
+				const float W = BoxBlend * BoxBlend * (3.f - 2.f * BoxBlend);   // smoothstep
+				H.PosM = FMath::Lerp(S0.PosM, PlayM, W);
+				H.YawDeg = S0.YawDeg + FMath::FindDeltaAngleDegrees(S0.YawDeg, PlayYaw) * W;
+				PoseCurrent = StepThirdPerson(Live, Filter, Follow);
+			}
+			else
+			{
+				PoseCurrent = StepThirdPerson(Live, Filter, Frame);
+			}
 			KeepLive = Live;
 		}
 	}

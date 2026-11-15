@@ -496,6 +496,12 @@ private:
 		bool bHavePrev = false;
 	};
 	FKeepProbe Probe;
+	// Lane A227: the box's follow (0 him .. 1 the play), stepped one sim frame at a time over BoxEaseFrames.
+	float BoxBlend = 0.f;
+public:
+	static constexpr int32 BoxEaseFrames = 20;
+	float GetBoxBlend() const { return BoxBlend; }
+private:
 	FJamCameraSettings KeepLive;   // the settings of the last third-person step (the probe reads the fraction and the aspect)
 	void ProbeObserve(const FJamPresentationFrame& Frame, const FJamCameraSettings& Live);
 };
