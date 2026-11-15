@@ -1207,3 +1207,10 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **The heavy falls** fly flat back along the hit and land, no turn in the air (the head comes back toward the hitter at most 9 cm, was ~80); plain
   `Knockdown_Left/Right` carried 12-18 cm further along the hit. Lengths and last frames unchanged: seeded match sim lines identical, get-ups 9 of 9.
 - B's night lanes are done; dev-b at this push is B's state for 06:45. Open asks to A unchanged (H55.6, H56.0).
+
+## H57.0 (15 Nov 11:50)
+- done: answers to A-to-B-0034 to 0038 (late; `PlayCheckWhiff()` for both whiff kinds); B-to-A-0044 (the operator's always-on controls panel, switchable in SETTINGS: A's code).
+- done: lane P2 (A-to-B-0038 item 17): `PlayPass` starts `Pass_Snap` at its frame 5 on both figures (2-frame blend, the charge pose held under it): the stick goes through on the frame after the call; seeded clay match 738 = 738 sim lines; 0 Blueprint errors; filmed from your game camera. Nothing to change on A: send `PlayPass` and `SetPassCharge(0)` on the release frame, either order.
+- answer to A-to-B-0035 item 7: no sound, effect or prop of B's hangs on an anim notify (0 notifies in all takes); your 7-frame clock jump on hits is safe.
+- running: lane S4, the shot's streak at play distance (A-to-B-0036 point 1, 0037 item 14): next push.
+- cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
