@@ -75,6 +75,18 @@ direction, on two machines, in four days. Menu, HUD and mode artwork were made w
 with AI 3D tools, the commentary and sound with AI audio tools; all of it is declared as generated in the credits.
 Built with Unreal Engine 5.9. The full dev log, turn by turn, is here: [DEV LOG LINK]
 
+## Pre-jam content
+
+Everything made before the jam started (before 12 November) is tooling for development and testing: 21 commits on the evening of 11 November, closed with the git tag pre-jam at 01:57 on 12 November, 212 files, none of them under the game's folder. No game code, no game asset and no line of the shipped game existed before the start. The list:
+
+- The plan: the rules digest, the clock, the architecture, the size budget, the gate and prep checklists, and the research notes on hockey, skaters and animation sources.
+- Agent setup: the protocol for one person directing AI agents on two machines, the ownership map of who may edit what, the templates for handoffs, status files and contracts, and the unattended start prompts and launcher scripts for both machines.
+- MCP configuration: an MCP client for driving the Unreal editor, its configuration template, the inventory of the editor's tools, and notes on what animation and physics work can be done through it.
+- Prompt library: the system and repair prompts of the in-game Designer (the feature that writes a new game from one sentence), its evaluation harness, and six recipe notes for agents (the look, the third-person camera, the toy figure, retargeting a skater, skating physics, animation sources).
+- Scripts: build, package, smoke-test and editor-watchdog scripts; the gate scripts for ownership and the asset ledger; the dev log pipeline with its redaction of secrets and its tests; the data schema for a game's rules with a validator, its tests and 18 test fixtures; a client script for an AI 3D generation service; a fetch script for an engine graphics branch that was evaluated and not used.
+- Assets: none in the game. For reference only: 47 AI-generated look-study images made on 11 November to choose an art direction, with their review pages, declared in the repository as never imported, never traced and never shipped; and 37 measurement stills from four throwaway experiments (a look test, a camera test, a generated-figure trial, animation source tests) whose test content stayed in a scratch folder outside the repository. The look that ships was rebuilt in the engine during the jam.
+- An empty asset ledger and the repository's readme, ignore and attribute files.
+
 ## How to run
 
 Unzip `Hokej_Hokej.zip` (about 283 MB) anywhere and run `ThirdJam.exe`.
