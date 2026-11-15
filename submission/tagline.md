@@ -1,4 +1,4 @@
-# Title treatments and taglines (lane A89's words; truth marks re-read by lane A180, Sat 14 Nov 2026 08:00)
+# Title treatments and taglines (lane A89's words; truth marks re-read by lane A180, Sat 14 Nov 2026 08:00, and by lane A225, Sun 15 Nov 16:40, against package H43)
 
 Device B owns the logo and the banner; these are the words only. Voice: `docs/experiments/VOICE.md`. Teen rating holds: no gore, clay figures, no real names, no brands.
 
@@ -6,7 +6,7 @@ Device B owns the logo and the banner; these are the words only. Voice: `docs/ex
 
 **Hockey with the whistle taken out.**
 
-True of the game this morning (TRUTH N05, TG01): no fouls and no box in the regular game, the season and eleven of twelve modes; one mode, Glass House, keeps the whistle on purpose. The game prints this line on its own first screen. Friday's fallback line is no longer needed as a fallback.
+True of package H43 (TRUTH N05, TG01, P5-TG01): no fouls and no box in the regular game, the season and eleven of twelve modes; one mode, Glow Ice, keeps the whistle on purpose. The game prints this line on its own first screen. Friday's fallback line is no longer needed as a fallback.
 
 ## Three title treatments
 
@@ -16,7 +16,7 @@ True of the game this morning (TRUTH N05, TG01): no fouls and no box in the regu
 
 The banner picture that exists: `devlog/shots/20261113-205819-B-br4-banner-1920.png` (device B: HOKEJ gouged in the ice, 1920 x 1080).
 
-## Six taglines, each true this morning
+## Six taglines, each true of package H43
 
 | # | Line | Where it goes | Truth row |
 |---|---|---|---|
@@ -35,8 +35,10 @@ The banner picture that exists: `devlog/shots/20261113-205819-B-br4-banner-1920.
 - "stop on the line" as an order (the line is an offer);
 - any win rate or percentage: "three levels, a newcomer's, yours, and a wall" is fine, a number is not;
 - a horn, an ink outline, a replay.
+- a line, bar or mark drawn at a hit or ahead of a carrier (none is drawn since R-0070); "rookies rarely hit" (the menu now says rookies are a step slower);
+- "cut" as the name of a mode or of the menu's screens (the menu says MODES, MAKE YOUR OWN, CHANGE A RULE).
 
 ## Open with the operator
 
-- [O17] The video's narration lines proposed by device B ("Pick your cut.", "Full speed. Full price.", "Stop. Cut. Gone.", "Once a period, you change the rules.", "That's the cut.") use the word "cut" on the ice, which the voice guide keeps for the menu: allowed in a trailer, or rewritten? They are proposals; none is on the page.
+- [O17] The video's narration lines proposed by device B ("Pick your cut.", "Full speed. Full price.", "Stop. Cut. Gone.", "Once a period, you change the rules.", "That's the cut.") use the word "cut", which the game itself no longer prints (its menu says MODES and CHANGE A RULE): allowed in a trailer as the theme's word, or rewritten? They are proposals; none is on the page.
 - [O3] "Clay skaters" in line 3 rests on clay being the first look: true by cartridge and by a window still; his eye says yes or no at 10:00.

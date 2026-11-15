@@ -5,6 +5,8 @@ Freezes already ruled (R-0047): rule changes land until **Saturday 19:00**, cont
 Owners: **O** = the operator, **D** = the Director (device A and its lanes), **B** = device B. "T-n" = hours before the submit.
 One rule runs through the whole list: **the film, the pictures and the page describe the package that is uploaded**, so the package comes first and everything else is made from it.
 
+> **Lane A225, Sun 15 Nov 16:40: the plan below has slipped.** The candidate is **H43** (main `a12ead1b`, cut 16:08, acceptance run, menu row and ship row green; **without the DLSS plugin**, whose restore waits for the operator's word). The words were checked against it (`TRUTH.md` pass 5, ready by 17:30). The recording starts about 18:00, the answers cut-off stays **18:00**, the page is final at 19:00, the submit at 22:00. If DLSS comes back, the package is re-cut, the four DLSS sentences of `TRUTH.md` section 5.6 switch to their "with" version, and the film should be recorded on that package, not on H43. `README.txt` inside H43 is the text before pass 5: the re-cut, or a replaced file in the zip, carries the new one.
+
 ## Saturday (the game closes)
 
 | When | T- | What | Owner | Waits on |

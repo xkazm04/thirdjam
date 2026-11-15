@@ -2,6 +2,8 @@
 
 > **Lane A180, Sat 14 Nov 08:00: the shot table below is superseded by `SHOTLIST.md`** (drill 22 now stages the nudge and the hit; the package is H30 or its successor; the stands, the level switch and the stop line exist; device B's edit is one command). The notes on what a Shipping and a Development package can stage still hold.
 
+> **Lane A225, Sun 15 Nov 16:40 (pass 5):** this table is history. Its menu words (CHOOSE YOUR CUT, the cards, TIME OUT, the Director's Call) and the drawn marks it mentions are gone from package H43; the shots are in `SHOTLIST.md` section 3.
+
 Truth rows: `submission/TRUTH.md` VS01 to VS15. Marks: `[waits: X]` = the shot is only filmable when X lands or delivers.
 Rules (docs/PLAN.md section 2): 1920x1080 or higher, 30 to 60 s, theme (Director's Cut) visible in the first seconds, no logos or trademark words (captions are ours; engine and vendor names appear nowhere on screen). Voice: `docs/experiments/VOICE.md`, taglines `submission/tagline.md`.
 Machine facts from A88: posted keys and mouse buttons reach the game window, the cursor cannot be posted in a Shipping build, recording is PrintWindow-based (`tools/media/take.ps1`), no audio device on this machine.

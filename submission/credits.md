@@ -1,11 +1,15 @@
 # Credits and provenance (from ASSETS.md, built by tools/media/credits.mjs)
 
-Rows: 1654; shipped: 976. Origin counts (all rows): {"original":1011,"ai-generated":581,"sourced":62}. Shipped: {"original":524,"ai-generated":451,"sourced":1}.
+Rows: 2281; shipped: 1454. Origin counts (all rows): {"original":1483,"ai-generated":732,"sourced":66}. Shipped: {"original":881,"ai-generated":568,"sourced":5}.
 
-## Sourced (not original, not AI-generated): 62 rows, 1 shipped
+## Sourced (not original, not AI-generated): 66 rows, 5 shipped
 
 | path | kind | shipped | tool / origin | licence | url |
 |---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/UI/Fonts/FF_Hokej_Regular.uasset | font | y | Roboto shipped with UE 5.9 (Engine/Content/Slate/Fonts/Roboto-Regular.ttf) imported as a Font Face | Apache License 2.0 (Engine/Source/ThirdParty/Licenses/ROBOTO_License.txt; font data copyright Google 2012) | https://www.fontsquirrel.com/license/roboto (from the engine Roboto.tps; nothing downloaded) |
+| Game/Plugins/JamAssets/Content/UI/Fonts/FF_Hokej_Bold.uasset | font | y | Roboto shipped with UE 5.9 (Engine/Content/Slate/Fonts/Roboto-BoldCondensed.ttf) imported as a Font Face | Apache License 2.0 (Engine/Source/ThirdParty/Licenses/ROBOTO_License.txt; font data copyright Google 2012) | https://www.fontsquirrel.com/license/roboto (from the engine Roboto.tps; nothing downloaded) |
+| Game/Plugins/JamAssets/Content/UI/Fonts/FF_Hokej_Black.uasset | font | y | Roboto shipped with UE 5.9 (Engine/Content/Slate/Fonts/Roboto-Black.ttf) imported as a Font Face | Apache License 2.0 (Engine/Source/ThirdParty/Licenses/ROBOTO_License.txt; font data copyright Google 2012) | https://www.fontsquirrel.com/license/roboto (from the engine Roboto.tps; nothing downloaded) |
+| Game/Plugins/JamAssets/Content/UI/Fonts/F_Hokej_Display.uasset | font | y | UE Font asset over the three Roboto Font Faces | Apache License 2.0 (Engine/Source/ThirdParty/Licenses/ROBOTO_License.txt; font data copyright Google 2012) | https://www.fontsquirrel.com/license/roboto (from the engine Roboto.tps; nothing downloaded) |
 | Game/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll | other | y | NVIDIA DLSS 4.5 Unreal plugin v8.9.0 (UE 5.8 build, ported to 5.9) | NVIDIA RTX SDKs License + RTX Supplement (v. 2024-03-14) | https://developer.nvidia.com/downloads/assets/gameworks/downloads/secure/dlss/ue-dlss-5.8/8.9.0/2026.10.16_ue5.8_dlss4.5plugin_v8.9.0.zip |
 | Game/Content/P4/Meshy/Anims/MF_Unarmed_Jog_Fwd_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
 | Game/Content/P4/Meshy/Anims/MF_Unarmed_Walk_Fwd_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
@@ -71,15 +75,15 @@ Rows: 1654; shipped: 976. Origin counts (all rows): {"original":1011,"ai-generat
 
 ## Findings
 
-- Sourced rows with an empty licence or url: 0 of 62.
+- Sourced rows with an empty licence or url: 0 of 66.
 
 ## AI-generated content (declared as such, not "sourced"), by tool
 
-- ElevenLabs TTS: 340 rows
+- ElevenLabs TTS: 415 rows
+- ElevenLabs sound effects: 103 rows
 - Codex image generation: 52 rows
 - Meshy: 50 rows
 - Hyper3D Rodin: 48 rows
-- ElevenLabs sound effects: 27 rows
 - Codex concept sheet: 10 rows
 - Meshy text-to-3d meshy-6-lite: 10 rows
 - Hyper3D Rodin Gen-2.5-Low: 10 rows
