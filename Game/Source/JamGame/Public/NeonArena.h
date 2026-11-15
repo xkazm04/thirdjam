@@ -20,6 +20,7 @@ class UProceduralMeshComponent;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
 class UMeshComponent;
+class UStaticMeshComponent;
 
 UCLASS(ClassGroup = (Jam))
 class JAMGAME_API UJamNeonArena : public USceneComponent
@@ -61,6 +62,8 @@ public:
 	int32 GetGoalPulses() const { return GoalPulses; }
 	// Figure material slots lit since the last Draw (B's trims ask); a read-out for the proof.
 	int32 GetFiguresLit() const { return FiguresLit; }
+	// Lane A223: material slots of the penalty boxes that took the dark sheet's material at the last Draw (`jam.look.NeonBoxes`); 0 off the grid arena.
+	int32 GetBoxSlotsDarkened() const { return BoxSlotsDarkened; }
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -79,11 +82,16 @@ private:
 	void BindBus(UJamEventBus* InBus);
 	void ApplyFigure(AActor* Skater, int32 Team);
 	void RestoreFigures();
+	void DarkenBoxes(ARinkActor* Rink, bool bSheet);   // lane A223
+	void RestoreBoxes();
 	UFUNCTION() void OnJamEvent(FName Event, const FJamEventPayload& Payload);
 
 	struct FTile { FVector2D Centre = FVector2D::ZeroVector; float Emissive = -1.f; };
 	struct FFigureSave { TWeakObjectPtr<UMeshComponent> Mesh; int32 Slot = -1; TWeakObjectPtr<UMaterialInterface> Original; TWeakObjectPtr<UMaterialInstanceDynamic> Mid; TMap<FName, FLinearColor> Vectors; TMap<FName, float> Scalars; };
 	TArray<FFigureSave> SavedFigures;
+	struct FBoxSave { TWeakObjectPtr<UStaticMeshComponent> Mesh; int32 Slot = -1; TWeakObjectPtr<UMaterialInterface> Original; };
+	TArray<FBoxSave> SavedBoxes;      // lane A223: the boxes' daylight materials before Draw darkened them
+	int32 BoxSlotsDarkened = 0;
 	struct FTrail { TWeakObjectPtr<AActor> Who; int32 Team = 0; bool bPuck = false; TArray<FVector> Points; };
 
 	FJamGameConfig Config;

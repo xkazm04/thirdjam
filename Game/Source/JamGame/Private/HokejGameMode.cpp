@@ -358,6 +358,7 @@ bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 	if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>())
 	{
 		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
+		Look->SetFog(static_cast<float>(G.Look.FogDensity));   // lane A223: look.fog_density drawn (B-to-A-0046 point 3)
 		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
 	}
 	// Lane A31 (B-to-A-0021 point 1): the figure follows the tier at once; a changed class respawns the visuals with the setup calls repeated.
@@ -545,6 +546,7 @@ void AHokejGameMode::BuildMatch()
 	if (ULookTierSwitcher* Look = World->GetSubsystem<ULookTierSwitcher>())
 	{
 		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
+		Look->SetFog(static_cast<float>(G.Look.FogDensity));   // lane A223: look.fog_density drawn (B-to-A-0046 point 3)
 		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
 	}
 

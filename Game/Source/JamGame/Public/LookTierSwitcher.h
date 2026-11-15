@@ -7,8 +7,9 @@
 // B-to-A-0018 (lane A21): tier p3_clay (/JamAssets/Rigs/LR_P3_Clay). The previous rig is UNLOADED, never hidden, so the clay rig's
 // BP_LookParams restores MPC_Look on EndPlay and the night tier never keeps the clay surface response. Only local lights are scaled:
 // a post-process volume's depth-of-field focus distance is a setting, not a transform, and is never scaled with the rink.
-// The trim strips' Emissive is per tier (night 30, clay 12, day 30, neon 30), overridable by the cartridge key look.trim_emissive;
+// The trim strips' Emissive is per tier (night 30, clay 12, day 10 from `jam.look.TrimDay` since lane A223, neon 30), overridable by the cartridge key look.trim_emissive;
 // the rink reads it from here (GetTrimEmissiveFor) and SetTier pushes it to every rink in the world. The beacon stays at B's 40.
+// Lane A223: the cartridge's look.fog_density is drawn here too (SetFog: one height fog owned by this switcher; `jam.look.Fog*`; docs/experiments/LOOKS.md).
 #pragma once
 
 #include "CoreMinimal.h"
@@ -16,6 +17,7 @@
 #include "LookTierSwitcher.generated.h"
 
 class ULevelStreamingDynamic;
+class AExponentialHeightFog;
 
 JAMGAME_API DECLARE_LOG_CATEGORY_EXTERN(LogJamLook, Log, All);
 
@@ -56,7 +58,7 @@ public:
 	static float RigScaleFor(float RinkLengthM);
 
 	// B-to-A-0018 point 5: the trim strips' Emissive a tier ships with (schema default of look.trim_emissive per tier):
-	// l1_day 30, l2_night 30, l3_neon 30, p3_clay 12, p4_broadcast 30. Unknown tier: 30.
+	// l1_day `jam.look.TrimDay` (10; 30 before lane A223), l2_night 30, l3_neon 30, p3_clay 12, p4_broadcast 30. Unknown tier: 30.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	static float DefaultTrimEmissiveFor(const FString& Tier);
 
@@ -74,6 +76,25 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	bool HasTrimEmissiveOverride() const { return bTrimOverride; }
+
+	// Lane A223 (B-to-A-0046 point 3): the cartridge's look.fog_density drawn. The engine height-fog density a cartridge value is drawn with: 0 below
+	// `jam.look.FogFrom` (0.03) or with `jam.look.FogScale` 0 (the picture of before the lane), else the value x FogScale (8).
+	UFUNCTION(BlueprintPure, Category = "Jam|Look")
+	static float FogDensityFor(float CartridgeDensity);
+	// look.fog_density of the match's cartridge. Draws (or hides) one height fog owned by this switcher; a rig with a height fog of its own keeps it.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Look")
+	void SetFog(float CartridgeDensity);
+	// The engine density of A's height fog as drawn now (0 = none).
+	UFUNCTION(BlueprintPure, Category = "Jam|Look")
+	float GetFogDrawn() const { return FogDrawn; }
+	// Pushes the `jam.look.*` variables to the live world again (a console change calls it).
+	void RefreshLookVars();
+	// The fog's height falloff (near-uniform to the hall's roof: it is fog by distance) and its colour before `jam.look.FogBright`: a pale cold blue. Judged on
+	// film: a third of this (0.16, 0.21, 0.30) read as the hall going dark, not as fog; twice this washed the ice white.
+	static constexpr float FogHeightFalloff = 0.05f;
+	static constexpr float FogColourR = 0.48f;
+	static constexpr float FogColourG = 0.63f;
+	static constexpr float FogColourB = 0.90f;
 
 	// Streams in the tier's rig at the scale for RinkLengthM and requests unload of every other rig this switcher loaded. Unknown tier:
 	// logs an error, changes nothing, returns false. Same tier and same scale as the current one: no-op, returns true. A different scale
@@ -116,4 +137,10 @@ private:
 	bool bFloorLowered = false;
 	bool bTrimOverride = false;
 	float TrimOverride = 30.f;
+	// Lane A223: the fog asked by the cartridge, the density drawn, the one fog actor.
+	void PushFog();
+	float FogAsked = 0.f;
+	float FogDrawn = 0.f;
+	UPROPERTY(Transient)
+	TObjectPtr<AExponentialHeightFog> FogActor;
 };

@@ -73,6 +73,19 @@ bool FJamRinkNeonArenaTest::RunTest(const FString& Parameters)
 			TestTrue(TEXT("grid tiles drawn (90 x 45: 12 x 6)"), A->GetGridTileCount() == 72);
 			TestFalse(TEXT("the painted marks are hidden"), Rink->Markings->IsVisible());
 			TestFalse(TEXT("the ochre kick plate is hidden"), Rink->KickPlate->IsVisible());
+			// Lane A223 (B-to-A-0046 point 2): Glow Ice whistles, so its two penalty boxes stand on this tier; their daylight slots (board, bench, kick plate:
+			// three a box) take the dark sheet's material, and `jam.look.NeonBoxes 0` gives back the cream boxes of before.
+			TestEqual(TEXT("the two penalty boxes are on the dark sheet (6 slots)"), A->GetBoxSlotsDarkened(), 6);
+			if (IConsoleVariable* BoxCv = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.look.NeonBoxes")))
+			{
+				BoxCv->Set(0, ECVF_SetByCode);
+				Rink->Build(Glow->Game);
+				TestEqual(TEXT("jam.look.NeonBoxes 0: the boxes keep their daylight materials"), A->GetBoxSlotsDarkened(), 0);
+				BoxCv->Set(1, ECVF_SetByCode);
+				Rink->Build(Glow->Game);
+				TestEqual(TEXT("jam.look.NeonBoxes 1 again: dark"), A->GetBoxSlotsDarkened(), 6);
+			}
+			else AddError(TEXT("jam.look.NeonBoxes does not exist"));
 
 			// A puck at (10, 5) m: two frames of samples give it a trail and light the tile under it.
 			AJamPuck* Puck = World->SpawnActor<AJamPuck>(FVector(1000, 500, 0), FRotator::ZeroRotator);
@@ -91,6 +104,7 @@ bool FJamRinkNeonArenaTest::RunTest(const FString& Parameters)
 			// A tier switch away and back without a rebuild.
 			UJamNeonArena::OnTierChanged(Rink, TEXT("p3_clay"));
 			TestFalse(TEXT("cleared on clay"), A->IsArenaDrawn());
+			TestEqual(TEXT("off the grid arena the boxes have their own materials back"), A->GetBoxSlotsDarkened(), 0);
 			TestTrue(TEXT("the marks are back on clay"), Rink->Markings->IsVisible());
 			UJamNeonArena::OnTierChanged(Rink, TEXT("l3_neon"));
 			TestTrue(TEXT("drawn again on l3_neon"), A->IsArenaDrawn() && A->GetGridTileCount() == 72);

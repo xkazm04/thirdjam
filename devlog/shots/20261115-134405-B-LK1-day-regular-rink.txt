@@ -1,0 +1,1 @@
+Lane LK1, the day rig on the regular 90 x 45 rink (a scratch copy of hockey.regular with look.tier l1_day), faceoff at 0.9 s, 1920x1080: the 90 m crowd actor fills both sides, the sky and tree line sit above the far stands.

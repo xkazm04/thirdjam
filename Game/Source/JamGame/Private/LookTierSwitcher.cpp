@@ -6,6 +6,8 @@
 #include "Engine/SkyLight.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/StaticMeshActor.h"
+#include "Engine/ExponentialHeightFog.h"
+#include "Components/ExponentialHeightFogComponent.h"
 #include "Components/LocalLightComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/SkyLightComponent.h"
@@ -21,6 +23,41 @@
 
 DEFINE_LOG_CATEGORY(LogJamLook);
 
+// Lane A223 (track L1; B-to-A-0046): three looks the trailer shows. Every number is a variable whose neutral value gives back the picture of before.
+// Point 1: the board trim in daylight. Emissive 30 is a light strip against white ice under B's day rig (a halo, the colour washed to pale yellow and pale
+// cyan); at 10 it is the trim's own colour, painted on the boards.
+static TAutoConsoleVariable<float> CVarLookTrimDay(TEXT("jam.look.TrimDay"), 10.f,
+	TEXT("Lane A223: Emissive of the board trim on the l1_day tier (Pond, Outnumbered). 10 (default) reads as painted trim in daylight; 30 = as before the lane (a glowing line). A cartridge's look.trim_emissive still wins."), ECVF_Default);
+// Point 3: the cartridge's look.fog_density was parsed and never drawn. A cut that asks at least FogFrom gets a height fog of density look.fog_density x FogScale
+// (Fog of War asks 0.04: 0.32, about half of a skater 30 m away kept and a tenth of the far boards); a cut that asks less (hockey.boost and the ladder's neon
+// takes ask 0.02) keeps its picture of before. A rig that brings a height fog of its own (LR_L3_Neon) keeps it: A draws none there.
+static TAutoConsoleVariable<float> CVarLookFogScale(TEXT("jam.look.FogScale"), 8.f,
+	TEXT("Lane A223: engine height-fog density drawn per unit of the cartridge's look.fog_density (Fog of War: 0.04 x 8 = 0.32). 0 = no fog is drawn, as before the lane."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarLookFogFrom(TEXT("jam.look.FogFrom"), 0.03f,
+	TEXT("Lane A223: the smallest look.fog_density that draws fog; a cut that asks less keeps the picture it had (0.02: hockey.boost, the ladder's neon takes)."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarLookFogStartM(TEXT("jam.look.FogStartM"), 10.f,
+	TEXT("Lane A223: metres from the camera where the fog begins: his own skater, the puck on his stick and the nearest opponents stay clear of it."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarLookFogMax(TEXT("jam.look.FogMax"), 0.9f,
+	TEXT("Lane A223: the most the fog may cover (0..1): the far boards and the far goal stay a shape in it, never gone."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarLookFogBright(TEXT("jam.look.FogBright"), 1.f,
+	TEXT("Lane A223: multiplies the fog's own colour (a pale cold blue, lighter than the dark hall so that it reads as fog and not as darkness; 0.33 was the first try and read as darkness, 2 washes the ice white)."), ECVF_Default);
+
+// A variable changed at the console is pushed to the live world at once (the looks were judged by looking, one value after another, in one process).
+static void JamLookVarsChanged()
+{
+	static float Seen[6] = { -1.f, -1.f, -1.f, -1.f, -1.f, -1.f };
+	const float Now[6] = { CVarLookTrimDay.GetValueOnGameThread(), CVarLookFogScale.GetValueOnGameThread(), CVarLookFogFrom.GetValueOnGameThread(),
+		CVarLookFogStartM.GetValueOnGameThread(), CVarLookFogMax.GetValueOnGameThread(), CVarLookFogBright.GetValueOnGameThread() };
+	bool bChanged = false;
+	for (int32 i = 0; i < 6; ++i) { bChanged = bChanged || Now[i] != Seen[i]; Seen[i] = Now[i]; }
+	if (!bChanged) return;
+	for (TObjectIterator<ULookTierSwitcher> It; It; ++It)
+	{
+		if (*It && !It->HasAnyFlags(RF_ClassDefaultObject) && It->GetWorld()) It->RefreshLookVars();
+	}
+}
+static FAutoConsoleVariableSink GJamLookVarsSink(FConsoleCommandDelegate::CreateStatic(&JamLookVarsChanged));
+
 namespace
 {
 	struct FTierRig { const TCHAR* Tier; const TCHAR* Map; };
@@ -32,6 +69,7 @@ namespace
 		{ TEXT("p4_broadcast"), TEXT("/JamAssets/Rigs/LR_P4_Broadcast.LR_P4_Broadcast") },   // B-to-A-0025 (lane A31)
 	};
 	// B-to-A-0018 point 5: trim Emissive per tier; on bright clay ice 30 reads as a thin gold line, so clay ships 12 (B's 10..15). Broadcast 30 (B-to-A-0025).
+	// Lane A223 (B-to-A-0046 point 1): l1_day is read from `jam.look.TrimDay` (10; this table keeps the 30 of before as the variable's neutral value).
 	struct FTierTrim { const TCHAR* Tier; float Emissive; };
 	const FTierTrim GTierTrim[] = {
 		{ TEXT("l1_day"),   30.f },
@@ -63,6 +101,7 @@ FString ULookTierSwitcher::GetRigMapPath(const FString& Tier)
 
 float ULookTierSwitcher::DefaultTrimEmissiveFor(const FString& Tier)
 {
+	if (Tier.Equals(TEXT("l1_day"), ESearchCase::CaseSensitive)) { return FMath::Clamp(CVarLookTrimDay.GetValueOnAnyThread(), 0.f, 100.f); }   // lane A223
 	for (const FTierTrim& T : GTierTrim)
 	{
 		if (Tier.Equals(T.Tier, ESearchCase::CaseSensitive)) { return T.Emissive; }
@@ -97,6 +136,74 @@ void ULookTierSwitcher::PushTrimEmissive()
 	{
 		if (*It) It->SetTrimEmissive(E);
 	}
+}
+
+float ULookTierSwitcher::FogDensityFor(float CartridgeDensity)
+{
+	const float Scale = CVarLookFogScale.GetValueOnAnyThread();
+	if (!(Scale > 0.f) || !(CartridgeDensity > 0.f) || CartridgeDensity < CVarLookFogFrom.GetValueOnAnyThread()) return 0.f;
+	return FMath::Min(CartridgeDensity * Scale, 10.f);   // the engine clamps a height fog's density to 10
+}
+
+void ULookTierSwitcher::SetFog(float CartridgeDensity)
+{
+	FogAsked = CartridgeDensity;
+	PushFog();
+}
+
+void ULookTierSwitcher::RefreshLookVars()
+{
+	PushTrimEmissive();
+	PushFog();
+}
+
+void ULookTierSwitcher::PushFog()
+{
+	UWorld* W = GetWorld();
+	if (!W) return;
+	float Density = FogDensityFor(FogAsked);
+	// One height fog a scene: a rig that brings its own (LR_L3_Neon's Fog_L3) keeps it.
+	bool bRigFog = false;
+	if (Density > 0.f)
+	{
+		if (const TObjectPtr<ULevelStreamingDynamic>* Rig = LoadedRigs.Find(CurrentTier))
+		{
+			if (const ULevel* Level = *Rig ? (*Rig)->GetLoadedLevel() : nullptr)
+			{
+				for (const AActor* A : Level->Actors) { if (A && A->FindComponentByClass<UExponentialHeightFogComponent>()) { bRigFog = true; break; } }
+			}
+		}
+		if (bRigFog) Density = 0.f;
+	}
+	if (!(Density > 0.f))
+	{
+		if (FogActor && FogActor->GetComponent()) FogActor->GetComponent()->SetVisibility(false);
+		if (FogDrawn > 0.f || bRigFog) UE_LOG(LogJamLook, Log, TEXT("JAMLOOK fog off (look.fog_density %.3f%s)"), FogAsked, bRigFog ? TEXT("; the rig brings its own height fog") : TEXT(""));
+		FogDrawn = 0.f;
+		return;
+	}
+	if (!FogActor)
+	{
+		FActorSpawnParameters P;
+		P.ObjectFlags |= RF_Transient;
+		P.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		FogActor = W->SpawnActor<AExponentialHeightFog>(AExponentialHeightFog::StaticClass(), FTransform::Identity, P);
+	}
+	UExponentialHeightFogComponent* C = FogActor ? FogActor->GetComponent() : nullptr;
+	if (!C) return;
+	const float StartM = FMath::Max(0.f, CVarLookFogStartM.GetValueOnGameThread());
+	const float MaxOpacity = FMath::Clamp(CVarLookFogMax.GetValueOnGameThread(), 0.f, 1.f);
+	const float Bright = FMath::Max(0.f, CVarLookFogBright.GetValueOnGameThread());
+	C->SetFogDensity(Density);
+	C->SetFogHeightFalloff(FogHeightFalloff);
+	C->SetStartDistance(StartM * 100.f);
+	C->SetFogMaxOpacity(MaxOpacity);
+	C->SetFogInscatteringColor(FLinearColor(FogColourR * Bright, FogColourG * Bright, FogColourB * Bright));
+	C->SetDirectionalInscatteringColor(FLinearColor::Black);   // no sun glow in a hall
+	C->SetVolumetricFog(false);
+	C->SetVisibility(true);
+	if (!FMath::IsNearlyEqual(FogDrawn, Density, 1e-4f)) UE_LOG(LogJamLook, Log, TEXT("JAMLOOK fog on: look.fog_density %.3f drawn as height fog density %.3f from %.0f m, at most %.2f, brightness %.2f"), FogAsked, Density, StartM, MaxOpacity, Bright);
+	FogDrawn = Density;
 }
 
 float ULookTierSwitcher::RigScaleFor(float RinkLengthM)
@@ -184,6 +291,7 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 	LowerFloor();
 	PushTrimEmissive();
 	PushGlass();
+	PushFog();   // lane A223
 	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK tier=%s map=%s scale=%.3f (rink %.1f m) trim_emissive=%.1f"), *Tier, *MapPath, Scale, RinkLengthM, GetTrimEmissive());
 	return true;
 }
@@ -215,6 +323,7 @@ void ULookTierSwitcher::OnRigLoaded()
 			}
 		}
 	}
+	PushFog();   // lane A223: a rig with a height fog of its own keeps it
 	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK rig %s loaded: MPC_Look.Clay=%.1f (BP_LookParams writes its value on BeginPlay, read again by GetLookClay)"), *CurrentTier, GetLookClay());
 }
 

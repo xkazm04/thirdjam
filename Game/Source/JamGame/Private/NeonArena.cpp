@@ -6,6 +6,7 @@
 #include "JamSim.h"
 #include "ProceduralMeshComponent.h"
 #include "Components/MeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
@@ -28,6 +29,11 @@ static TAutoConsoleVariable<int32> CVarJamNeonLines(TEXT("jam.neon.lines"), 1,
 	TEXT("Lane A197: 1 = A's rink lines, board-foot band and goal frames in light by half (default), 0 = none."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamNeonFigures(TEXT("jam.neon.figures"), 1,
 	TEXT("Lane A197 (B's ask with LR_L3_Neon): 1 = the figures' trim (slot 2) and helmet (slot 4) glow in the team colour on the grid arena (default), 0 = as on every tier."), ECVF_Default);
+
+// Lane A223 (track L1; B-to-A-0046 point 2): the penalty boxes on the grid arena. Lane A160 stood them on this tier for the cut that whistles (Glow Ice) and
+// they kept their daylight materials: a cream board, a grey bench and an ochre kick plate on the dark sheet, the brightest and biggest thing in the frame.
+static TAutoConsoleVariable<int32> CVarLookNeonBoxes(TEXT("jam.look.NeonBoxes"), 1,
+	TEXT("Lane A223: 1 (default) = on the grid arena the penalty boxes' board, bench and kick plate take the dark sheet's material (the team's seats and the boxed figure stay as they are); 0 = the cream boxes of before the lane."), ECVF_Default);
 
 namespace
 {
@@ -154,6 +160,7 @@ UJamNeonArena* UJamNeonArena::ApplyFor(ARinkActor* Rink, const FJamGameConfig& G
 	A->bHasConfig = true;
 	A->bIceSaved = false;    // Build made a fresh ice instance and set the boards' material again
 	A->SavedBoards = nullptr;
+	A->SavedBoxes.Reset();   // lane A223: and bound the boxes' materials again
 	if (Game.Teams.Num() == 2) { A->TeamColour[0] = Game.Teams[0].Colour; A->TeamColour[1] = Game.Teams[1].Colour; }
 	if (IsNeonTier(Game.Look.Tier) && CVarJamNeon.GetValueOnGameThread() != 0) A->Draw(Rink); else A->Clear(Rink);
 	return A;
@@ -208,6 +215,7 @@ void UJamNeonArena::Clear(ARinkActor* Rink)
 		for (const TPair<FName, float>& P : SavedIceScalars) Rink->IceMid->SetScalarParameterValue(P.Key, P.Value);
 	}
 	if (Rink->Boards && SavedBoards) Rink->Boards->SetMaterial(0, SavedBoards);
+	RestoreBoxes();
 	bIceSaved = false;
 	SavedBoards = nullptr;
 }
@@ -259,6 +267,7 @@ void UJamNeonArena::Draw(ARinkActor* Rink)
 		if (!DarkBoards) DarkBoards = MakeLight(DarkBoard, 0.f);
 		if (DarkBoards) Rink->Boards->SetMaterial(0, DarkBoards);
 	}
+	DarkenBoxes(Rink, bSheet);   // lane A223
 	if (bSheet && Rink->Markings) Rink->Markings->SetVisibility(false);
 	if (bSheet && Rink->KickPlate) Rink->KickPlate->SetVisibility(false);
 
@@ -274,6 +283,41 @@ void UJamNeonArena::Draw(ARinkActor* Rink)
 	SetComponentTickEnabled(true);
 	if (UGameInstance* GI = Rink->GetGameInstance()) BindBus(GI->GetSubsystem<UJamEventBus>());
 	UE_LOG(LogJamLook, Log, TEXT("JAMNEON grid arena on tier %s: %d grid tiles, rink %.0f x %.0f m"), *Config.Look.Tier, GridTiles.Num(), R.LengthM, R.WidthM);
+}
+
+void UJamNeonArena::DarkenBoxes(ARinkActor* Rink, bool bSheet)
+{
+	RestoreBoxes();
+	if (!Rink || !bSheet || CVarLookNeonBoxes.GetValueOnGameThread() == 0) return;
+	if (!DarkBoards) DarkBoards = MakeLight(DarkBoard, 0.f);
+	if (!DarkBoards) return;
+	// The daylight slots of SM_Arena_PenaltyBox (the clock's face is part of `board`); `team` (the seats, the door's panel) and `dark` stay.
+	static const TCHAR* const Daylight[3] = { TEXT("board"), TEXT("bench"), TEXT("kick") };
+	for (UStaticMeshComponent* C : { Rink->ArenaBoxNeg.Get(), Rink->ArenaBoxPos.Get(), Rink->ArenaBoxDoorNeg.Get(), Rink->ArenaBoxDoorPos.Get(), Rink->ArenaBoxHandNeg.Get(), Rink->ArenaBoxHandPos.Get() })
+	{
+		if (!C || !C->GetStaticMesh()) continue;
+		for (const TCHAR* Slot : Daylight)
+		{
+			const int32 I = C->GetMaterialIndex(FName(Slot));
+			if (I == INDEX_NONE) continue;
+			FBoxSave Save;
+			Save.Mesh = C; Save.Slot = I; Save.Original = C->GetMaterial(I);
+			SavedBoxes.Add(Save);
+			C->SetMaterial(I, DarkBoards);
+		}
+	}
+	BoxSlotsDarkened = SavedBoxes.Num();
+	UE_LOG(LogJamLook, Log, TEXT("JAMNEON penalty boxes on the dark sheet: %d material slots (board, bench, kick plate)"), BoxSlotsDarkened);
+}
+
+void UJamNeonArena::RestoreBoxes()
+{
+	for (const FBoxSave& S : SavedBoxes)
+	{
+		if (UStaticMeshComponent* C = S.Mesh.Get()) { if (UMaterialInterface* O = S.Original.Get()) C->SetMaterial(S.Slot, O); }
+	}
+	SavedBoxes.Reset();
+	BoxSlotsDarkened = 0;
 }
 
 void UJamNeonArena::BuildGrid(const FJamRinkConfig& R)
