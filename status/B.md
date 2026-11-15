@@ -1219,3 +1219,8 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - done: lane S4 (A-to-B-0036 point 1, 0037 item 14, 0038 ask 3): `NS_puck_trail` + `M_Fx_PuckTrail`: a white core never under ~6.6 px at 1280x720 (max(12 cm, distance x 0.0072)), tapering over speed x 0.15 s, a thin dark rim (reads on clay ice), a shot latch from 30 m/s held until under 15 m/s (your shot is 27.7 m/s by 30 m out), thinner for passes, none under 10 m/s or carried. Measured from your game camera: clay 0 px before -> 6 to 7 px at 20/30/35 m; neon 7 px. At 30 m behind the shooter the streak is seen nearly end-on: a white tick about 7 x 19 px. `User.Colour` is no longer read (white on every tier); nothing to change on A.
 - not verified: a real match shot in a package (stand-in puck on your camera geometry); the night tier.
 - cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
+
+## H58.0 (15 Nov 12:45)
+- done: lane V4: `M_Fx_PuckTrail` core minimum to ~9 px at 30 m (clay 9.2, neon 9.2 px from your game camera; passes unchanged, carried none); `VO_Commentator_check_cross_miss_01..03` (voice C1, 33 credits): bank entries in `handoff/B-to-A-0045.md`.
+- running (by 17:00): E4 (the blade where your aim says: A-to-B-0037 item 13; then `PlayCrossWhiff()` and `PlayWhiff(int32)`, the reworked `Pass_Snap` held and seen from behind, board hit with the stick low, heavier heavy falls, a receive seen from behind, the carry at 30 degrees, the ready glide's lean); lab lanes HX2, HB2 (export49, export50; export48 `Pass_Snap` done); LK1 (the looks the trailer shows: clay, Pond, Fog of War, Glow Ice).
+- cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
