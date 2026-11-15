@@ -195,6 +195,9 @@ private:
 	bool bWasCrossBraced = false;   // lane A184: SetCrossCheckHold level, sent on the change
 	// Lane A219 (jam.vis.HitTakeGuard): the last sim frame of this figure's own check or cross-check take (press + wind-up + follow-through); -1 none.
 	int64 OwnHitTakeUntil = -1;
+	int64 WhiffTakeUntil = -1;   // lane A224: the last sim frame of a whiff take device B plays (-1 none)
+	bool bSimBracedLast = false;  // lane A224: the sim's bCrossBraced on the last frame applied
+	int64 HoldWhiffAt = -1;       // lane A224: the sim frame the release's whiff is due (-1 none pending)
 	// Lane A219, wave 2 (jam.vis.HoldEarly): the sim frame of the cross-check press whose button may still be held (-1 none) and that press's wind-up.
 	int64 HoldPressFrame = -1;
 	int32 HoldPressWindup = 0;
@@ -212,6 +215,22 @@ public:
 	// Pure, for the test: is PlayHitReaction for a collision kept off this figure? Only a mere collision (no stumble frames), only with the guard on, and
 	// only while his own hit take runs (Frame <= TakeUntil) or he holds the brace.
 	static bool OwnHitTakeKeeps(bool bGuard, int32 StumbleFrames, int64 Frame, int64 TakeUntil, bool bBraced) { return bGuard && StumbleFrames <= 0 && (bBraced || (TakeUntil >= 0 && Frame >= 0 && Frame <= TakeUntil)); }
+	// Lane A224 (jam.vis.WhiffTake, 1 default; 0 = package of 94bb5b48): a miss is device B's take (PlayWhiff(Kind): 0 body check, 1 cross-check). The hit
+	// layer (AJamHitRead) tells the pawn the frame it sent the whiff (NoteWhiffTake); while the take runs (WhiffTakeFrames(Kind) sim frames) no other call of
+	// A's cuts it: no PlayHitReaction for a mere collision, no SetBraking(true), no PlayLift. A held cross-check released on nobody is a whiff too (sent
+	// here). Presentation only.
+	static bool WhiffTakeOn();
+	static int32 WhiffTakeFrames(int32 Kind) { return Kind == 1 ? 16 : 25; }   // B: CrossCheck_Whiff frames 0-14; PlayCheckWhiff recovers in 25
+	void NoteWhiffTake(int32 Kind) { const int64 F = SimFrameForLog(); if (F >= 0) WhiffTakeUntil = F + WhiffTakeFrames(Kind); }
+	// Pure, for the test: is the whiff take still running on Frame? (the guard is on, a whiff was sent, Frame within its take)
+	static bool WhiffTakeKeeps(bool bOn, int64 Frame, int64 Until) { return bOn && Until >= 0 && Frame >= 0 && Frame <= Until; }
+	// Pure, for the test: a held cross-check released on nobody: the sim braced last frame, this frame the button is up (no hold frames), no brace, not
+	// down, and the brace was not spent on a body (a braced hit drops bCrossBraced while the button is still down, so it never reaches this).
+	static bool HoldReleasedOnNobody(bool bBracedLast, bool bBracedNow, int32 HoldFramesNow, bool bDown) { return bBracedLast && !bBracedNow && HoldFramesNow == 0 && !bDown; }
+	// The release's whiff goes out HoldWhiffDelayFrames after the release, and not at all when a new press (a check or a cross-check) came in between:
+	// film a-clay-hand f702/f703: a body check pressed one frame after the release was swallowed by the whiff take (device B's figure keeps a running
+	// take over the check's wind-up), so the press he made wins.
+	static constexpr int32 HoldWhiffDelayFrames = 3;
 private:
 	bool bWasTakeGrace = false, bWasStickLock = false;   // lane A163 (track F2): the take grace and the stick lock at the last frame applied (the JAMVIS takegrace / sticklock lines)
 	double LastSimSpeed = 0.0;   // lane A125: the sim speed at the last frame applied (SetBraking's Decel)

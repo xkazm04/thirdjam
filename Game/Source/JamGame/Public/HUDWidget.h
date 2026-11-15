@@ -157,6 +157,15 @@ public:
 	FBox2D ControlsPanelBox(const FVector2D& View) const;
 	// What stood one row above the old pill (the RULE CHANGE READY hint) stands over this: the panel's top above the bottom edge (units), 0 = not shown.
 	static float ControlsPanelTopNow();
+	// Lane A224 (A222 clamped only the puck arrow): a point that would stand on the controls panel's box (bottom left, left of EdgePx + ControlsPanelMaxW
+	// + Pad, below VH - PanelTop - Pad) is lifted to stand over it; PanelTop <= 0 (no panel) leaves it. Pure. jam.hud.ChevronsOffPanel 1 (default) applies
+	// it to the far-net and own-net badges and their edge chevrons; 0 = main 94bb5b48.
+	static FVector2D KeepOffPanel(const FVector2D& P, float VH, float PanelTop, float Pad, float EdgePx)
+	{
+		if (PanelTop <= 0.f || P.X >= EdgePx + ControlsPanelMaxW + Pad || P.Y <= VH - PanelTop - Pad) return P;
+		return FVector2D(P.X, VH - PanelTop - Pad);
+	}
+	static bool ChevronsOffPanelOn();
 	TArray<TPair<FString, FBox2D>> CornerBoxesForTest(const FVector2D& View) const;
 
 	// ---- Lane A111 (track U1, B-to-A-0038 fault 7: "the human's ring is the only mark among five blue figures"): the marker over the human's helmet, always
@@ -210,6 +219,10 @@ public:
 	static float RingYieldStep(float Share, bool bOnDowned) { return FMath::Clamp(Share + (bOnDowned ? -1.f : 1.f) / static_cast<float>(RingYieldFrames), 0.f, 1.f); }
 	static constexpr float FigurePadCm = 14.f;
 	static constexpr float KeepClearPadPx = 6.f;
+	// Lane A224 (A223's FAULT 14:53, Glow Ice): a ring belongs under a skater on the ice: none under a skater who sits in the penalty box (his figure is not
+	// on the ice), the human's or a bot's, on every look. jam.hud.BoxedRing 0 (default); 1 = main 94bb5b48 (the ring stayed in front of the box). Pure.
+	static bool BoxedRingOn();
+	static bool RingOnIce(bool bShowBoxed, bool bInBox) { return bShowBoxed || !bInBox; }
 	// The ring's share while the rule is on: 0 down, a ramp over RingBackFrames from the frame he is up again (UpSinceFrame; < 0 = never down). Pure.
 	static float RingDownAlpha(bool bRuleOn, bool bDown, int64 SimFrame, int64 UpSinceFrame)
 	{

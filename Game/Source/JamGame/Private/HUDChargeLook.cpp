@@ -84,7 +84,7 @@ void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 		{
 			FVector2D C, Size;
 			float DistM = 0.f;
-			if (ProjectGroundRing(Sk[GFlightTarget].Pos, CarrierRingRadiusM * 1.15f, C, Size, DistM))
+			if (RingOnIce(BoxedRingOn(), Sk[GFlightTarget].InBox()) && ProjectGroundRing(Sk[GFlightTarget].Pos, CarrierRingRadiusM * 1.15f, C, Size, DistM))   // lane A224: never in the box
 			{
 				const FLinearColor Team = F.GetTeamColour(Hu.Team);
 				Ring->SetColorAndOpacity(FLinearColor(Team.R, Team.G, Team.B, 1.f));
@@ -101,7 +101,7 @@ void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 			GLastHeldFrames = Hu.PassChargeFrames; GLastHeldTarget = T;
 			FVector2D C, Size;
 			float DistM = 0.f;
-			if (Sk.IsValidIndex(T) && ProjectGroundRing(Sk[T].Pos, CarrierRingRadiusM * 1.15f, C, Size, DistM))
+			if (Sk.IsValidIndex(T) && RingOnIce(BoxedRingOn(), Sk[T].InBox()) && ProjectGroundRing(Sk[T].Pos, CarrierRingRadiusM * 1.15f, C, Size, DistM))   // lane A224
 			{
 				const FLinearColor Team = F.GetTeamColour(Hu.Team);
 				Ring->SetColorAndOpacity(FLinearColor(Team.R, Team.G, Team.B, 1.f));

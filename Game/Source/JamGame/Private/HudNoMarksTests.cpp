@@ -9,6 +9,10 @@
 //   Jam.Hit.HoldOneMove     wave 2: press and hold is one movement: the hold's pose is wanted from the end of the tap's wind-up while the button is
 //                           still held (jam.vis.HoldEarly), dropped on the release or when the sim never braces; the braking pose is held back while
 //                           the hold's pose is on (jam.vis.HoldOverBrake).
+//   Jam.Hit.WhiffTake       lane A224: a miss is device B's whiff take (jam.vis.WhiffTake, JamPawns.cpp / HitRead.cpp): while it runs no
+//                           collision reaction, braking pose or PlayLift of A's cuts it; a held cross-check let go on nobody is a whiff.
+//   Jam.Hud.BoxedRing       lane A224: no ring under a skater who sits in the penalty box (jam.hud.BoxedRing 0).
+//   Jam.Hud.ChevronsOffPanel lane A224: the net badges and their chevrons stand over the controls panel, never on it.
 // The hit layer's own bars are Jam.Hit.NoBars (HitRead.cpp).
 #include "CoreMinimal.h"
 #include "Misc/AutomationTest.h"
@@ -111,6 +115,68 @@ bool FJamHitHoldOneMove::RunTest(const FString&)
 	TestFalse(TEXT("not braking: nothing"), AJamSkater::BrakeLevelToSend(1, false, true));
 	TestTrue(TEXT("mode 2: the brake goes out (the hold is told again after it)"), AJamSkater::BrakeLevelToSend(2, true, true));
 	TestTrue(TEXT("mode 0: package H40"), AJamSkater::BrakeLevelToSend(0, true, true));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHitWhiffTake, "Jam.Hit.WhiffTake", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHitWhiffTake::RunTest(const FString&)
+{
+	IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.vis.WhiffTake"));
+	TestNotNull(TEXT("jam.vis.WhiffTake exists"), V);
+	TestEqual(TEXT("ships: the whiff is device B's take"), V ? V->GetInt() : -1, 1);
+	TestTrue(TEXT("the reader agrees"), AJamSkater::WhiffTakeOn());
+	// The takes' lengths (device B, E4 / H56.5): the cross-check's whiff frames 0 to 14; the body check's lunge recovers in 25.
+	TestEqual(TEXT("cross-check whiff: 16 frames kept"), AJamSkater::WhiffTakeFrames(1), 16);
+	TestEqual(TEXT("body check whiff: 25 frames kept"), AJamSkater::WhiffTakeFrames(0), 25);
+	// A whiff sent at frame 1000 (cross-check): kept to 1016.
+	const int64 Until = 1000 + AJamSkater::WhiffTakeFrames(1);
+	TestTrue(TEXT("the frame it is sent: kept"), AJamSkater::WhiffTakeKeeps(true, 1000, Until));
+	TestTrue(TEXT("its last frame: kept (no reaction, no brake, no lift over it)"), AJamSkater::WhiffTakeKeeps(true, Until, Until));
+	TestFalse(TEXT("a frame after: A's calls go out as before"), AJamSkater::WhiffTakeKeeps(true, Until + 1, Until));
+	TestFalse(TEXT("no whiff sent: nothing kept"), AJamSkater::WhiffTakeKeeps(true, 1000, -1));
+	TestFalse(TEXT("the switch off: main 94bb5b48"), AJamSkater::WhiffTakeKeeps(false, 1000, Until));
+	TestFalse(TEXT("no sim frame known: nothing kept"), AJamSkater::WhiffTakeKeeps(true, -1, Until));
+	// The braking pose under the whiff: BrakeLevelToSend AND not kept (as ApplySimFrame composes them).
+	TestFalse(TEXT("braking inside the whiff: the braking pose is held back"), AJamSkater::BrakeLevelToSend(1, true, false) && !AJamSkater::WhiffTakeKeeps(true, 1005, Until));
+	TestTrue(TEXT("braking after it: sent"), AJamSkater::BrakeLevelToSend(1, true, false) && !AJamSkater::WhiffTakeKeeps(true, Until + 1, Until));
+	// The held cross-check let go on nobody.
+	TestTrue(TEXT("braced last frame, button up now, not down: a whiff"), AJamSkater::HoldReleasedOnNobody(true, false, 0, false));
+	TestFalse(TEXT("still braced: no whiff"), AJamSkater::HoldReleasedOnNobody(true, true, 10, false));
+	TestFalse(TEXT("the brace spent on a body (bCrossBraced drops while the button is down): no whiff"), AJamSkater::HoldReleasedOnNobody(true, false, 10, false));
+	TestFalse(TEXT("never braced (a tap): no whiff here (the tap's own miss is the hit layer's)"), AJamSkater::HoldReleasedOnNobody(false, false, 0, false));
+	TestFalse(TEXT("knocked down out of the hold: no whiff"), AJamSkater::HoldReleasedOnNobody(true, false, 0, true));
+	TestEqual(TEXT("the release's whiff waits 3 frames for a new press (film f702 / f703: a check pressed a frame after the release wins)"), AJamSkater::HoldWhiffDelayFrames, 3);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudBoxedRing, "Jam.Hud.BoxedRing", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudBoxedRing::RunTest(const FString&)
+{
+	IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.BoxedRing"));
+	TestNotNull(TEXT("jam.hud.BoxedRing exists"), V);
+	TestEqual(TEXT("ships 0: no ring under a boxed skater"), V ? V->GetInt() : -1, 0);
+	TestFalse(TEXT("the reader agrees"), UJamHudWidget::BoxedRingOn());
+	TestFalse(TEXT("boxed (his or a bot's): no ring"), UJamHudWidget::RingOnIce(false, true));
+	TestTrue(TEXT("on the ice: the ring as before"), UJamHudWidget::RingOnIce(false, false));
+	TestTrue(TEXT("the switch at 1: main 94bb5b48 (the ring stayed in front of the box)"), UJamHudWidget::RingOnIce(true, true));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudChevronsOffPanel, "Jam.Hud.ChevronsOffPanel", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudChevronsOffPanel::RunTest(const FString&)
+{
+	IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.ChevronsOffPanel"));
+	TestNotNull(TEXT("jam.hud.ChevronsOffPanel exists"), V);
+	TestEqual(TEXT("ships 1"), V ? V->GetInt() : -1, 1);
+	// 1920 x 1080 layout units, the panel 240 tall at the bottom left, the edge 24.
+	const float VH = 1080.f, Top = 240.f, Pad = 40.f, Edge = 24.f;
+	const FVector2D OnPanel(44.f, 1016.f);   // the own-net badge clamped to the left edge, low: on the panel's box
+	const FVector2D Lifted = UJamHudWidget::KeepOffPanel(OnPanel, VH, Top, Pad, Edge);
+	TestTrue(TEXT("on the panel: lifted to stand over it (same x)"), FMath::IsNearlyEqual(Lifted.X, OnPanel.X));
+	TestTrue(TEXT("on the panel: its top less the pad"), FMath::IsNearlyEqual(Lifted.Y, static_cast<double>(VH - Top - Pad)));
+	TestTrue(TEXT("right of the panel: untouched"), FMath::IsNearlyEqual(UJamHudWidget::KeepOffPanel(FVector2D(Edge + UJamHudWidget::ControlsPanelMaxW + Pad + 1.f, 1016.f), VH, Top, Pad, Edge).Y, 1016.0));
+	TestTrue(TEXT("above the panel: untouched"), FMath::IsNearlyEqual(UJamHudWidget::KeepOffPanel(FVector2D(44.f, 700.f), VH, Top, Pad, Edge).Y, 700.0));
+	TestTrue(TEXT("no panel shown: untouched"), FMath::IsNearlyEqual(UJamHudWidget::KeepOffPanel(OnPanel, VH, 0.f, Pad, Edge).Y, OnPanel.Y));
 	return true;
 }
 

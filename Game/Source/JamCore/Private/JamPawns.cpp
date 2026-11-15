@@ -133,6 +133,13 @@ static TAutoConsoleVariable<int32> CVarJamVisHoldEarlyLead(TEXT("jam.vis.HoldEar
 static TAutoConsoleVariable<int32> CVarJamVisHoldOverBrake(TEXT("jam.vis.HoldOverBrake"), 1,
 	TEXT("Lane A219 (wave 2): 1 (default) the braking pose is not sent while the hold's pose is on; 2 = it is sent and the hold is told again after it; 0 = package H40 (the braking pose replaced the hold)."));
 static constexpr int32 HoldEarlyGiveUpFrames = 20;   // the sim braces 10 (a bot) to 13 (the human's buttons) frames after the press
+// Lane A224 (track F3, B's H59.5: "take your bridge dip off the figure"): a miss is device B's own take. 1 (default): the hit layer sends PlayWhiff(Kind)
+// on the frame the sim knows the hit met nobody, A's stick-to-front over it (SetAimRecover) and the dip stay off, a held cross-check released on nobody
+// is a whiff too, and while the take runs nothing of A's cuts it (PlayHitReaction for a collision, SetBraking(true), PlayLift). 0 = the calls of main
+// 94bb5b48 (the whiff and the 30-frame stick-to-front sent into the hold on the frame the sim braces; no whiff on a released hold). Presentation only.
+static TAutoConsoleVariable<int32> CVarJamVisWhiffTake(TEXT("jam.vis.WhiffTake"), 1,
+	TEXT("Lane A224: 1 (default) a miss is device B's whiff take (PlayWhiff on the sim's miss frame, a released hold on nobody too), kept from A's other calls while it runs, without A's stick-to-front; 0 = the calls of main 94bb5b48."));
+bool AJamSkater::WhiffTakeOn() { return CVarJamVisWhiffTake.GetValueOnGameThread() != 0; }
 
 static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
 	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
@@ -489,6 +496,23 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosshold frame=%lld skater=%d team=%d human=1 on=%d speed=%.2f call=%s early=%d press=%lld"), SimFrameForLog(), S.Index, S.Team, bWasCrossBraced ? 1 : 0, S.Vel.Size(), bSent ? TEXT("SetCrossCheckHold") : TEXT("none"),
 				bWasCrossBraced && !S.bCrossBraced ? 1 : 0, HoldPressFrame);
 		}
+		// Lane A224 (jam.vis.WhiffTake): a held cross-check let go on nobody swings through air: device B's cross-check whiff, after the hold's pose is off.
+		if (WhiffTakeOn() && !S.bAtFaceoff && !S.InBox() && HoldReleasedOnNobody(bSimBracedLast, S.bCrossBraced, S.CrossHoldFrames, S.IsDown()) && SimFrameForLog() >= 0)
+			HoldWhiffAt = SimFrameForLog() + HoldWhiffDelayFrames;
+		if (S.bCheckThisFrame || S.bLiftThisFrame || S.bCrossBraced || S.IsDown() || S.InBox() || S.bAtFaceoff || !WhiffTakeOn())
+		{
+			if (HoldWhiffAt >= 0 && S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS whiff frame=%lld skater=%d team=%d human=1 kind=hold_release call=none (a new press or the play came first)"), SimFrameForLog(), S.Index, S.Team);
+			HoldWhiffAt = -1;
+		}
+		else if (HoldWhiffAt >= 0 && SimFrameForLog() >= HoldWhiffAt)
+		{
+			HoldWhiffAt = -1;
+			static const FName NamePlayWhiff(TEXT("PlayWhiff"));
+			const bool bSent = CallFigure(V, NamePlayWhiff, { 1.0 });
+			if (bSent) NoteWhiffTake(1);
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS whiff frame=%lld skater=%d team=%d human=1 kind=hold_release call=%s until=%lld"), SimFrameForLog(), S.Index, S.Team, bSent ? TEXT("PlayWhiff(1)") : TEXT("none"), WhiffTakeUntil);
+		}
+		bSimBracedLast = S.bCrossBraced;
 	}
 	if (S.IsDown() != bWasDown)
 	{
@@ -518,7 +542,8 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		static const FName NamePlayStumble(TEXT("PlayStumble"));
 		const bool bStumbleSent = StumbleFrames > 0 && CallFigure(V, NamePlayStumble, { S.BumpDir.X, S.BumpDir.Y, static_cast<double>(StumbleFrames) });
 		// Lane A219 (jam.vis.HitTakeGuard): a mere collision (no stumble) does not replace the take of his own check or cross-check, nor the held brace.
-		const bool bOwnTake = OwnHitTakeKeeps(CVarJamVisHitTakeGuard.GetValueOnGameThread() != 0, StumbleFrames, SimFrameForLog(), OwnHitTakeUntil, bWasCrossBraced);
+		const bool bOwnTake = OwnHitTakeKeeps(CVarJamVisHitTakeGuard.GetValueOnGameThread() != 0, StumbleFrames, SimFrameForLog(), OwnHitTakeUntil, bWasCrossBraced)
+			|| (StumbleFrames <= 0 && WhiffTakeKeeps(WhiffTakeOn(), SimFrameForLog(), WhiffTakeUntil));   // lane A224: nor his whiff take
 		if (!bStumbleSent && bOwnTake)
 		{
 			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS hit frame=%lld skater=%d team=%d dir=(%.2f, %.2f) kept=own_take until=%lld braced=%d (PlayHitReaction NOT sent: his own check or cross-check take is running)"),
@@ -543,7 +568,8 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	// is not braking whatever the flag says.
 	// Lane A219 (wave 2, jam.vis.HoldOverBrake): the level SENT is the sim's brake, held back while the hold's pose is on (mode 1). bWasBraking is the sent level.
 	const int32 HoldOverBrake = CVarJamVisHoldOverBrake.GetValueOnGameThread();
-	const bool bBrakingNow = BrakeLevelToSend(HoldOverBrake, S.bReverseBraking && !S.Vel.IsNearlyZero(), bWasCrossBraced);
+	const bool bBrakingNow = BrakeLevelToSend(HoldOverBrake, S.bReverseBraking && !S.Vel.IsNearlyZero(), bWasCrossBraced)
+		&& !WhiffTakeKeeps(WhiffTakeOn(), SimFrameForLog(), WhiffTakeUntil);   // lane A224: no braking pose over the whiff take
 	if (bBrakingNow != bWasBraking)
 	{
 		bWasBraking = bBrakingNow;
@@ -632,7 +658,7 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	if (bHeld)
 	{
 		if (S.PokeResult != 0) IJamSkaterVisual::Execute_PlayPoke(V, S.PokeResult > 0);
-		if (S.bLiftThisFrame) IJamSkaterVisual::Execute_PlayLift(V);
+		if (S.bLiftThisFrame && !WhiffTakeKeeps(WhiffTakeOn(), SimFrameForLog(), WhiffTakeUntil)) IJamSkaterVisual::Execute_PlayLift(V);   // lane A224
 		if (S.bPassThisFrame) IJamSkaterVisual::Execute_PlayPass(V, S.LastPassStrength);
 		if (S.bAtFaceoff != bWasAtFaceoff) { bWasAtFaceoff = S.bAtFaceoff; IJamSkaterVisual::Execute_SetFaceoff(V, bWasAtFaceoff); }
 		if (S.DrawResult != 0) IJamSkaterVisual::Execute_PlayFaceoffDraw(V, S.DrawResult > 0);
@@ -685,7 +711,7 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		}
 	}
 	if (S.PokeResult != 0) IJamSkaterVisual::Execute_PlayPoke(V, S.PokeResult > 0);
-	if (S.bLiftThisFrame) IJamSkaterVisual::Execute_PlayLift(V);
+	if (S.bLiftThisFrame && !WhiffTakeKeeps(WhiffTakeOn(), SimFrameForLog(), WhiffTakeUntil)) IJamSkaterVisual::Execute_PlayLift(V);   // lane A224: not over the whiff take
 	if (S.bPassThisFrame) IJamSkaterVisual::Execute_PlayPass(V, S.LastPassStrength);
 	if (S.bAtFaceoff != bWasAtFaceoff)
 	{

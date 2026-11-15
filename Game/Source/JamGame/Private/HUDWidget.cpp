@@ -51,6 +51,14 @@ uint64 UJamHudWidget::PromptBandTick = 0;
 float UJamHudWidget::PromptBandTop = 0.f;
 
 // Lane A123 (track U1, evolution 2; docs/experiments/SCREEN.md part 2). Each rule has its neutral value: the screen before this lane.
+// Lane A224: no ring under a skater who sits in the penalty box (UJamHudWidget::RingOnIce).
+static TAutoConsoleVariable<int32> CVarJamHudBoxedRing(TEXT("jam.hud.BoxedRing"), 0,
+	TEXT("Lane A224: 0 (default) no ring (his, a carrier's, a pass's mate's) under a skater who sits in the penalty box; 1 = main 94bb5b48 (the human's ring stayed on the ice in front of the box, lane A223 on Glow Ice)."), ECVF_Default);
+bool UJamHudWidget::BoxedRingOn() { return CVarJamHudBoxedRing.GetValueOnGameThread() != 0; }
+// Lane A224: the net badges' chevrons kept off the controls panel as the puck arrow is (UJamHudWidget::KeepOffPanel).
+static TAutoConsoleVariable<int32> CVarJamHudChevronsOffPanel(TEXT("jam.hud.ChevronsOffPanel"), 1,
+	TEXT("Lane A224: 1 (default) the far-net and own-net badges and their edge chevrons stand over the controls panel, never on it (lane A222's clamp of the puck arrow); 0 = main 94bb5b48."), ECVF_Default);
+bool UJamHudWidget::ChevronsOffPanelOn() { return CVarJamHudChevronsOffPanel.GetValueOnGameThread() != 0; }
 static TAutoConsoleVariable<int32> CVarJamHudMarkerAnchor(TEXT("jam.hud.MarkerAnchor"), 1,
 	TEXT("The human's marker: 1 its tip on the figure's head (the visual's head_socket, else the top of its bounds) and a ghost while the puck is under it (default); 0 the point 1.8 m over the skater's feet."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHudMarkerLiftCm(TEXT("jam.hud.MarkerLiftCm"), UJamHudWidget::YouMarkerHeadLiftCm,
@@ -1566,7 +1574,10 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	const bool bOn = ProjectGroundRing(Me.PosM, YouRingRadiusM, Centre, Size, DistM);
 	// Lane A158: no ring while he is down (it lay across the body: the critic's fault 1); back over RingBackFrames after the get-up. The chevron stays.
 	// Nor across a downed figure beside him (StepRingYield).
-	const float RingAlpha = (bOn ? RingAlphaAt(DistM) : 0.f) * RingDownAlpha(ClearDownOn(), bHumanDownNow, F.SimFrame, HumanUpSince) * StepRingYield(bOn, Centre, Size);
+	// Lane A224: nor while he sits in the penalty box (jam.hud.BoxedRing).
+	const AHokejGameMode* GMb = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const bool bMeBoxed = GMb && GMb->GetSim() && GMb->GetSim()->GetSkaters().IsValidIndex(F.HumanIndex) && GMb->GetSim()->GetSkaters()[F.HumanIndex].InBox();
+	const float RingAlpha = (bOn && RingOnIce(BoxedRingOn(), bMeBoxed) ? RingAlphaAt(DistM) : 0.f) * RingDownAlpha(ClearDownOn(), bHumanDownNow, F.SimFrame, HumanUpSince) * StepRingYield(bOn, Centre, Size);
 	if (RingAlpha > 0.f)
 	{
 		YouRing->SetColorAndOpacity(FLinearColor(Team.R, Team.G, Team.B, RingAlpha));
@@ -1644,7 +1655,8 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 		float Best = 1.2f;
 		for (int32 i = 0; i < F.Skaters.Num(); ++i) { const float D = FVector2D::Distance(F.Skaters[i].PosM, F.PuckM); if (D < Best) { Best = D; Carrier = i; } }
 	}
-	if (Carrier >= 0 && Carrier != F.HumanIndex && F.Skaters.IsValidIndex(Carrier) && ProjectGroundRing(F.Skaters[Carrier].PosM, CarrierRingRadiusM, Centre, Size, DistM))
+	const bool bCarrierBoxed = GM && GM->GetSim() && GM->GetSim()->GetSkaters().IsValidIndex(Carrier) && GM->GetSim()->GetSkaters()[Carrier].InBox();   // lane A224
+	if (Carrier >= 0 && Carrier != F.HumanIndex && F.Skaters.IsValidIndex(Carrier) && RingOnIce(BoxedRingOn(), bCarrierBoxed) && ProjectGroundRing(F.Skaters[Carrier].PosM, CarrierRingRadiusM, Centre, Size, DistM))
 	{
 		CarrierRing->SetColorAndOpacity(FLinearColor(S::Paper().R, S::Paper().G, S::Paper().B, 0.9f));
 		CarrierRing->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -1721,6 +1733,7 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	// Lane A42: MarkerEdgePx inside every edge plus the arrow's room on the sides; the top margin keeps the marker below the scoreboard,
 	// the bottom one above the strips (the distance text hangs 18 + 30 px under the diamond).
 	Marker.ScreenPos = ClampMarker(Sp, VW, VH, 44.f, bP3 ? 120.f : 150.f, 64.f);   // lane A76: top 150 -> 120 (the badge is already lifted off the net; scoreboard plates end near 104)
+	if (ChevronsOffPanelOn()) Marker.ScreenPos = KeepOffPanel(Marker.ScreenPos, VH, ControlsPanelTopNow(), 40.f, FJamUiStyle::EdgePx);   // lane A224: off the controls panel
 
 	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(NetDiamond->Slot))
 	{
@@ -1928,6 +1941,7 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 	OwnMarker.ScreenPos = ClampMarker(Sp, VW, VH, 40.f, 150.f, 56.f);
 	// Lane A171: never under the radar or the ability plate (the label "own 8 m" lay under the radar: evolution 5's still f03057).
 	if (ClearEdgesOn()) OwnMarker.ScreenPos = KeepOffRadar(OwnMarker.ScreenPos, VW, VH, 60.f, 40.f);
+	if (ChevronsOffPanelOn()) OwnMarker.ScreenPos = KeepOffPanel(OwnMarker.ScreenPos, VH, ControlsPanelTopNow(), 40.f, FJamUiStyle::EdgePx);   // lane A224: off the controls panel
 	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(OwnDiamond->Slot)) { DS->SetPosition(OwnMarker.ScreenPos); }
 	OwnText->SetText(FText::FromString(OwnMarker.Text));
 	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(OwnText->Slot)) { TS->SetPosition(OwnMarker.ScreenPos + FVector2D(0, 10)); }
