@@ -1,4 +1,5 @@
 #include "SettingsWidget.h"
+#include "HUDWidget.h"   // lane A222: the CONTROLS PANEL row applies to the HUD
 #include "InputMapping.h"
 #include "Components/Border.h"
 #include "Components/Overlay.h"
@@ -50,7 +51,7 @@ void FJamSettings::SetOverrideForTest(const FJamSettings* Settings)
 
 namespace
 {
-	const TCHAR* const SavedKeys[] = { TEXT("Difficulty"), TEXT("DifficultyChosen"), TEXT("LookTier"), TEXT("Volume"), TEXT("Barks"), TEXT("BarkIntensity") };
+	const TCHAR* const SavedKeys[] = { TEXT("Difficulty"), TEXT("DifficultyChosen"), TEXT("LookTier"), TEXT("Volume"), TEXT("Barks"), TEXT("BarkIntensity"), TEXT("ControlsPanel") };
 }
 
 FJamSettings FJamSettings::FromSaved(const TMap<FString, FString>& Saved)
@@ -66,6 +67,7 @@ FJamSettings FJamSettings::FromSaved(const TMap<FString, FString>& Saved)
 	if (const FString* B = Saved.Find(TEXT("Barks"))) St.Barks = FMath::Clamp(FCString::Atoi(**B), -1, 1);
 	if (const FString* I = Saved.Find(TEXT("BarkIntensity"))) St.BarkIntensity = *I;
 	if (St.BarkIntensity != TEXT("quiet") && St.BarkIntensity != TEXT("normal") && St.BarkIntensity != TEXT("loud")) St.BarkIntensity.Empty();
+	if (const FString* P = Saved.Find(TEXT("ControlsPanel"))) St.bControlsPanel = P->ToBool();   // lane A222: absent = ON (the default)
 	// Lane A183: the bindings, "Controls.<verb>" -> "Keys|Pads".
 	for (const TPair<FString, FString>& P : Saved) if (P.Key.StartsWith(TEXT("Controls."))) St.Controls.Add(P.Key.Mid(9), P.Value);
 	return St;
@@ -80,6 +82,7 @@ TMap<FString, FString> FJamSettings::ToSaved() const
 	Out.Add(TEXT("Volume"), FString::SanitizeFloat(Volume));
 	Out.Add(TEXT("Barks"), FString::FromInt(Barks));
 	Out.Add(TEXT("BarkIntensity"), BarkIntensity);
+	Out.Add(TEXT("ControlsPanel"), bControlsPanel ? TEXT("True") : TEXT("False"));   // lane A222
 	for (const TPair<FString, FString>& P : Controls) Out.Add(TEXT("Controls.") + P.Key, P.Value);   // lane A183
 	return Out;
 }
@@ -137,6 +140,7 @@ void FJamSettings::Apply() const
 	// Barks on/off through lane A12's console variable; the intensity override only when a variable for it exists.
 	if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.Barks"))) V->Set(Barks, ECVF_SetByCode);
 	if (IConsoleVariable* I = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.BarkIntensity"))) I->Set(*BarkIntensity, ECVF_SetByCode);
+	UJamHudWidget::SetControlsPanelSetting(bControlsPanel);   // lane A222: the HUD shows the panel or not from its next frame
 }
 
 FString FJamSettings::BarksLabel(int32 Barks, const FString& Intensity)
@@ -308,8 +312,13 @@ void UJamSettingsWidget::BuildTree()
 	BarksButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnBarksClicked);
 	AddV(Right, BarksButton, FMargin(0), HAlign_Left);
 
-	// Lane A144: the controls have a screen of their own; lane A195: say where, in the words of the screens.
-	Heading(Right, TEXT("CONTROLS"), TEXT("Rebind any key: CONTROLS on HOME, or Esc in a match, then CONTROLS."));
+	// Lane A222 (B-to-A-0044): the panel of keys beside the play, ON / OFF, saved with the profile. Lane A144: the controls have a screen of their own;
+	// lane A195: say where, in the words of the screens.
+	Heading(Right, TEXT("CONTROLS PANEL"), TEXT("The keys beside the play, all match. OFF stays off. Rebind any key: CONTROLS on HOME, or Esc in a match."));
+	ControlsPanelButton = Item(TEXT(""), Tmp);
+	ControlsPanelText = Tmp;
+	ControlsPanelButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnControlsPanelClicked);
+	AddV(Right, ControlsPanelButton, FMargin(0), HAlign_Left);
 
 	RefreshLabels();
 }
@@ -335,6 +344,20 @@ void UJamSettingsWidget::RefreshLabels()
 	if (VoiceText) VoiceText->SetText(FText::FromString(UJamSignalSystem::IsVoiceSignalsEnabled() ? TEXT("VOICE: ON") : TEXT("VOICE: OFF")));
 	if (VoiceStatusText) VoiceStatusText->SetText(FText::FromString(VoiceStatus()));
 	if (BarksText) BarksText->SetText(FText::FromString(FJamSettings::BarksLabel(Settings.Barks, Settings.BarkIntensity)));
+	if (ControlsPanelText) ControlsPanelText->SetText(FText::FromString(ControlsPanelLabel(Settings.bControlsPanel)));   // lane A222
+}
+
+UButton* UJamSettingsWidget::GetControlsPanelButtonForTest() const { return ControlsPanelButton; }
+FString UJamSettingsWidget::GetControlsPanelLabelForTest() const { return ControlsPanelText ? ControlsPanelText->GetText().ToString() : FString(); }
+
+// Lane A222: ON <-> OFF on the profile as saved (lane A164's rule), saved at once, applied to the HUD on the frame of the press.
+void UJamSettingsWidget::OnControlsPanelClicked()
+{
+	Settings = FJamSettings::Load();
+	Settings.bControlsPanel = !Settings.bControlsPanel;
+	Settings.Save();
+	UJamHudWidget::SetControlsPanelSetting(Settings.bControlsPanel);
+	RefreshLabels();
 }
 
 FString UJamSettingsWidget::VoiceStatus() const
@@ -379,6 +402,7 @@ TArray<UWidget*> UJamSettingsWidget::GetFocusables() const
 	Out.Add(VolumeSlider.Get());
 	Out.Add(VoiceButton.Get());
 	Out.Add(BarksButton.Get());
+	Out.Add(ControlsPanelButton.Get());   // lane A222
 	return Out;
 }
 

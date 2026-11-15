@@ -590,13 +590,19 @@ bool FJamHudRules::RunTest(const FString&)
 		&& UJamHudWidget::ControlsHintText().Contains(TEXT("SPRINT  SHIFT")));
 	TestTrue(TEXT("the hint is shorter than the ten-verb line (146 characters)"), UJamHudWidget::ControlsHintText().Len() < 146);
 	TestEqual(TEXT("the hint window is 8 s"), UJamHudWidget::ControlsHintFrames, static_cast<int64>(480));
+	// Lane A222 (B-to-A-0044): the 8-second strip is the screen of before (jam.hud.ControlsPanel 0): the controls panel replaced it, all match, and
+	// SETTINGS' CONTROLS PANEL OFF takes the legend away whole (no panel, no strip, no pill). The words above stay the neutral value's.
+	TestTrue(TEXT("A222: the strip only in the screen of before"), UJamHudWidget::LegendFor(false, true) == UJamHudWidget::ELegend::StripAndPill);
+	TestTrue(TEXT("A222: the panel, not the strip, with the rule on"), UJamHudWidget::LegendFor(true, true) == UJamHudWidget::ELegend::Panel);
+	TestTrue(TEXT("A222: OFF in SETTINGS: no strip either"), UJamHudWidget::LegendFor(true, false) == UJamHudWidget::ELegend::None);
+	TestTrue(TEXT("A222: ships with the panel rule on"), UJamHudWidget::ControlsPanelRuleOn());
 	// The marker over the human: always on; off, lane A42's fade rule.
 	TestEqual(TEXT("marker on at the faceoff (ring full)"), UJamHudWidget::YouMarkerAlpha(true, 1.f), 1.f);
 	TestEqual(TEXT("A42: no chevron while the ring is full"), UJamHudWidget::YouMarkerAlpha(false, 1.f), 0.f);
 	TestEqual(TEXT("A42: chevron once the ring has faded"), UJamHudWidget::YouMarkerAlpha(false, 0.f), 1.f);
 	// The commentator's strip: docked on the edge, over the controls strip and the call line while they show; undocked, the earlier places.
 	TestEqual(TEXT("docked on the edge"), UJamHudWidget::CommentaryStripY(true, false, false), -24.f);
-	TestEqual(TEXT("over the controls strip while it shows"), UJamHudWidget::CommentaryStripY(true, true, false), -150.f);
+	TestEqual(TEXT("over the controls strip while it shows (the screen of before; with the panel no strip shows: docked)"), UJamHudWidget::CommentaryStripY(true, true, false), -150.f);
 	TestEqual(TEXT("docked over the call line"), UJamHudWidget::CommentaryStripY(true, false, true), -76.f);
 	TestEqual(TEXT("undocked as before"), UJamHudWidget::CommentaryStripY(false, false, true), -110.f);
 	TestEqual(TEXT("undocked over the strip as before"), UJamHudWidget::CommentaryStripY(false, true, false), -150.f);

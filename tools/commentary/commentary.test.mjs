@@ -93,10 +93,10 @@ test('the rough supplement is clean, keeps the situations, is embedded; the whol
   const rough = JSON.parse(readFileSync(resolve(repo, ROUGH), 'utf8'));
   const r = checkManifest(rough, { soundExists: () => true });
   assert.deepEqual(r.errors, []);
-  assert.equal(r.lines, 60);
+  assert.equal(r.lines, 63);
   const per = {};
   for (const l of rough.lines) per[situationOf(l.id)] = (per[situationOf(l.id)] || 0) + 1;
-  assert.deepEqual(per, { 'check.light': 6, 'check.solid': 7, 'knockdown.big': 7, 'check.cross': 10, 'knockdown.human': 10, 'knockdown.massacre': 10, 'goal.after_hit': 10 });
+  assert.deepEqual(per, { 'check.light': 6, 'check.solid': 7, 'knockdown.big': 7, 'check.cross': 10, 'check.cross_miss': 3, 'knockdown.human': 10, 'knockdown.massacre': 10, 'goal.after_hit': 10 });
   const sup = JSON.parse(readFileSync(resolve(repo, SUPPLEMENT), 'utf8'));
   const taken = new Set([...manifest.lines, ...sup.lines].map((l) => l.id));
   for (const l of rough.lines) assert.ok(!taken.has(l.id), `${l.id} collides`);

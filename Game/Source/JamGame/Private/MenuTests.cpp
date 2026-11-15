@@ -1497,7 +1497,7 @@ bool FJamMenuEveryScreenOneLook::RunTest(const FString&)
 	F.Menu->ShowScreen(EJamMenuScreen::Settings);
 	if (UJamSettingsWidget* S = F.Menu->GetSettingsPanel())
 	{
-		TestEqual(TEXT("SETTINGS: seven places to stand"), S->GetFocusables().Num(), 7);
+		TestEqual(TEXT("SETTINGS: eight places to stand (lane A222: CONTROLS PANEL ON / OFF is the eighth)"), S->GetFocusables().Num(), 8);
 		TestTrue(TEXT("SETTINGS opens on the level"), S->GetFirstFocusable() == S->GetFocusables()[0]);
 		// Lane A195 (FAULT 7): the key box keeps the focus on its commit and hands it to an enabled button (never nowhere): Up, Enter, Esc leaves SETTINGS.
 		TestTrue(TEXT("the key box does not clear the focus on commit"), S->GetKeyBox() && !S->GetKeyBox()->GetClearKeyboardFocusOnCommit());

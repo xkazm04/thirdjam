@@ -1180,7 +1180,8 @@ void UJamHudWidget::UpdateButtonsBadge(const FJamPresentationFrame& F)
 	if (!ButtonsBadge || !ButtonsBadgeText) return;
 	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
-	if (CVarJamHudButtonsBadge.GetValueOnGameThread() == 0 || !Sim || !Sim->GetSkaters().IsValidIndex(F.HumanIndex))
+	// Lane A222: the pill is the screen of before's (jam.hud.ControlsPanel 0); the panel replaced it, and SETTINGS' OFF takes it away too.
+	if (CVarJamHudButtonsBadge.GetValueOnGameThread() == 0 || UJamHudWidget::LegendNow() != UJamHudWidget::ELegend::StripAndPill || !Sim || !Sim->GetSkaters().IsValidIndex(F.HumanIndex))
 	{
 		ButtonsBadge->SetVisibility(ESlateVisibility::Collapsed);
 		return;

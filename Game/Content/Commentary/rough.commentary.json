@@ -1,7 +1,7 @@
 {
   "schema": "hokej.commentary/1",
   "rules": "Lane A90 (R-0041 point 4): A89 rough-voice lines (docs/experiments/VOICE.md), A supplement to B manifest beside the ability lines. Ids and situations as A89 proposed; knockdown.human.04..13 extend B situation. The waves are B to record (names in sound); until then the strip shows the text and the voice is silent.",
-  "count": 60,
+  "count": 63,
   "lines": [
     {
       "id": "check.light.01",
@@ -362,6 +362,42 @@
       "text": "Cross-check! The glass felt that too.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_10.VO_Commentator_check_cross_10",
       "seconds": 2.8
+    },
+    {
+      "id": "check.cross_miss.01",
+      "event": "check",
+      "kind": "cross_miss",
+      "team": "any",
+      "priority": 3,
+      "cooldown_s": 12,
+      "when": "the human's cross-check that meets nobody (event lift, Kind miss); device B's lines of 15 Nov (B-to-A-0045)",
+      "text": "Shoves at air.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_miss_01.VO_Commentator_check_cross_miss_01",
+      "seconds": 1.53
+    },
+    {
+      "id": "check.cross_miss.02",
+      "event": "check",
+      "kind": "cross_miss",
+      "team": "any",
+      "priority": 3,
+      "cooldown_s": 12,
+      "when": "the human's cross-check that meets nobody (event lift, Kind miss); device B's lines of 15 Nov (B-to-A-0045)",
+      "text": "Cross-check, and nobody home.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_miss_02.VO_Commentator_check_cross_miss_02",
+      "seconds": 2.08
+    },
+    {
+      "id": "check.cross_miss.03",
+      "event": "check",
+      "kind": "cross_miss",
+      "team": "any",
+      "priority": 3,
+      "cooldown_s": 12,
+      "when": "the human's cross-check that meets nobody (event lift, Kind miss); device B's lines of 15 Nov (B-to-A-0045)",
+      "text": "Swings the shaft, finds nothing.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_miss_03.VO_Commentator_check_cross_miss_03",
+      "seconds": 2.43
     },
     {
       "id": "knockdown.human.04",

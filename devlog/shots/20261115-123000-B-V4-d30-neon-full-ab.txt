@@ -1,0 +1,1 @@
+Lane V4, neon, full 1280x720 frame, puck 30 m from the game camera. Top S4, bottom V4: core 7.2 -> 9.2 px.

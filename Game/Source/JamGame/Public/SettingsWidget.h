@@ -49,6 +49,9 @@ struct JAMGAME_API FJamSettings
 	// Saved in the settings file's own section [Jam.Controls], in the same save and flush as [Jam.Settings]; ToSaved / FromSaved carry them as
 	// "Controls.<verb>" keys so a test holds them across a "restart" like the level.
 	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") TMap<FString, FString> Controls;
+	// Lane A222 (B-to-A-0044): SETTINGS' CONTROLS PANEL, ON by default: the keys beside the play all match; OFF takes the panel (and the strip and the
+	// pill it replaced) away for good. Saved as [Jam.Settings] ControlsPanel=True|False; applied to the HUD by Apply() and by the row on its press.
+	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") bool bControlsPanel = true;
 
 	static const TCHAR* Section;   // "Jam.Settings"
 	static const TCHAR* ControlsSection;   // "Jam.Controls" (lane A183)
@@ -116,6 +119,7 @@ private:
 	UFUNCTION() void OnVolumeChanged(float V);
 	UFUNCTION() void OnVoiceClicked();
 	UFUNCTION() void OnBarksClicked();
+	UFUNCTION() void OnControlsPanelClicked();   // lane A222
 	FString VoiceStatus() const;
 
 	FJamSettings Settings;
@@ -136,6 +140,14 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> VoiceStatusText;
 	UPROPERTY(Transient) TObjectPtr<UButton> BarksButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> BarksText;
+	UPROPERTY(Transient) TObjectPtr<UButton> ControlsPanelButton;   // lane A222: CONTROLS PANEL  ON / OFF
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ControlsPanelText;
+public:
+	UButton* GetControlsPanelButtonForTest() const;
+	FString GetControlsPanelLabelForTest() const;
+	void PressControlsPanelForTest() { OnControlsPanelClicked(); }
+	static FString ControlsPanelLabel(bool bOn) { return bOn ? TEXT("ON") : TEXT("OFF"); }
+private:
 	int32 VoiceStatusTick = 0;
 	// Lane A195: the buttons in the front end's item look (MenuWidget.h, FJamMenuPainter; made in BuildTree).
 	TSharedPtr<struct FJamMenuPainter> Painter;

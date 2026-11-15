@@ -96,6 +96,14 @@ void UJamHudWidget::UpdateTeach(const FJamPresentationFrame& F)
 		}
 		TeachShown = Show;
 	}
+	// Lane A222: with the panel (or no legend) there is no pill: the panel lights the row it teaches (TeachShown, HUDControlsPanel.cpp).
+	if (LegendNow() != ELegend::StripAndPill)
+	{
+		if (bTeachPainted) { ButtonsBadge->SetBrush(S::Pill(0.72f, 0.f)); bTeachPainted = false; }
+		ButtonsBadge->SetRenderScale(FVector2D(1.f, 1.f));
+		ButtonsBadge->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
 	if (Show < 0)
 	{
 		if (bTeachPainted) { ButtonsBadge->SetBrush(S::Pill(0.72f, 0.f)); bTeachPainted = false; }   // the pill as BuildButtonsBadge made it

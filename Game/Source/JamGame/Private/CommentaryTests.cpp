@@ -528,7 +528,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryCheckByStrength, "Jam.Commentary.
 bool FJamCommentaryCheckByStrength::RunTest(const FString&)
 {
 	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
-	TestEqual(TEXT("shipped bank: 340 + 12 ability + 60 rough lines"), Bank.Lines.Num(), 412);
+	TestEqual(TEXT("shipped bank: 340 + 12 ability + 63 rough lines"), Bank.Lines.Num(), 415);
 	TestTrue(TEXT("rough ids merged"), Bank.Find(TEXT("check.light.01")) != INDEX_NONE && Bank.Find(TEXT("knockdown.human.13")) != INDEX_NONE && Bank.Find(TEXT("goal.after_hit.10")) != INDEX_NONE);
 	FJamCommentaryPicker Picker(Bank, 7);
 	const FJamCommentaryWorld W = World(1000);

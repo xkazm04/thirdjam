@@ -602,7 +602,8 @@ bool FJamControlsButtonsBadge::RunTest(const FString&)
 	Sim->SkipFaceoff();
 	TArray<FJamInput> In;
 	In.Init(FJamInput(), Sim->GetSkaters().Num());
-	int32 Agree = 0, Frames = 0, Flips = 0;
+	int32 Agree = 0, Frames = 0, Flips = 0, PanelAgree = 0, UnpressedLate = 0;
+	UJamHudWidget::FControlsPanelSwap PanelPressed, PanelUnpressed;
 	bool bLast = false;
 	for (int32 F = 0; F < 90; ++F)
 	{
@@ -619,12 +620,24 @@ bool FJamControlsButtonsBadge::RunTest(const FString&)
 		const FJamButtonVerbs V = R.Step(bWith, UJamInputMap::Get()->GetBindings());
 		const FString Line = UJamHudWidget::ButtonsBadgeLine(bWith);
 		Agree += (V.bShootPress == Line.Contains(TEXT("LMB  SHOOT")) && V.bLift == Line.Contains(TEXT("LMB  CROSS-CHECK"))) ? 1 : 0;
+		// Lane A222: the controls panel replaced the pill on screen; its first row says what an LMB press does on the same frame. Wave 2: the half shown
+		// is held 12 frames after a loss (jam.hud.PanelHoldFrames) unless a two-role button is pressed: here LMB is pressed every frame, so it must agree;
+		// an unpressed panel may be up to 12 frames late (counted below, not held to agreement).
+		PanelPressed.Step(bWith, true, F, UJamHudWidget::PanelHoldFrames());
+		PanelUnpressed.Step(bWith, false, F, UJamHudWidget::PanelHoldFrames());
+		if (PanelUnpressed.Shown != (bWith ? 1 : 0)) ++UnpressedLate;
+		const TArray<UJamHudWidget::FControlsPanelRow> Pr = UJamHudWidget::ControlsPanelRows(UJamInputMap::Get()->GetBindings(), false, PanelPressed.Shown == 1, false, UJamHudWidget::FControlsPanelHeld());
+		PanelAgree += (Pr.Num() > 0 && Pr[0].Key == TEXT("LMB") && V.bShootPress == (Pr[0].Word == TEXT("SHOOT")) && V.bLift == (Pr[0].Word == TEXT("CROSS-CHECK"))) ? 1 : 0;
 		if (F > 0 && bWith != bLast) ++Flips;
 		bLast = bWith;
 		++Frames;
 	}
 	AddInfo(FString::Printf(TEXT("JAMCTRL badge: %d of %d frames agree with the press, %d flips"), Agree, Frames, Flips));
 	TestEqual(TEXT("the badge says what an LMB press does on every frame"), Agree, Frames);
+	TestEqual(TEXT("A222: the panel's LMB row says what an LMB press does on every frame it is pressed"), PanelAgree, Frames);
+	AddInfo(FString::Printf(TEXT("JAMCTRL A222 wave 2: an unpressed panel showed the other half on %d of %d frames (the hold after a loss; relaxed on purpose)"), UnpressedLate, Frames));
+	TestTrue(TEXT("A222 wave 2: an unpressed panel is late at most the hold after a loss"), UnpressedLate <= UJamHudWidget::PanelHoldFrames() * FMath::Max(1, Flips));
+	TestTrue(TEXT("A222: the pill shows only in the screen of before (jam.hud.ControlsPanel 0)"), UJamHudWidget::LegendFor(true, true) != UJamHudWidget::ELegend::StripAndPill && UJamHudWidget::LegendFor(false, true) == UJamHudWidget::ELegend::StripAndPill);
 	TestTrue(TEXT("the staging flipped possession"), Flips >= 1);
 	// The fit: the pill's words at the HUD's type, with the longest key names, inside ButtonsBadgeMaxW.
 	const TSharedRef<FSlateFontMeasure> Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();

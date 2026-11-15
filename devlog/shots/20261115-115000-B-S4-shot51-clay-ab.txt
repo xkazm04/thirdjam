@@ -1,0 +1,1 @@
+Lane S4, clay, the shot held at a constant 51.6 m/s (no fade), puck at 8 frames, 20, 30, 35 m. Top old, bottom new. New: core 7.0/7.2/7.0 px 1 m behind the puck at 20/30/35 m, visible length 7.2/7.2/7.6 m (91/36/28 px on screen); old: no pixel 20 levels off the ice, its faint line 0.7-1.2 m long.

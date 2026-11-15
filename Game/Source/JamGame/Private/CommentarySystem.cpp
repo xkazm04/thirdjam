@@ -409,6 +409,18 @@ void FJamCommentaryPicker::Observe(FName Event, const FJamEventPayload& Payload,
 		Candidates(X, W, C);
 		for (int32 I : C) if (Bank.Lines[I].Situation == SitCheckCross) E.Candidates.Add(I);
 	}
+	// 15 Nov (B-to-A-0045): device B voiced the missed cross-check. Its lines are check.cross_miss (event check, kind cross_miss: no body
+	// check carries that Kind); they are offered on the HUMAN's lift that meets nobody while the lift is the cross-check.
+	if (Event == JamEvents::Lift && E.Kind == FName(TEXT("miss")) && E.Who == W.HumanIndex && JamCommentaryLiftIsCross())
+	{
+		FJamCommentaryEvent X = E;
+		X.Event = JamEvents::Check;
+		X.Kind = FName(TEXT("cross_miss"));
+		TArray<int32> C;
+		Candidates(X, W, C);
+		const FName SitCrossMiss(TEXT("check.cross_miss"));
+		for (int32 I : C) if (Bank.Lines[I].Situation == SitCrossMiss) E.Candidates.Add(I);
+	}
 	// Lane A213 (A211's EYE 12, the Director's ruling of 01:36): the sim's lift IS the human's cross-check (LMB without the puck, R-0064), so the
 	// lift's own lines ("Reached for the lift, nothing there") call it by the wrong name. With jam.comm.LiftIsCross 1 a lift offers only the
 	// cross-check's lines (check.cross, on a clean one); a missed cross-check plays nothing until device B voices its own lines (FOR B in status/A213.md).

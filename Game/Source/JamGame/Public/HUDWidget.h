@@ -16,6 +16,11 @@ class UTextBlock;
 class UBorder;
 class UImage;
 class USceneComponent;
+class UVerticalBox;   // lane A222
+class USizeBox;
+class UJamDirectorsCallWidget;
+enum class EJamVerb : uint8;
+struct FJamBindings;
 
 // Where the far-net marker is this frame (Slate units, i.e. DPI-scaled viewport coordinates).
 USTRUCT(BlueprintType)
@@ -69,6 +74,91 @@ public:
 	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
 	// The live rule: the frame window, and not spent this session (bEveryMatch: the neutral value, the strip in every match).
 	static bool ShowControlsHintLive(const FJamPresentationFrame& F, bool bSpent, bool bEveryMatch) { return ShowControlsHint(F) && (bEveryMatch || !bSpent); }
+	// ---- Lane A222 (track U3; B-to-A-0044, the operator's order of 15 Nov 10:50: "keep it visible throughout the game, switchable in settings to take
+	// off permanently"). HUDControlsPanel.cpp. One panel bottom left, all match, in every match and mode, while play runs; hidden under the pause card,
+	// the GOAL banner and the end card. It REPLACES the 8-second controls strip and the bottom-left pill: with the panel OFF in SETTINGS none of the
+	// three shows. Rows from the live bindings (the pad's names when the pad was touched last): with the puck SHOOT, PASS, DEKE, SPIN; without it
+	// CROSS-CHECK, CHECK, POKE; always SKATE, SPRINT, BRAKE, and ABILITY while he holds one (6 to 8 rows). The possession half swaps on the frame
+	// possession changes (fading in over ControlsPanelFadeFrames) under a dot in his team's colour; the row whose button is down lights, its word the
+	// held verb's (SAUCER, BRACED). jam.hud.ControlsPanel 0 = the screen of before (the strip in the first match, the pill), the neutral value.
+	struct FControlsPanelRow
+	{
+		EJamVerb Verb;
+		FString Key;    // the keycap: the first key (or pad button) bound now, "WASD" / "L-STICK" for the skate
+		FString Word;   // the verb in caps; a held pass reads SAUCER, a held cross-check BRACED (the pill's swaps)
+		bool bLit = false;
+		bool bPossession = false;   // the half that swaps with the puck
+	};
+	struct FControlsPanelHeld
+	{
+		uint32 DownMask = 0;     // bit (1 << verb): that verb's button is down now
+		bool bSaucer = false;    // the pass is held long enough to be a saucer
+		bool bBraced = false;    // the cross-check is held long enough to be a brace
+		void Set(EJamVerb V);
+		bool Has(EJamVerb V) const;
+	};
+	enum class ELegend : uint8 { Panel, None, StripAndPill };
+	static ELegend LegendFor(bool bPanelRuleOn, bool bSettingOn) { return !bPanelRuleOn ? ELegend::StripAndPill : bSettingOn ? ELegend::Panel : ELegend::None; }
+	static ELegend LegendNow();
+	static bool ControlsPanelRuleOn();                  // jam.hud.ControlsPanel (1)
+	static bool IsControlsPanelSettingOn();             // SETTINGS' CONTROLS PANEL (FJamSettings::bControlsPanel), live
+	static void SetControlsPanelSetting(bool bOn);      // FJamSettings::Apply and the SETTINGS row call it: the HUD follows on its next frame
+	// While play runs: not under the pause card (or a paused world), the GOAL banner or the end card.
+	static bool ShowControlsPanel(EJamPhase Phase, bool bPauseCardOrPaused, bool bGoalBannerUp) { return Phase == EJamPhase::Play && !bPauseCardOrPaused && !bGoalBannerUp; }
+	static TArray<FControlsPanelRow> ControlsPanelRows(const FJamBindings& B, bool bPad, bool bWithPuck, bool bAbility, const FControlsPanelHeld& Held);
+	static FString ControlsPanelKey(const FJamBindings& B, EJamVerb V, bool bPad);
+	static constexpr int32 ControlsPanelMaxRows = 8;
+	static constexpr int32 ControlsPanelFadeFrames = 6;
+	static constexpr float ControlsPanelMaxW = 300.f;   // layout units (= px at 1920 x 1080; 2/3 of them at 1280 x 720)
+	static constexpr float ControlsPanelKeycapH = 22.f;
+	static constexpr float ControlsPanelKeycapMinW = 84.f;   // one column of keycaps: SPACE, SHIFT, WASD, WHEEL, L-STICK all fit it, so the verbs align
+	static constexpr float ControlsPanelReserveH = 300.f;   // the height kept for the panel at its tallest (eight rows: 298 units)
+	static constexpr float ControlsPanelMinW = 264.f;        // the panel keeps one width when the half swaps (the widest default row, LMB CROSS-CHECK)
+	static constexpr float ControlsPanelPad = 12.f;
+	static constexpr float ControlsPanelRowGap = 4.f;
+	// The panel's state as one frame of the HUD sees it (UpdateControlsPanel gathers it from the game; tests pass it straight in).
+	struct FControlsPanelInput
+	{
+		EJamPhase Phase = EJamPhase::Play;
+		bool bPauseCardOrPaused = false;
+		bool bGoalBannerUp = false;
+		bool bWithPuck = false;
+		bool bAbility = false;
+		bool bDown = false;          // he lies on the ice: the panel dims (the pill's rule, BadgeDownOpacity)
+		int32 TeamId = 0;
+		FLinearColor TeamColour = FLinearColor::White;
+		int32 Teach = -1;            // lane A213's pulse: 0 the pass, 1 the check (the row lights yellow), -1 none
+		int64 SimFrame = 0;
+		bool bPress = false;         // a two-role button (LMB / RMB, RT / RB) is down this frame
+		FControlsPanelHeld Held;
+	};
+	// Wave 2 (the Director, 13:26: "the possession half must not blink"): the half shown is not possession frame by frame. Gaining the puck swaps
+	// to WITH on that frame; losing it swaps to WITHOUT once "without" has held PanelHoldFrames sim frames in a row, or at once on a frame he presses
+	// a two-role button (LMB / RMB) while without it; after a swap no other swap for PanelHoldFrames unless such a press forces it. So a lit row and its
+	// word are always what the press really does on that frame; an unpressed half may be up to PanelHoldFrames late. jam.hud.PanelHoldFrames
+	// (12; 0 = the half follows possession every frame, the panel as PANEL READY).
+	struct FControlsPanelSwap
+	{
+		int32 Shown = -1;              // 1 WITH, 0 WITHOUT, -1 nothing yet
+		int64 LastSwap = -1000000;
+		int64 LossStart = -1;          // the first frame of the current run of "without" (-1: he has it)
+		int64 LastFrame = -1;
+		// One sim frame: true when the half shown swaps on it. A frame count going back (a restart) starts over.
+		bool Step(bool bWith, bool bPress, int64 Frame, int32 Hold);
+	};
+	static int32 PanelHoldFrames();
+	void ApplyControlsPanel(const FControlsPanelInput& In);
+	bool IsControlsPanelShown() const;
+	const TArray<FControlsPanelRow>& GetControlsPanelRowsShown() const { return CPanelRowsShown; }
+	float GetControlsPanelSwapOpacity() const { return CPanelSwapAlpha; }
+	// Tests and QA: the box a canvas child of the HUD (the panel, the radar's frame, the scoreboard, the ability slot, the commentary strip, the old
+	// strip and pill) takes in a viewport of View layout units, from its slot and its desired size (call after a Slate prepass). Empty = not built.
+	FBox2D LayoutBoxOf(const UWidget* W, const FVector2D& View) const;
+	FBox2D ControlsPanelBox(const FVector2D& View) const;
+	// What stood one row above the old pill (the RULE CHANGE READY hint) stands over this: the panel's top above the bottom edge (units), 0 = not shown.
+	static float ControlsPanelTopNow();
+	TArray<TPair<FString, FBox2D>> CornerBoxesForTest(const FVector2D& View) const;
+
 	// ---- Lane A111 (track U1, B-to-A-0038 fault 7: "the human's ring is the only mark among five blue figures"): the marker over the human's helmet, always
 	// on while the match plays: a take-yellow chevron with an ink edge (the HUD's accent, not the team's blue, so it reads on clay and on night ice), its tip
 	// YouMarkerGapPx over the point YouMarkerHeadM above the ice (the helmet's top is at 1.65 m); the YOU tag rides above it. It stands over the head, so it never covers the stick or the puck.
@@ -757,6 +847,30 @@ private:
 	void UpdateButtonsBadge(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UBorder> ButtonsBadge;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> ButtonsBadgeText;
+	// Lane A222: the controls panel (HUDControlsPanel.cpp: one call from BuildTree, one from RefreshFromFrame).
+	void BuildControlsPanel();
+	void UpdateControlsPanel(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<USizeBox> CPanel;              // the canvas child (the ClearDown rule sets its opacity)
+	UPROPERTY(Transient) TObjectPtr<UBorder> CPanelPlate;          // the dims and the fade go on what is inside it
+	UPROPERTY(Transient) TObjectPtr<UBorder> CPanelDot;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> CPanelHead;
+	UPROPERTY(Transient) TObjectPtr<UVerticalBox> CPanelPossBox;
+	UPROPERTY(Transient) TArray<TObjectPtr<UWidget>> CPanelRowW;
+	UPROPERTY(Transient) TArray<TObjectPtr<UBorder>> CPanelCap;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> CPanelCapText;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> CPanelWord;
+	TArray<FControlsPanelRow> CPanelRowsShown;
+	TArray<FString> CPanelPainted;   // per row widget: what was last painted (so a frame without change touches nothing)
+	int32 CPanelWith = -1;
+	int64 CPanelSwapFrame = -1000;
+	FControlsPanelSwap CPanelSwap;   // wave 2: the half shown
+	int32 CPanelTruth = -1;          // wave 2 proof: possession as the buttons read it last frame
+	int64 CPanelPrevHeld = 0;   // frames the half before the last swap had stood (the proof films a swap after a settled one)
+	float CPanelSwapAlpha = 1.f;
+	bool bCPanelShown = false;
+	FString CPanelLogged;
+	TWeakObjectPtr<UJamDirectorsCallWidget> CPanelPause;
+	int32 CPanelSearch = 0;
 	// Lane A18 preview counter (declared by lane A16 to keep the tree compiling, R-0003 point 5).
 	int32 FaceoffPreview = 0;
 	void BuildTree();

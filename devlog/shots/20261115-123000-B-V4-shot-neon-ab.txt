@@ -1,0 +1,1 @@
+Lane V4, neon (l3_neon), same rig and shot as the clay sheet. Top S4 (MinRad 0.0072), bottom V4 (MinRad 0.01). Core 1 m behind the puck: 20 m 7.0 -> 10.0 px, 30 m 7.2 -> 9.2 px, 35 m 6.2 -> 8.2 px. No glow.

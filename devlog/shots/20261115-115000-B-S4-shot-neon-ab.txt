@@ -1,0 +1,1 @@
+Lane S4, neon (l3_neon), same rig and shot as shot-clay-ab. Top old, bottom new. Core width 1 m behind the puck at 20/30/35 m: old 9.0/4.2/4.2 px, new 7.0/7.2/6.2 px; at 25 % of speed x 0.15 s: old 10.0/4.0/4.2, new 8.0/7.2/6.2.

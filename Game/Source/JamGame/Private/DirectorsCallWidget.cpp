@@ -733,6 +733,15 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 	if (bReadyDue && (!GReadyHintWas || F.SimFrame < GReadyHintSince)) GReadyHintSince = F.SimFrame;
 	GReadyHintWas = bReadyDue;
 	SetLine(ReadyHint, ReadyHintBriefShows(bReadyDue, CVarJamHudReadyHintBrief.GetValueOnGameThread() != 0, F.SimFrame - GReadyHintSince));
+	// Lane A222: the hint steps over the controls panel while it shows (it stood one row above the pill the panel replaced).
+	if (UWidget* Pill = ReadyHint ? ReadyHint->GetParent() : nullptr)
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Pill->Slot))
+		{
+			const float Base = CVarJamHudReadyHintBrief.GetValueOnGameThread() != 0 ? -FJamUiStyle::EdgePx - ReadyHintRowPx : -FJamUiStyle::EdgePx;
+			const float Over = UJamHudWidget::ControlsPanelTopNow();
+			const FVector2D Want(FJamUiStyle::EdgePx, Over > 0.f ? -(Over + 8.f) : Base);
+			if (CS->GetPosition() != Want) CS->SetPosition(Want);
+		}
 }
 
 FString UJamDirectorsCallHudWidget::GetTakeCardText() const

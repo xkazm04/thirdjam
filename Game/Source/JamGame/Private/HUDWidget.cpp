@@ -655,6 +655,7 @@ void UJamHudWidget::BuildTree()
 	StripSlot->SetAlignment(FVector2D(0, 1));
 	StripSlot->SetOffsets(FMargin(S::EdgePx, -96, ControlsRightInsetPx, 44));
 	BuildButtonsBadge();   // lane A191: what LMB / RMB do right now (InputMapping.cpp)
+	BuildControlsPanel();   // lane A222: the controls panel, all match (HUDControlsPanel.cpp); it replaces the strip and the pill
 
 	// ---- Lane A64: a notice plate top-left (a rejected -cut cartridge), 4 s.
 	ToastPlate = S::Plate(T, S::Pill(0.86f), FMargin(16, 6));
@@ -950,7 +951,8 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 
 	// Controls strip: full for 8 s, fading over the last 2 s of the hint window.
 	// Lane A111: the first match of a session only; spent once the window has run out in play or the human has shot (HandleJamEvent).
-	const bool bHint = ShowControlsHintLive(F, bControlsHintSpent, CVarJamHudHintEveryMatch.GetValueOnGameThread() != 0);
+	// Lane A222: only the screen of before (jam.hud.ControlsPanel 0) has the strip; the panel replaced it, and SETTINGS' OFF takes the legend away.
+	const bool bHint = LegendNow() == ELegend::StripAndPill && ShowControlsHintLive(F, bControlsHintSpent, CVarJamHudHintEveryMatch.GetValueOnGameThread() != 0);
 	if (F.Phase == EJamPhase::Play && F.SimFrame >= ControlsHintFrames) bControlsHintSpent = true;
 	bHintThisFrame = bHint;
 	ControlsStrip->SetVisibility(bHint ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -1030,6 +1032,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateOneLine(F);   // lane A213 (track U3): one line of words at a time (HUDOneLine.cpp)
 	UpdateTeach(F);   // lane A213 (track U3): the pill teaches pass and check, three times at most (HUDTeach.cpp)
 	UpdateEndWait(F);   // lane A213 (track U3): the end card waits for the last goal to be seen (HUDEndWait.cpp)
+	UpdateControlsPanel(F);   // lane A222 (track U3): the controls panel (HUDControlsPanel.cpp)
 	UpdateEndStats(F);   // lane A213 (track U3): the end card says what happened (HUDEndStats.cpp)
 }
 
@@ -1285,6 +1288,8 @@ void UJamHudWidget::UpdatePuckMarker(const FJamPresentationFrame& F, bool bCover
 			// The rectangle the arrow stands on: under the scoreboard, above the strips; the radar corner is kept clear.
 			FVector2D P = PuckMarkerEdgePoint(Dir, VW, VH, 64.f, VW - 64.f, 150.f, VH - 170.f);
 			if (P.X > VW - 330.f && P.Y > VH - 200.f) P.Y = VH - 200.f;
+			// Lane A222: off the controls panel (bottom left, its tallest top kept at ControlsPanelTopNow): the arrow and its label stand over it.
+			if (const float PanelTop = ControlsPanelTopNow(); PanelTop > 0.f && P.X < FJamUiStyle::EdgePx + ControlsPanelMaxW + 40.f && P.Y > VH - PanelTop - 40.f) P.Y = VH - PanelTop - 40.f;
 			const float Angle = FMath::RadiansToDegrees(FMath::Atan2(-Dir.X, Dir.Y));
 			PuckArrow->SetRenderTransformAngle(Angle);
 			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(PuckArrow->Slot)) CS->SetPosition(P);
