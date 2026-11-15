@@ -3411,6 +3411,7 @@ void UJamSim::TryPassPowered(FJamSkaterState& S, int32 HoldFrames, bool bSaucer,
 		const double Side = Dot(S.Pos - Skaters[Presser].Pos, Perp) >= 0.0 ? 1.0 : -1.0;
 		const FVector2D E = S.Pos + Way * 0.6 + Perp * (Side * 0.9);
 		FVector2D Nrm;
+		if (NetBetween(Puck.Pos, E) || NetBetween(S.Pos, E) || InGoal(E, 1) || InGoal(E, -1)) return Puck.Pos;   // lane A216 (A212's FAULT 07:04): never across a net's wall: it leaves from the puck's own place
 		return BoardDistance(E, Nrm) + Eff(EJamStat::PuckRadius, -1) > 0.0 ? Puck.Pos : E;
 	};
 	if (S.bHuman && Config.Pass.AimConeDeg > 0.0)
@@ -3810,7 +3811,7 @@ void UJamSim::OwnNetWall(int32 Side, const FVector2D& From, double R, double E)
 	const int32 Defending = Side > 0 ? (bNetsSwapped ? 0 : 1) : (bNetsSwapped ? 1 : 0);
 	const double X0 = Side * GoalLineX();
 	const double Hw = Config.Rink.GoalWidthM * 0.5;
-	if (!(From.X * Side < GoalLineX() && Puck.Pos.X * Side >= GoalLineX() - R && FMath::Abs(Puck.Pos.Y) < Hw)) return;   // in front of the line, then at it (both nets: X * Side against the positive goal line)
+	if (!(From.X * Side < GoalLineX() + R && Puck.Pos.X * Side >= GoalLineX() - R && FMath::Abs(Puck.Pos.Y) < Hw)) return;   // in front of the line or on it (short of InGoal's GL + R: lane A216, a puck taken by a defender ON his own goal line), then at it (both nets: X * Side against the positive goal line)
 	const int32 Ci = RidingCarrier();   // carried = riding with him (CarrierIndex alone is any last toucher in reach: a shot glancing off a defender)
 	const bool bCarried = Skaters.IsValidIndex(Ci) && Skaters[Ci].Team == Defending;
 	const bool bPlayed = Skaters.IsValidIndex(Puck.LastPlayedBy) && Skaters[Puck.LastPlayedBy].Team == Defending;
@@ -3827,16 +3828,20 @@ void UJamSim::NetBoxGuard(const FVector2D& From, double R)
 	const double Hw = Config.Rink.GoalWidthM * 0.5;
 	for (int32 Side = -1; Side <= 1; Side += 2)
 	{
-		if (!InGoal(Puck.Pos, Side, Puck.Z) || InGoal(From, Side, Puck.Z)) continue;
+		if (!InGoal(Puck.Pos, Side, Puck.Z)) continue;
+		// Lane A216 (A212's FAULT 07:04): a puck already inside at this substep's start but not at the frame's start was PLACED there this frame before the
+		// substeps (a pass's or shot's exit point, a seat, a strip): its path is measured from the frame's start (Puck.PrevPos), and it goes back there.
+		FVector2D A = From;
+		if (InGoal(From, Side, Puck.Z)) { if (InGoal(Puck.PrevPos, Side, Puck.PrevZ)) continue; A = Puck.PrevPos; }
 		const double Line = Side * (GL + R);   // InGoal's own threshold
-		const double Dx = Puck.Pos.X - From.X;
+		const double Dx = Puck.Pos.X - A.X;
 		bool bMouth = false;
-		if (FMath::Abs(Dx) > 1e-9 && (From.X - Line) * (Puck.Pos.X - Line) <= 0.0)
+		if (FMath::Abs(Dx) > 1e-9 && (A.X - Line) * (Puck.Pos.X - Line) <= 0.0)
 		{
-			const double T = (Line - From.X) / Dx;
-			bMouth = FMath::Abs(From.Y + (Puck.Pos.Y - From.Y) * T) < Hw + R && From.X * Side < Line * Side;   // between the posts (their radius and the puck's: a puck past a post's inside edge)
+			const double T = (Line - A.X) / Dx;
+			bMouth = FMath::Abs(A.Y + (Puck.Pos.Y - A.Y) * T) < Hw + R && A.X * Side < Line * Side;   // between the posts (their radius and the puck's: a puck past a post's inside edge)
 		}
-		if (!bMouth) Puck.Pos = From;
+		if (!bMouth) Puck.Pos = A;
 	}
 }
 

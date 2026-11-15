@@ -17,6 +17,7 @@ static TAutoConsoleVariable<int32> CVarJamHudOneLine(TEXT("jam.hud.OneLine"), 1,
 	TEXT("Lane A213: 1 (default) at most one line of the HUD's words over the play at a time (contact line, prompt, controls strip, faceoff hint, caption, in that order) and the kept-puck prompt only while the human carries; 0 = the screen of before."), ECVF_Default);
 
 bool UJamHudWidget::OneLineOn() { return CVarJamHudOneLine.GetValueOnGameThread() != 0; }
+static constexpr int64 AfterDropQuietFrames = 60;   // 4d: the draw's own second (the dial's WON / LOST stands then)
 static TAutoConsoleVariable<int32> CVarJamHudKeptPrompt(TEXT("jam.hud.KeptPrompt"), 0,
 	TEXT("Lane A213 (wave 4): 0 (default) the kept-puck prompt (THE PUCK IS YOURS UNTIL SOMEONE PRESSES FOR IT) is not drawn: the double ring says it; 1 = drawn (while he carries)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudOwnThird(TEXT("jam.hud.OwnThird"), 1,
@@ -80,7 +81,9 @@ void UJamHudWidget::UpdateOneLine(const FJamPresentationFrame& F)
 	if (Up(ContactPlate.Get()) && ContactText && ContactText->GetText().ToString() == CarrierCueLine(false, true))
 	{
 		const AHokejGameMode* GM2 = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
-		if (GM2 && GM2->GetSim() && PossessFromSim(*GM2->GetSim()) == EPossess::You) ContactPlate->SetVisibility(ESlateVisibility::Collapsed);
+		// 4d (the critic, pro seed 5 f100-120: the dial said WON while this line said HE JUST GOT IT): not in the draw's first second either.
+		const bool bJustDropped = LastDropFrame >= 0 && F.SimFrame >= LastDropFrame && F.SimFrame - LastDropFrame < AfterDropQuietFrames;
+		if (bJustDropped || (GM2 && GM2->GetSim() && PossessFromSim(*GM2->GetSim()) == EPossess::You)) ContactPlate->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	UWidget* const Lines[5] = { ContactPlate.Get(), PromptPlate.Get(), ControlsStrip.Get(), FaceoffHintPlate.Get(), CommentaryStrip.Get() };
 	int32 Win = OneLineWinner(Up(Lines[0]), Up(Lines[1]), Up(Lines[2]), Up(Lines[3]), Up(Lines[4]));

@@ -504,3 +504,5 @@
 - link green 05:46: main bf20d00e (The slab at his shoulder is gone; a loose puck is drawn where it is; device B's takes stan) pushed.
 - link green 06:37: main ade7aa64 (The net is never left empty; a cross-check lands when the stick is on the man (A206 track ) pushed.
 - package 06:54: `Hokej_Hokej_H36.zip` from main ade7aa64, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 07:11: main c26e9152 (The last goal has its banner, the end card reads true on three looks, the carried puck is ) pushed.
+- package 07:20: `Hokej_Hokej_H37.zip` from main c26e9152, acceptance run green (18 verbs through the cursor and the buttons).

@@ -547,6 +547,29 @@ bool FJamPossessionOwnNet::RunTest(const FString& Parameters)
 				if (Sim->GetPhase() != EJamSimPhase::Playing) break;
 			}
 		}
+		else if (Case == 5)
+		{
+			// Lane A216 (A212's FAULT 07:04): he stands behind his own goal line at the post, the puck held against the OUTSIDE of his own net's side wall, an
+			// opponent pressing from outside, and he passes to a mate in front of the net: the pass must not leave through the side netting into his net.
+			const double Hw = Sim->GetConfig().Rink.GoalWidthM * 0.5;
+			int32 Mate = -1;
+			for (const FJamSkaterState& S : Sim->GetSkaters()) if (Mate < 0 && S.Team == MyTeam && S.Index != Me) Mate = S.Index;
+			const FVector2D MePos(Side * (GL + 0.6), Hw + 0.75), MatePos(Side * (GL - 8.0), -3.0);
+			Sim->SetSkater(Me, MePos, FVector2D::ZeroVector, FMath::Atan2(MatePos.Y - MePos.Y, MatePos.X - MePos.X));
+			if (Opp >= 0) Sim->SetSkater(Opp, FVector2D(Side * (GL + 1.5), Hw + 1.7), FVector2D::ZeroVector, Yaw);
+			if (Mate >= 0) Sim->SetSkater(Mate, MatePos, FVector2D::ZeroVector, Yaw + UE_DOUBLE_PI);
+			Sim->SetPuck(FVector2D(Side * (GL + 0.574), Hw + 0.12), FVector2D::ZeroVector);
+			const FVector2D Way = (MatePos - MePos).GetSafeNormal();
+			for (int32 F = 0; F < 4; ++F) { In[Me] = FJamInput(); In[Me].Stick = Way * 0.5; Sim->Step(In); }
+			for (int32 F = 0; F < 60; ++F)
+			{
+				In[Me] = FJamInput();
+				In[Me].Stick = Way;
+				In[Me].bPass = F == 0;
+				Sim->Step(In);
+				if (Sim->GetPhase() != EJamSimPhase::Playing) break;
+			}
+		}
 		else
 		{
 			// An opponent carries, then the puck flies from 6 m out at his shot's speed; in case 3 the human stands 0.42 m off its line, 2 m in front.
@@ -559,8 +582,8 @@ bool FJamPossessionOwnNet::RunTest(const FString& Parameters)
 		}
 		return Sim->GetScore(1 - MyTeam) - Against;
 	};
-	const TCHAR* Names[] = { TEXT(""), TEXT("carried into his own net"), TEXT("his own clear into his own net"), TEXT("an opponent's shot off his body"), TEXT("an opponent's shot") };
-	for (int32 Case = 1; Case <= 4; ++Case)
+	const TCHAR* Names[] = { TEXT(""), TEXT("carried into his own net"), TEXT("his own clear into his own net"), TEXT("an opponent's shot off his body"), TEXT("an opponent's shot"), TEXT("his pass from beside his own net, through the side netting") };
+	for (int32 Case = 1; Case <= 5; ++Case)
 	{
 		const int32 N = Run(false, Case), Y = Run(true, Case);
 		AddInfo(FString::Printf(TEXT("POSOWNNET %s: goals against at the neutral value %d, with the rule %d"), Names[Case], N, Y));
@@ -570,7 +593,8 @@ bool FJamPossessionOwnNet::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("the rule: no goal on himself: %s"), Names[Case]), Y, 0);
 		}
 		else if (Case == 3) TestEqual(*FString::Printf(TEXT("the rule changes nothing for %s (a touch is not a play)"), Names[Case]), Y, N);
-		else TestEqual(*FString::Printf(TEXT("the rule: still a goal: %s"), Names[Case]), Y, 1);
+		else if (Case == 4) TestEqual(*FString::Printf(TEXT("the rule: still a goal: %s"), Names[Case]), Y, 1);
+		else TestEqual(*FString::Printf(TEXT("the rule: no goal through the side of the net: %s"), Names[Case]), Y, 0);   // lane A216 (FAULT 07:04)
 	}
 	return true;
 }

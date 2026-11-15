@@ -17,6 +17,7 @@
 #include "JamSim.h"
 #include "JamEventBus.h"
 
+static constexpr int32 EndStatsPt = 22;   // 4d: a step over the card's Body (18)
 static TAutoConsoleVariable<int32> CVarJamHudEndStats(TEXT("jam.hud.EndStats"), 1,
 	TEXT("Lane A213: 1 (default) the end card shows four lines of the human's match (shots and goals, passes that arrived, hits landed, time with the puck); 0 = the card of before."), ECVF_Default);
 
@@ -45,10 +46,17 @@ void UJamHudWidget::UpdateEndStats(const FJamPresentationFrame& F)
 		if (Hu.Shots > EndStatsShotsSeen) EndStatsNow.Shots += Hu.Shots - EndStatsShotsSeen;
 		if (Hu.Goals > EndStatsGoalsSeen) EndStatsNow.Goals += Hu.Goals - EndStatsGoalsSeen;
 		EndStatsShotsSeen = Hu.Shots; EndStatsGoalsSeen = Hu.Goals;
-		const int32 Received = TeamReceived();
-		if (EndStatsPassPending >= 0 && Received > EndStatsReceivedSeen) { ++EndStatsNow.Arrived; EndStatsPassPending = -1; }
+		// FAULT 4d (the critic's sixth list: "4 OF 6 at a loss where the log has 2 of 6"): it counted any mate's reception inside 3 s of his pass,
+		// so a pass an opponent took and a later mate's catch counted. Now his pass arrives only when the FIRST skater other than him to touch the
+		// puck after it (the sim's Puck.LastTouch) is a mate; an opponent first = it did not arrive; nobody inside EndPassArriveFrames = it did not.
+		EndStatsReceivedSeen = TeamReceived();
+		const int32 Toucher = Sim->GetPuck().LastTouch;
+		if (EndStatsPassPending >= 0 && Toucher != Hi && Sk.IsValidIndex(Toucher))
+		{
+			if (Sk[Toucher].Team == Hu.Team) ++EndStatsNow.Arrived;
+			EndStatsPassPending = -1;
+		}
 		if (EndStatsPassPending >= 0 && F.SimFrame - EndStatsPassPending > EndPassArriveFrames) EndStatsPassPending = -1;
-		EndStatsReceivedSeen = Received;
 		if (Hu.Passes > EndStatsPassesSeen) { EndStatsNow.Passes += Hu.Passes - EndStatsPassesSeen; EndStatsPassPending = F.SimFrame; }
 		EndStatsPassesSeen = Hu.Passes;
 		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Who == Hi && E.Name == JamEvents::Check) ++EndStatsNow.Hits;
@@ -60,13 +68,25 @@ void UJamHudWidget::UpdateEndStats(const FJamPresentationFrame& F)
 		if (UVerticalBox* Body = Cast<UVerticalBox>(CardScoreText->GetParent()))
 		{
 			UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EndStats"));
-			T->SetFont(FJamMenuLook::Font(FJamMenuLook::Body, FName("Bold"), FJamMenuLook::TrackLabel));
-			T->SetColorAndOpacity(FSlateColor(FJamMenuLook::TextDim()));
+			// 4d (the critic: "grey and small", under the keys): a step larger, in the card's text colour, directly under the score.
+			T->SetFont(FJamMenuLook::Font(EndStatsPt, FName("Bold"), FJamMenuLook::TrackLabel));
+			T->SetColorAndOpacity(FSlateColor(FJamMenuLook::Text()));
 			T->SetJustification(ETextJustify::Center);
 			T->SetVisibility(ESlateVisibility::Collapsed);
-			// Above the keys row (the lines under the keys read as part of them: the stills of wave 4).
-			const int32 At = CardHints ? Body->GetChildIndex(CardHints) : Body->GetChildIndex(CardScoreText) + 1;
-			if (UVerticalBoxSlot* VS = Cast<UVerticalBoxSlot>(Body->InsertChildAt(At, T))) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetPadding(FMargin(0, 0, 0, FJamMenuLook::Unit * 2.f)); }
+			// Directly under the score (and the season's note), the keys below them. A vertical box's Slate side only appends, so an inserted child
+			// drew last (under the keys, the stills of wave 4): the children after the note are taken out, the lines added, and they go back after.
+			const int32 After = Body->GetChildIndex(CardNoteText) >= 0 ? Body->GetChildIndex(CardNoteText) + 1 : Body->GetChildIndex(CardScoreText) + 1;
+			struct FKept { UWidget* W; FMargin Pad; EHorizontalAlignment HA; };
+			TArray<FKept> Kept;
+			while (Body->GetChildrenCount() > After)
+			{
+				UWidget* W = Body->GetChildAt(After);
+				const UVerticalBoxSlot* KS = W ? Cast<UVerticalBoxSlot>(W->Slot) : nullptr;
+				Kept.Add({ W, KS ? KS->GetPadding() : FMargin(0), KS ? KS->GetHorizontalAlignment() : HAlign_Center });
+				Body->RemoveChildAt(After);
+			}
+			if (UVerticalBoxSlot* VS = Body->AddChildToVerticalBox(T)) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetPadding(FMargin(0, 0, 0, FJamMenuLook::Unit * 2.f)); }
+			for (const FKept& K : Kept) if (K.W) if (UVerticalBoxSlot* KS = Body->AddChildToVerticalBox(K.W)) { KS->SetPadding(K.Pad); KS->SetHorizontalAlignment(K.HA); }
 			EndStatsBlock = T;
 		}
 	}

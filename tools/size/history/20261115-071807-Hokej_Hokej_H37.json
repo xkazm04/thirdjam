@@ -1,0 +1,290 @@
+{
+ "staged_mb": 420,
+ "folders_mb": {
+  "code": 187.1,
+  "paks": 147.1,
+  "plugins": 56.2,
+  "redist": 28.9,
+  "other": 0.4,
+  "engine-loose": 0.2
+ },
+ "classes_mb": {
+  "shaders": 75.4,
+  "textures": 26.3,
+  "engine-other": 12.8,
+  "game-other": 6.7,
+  "meshes": 4.2,
+  "container-meta": 3.6,
+  "audio": 1.5,
+  "anims": 1.1,
+  "maps": 0.6,
+  "materials": 0.5,
+  "vfx": 0.4,
+  "blueprints": 0.1,
+  "ui": 0
+ },
+ "classes_raw_mb": {
+  "shaders": 75.4,
+  "textures": 66.9,
+  "engine-other": 59,
+  "meshes": 18.2,
+  "game-other": 7,
+  "audio": 4.5,
+  "container-meta": 3.6,
+  "maps": 2.1,
+  "materials": 1.9,
+  "vfx": 1.6,
+  "anims": 1.5,
+  "blueprints": 1,
+  "ui": 0.1
+ },
+ "sources_mb": {
+  "shader-code": 78.6,
+  "project-plugin:JamAssets": 25.2,
+  "game:UI": 15,
+  "engine:EngineMaterials": 5.8,
+  "engine:MapTemplates": 3.5,
+  "engine-plugin:Assets": 1.9,
+  "engine-plugin:ControlRig": 0.8,
+  "game:Arena": 0.7,
+  "shader-library": 0.4,
+  "engine-plugin:SpeedTreeImporter": 0.4,
+  "engine:EditorResources": 0.2,
+  "engine:BasicShapes": 0.1,
+  "engine:EditorMaterials": 0.1,
+  "engine:EngineMeshes": 0.1,
+  "game:Figures": 0.1,
+  "engine-plugin:ToolsetRegistry": 0.1,
+  "engine-plugin:Water": 0.1
+ },
+ "container_entries": 4217,
+ "largest_files": [
+  {
+   "path": "ThirdJam/Binaries/Win64/ThirdJam-Win64-Shipping.exe",
+   "mb": 166.7
+  },
+  {
+   "path": "ThirdJam/Content/Paks/ThirdJam-Windows.ucas",
+   "mb": 132.7
+  },
+  {
+   "path": "ThirdJam/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll",
+   "mb": 56.2
+  },
+  {
+   "path": "Engine/Extras/Redist/en-us/vc_redist.x64.exe",
+   "mb": 17.7
+  },
+  {
+   "path": "Engine/Extras/Redist/en-us/vc_redist.arm64.exe",
+   "mb": 11.2
+  },
+  {
+   "path": "ThirdJam/Content/Paks/ThirdJam-Windows.pak",
+   "mb": 10.5
+  },
+  {
+   "path": "Engine/Binaries/ThirdParty/NVIDIA/NVaftermath/Win64/GFSDK_Aftermath_Lib.x64.dll",
+   "mb": 5.5
+  },
+  {
+   "path": "ThirdJam/Binaries/Win64/D3D12/x64/D3D12Core.dll",
+   "mb": 4.8
+  },
+  {
+   "path": "ThirdJam/Binaries/Win64/D3D12/x64/d3d12SDKLayers.dll",
+   "mb": 4.7
+  },
+  {
+   "path": "ThirdJam/Content/Paks/global.ucas",
+   "mb": 3.6
+  }
+ ],
+ "largest_assets": [
+  {
+   "name": "<ShaderCode chunks>",
+   "class": "shaders",
+   "mb": 75,
+   "raw_mb": 75
+  },
+  {
+   "name": "<ScriptObjects>",
+   "class": "container-meta",
+   "mb": 3.6,
+   "raw_mb": 3.6
+  },
+  {
+   "name": "Engine/Content/MapTemplates/Sky/DaylightAmbientCubemap",
+   "class": "engine-other",
+   "mb": 3.5,
+   "raw_mb": 16
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Raw",
+   "class": "textures",
+   "mb": 2.4,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_LargeRink",
+   "class": "textures",
+   "mb": 2.3,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Boost",
+   "class": "textures",
+   "mb": 2,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_DirectorsCut",
+   "class": "textures",
+   "mb": 2,
+   "raw_mb": 6
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/FastBlueNoise_vec2_128x128x64",
+   "class": "engine-other",
+   "mb": 2,
+   "raw_mb": 4
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Regular",
+   "class": "textures",
+   "mb": 1.9,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Wide",
+   "class": "textures",
+   "mb": 1.8,
+   "raw_mb": 6
+  },
+  {
+   "name": "Engine/Plugins/Interchange/Assets/Content/Utilities/New_LUT",
+   "class": "engine-other",
+   "mb": 1.8,
+   "raw_mb": 8.7
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/Textures/T_Clay_Thumb_N",
+   "class": "textures",
+   "mb": 1.3,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/P4Lab/T_P4_IceScratch_N",
+   "class": "textures",
+   "mb": 1.2,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/P4Lab/T_P4_IceNear_N",
+   "class": "textures",
+   "mb": 1.1,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/Textures/T_Ice_Scratch_N",
+   "class": "textures",
+   "mb": 1.1,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/UI/T_UI_MenuBackdrop",
+   "class": "textures",
+   "mb": 1.1,
+   "raw_mb": 2
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/FastBlueNoise_scalar_128x128x64",
+   "class": "engine-other",
+   "mb": 1,
+   "raw_mb": 1
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_MatchCard",
+   "class": "textures",
+   "mb": 0.8,
+   "raw_mb": 2.7
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/Substrate/Glints2/AGlintTex2dArray2",
+   "class": "engine-other",
+   "mb": 0.7,
+   "raw_mb": 2
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Audio/Music/MUS_MatchLoop_01",
+   "class": "audio",
+   "mb": 0.7,
+   "raw_mb": 0.7
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_TitleHokej",
+   "class": "textures",
+   "mb": 0.5,
+   "raw_mb": 0.6
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/P4Lab/T_P4_IceScratch_M",
+   "class": "textures",
+   "mb": 0.5,
+   "raw_mb": 0.7
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/Textures/T_Ice_Scratch_M",
+   "class": "textures",
+   "mb": 0.4,
+   "raw_mb": 0.7
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/Substrate/GLints/AGlintTex2dArray",
+   "class": "engine-other",
+   "mb": 0.4,
+   "raw_mb": 1
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Arena/SM_Barn_TrussBay",
+   "class": "meshes",
+   "mb": 0.4,
+   "raw_mb": 2.3
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/DefaultDiffuse",
+   "class": "engine-other",
+   "mb": 0.4,
+   "raw_mb": 0.7
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/Textures/T_Felt_Fibre",
+   "class": "textures",
+   "mb": 0.4,
+   "raw_mb": 0.7
+  },
+  {
+   "name": "Engine/Plugins/Editor/SpeedTreeImporter/Content/SpeedTree9/game_wind_noise",
+   "class": "engine-other",
+   "mb": 0.4,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_CallCard",
+   "class": "textures",
+   "mb": 0.4,
+   "raw_mb": 0.6
+  },
+  {
+   "name": "ThirdJam/Plugins/JamAssets/Content/Look/P4Lab/T_P4_IceNear_M",
+   "class": "textures",
+   "mb": 0.3,
+   "raw_mb": 0.7
+  }
+ ],
+ "errors": [],
+ "zip_mb": 271,
+ "label": "Hokej_Hokej_H37",
+ "input": "C:\\Users\\kazda\\kiro\\thirdjam\\Game\\Packaged\\Hokej_Hokej_H37\\Windows",
+ "at": "2026-11-15T06:18:07.299Z"
+}

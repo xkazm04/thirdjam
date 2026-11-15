@@ -83,7 +83,9 @@ void UJamHudWidget::UpdateTeach(const FJamPresentationFrame& F)
 		const bool bPassOn = TeachStep(TeachStateFor(ETeach::Pass), bPassDue, bPassed, F.SimFrame);
 		const bool bHitOn = TeachStep(TeachStateFor(ETeach::Hit), bHitDue, bHit, F.SimFrame);
 		Show = bPassOn && Ci == Hi ? 0 : bHitOn && Ci != Hi ? 1 : -1;
-		if (bHumanDownNow) Show = -1;   // knocked down inside a showing (the w2c still at f155): he cannot act, the pill does not ask him to
+		if (bHumanDownNow) Show = -1;
+		// 4d (the critic, pro seed 5 f100-120: RMB CHECK HIM while the dial said WON): no teaching in the draw's first second.
+		if (LastDropFrame >= 0 && F.SimFrame >= LastDropFrame && F.SimFrame - LastDropFrame < 60) Show = -1;   // knocked down inside a showing (the w2c still at f155): he cannot act, the pill does not ask him to
 	}
 	if (Show != TeachShown)
 	{
