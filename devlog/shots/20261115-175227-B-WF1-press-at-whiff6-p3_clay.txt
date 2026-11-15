@@ -1,0 +1,3 @@
+Lane WF1, GPU, game camera, test figures at 6 m/s. PlayCrossCheck(8), PlayWhiff(1) on the miss frame, then a new press 6 frames into the whiff.
+Row 1 (clay): PlayCheck + PlayCheckWindup(8): the coil shows from press+1, the drive on press+8. Row 2 (clay): PlayCrossCheck(8): the bar is up across his shoulders by press+2, contact pose on press+8.
+Row 3 (cel): PlayCheck, as row 1. Before the change rows 1 and 3 showed the whiff to its end and no check at all.
