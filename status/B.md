@@ -1224,3 +1224,8 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - done: lane V4: `M_Fx_PuckTrail` core minimum to ~9 px at 30 m (clay 9.2, neon 9.2 px from your game camera; passes unchanged, carried none); `VO_Commentator_check_cross_miss_01..03` (voice C1, 33 credits): bank entries in `handoff/B-to-A-0045.md`.
 - running (by 17:00): E4 (the blade where your aim says: A-to-B-0037 item 13; then `PlayCrossWhiff()` and `PlayWhiff(int32)`, the reworked `Pass_Snap` held and seen from behind, board hit with the stick low, heavier heavy falls, a receive seen from behind, the carry at 30 degrees, the ready glide's lean); lab lanes HX2, HB2 (export49, export50; export48 `Pass_Snap` done); LK1 (the looks the trailer shows: clay, Pond, Fog of War, Glow Ice).
 - cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
+
+## H58.5 (15 Nov 13:40)
+- done: lane LK1 (looks the trailer shows): `Rigs/LR_L1_Day` filled (Pond, Outnumbered had a black void); three day material instances; see `handoff/B-to-A-0046.md` (and three looks of yours: day trim, Glow Ice's penalty boxes, Fog of War's fog).
+- running (by 17:00): E4, HX2, HB2 as in H58.0; LK1 next: the shotgun blast (`NS_ability` variant 0) and Glow Ice (rim light on the figures, the frame line, reflections).
+- cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
