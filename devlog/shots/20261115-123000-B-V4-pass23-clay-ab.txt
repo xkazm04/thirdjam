@@ -1,0 +1,1 @@
+Lane V4, clay, a 23.3 m/s pass heading 35 deg right, 4/10/20 frames after release, top S4, bottom V4: unchanged within 1 px (5.0 to 7.0 px), thinner than the shot (passes are near the camera where the 12 cm floor rules, and their width factor is 0.55 to 0.8 of a shot's).

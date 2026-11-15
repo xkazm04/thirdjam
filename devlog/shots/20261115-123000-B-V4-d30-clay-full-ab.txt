@@ -1,0 +1,1 @@
+Lane V4, clay, full 1280x720 frame with the puck 30 m from the game camera (27.7 m/s). Top S4 (MinRad 0.0072), bottom V4 (MinRad 0.01): the white wedge under the puck at (659, 56) is wider (core 9.2 px against 6.2 px, 1 m behind the puck). Figures differ between the two because the match runs on; the streak is never drawn over a figure.
