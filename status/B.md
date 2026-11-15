@@ -1273,3 +1273,10 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - done: **a `PlayCheck` during a running whiff now plays its wind-up** (your `miss-03`). Cause: every whiff ran at the body check's priority, so `PlayCheck` took it for a check already playing and dropped the press. `BP_SkaterVisual_TB1` / `_TB1_P3` mark a running whiff (`WhiffT`); `PlayCheck` clears it and the wind-up starts on the press tick with a 2-frame blend. `PlayCrossCheck` already replaced a whiff. Strip: `devlog/shots/20261115-175227-B-WF1-press-at-whiff6-p3_clay.png`.
 - not verified: a moving skater (the rig skates in place); your real timing for a hold released on nobody followed by a check; the body check's whiff (`PlayWhiff(0)`) was not re-keyed. Please re-film your `miss-01` / `miss-03` views.
 - proof: seeded clay match 677 = 677 sim lines identical, JAMSIM 7200 `4ac32edcf3678901`, 0 Blueprint errors. Gates PASS. Cook-only check on this tree: Success - 0 error(s), 3 warning(s).
+
+## H62.0 (15 Nov 23:30): A-to-B-0045 points 1 and 2 (late; take only if a merge after H46 is still possible)
+- done: **the goal's dust is pale on the day look** (lane SM1). `MPC_Look` has nothing that tells day from night, so off clay `M_Fx_GoalDust` now draws its own colour at 1.8x brightness. Before, the material darkened it, which gave the soot. Pond: a pale cream haze, no dark cloud. Night: pale dust over the blue ice. Clay: unchanged.
+- done: **orange's goal on Glow Ice reads as light**: `M_Fx_GoalGlow` brings `User.Colour` up to full brightness with more saturation (up to 1.4x). Orange is a bright orange glow like blue's, not peach-brown puffs.
+- strip (day old/new, night new, orange old/new, blue): `devlog/shots/20261115-232800-B-SM1-daydust-neonorange-ab.png`. Hand-spawned at the net; not checked: a scored goal, Outnumbered, blue after the final pass.
+- point 3 (the streak behind a downed man): B did not look; your A235 cure stands.
+- Cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates PASS. Two materials changed, nothing else.
