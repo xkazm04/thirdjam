@@ -788,7 +788,32 @@ void AJamHitRead::RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSk
 	}
 	// Wave 4: a miss is told to the figure by name: a body check device B's PlayCheckWhiff() (H56.5), else PlayWhiff(0); a cross-check PlayWhiff(1)
 	// (B is asked in handoff 0037 whether a cross-check's whiff has its own call). A figure without the call gets nothing.
-	if (CVarJamHitWhiff.GetValueOnGameThread() > 0.f)
+	// Lane A224 (jam.vis.WhiffTake 1): PlayWhiff(Kind) first (device B's H59.5: 0 body check, 1 cross-check), PlayCheckWhiff only for a figure without it;
+	// no stick-to-front over B's take; the pawn keeps A's other calls off the take while it runs (NoteWhiffTake). A cross-check whose live window ended
+	// because he braces (or still holds the button) is not a miss yet: the hold goes on, and its whiff is the release on nobody (AJamSkater::ApplySimFrame).
+	if (AJamSkater::WhiffTakeOn())
+	{
+		static const FName NameWhiff(TEXT("PlayWhiff")), NameCheckWhiff(TEXT("PlayCheckWhiff"));
+		const TArray<FJamSkaterState>& SkS = Sim->GetSkaters();
+		for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
+		{
+			if (L.Result != EJamHitResult::Miss) continue;
+			const bool bCross = L.Kind == TEXT("cross");
+			if (bCross && SkS.IsValidIndex(L.Checker) && (SkS[L.Checker].bCrossBraced || SkS[L.Checker].CrossHoldFrames > 0))
+			{
+				if (L.bHuman) UE_LOG(LogJamHit, Log, TEXT("JAMHIT whiff frame=%lld checker=%d kind=cross call=none (held: the hold goes on; its whiff is the release on nobody)"), Sim->GetFrame(), L.Checker);
+				continue;
+			}
+			for (AJamSkater* Sk : Skaters) if (Sk && Sk->GetSimIndex() == L.Checker)
+			{
+				const bool bSent = AJamSkater::CallFigure(Sk->GetVisualObject(), NameWhiff, { bCross ? 1.0 : 0.0 });
+				const bool bSentCheck = !bSent && !bCross && AJamSkater::CallFigure(Sk->GetVisualObject(), NameCheckWhiff, {});
+				if (bSent || bSentCheck) Sk->NoteWhiffTake(bCross ? 1 : 0);
+				if (L.bHuman) UE_LOG(LogJamHit, Log, TEXT("JAMHIT whiff frame=%lld checker=%d kind=%s call=%s take=1"), Sim->GetFrame(), L.Checker, *L.Kind, bSent ? (bCross ? TEXT("PlayWhiff(1)") : TEXT("PlayWhiff(0)")) : bSentCheck ? TEXT("PlayCheckWhiff") : TEXT("none"));
+			}
+		}
+	}
+	else if (CVarJamHitWhiff.GetValueOnGameThread() > 0.f)
 	{
 		static const FName NameWhiff(TEXT("PlayWhiff")), NameCheckWhiff(TEXT("PlayCheckWhiff"));
 		for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
@@ -1015,7 +1040,7 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 			if (!Sk || !BraceSetK.IsValidIndex(Sk->GetSimIndex())) continue;
 			const int32 I = Sk->GetSimIndex();
 			const float K = SetAmt > 0.f ? FMath::InterpEaseInOut(0.f, 1.f, BraceSetK[I], 2.f) : 0.f;
-			if (!Sk->IsHitStopped()) PopHeld[I] = PopAmt > 0.f ? Model.PopFor(I, FrameF, FMath::Clamp(CVarJamHitWhiff.GetValueOnGameThread(), 0.f, 1.5f)) * PopAmt : 0.f;
+			if (!Sk->IsHitStopped()) PopHeld[I] = PopAmt > 0.f ? Model.PopFor(I, FrameF, AJamSkater::WhiffTakeOn() ? 0.f : FMath::Clamp(CVarJamHitWhiff.GetValueOnGameThread(), 0.f, 1.5f)) * PopAmt : 0.f;
 			const FVector Scale = BraceSetScale(K, SetAmt) * PopScale(PopHeld[I]);
 			if (!Scale.Equals(FVector::OneVector, 1e-4)) { Sk->SetActorScale3D(Scale); BraceScaled[I] = true; }
 			else if (BraceScaled[I]) { Sk->SetActorScale3D(FVector::OneVector); BraceScaled[I] = false; }
