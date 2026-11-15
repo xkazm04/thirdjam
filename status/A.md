@@ -512,3 +512,5 @@
 - package 08:40: `Hokej_Hokej_H39.zip` from main d1779d38, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 09:05: main 00e6f5f3 (The hardening lane's last suite and its final table for the game that ships (A212, track S) pushed.
 - link green 12:13: main 81e3d1a9 (R-0069: a loose puck inside his ring is his; MODES is a list with a preview; build tag on ) pushed.
+- link green 12:38: main b4b89f13 (R-0069 / R-0070: nothing is drawn at a cross-check but the figure; its take is no longer r) pushed.
+- package 13:11: `Hokej_Hokej_H40.zip` from main b4b89f13, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.

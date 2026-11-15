@@ -83,3 +83,22 @@ a drill set on the command line (`-dpcvars=jam.ctrl.Drill=2`) and the hand's mat
 one sim. `-log` on a packaged exe opens a console window: the tool uses `-abslog` alone. The mode names for `jam.menuscreen choose` are
 `modes/hockey.mode.<name>`. The hand's match on the night look (Fog of War) has no cross-check in it. The game logs every variable set at its start
 (`LogConfig: Set CVar [[...]]`): read it before trusting a film's defaults.
+
+## Wave 2: the hold's continuity (12:07 to 13:30)
+
+The final package's strip (`send-01`) showed a person's press-and-hold as two moves: the stick up for the tap (press + 2 to + 8), down for twenty
+frames, up again for the hold (press + 30); and device B's braking pose replaced the hold whenever he braked. Six films on the editor binary, the same
+hand and frames, one variable each (`tools/qa/eye2/out/w2-v0` to `w2-v7`):
+
+| Tried, on A's side of the calls | What the film showed |
+|---|---|
+| `SetBraking` not sent while the hold's pose is on | **The hold stays through the whole brake and while he stands.** In source: `jam.vis.HoldOverBrake 1`. (`wave2-exp-01`, top rows) |
+| `SetBraking` sent and `SetCrossCheckHold(1)` told again after it | The braking crouch replaces the hold as before: device B's figure does not obey the second call. (`wave2-exp-01`, bottom rows) |
+| `SetCrossCheckHold(1)` called at the end of the tap's wind-up (press + 8) instead of on the sim's brace (press + 12) | No change: the hold's pose shows at press + 29 either way. Kept in source (`jam.vis.HoldEarly 1`): it is A's half of the join and costs nothing. (`wave2-exp-02`) |
+| The figure's clock run forward over the take's tail (time dilation, as the check's re-time) | No change: the take is not on the figure's clock. Withdrawn. |
+| The interface's `PlayLift()` (sent by the pawn on the same press as `PlayCrossCheck`, further down `ApplySimFrame`) held back | No change in any frame: the lift over the helmet is `PlayCrossCheck`'s own take. Withdrawn. |
+| The press shown by the hold's pose alone (no `PlayCrossCheck`) | The stick comes up, but level only for a few frames; the figure drops the pose about 20 frames after the call and does not show it again for the rest of the hold. Withdrawn. (`wave2-exp-03`, `wave2-exp-04`) |
+
+So the join of the tap's take to the hold is inside device B's figure: after `PlayCrossCheck` it shows the hold's pose no earlier than 29 frames after
+the press, and without `PlayCrossCheck` it does not keep the pose. What a person holding LMB sees after wave 2: the stick up for the tap, down for
+twenty frames, then up and STAYING up through skating, braking and standing until the hit or the release.

@@ -117,6 +117,22 @@ static TAutoConsoleVariable<int32> CVarJamBoardBumpTake(TEXT("jam.board.BumpTake
 static TAutoConsoleVariable<int32> CVarJamVisHitTakeGuard(TEXT("jam.vis.HitTakeGuard"), 1,
 	TEXT("Lane A219: 1 (default) a skater's own check or cross-check take (and the held brace) is not interrupted by PlayHitReaction for a mere collision; 0 = the reaction is always sent (package H39: it replaced the hitter's take)."));
 static constexpr int32 OwnHitTakeFollowFrames = 10;   // device B's takes: the drive and the follow-through after the wind-up
+// Lane A219, wave 2 (the Director, 15 Nov 12:07, on the final package's strips): PRESS AND HOLD IS ONE MOVEMENT. The sim throws the tap on the press and
+// braces 10 to 13 frames later; the pawn called SetCrossCheckHold only then, so the stick went up for the tap (press + 2 to + 8), came DOWN, and rose again
+// for the hold (full about 30 frames after the press); and device B's braking pose took the hold away whenever he braked.
+//   jam.vis.HoldEarly 1 (default): while the button is still held (the sim's CrossHoldFrames > 0) the hold's pose is called from the frame the tap's
+//     wind-up ends (+ jam.vis.HoldEarlyLead), without waiting for the sim's brace; it is dropped the frame the button is released, or HoldEarlyGiveUpFrames
+//     after the press if the sim has not braced by then. Once the sim braces the pose simply stays. 0 = the sim's brace alone (package H40).
+//   jam.vis.HoldOverBrake 1 (default): SetBraking(true) is not sent while the hold's pose is on (and is taken back when the pose comes on); it goes out
+//     when the pose ends if he still brakes. 2 = the brake is sent and the hold is told again right after it. 0 = package H40.
+// Presentation only: nothing here is read by the sim.
+static TAutoConsoleVariable<int32> CVarJamVisHoldEarly(TEXT("jam.vis.HoldEarly"), 1,
+	TEXT("Lane A219 (wave 2): 1 (default) a cross-check still held when its tap's wind-up ends goes straight into the hold's pose (SetCrossCheckHold is called then, not when the sim braces); 0 = on the sim's brace only (package H40: the stick dropped between the tap and the hold)."));
+static TAutoConsoleVariable<int32> CVarJamVisHoldEarlyLead(TEXT("jam.vis.HoldEarlyLead"), 0,
+	TEXT("Lane A219 (wave 2): frames after the end of the tap's wind-up at which the early hold is called (0 default; negative = before the contact frame)."));
+static TAutoConsoleVariable<int32> CVarJamVisHoldOverBrake(TEXT("jam.vis.HoldOverBrake"), 1,
+	TEXT("Lane A219 (wave 2): 1 (default) the braking pose is not sent while the hold's pose is on; 2 = it is sent and the hold is told again after it; 0 = package H40 (the braking pose replaced the hold)."));
+static constexpr int32 HoldEarlyGiveUpFrames = 20;   // the sim braces 10 (a bot) to 13 (the human's buttons) frames after the press
 
 static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
 	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
@@ -460,11 +476,18 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		}
 		// Lane A219: the frames this figure's own hit take runs (the guard below keeps a collision's reaction off it).
 		if ((S.bCheckThisFrame || S.bLiftThisFrame) && S.WindupFrames > 0) OwnHitTakeUntil = SimFrameForLog() + S.WindupFrames + OwnHitTakeFollowFrames;
-		if (S.bCrossBraced != bWasCrossBraced)
+		// Lane A219 (wave 2, jam.vis.HoldEarly): the hold's pose is wanted while the sim braces, and already from the end of the tap's wind-up while the
+		// button is still held. bWasCrossBraced is the level SENT to the figure.
+		// (The button's level reaches the sim up to three frames after the press, so the press is remembered and the window's end bounds it.)
+		if (S.bLiftThisFrame && S.WindupFrames > 0) { HoldPressFrame = SimFrameForLog(); HoldPressWindup = S.WindupFrames; }
+		const bool bHoldWanted = HoldPoseWanted(CVarJamVisHoldEarly.GetValueOnGameThread() != 0, S.bCrossBraced, S.CrossHoldFrames, S.IsDown(), SimFrameForLog(), HoldPressFrame,
+			HoldPressWindup, CVarJamVisHoldEarlyLead.GetValueOnGameThread(), HoldEarlyGiveUpFrames);
+		if (bHoldWanted != bWasCrossBraced)
 		{
-			bWasCrossBraced = S.bCrossBraced;
+			bWasCrossBraced = bHoldWanted;
 			const bool bSent = CallFigure(V, NameSetCrossCheckHold, { bWasCrossBraced ? 1.0 : 0.0 });
-			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosshold frame=%lld skater=%d team=%d human=1 on=%d speed=%.2f call=%s"), SimFrameForLog(), S.Index, S.Team, bWasCrossBraced ? 1 : 0, S.Vel.Size(), bSent ? TEXT("SetCrossCheckHold") : TEXT("none"));
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosshold frame=%lld skater=%d team=%d human=1 on=%d speed=%.2f call=%s early=%d press=%lld"), SimFrameForLog(), S.Index, S.Team, bWasCrossBraced ? 1 : 0, S.Vel.Size(), bSent ? TEXT("SetCrossCheckHold") : TEXT("none"),
+				bWasCrossBraced && !S.bCrossBraced ? 1 : 0, HoldPressFrame);
 		}
 	}
 	if (S.IsDown() != bWasDown)
@@ -518,17 +541,22 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	// By name (CallFigure): a figure without SetBraking gets nothing. The JAMVIS line is the human's only (a bot reverses some 2,000 times a match).
 	// The read-out is written by the skater's own step: a faceoff or a period break (no step) leaves the last value standing, so a skater the sim holds still
 	// is not braking whatever the flag says.
-	const bool bBrakingNow = S.bReverseBraking && !S.Vel.IsNearlyZero();
+	// Lane A219 (wave 2, jam.vis.HoldOverBrake): the level SENT is the sim's brake, held back while the hold's pose is on (mode 1). bWasBraking is the sent level.
+	const int32 HoldOverBrake = CVarJamVisHoldOverBrake.GetValueOnGameThread();
+	const bool bBrakingNow = BrakeLevelToSend(HoldOverBrake, S.bReverseBraking && !S.Vel.IsNearlyZero(), bWasCrossBraced);
 	if (bBrakingNow != bWasBraking)
 	{
 		bWasBraking = bBrakingNow;
 		const float Decel = BrakeDecelFor(LastSimSpeed, S);
 		static const FName NameSetBraking(TEXT("SetBraking"));
 		const bool bBrakeSent = CallFigure(V, NameSetBraking, { bWasBraking ? 1.0 : 0.0, static_cast<double>(Decel) });
+		// Mode 2: the brake goes out and the hold is told again over it.
+		static const FName NameHoldAgain(TEXT("SetCrossCheckHold"));
+		const bool bHoldAgain = HoldOverBrake == 2 && bWasCrossBraced && CallFigure(V, NameHoldAgain, { 1.0 });
 		if (S.bHuman)
 		{
-			UE_LOG(LogJamSim, Log, TEXT("JAMVIS brake frame=%lld skater=%d team=%d human=1 on=%d decel=%.1f speed=%.2f call=%s (SetBraking: the sim's reverse brake)"),
-				SimFrameForLog(), S.Index, S.Team, bWasBraking ? 1 : 0, Decel, S.Vel.Size(), bBrakeSent ? TEXT("SetBraking") : TEXT("none"));
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS brake frame=%lld skater=%d team=%d human=1 on=%d decel=%.1f speed=%.2f call=%s hold_pose=%d hold_again=%d (SetBraking: the sim's reverse brake)"),
+				SimFrameForLog(), S.Index, S.Team, bWasBraking ? 1 : 0, Decel, S.Vel.Size(), bBrakeSent ? TEXT("SetBraking") : TEXT("none"), bWasCrossBraced ? 1 : 0, bHoldAgain ? 1 : 0);
 		}
 	}
 	LastSimSpeed = S.Vel.Size();
