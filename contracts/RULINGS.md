@@ -914,3 +914,13 @@ The Director's reading:
 (3) Therefore the animation has to read by itself at game distance: the tap as a shove with the stick in both gloves, the hold as the stick held
     across the chest from press to release. Judged on film of the package, frame by frame (lane A219); what only device B's takes can cure goes
     to B by handoff.
+
+## R-0071 (15 Nov 17:00, the operator, on the last two hours)
+Asked for his word on the DLSS download and for the form's three answers, he wrote, verbatim:
+"1. Guide me please what to do with the DLSS to continue there 2. I will submit at event page, will let you know which information required. First step would be to make the last touch from both devices, hardening, fixes and packaging for judges until 19:00 (2h left)"
+
+The Director's reading: (1) the DLSS plugin is fetched by the operator's own command (`tools/dlss/fetch-dlss.ps1`: the download accepts
+NVIDIA's licence, so he starts it); until it is installed the final package is cut without it and says so. (2) The form's answers are his at
+the event page; A keeps `submission/page.md`, `form.md` and the pictures ready to paste and answers what the page asks. (3) Until 19:00:
+both devices' last touches (A227 on A; device B's last push by 18:30), hardening on the final sim (A228), one landing, the package for the
+judges at 19:00.
