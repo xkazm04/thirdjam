@@ -105,8 +105,6 @@ Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSound
 
 ### Known limits, said plainly
 
-- Your carry is short: about a second before the puck leaves you, often by your own shot or pass, sometimes off your own blade with nobody near. The rule keeps your puck from a stick that only brushes it. It does not yet make the puck stick.
-- Space is a gamble: about one jab in ten.
 - Hammering the right button lands more checks than timing it. We know.
 - At pro you spend real time on the ice, most often in the moment you win the puck. The ring round a loose puck is the warning.
 - The stop beats one defender. It does not win you a match by itself.
