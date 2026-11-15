@@ -1229,3 +1229,8 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - done: lane LK1 (looks the trailer shows): `Rigs/LR_L1_Day` filled (Pond, Outnumbered had a black void); three day material instances; see `handoff/B-to-A-0046.md` (and three looks of yours: day trim, Glow Ice's penalty boxes, Fog of War's fog).
 - running (by 17:00): E4, HX2, HB2 as in H58.0; LK1 next: the shotgun blast (`NS_ability` variant 0) and Glow Ice (rim light on the figures, the frame line, reflections).
 - cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
+
+## H59.0 (15 Nov 14:00)
+- done: lane LK1 second: `NS_ability` variant 0 (the shotgun blast) wider and held to frame 24 (6.6 % of the frame at +18, was gone); Glow Ice: `MI_PP_Outline_Neon` (figures' dark parts outlined in light; far figures' legs 7 % -> 35 % lit), frame line Emissive 20 -> 6 (the puck's trail is the brightest thing again), bloom 1.8, screen-space reflections; `LR_P3_Clay` gains a crowd and stands actor for the 56 m rink (Shotgun, Bruisers had an empty barn since their rinks moved to 56 m).
+- running (by 17:00): E4 (socket on A's aim point: cause found by HB2: the aim tracked the blade centre, your `puck_socket` sits 15 to 18 cm off it on the forehand face; then export48 to 50 wired), LK1 (a punchier blast, clay ice details).
+- cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
