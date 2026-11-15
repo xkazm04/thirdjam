@@ -24,6 +24,7 @@
 #include "JamSim.h"
 #include "JamCarrierMarks.h"
 #include "UnrealClient.h"
+#include "Misc/AutomationTest.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudMarks(TEXT("jam.hud.Marks"), 1,
 	TEXT("The two warnings on the ice (lane A166): 1 (default) the contested puck's ring and the stop's distance mark; 0 neither (the screen of before)."), ECVF_Default);
@@ -33,6 +34,18 @@ static TAutoConsoleVariable<int32> CVarJamHudMarks(TEXT("jam.hud.Marks"), 1,
 // by default. The rule's state is still logged (JAMHUD mark=stop ..., shown=0); the contested puck's rings stay with jam.hud.Marks. 1 = package H39's line.
 static TAutoConsoleVariable<int32> CVarJamHudStopLine(TEXT("jam.hud.StopLine"), 0,
 	TEXT("The stop's distance line on the ice ahead of the carrying human (lane A166 / A171): 0 (default from lane A219, R-0070: no line of the game's mechanics on the ice) not drawn; 1 = drawn (package H39). The contested puck's rings are jam.hud.Marks."), ECVF_Default);
+
+// /perfect (R-0069 point 3; the critic's EYE READY item 5): a pass from his own mate that is still in flight is a pass to him, not a puck to fight for.
+// The contested rule (JamCarrierMarks::Contested) only asks that nobody carries the puck, so the orange rings lit round a mate's pass he skated onto.
+// The rings now stay dark while such a pass flies (HUDPossession.cpp's loose ring already does the same). 1 = package H42's rings.
+static TAutoConsoleVariable<int32> CVarJamHudContestOnMatePass(TEXT("jam.hud.ContestOnMatePass"), 0,
+	TEXT("The contested puck's rings while a pass by the human's own mate is in flight: 0 (default) not drawn (it is a pass to him, not a fight); 1 = drawn (package H42)."), ECVF_Default);
+
+// True while the puck is a pass in flight from a skater of the human's side other than himself (his own pass to nobody can still be a real fight).
+static bool HudMatePassInFlight(const FJamPuckState& P, const TArray<FJamSkaterState>& Sk, int32 Hi)
+{
+	return P.PassFrames > 0 && P.PassBy != Hi && Sk.IsValidIndex(P.PassBy) && Sk.IsValidIndex(Hi) && Sk[P.PassBy].Team == Sk[Hi].Team;
+}
 
 static TAutoConsoleVariable<int32> CVarJamHudMarkStills(TEXT("jam.hud.MarkStills"), 0,
 	TEXT("Proof: N > 0 takes a still (with the HUD) N sim frames into every showing of a mark: u1-mark-<tag>-contest-f<frame>.png and u1-mark-<tag>-stop-f<frame>.png (the stop's when it is lit). 0 off."), ECVF_Default);
@@ -145,6 +158,7 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 		bConOn = JamCarrierMarks::StepShow(GContestShow, Con.bOn, Con.Opp, F.SimFrame, SR);
 		ConOpp = GContestShow.Opp;
 	}
+	if (CVarJamHudContestOnMatePass.GetValueOnGameThread() == 0 && HudMatePassInFlight(Sim->GetPuck(), Sk, Hi)) bConOn = false;   // /perfect: a mate's pass is his
 	bool bConShown = false, bOppShown = false;
 	if (bConOn && Sk.IsValidIndex(ConOpp))
 	{
@@ -227,3 +241,32 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	MarkStill(GStopStill, TEXT("stop"), bStopShown && Stop.bLit, F.SimFrame);
 	MarkStill(GArmedStill, TEXT("armed"), bStopShown && !Stop.bLit, F.SimFrame);
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+// Jam.Hud.ContestMatePass (/perfect): the contested puck's rings stay dark while a pass from his own mate flies; his own pass, an opponent's pass and a
+// puck that is no pass are judged by the contested rule as before. Pure: no world.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudContestMatePass, "Jam.Hud.ContestMatePass", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudContestMatePass::RunTest(const FString&)
+{
+	TArray<FJamSkaterState> Sk;
+	Sk.SetNum(4);
+	Sk[0].Team = 0; Sk[1].Team = 0; Sk[2].Team = 1; Sk[3].Team = 1;   // 0 the human, 1 his mate, 2 and 3 the others
+	const int32 Hi = 0;
+	FJamPuckState P;
+	P.PassFrames = 12;
+	P.PassBy = 1;
+	TestTrue(TEXT("a mate's pass in flight: his"), HudMatePassInFlight(P, Sk, Hi));
+	P.PassBy = 0;
+	TestFalse(TEXT("his own pass: still judged by the rule"), HudMatePassInFlight(P, Sk, Hi));
+	P.PassBy = 2;
+	TestFalse(TEXT("an opponent's pass: still judged by the rule"), HudMatePassInFlight(P, Sk, Hi));
+	P.PassBy = 1; P.PassFrames = 0;
+	TestFalse(TEXT("the pass has ended: still judged by the rule"), HudMatePassInFlight(P, Sk, Hi));
+	P.PassFrames = 12; P.PassBy = -1;
+	TestFalse(TEXT("no passer: still judged by the rule"), HudMatePassInFlight(P, Sk, Hi));
+	P.PassBy = 7;
+	TestFalse(TEXT("a passer out of range: no crash, the rule"), HudMatePassInFlight(P, Sk, Hi));
+	TestEqual(TEXT("the default is the new screen"), IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.ContestOnMatePass"))->GetInt(), 0);
+	return true;
+}
+#endif
