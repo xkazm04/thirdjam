@@ -673,4 +673,50 @@ bool FJamPassStagedOpponentInLane::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A207 (wave 3, the Director 04:52): the tap under pressure. The human carries, an opponent presses him from 1.2 to 1.8 m (ahead, to the side, between
+// him and the mate), skating at him at 3 m/s with his stick on the puck; a mate stands 8 to 14 m away in the clear, the stick on him; the tap must reach the
+// mate (bar 50 % here; the person's path is the curve lane's JamHandCells).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPassStagedUnderPressure, "Jam.Core.PassStaged.UnderPressure", JamPassStagedTests::Flags)
+bool FJamPassStagedUnderPressure::RunTest(const FString& Parameters)
+{
+	using namespace JamPassStagedTests;
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	int32 N = 0, Caught = 0, ToOpp = 0;
+	for (int32 i = 0; i < 48; ++i)
+	{
+		FPassStage Sc(*C, G);
+		const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+		int32 Opp = -1;
+		for (const FJamSkaterState& S : Sc.Sim->GetSkaters()) if (S.Team != Team && Opp < 0) Opp = S.Index;
+		const FVector2D From(-20.0, 0.0);
+		const double MateAng = -40.0 + 80.0 * (i % 4) / 3.0;
+		const FVector2D ToMate = Rot(FVector2D(1.0, 0.0), MateAng);
+		const double D = 8.0 + 6.0 * ((i / 4) % 2);
+		const double PressAng = MateAng + (-90.0 + 180.0 * ((i / 8) % 6) / 5.0);   // the presser from -90 to +90 degrees off the line to the mate
+		const double PressD = 1.2 + 0.6 * ((i / 48.0));
+		const FVector2D PPos = From + Rot(FVector2D(1.0, 0.0), PressAng) * PressD;
+		Sc.Sim->SetSkater(Sc.Mate, From + ToMate * D, FVector2D::ZeroVector, UE_DOUBLE_PI);
+		Sc.Sim->SetSkater(Sc.Me, From, FVector2D::ZeroVector, FMath::DegreesToRadians(MateAng));
+		const FVector2D PToMe = (From - PPos).GetSafeNormal();
+		Sc.Sim->SetSkater(Opp, PPos, PToMe * 3.0, FMath::Atan2(PToMe.Y, PToMe.X));
+		for (int32 k = 0; k < 2; ++k) { Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Sc.Me].BladePos, FVector2D::ZeroVector); Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(ToMate.X, ToMate.Y); Sc.Step(); }
+		const int32 R0 = Sc.Sim->GetSkaters()[Sc.Mate].PassesReceived;
+		for (int32 k = 0; k < 3; ++k) { Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(ToMate.X, ToMate.Y); Sc.In[Sc.Me].bPassHeld = k < 2; Sc.Step(); }
+		bool bMate = false, bOpp = false;
+		for (int32 f = 0; f < 150 && !bMate && !bOpp; ++f)
+		{
+			Sc.Clear(); Sc.Step();
+			bMate = Sc.Sim->GetSkaters()[Sc.Mate].PassesReceived > R0 || Sc.Sim->CarrierIndex() == Sc.Mate;
+			bOpp = Sc.Sim->GetPuck().LastTouch == Opp;
+		}
+		++N; Caught += bMate ? 1 : 0; ToOpp += bOpp ? 1 : 0;
+	}
+	AddInfo(FString::Printf(TEXT("PASSPRESS the tap under a presser at 1.2-1.8 m to a mate 8-14 m away in the clear: reaches the mate %d of %d (%.1f %%), the presser takes it %d"), Caught, N, 100.0 * Caught / N, ToOpp));
+	TestTrue(TEXT("the tap under pressure reaches the open mate at least 50 %"), Caught * 2 >= N);
+	return true;
+}
+
 #endif

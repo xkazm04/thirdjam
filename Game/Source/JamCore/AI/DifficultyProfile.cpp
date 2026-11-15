@@ -20,6 +20,7 @@ namespace JamAI
 			// Lane A112 (CURVE-6.md): the pro's aggression numbers moved in ProOppSkill (JamAICore.h), the brain's default
 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (the same as SpeedScale at pro)
 			P.Opp.Hk.DropNoHit9Frames = 45;   // lane A206 (wave 3, EYE 1): pro plays the puck, not the man, for 45 frames after a drop
+			P.Opp.Hk.EarlyLongShot9Frames = 600;   // lane A206 (wave 4): no shot from beyond 15 m in the match's first 10 s (Jam.Bot.PlayerBotWins: the first goal at pro fell at frames 358-364, the scrum's shot)
 			P.Opp.Hk.Dodge9Share = 0.3;   // lane A206 (evolution 9, wave 2): pro steps off the human's hit in 0.3 of the windows (60 matches: bots felled 6.70 -> 5.02 a match; 0.6: 4.45)
 			P.LargeRedSkill = 1.165;   // lane A189 (CURVE-12.md, pass 2): 1.18 -> 1.165 with the wind-ups 8 / 12, evolution 8 and pressure 0.6 (the regular player on 120 x 60 42.8 -> 46.2, 600). Pass 1: 1.15 -> 1.18 on main 58af359f (the regular player on 120 x 60 56.5 -> 46.2, 600; 1.21: 41.7). Lane A154 (CURVE-8.md): 1.12 -> 1.15 (main 4cab387, after BRAIN-3 / CONTACT-5 / MOVEMENT-5: the regular player on 120 x 60 54.8 at 1.12, 48.2 at 1.15, 43.3 at 1.17 (600)). Lane A133 (CURVE-7.md): 1.065 -> 1.12 (the regular player on 120 x 60 with the hunt 8 and the carry: 69.8 at 1.065, 55.5 at 1.1, 47.8 at 1.13, 41.2 at 1.16 (600); 44.9 at 1.13 (2,000)). Lane A112 (CURVE-6.md): 1.04 -> 1.065 (the regular player on 120 x 60 with the new aggression: 57.1 at 1.04 (2,000)). Lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
 			return P;
@@ -58,6 +59,8 @@ namespace JamAI
 			// after 20 frames in reach (10), the aim 6 deg wide (no aim cone), the shot from inside 11.5 m (21.5): 81.5. Each alone: 71.0 / 65.5 / 60.0 / 71.0.
 			// The poke at 20 let law 3's straight charge through at rookie (59.5 %); 16: 46.0 %, 14: 4.5 % (the cell 79.5), 12: 0 % (76.5): 14.
 			Opp.Hk.OppPace9 = 0.9;
+			Opp.Hk.EarlyLongShot9Frames = 600;   // lane A206 (wave 4): rookie's opponents shoot from beyond 15 m only after the match's first 10 s
+			Opp.Hk.bScrumStay9 = true;   // lane A206 (wave 4): rookie's crease keepers stay back from a drop until the puck leaves the scrum (goals against him inside 10 s of a restart 11 -> 4 in 60)
 			Opp.Hk.DropNoHit9Frames = 90;   // lane A206 (wave 3, EYE 1): rookie never hits in the 90 frames after a drop
 			Opp.Hk.Poke9Frames = 14;
 			Opp.Hk.AimError9Deg = 6.0;
@@ -126,6 +129,7 @@ namespace JamAI
 			// red skill 0.85 / 0.95: 32.3 / 31.5, flat; law 3 at 1.45: 84.5 % from 11 m, 100 % from 12 m).
 			FJamDifficultyProfile P{"all_star", 1.45, 0.9, 4.0, 25.0, 0.0, 60, Opp, 0.2};
 			P.Opp.Hk.DropNoHit9Frames = 45;   // lane A206 (wave 3, EYE 1)
+			P.Opp.Hk.EarlyLongShot9Frames = 600;   // lane A206 (wave 4): no shot from beyond 15 m in the match's first 10 s (Jam.Bot.PlayerBotWins: the first goal at pro fell at frames 358-364, the scrum's shot)
 			P.Opp.Hk.Dodge9Share = 0.5;   // lane A206 (evolution 9, wave 2): all_star steps off the human's hit in half the windows (rookie never)
 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the opposing side's speed only; the human's mates skate at the human's pace (1.4 before: 15.5 against his 11.3 m/s)
 			P.LargeSpeedScale = 1.47;   // lane A154 (CURVE-8.md): 1.42 -> 1.47 (main 4cab387: the good player on 120 x 60 30.3 at 1.42, 29.0 at 1.45, 27.3 at 1.47 (600)). Lane A133 (CURVE-7.md): 1.34 -> 1.42 (the good player on 120 x 60: 38.3 at 1.34, 33.8 at 1.38, 27.5 at 1.42 (600); all_star harder than pro there, R-0055 point 3). Lane A112 (CURVE-6.md): 1.22 -> 1.34 (the mates no longer share it; the good player on 120 x 60: 45.0 at 1.22, 37.3 at 1.27, 28.3 at 1.32 (600), 29.1 at 1.32 (2,000)). Lane A95 (CURVE-5.md): the good player on 120 x 60 at speed 1.4: 5.7 % (600), 1.25: 19.2 (2,000), 1.2: 32.3 (600)
@@ -234,6 +238,11 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_pressure9_s") == 0) { K.Hk.Pressure9S = V; return true; }
 			if (std::strcmp(Key, "hk_drop_no_hit9_frames") == 0) { K.Hk.DropNoHit9Frames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_pass_care9") == 0) { K.Hk.bPassCare9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_net_never_empty9") == 0) { K.Hk.bNetNeverEmpty9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_early_long_shot9_frames") == 0) { K.Hk.EarlyLongShot9Frames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_scrum_stay9") == 0) { K.Hk.bScrumStay9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_meet_line9") == 0) { K.Hk.bMeetLine9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_crease_keeper9") == 0) { K.Hk.bCreaseKeeper9 = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_defend_team9") == 0) { K.Hk.bDefendTeam9 = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_dodge9_share") == 0) { K.Hk.Dodge9Share = V; return true; }
 			if (std::strcmp(Key, "hk_drive_first9") == 0) { K.Hk.bDriveFirst9 = V != 0.0; return true; }
@@ -325,6 +334,7 @@ namespace JamAI
 		ShipEvolution8(P.Mate.Hk);
 		SetEvolution9(P.Opp.Hk, true, false);   // lane A206 (track Q2, evolution 9; BRAIN-9.md): ships on; brain9=0 (and every older brainN=0) is evolution 8
 		SetEvolution9(P.Mate.Hk, true, true);
+		P.Mate.Hk.bScrumStay9 = P.Opp.Hk.bScrumStay9;   // lane A206 (wave 4): the scrum's stay-back is the level's, both sides (rookie)
 		// Lane A189 (CURVE-12.md): a level's own step-up distance survives the evolutions (SetEvolution3 zeroes the opposing side's StepUpM, a rule of the
 		// human's side there). With hk_second_man_hunts and hk_step_up_max_team (kept by SetEvolution6 on) it is all_star's brain dial (BRAIN-6.md). 0 = none (every level today).
 		if (Profile.Opp.Hk.StepUpM > 0.0) { P.Opp.Hk.StepUpM = Profile.Opp.Hk.StepUpM; }

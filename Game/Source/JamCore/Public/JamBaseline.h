@@ -64,6 +64,7 @@ namespace JamBaseline
 		G.Skater.BreakawaySpeedBonus = 0.2;       // lane A194 (track F2 evolution 10): game.skater.breakaway.speed_bonus (default 0.3)
 		G.Skater.bChargeDiesOnLoss = false;      // lane A203 (track K1 evolution 4): game.skater.charge_dies_on_loss (ships true since the Director, 17:01)
 		G.Contact.CheckPullM = 0.0; G.Contact.bCrossAnyMan = false;   // lane A209 (track F1, the night): game.contact.check_pull_m, cross_any_man (ship 1.0, true)
+		G.Contact.CrossLiveFrames = 0; G.Contact.bCrossBackHuman = false;   // lane A215 (track F1, the night): game.contact.cross_live_frames, cross_back_human (ship 10, true)
 		PassShotNeutral(G);                      // lane A207 (track P1): game.pass.power / aim / catch_m / clear_own_body (ship 30, 25, 1.2, true), game.shot.speed_scale (ships 2)
 		G.Stick.PickupArcM = 0.0; G.Stick.bPickupBody = false;   // lane A208 (track F0, R-0067 point 2): game.stick.pickup.arc_m, pickup.body (default 1.5 and true)
 		G.Stick.FaceoffCentreGapM = 0.0; G.Stick.FaceoffWinnerShieldFrames = 0; G.Stick.FaceoffNoHitFrames = 0;   // lane A208 (the eye's list 1): game.stick.faceoff (default 1.8 / 90 / 45)

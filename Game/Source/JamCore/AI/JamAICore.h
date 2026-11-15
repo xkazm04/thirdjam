@@ -282,6 +282,10 @@ namespace JamAI
 		bool bAheadWeak9 = false;
 		// bMarkMan9 (wave 2): the second back of a five marks the opponent nearest our net (goal-side, moving with him) instead of standing on the slot spot.
 		bool bMarkMan9 = false;
+		// bMeetLine9 (READY 5, R-0067 "no pass reaches the end"): the bot a pass in flight is aimed at (Puck.PassTo) holds the velocity he had at the release
+		// for MeetHoldFrames (the passer's lead stays true), then skates to the point where the puck's line passes nearest him, and takes no other job until
+		// the pass is caught, taken by another, or 90 frames have gone (MeetPass).
+		bool bMeetLine9 = false;
 		// bShotLane9 (wave 2, R-0067 after the doubled shot): the Weak job's first skater stands in the shooting lane (on the line carrier -> our net, 9 m or
 		// a third of the way out from the carrier) while an opposing carrier is inside 35 m of our net, instead of on the far side (the back door).
 		bool bShotLane9 = false;
@@ -303,6 +307,17 @@ namespace JamAI
 		// gives way to a team-mate inside 3 m after 20 frames unless both play the puck; and an opposing carrier inside 35 m of the net is never left alone
 		// for more than 30 frames (nobody within 3 m): the nearest bot goes at him; the man in the crease steps onto a shot's line (EYE 2, EYE 3).
 		bool bDefendTeam9 = false;
+		// bCreaseKeeper9 (wave 4, EYE 3): the first back of a five takes the crease (1.5 m out, on the line net -> puck) whenever the other side carries the
+		// puck within 45 m of his net or a shot comes at it, and steps onto a shot's line (his body blocks): both backs stood 16 m out at the far shots.
+		bool bCreaseKeeper9 = false;
+		// bScrumStay9 (wave 4, EYE LIST 3; rookie, both sides): the crease keeper also stays back from a drop until the puck leaves the scrum (8 m, 3 s).
+		bool bScrumStay9 = false;
+		// bNetNeverEmpty9 (wave 4, the Director 03:00: "a net is never empty"): the crease keeper keeps the crease whenever the puck is outside the end his
+		// side attacks (the neutral zone or his own end), not only when the other side has it.
+		bool bNetNeverEmpty9 = false;
+		// EarlyLongShot9Frames: > 0 = the opponents take no shot from beyond 15 m in this many frames from the match's first drop (rookie 600: the first goal
+		// against a newcomer fell at frame 360 in 7 matches of 7, a shot from the scrum).
+		int EarlyLongShot9Frames = 0;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -429,6 +444,9 @@ namespace JamAI
 	constexpr bool kEvo9DriveFirst = true; // wave 2
 	constexpr bool kEvo9PassCare = true;   // wave 3
 	constexpr bool kEvo9DefendTeam = true; // wave 3
+	constexpr bool kEvo9CreaseKeeper = true; // wave 4
+	constexpr bool kEvo9MeetLine = true;     // READY 5
+	constexpr int kEvo9MeetHoldFrames = 12;
 	constexpr double kEvo9MatePressureS = 0.6;      // the opposing side's at rookie and pro
 	inline void SetEvolution9(FJamHockeySense& H, bool bOn, bool bMate)
 	{
@@ -445,8 +463,11 @@ namespace JamAI
 		H.DriveNet9M = bOn ? kEvo9DriveNetM : 0.0;
 		H.Pressure9S = (bOn && bMate) ? kEvo9MatePressureS : 0.0;
 		H.bPassCare9 = bOn && kEvo9PassCare;
-		H.bDefendTeam9 = bOn && kEvo9DefendTeam && !bMate;   // wave 3: the opponents only (on the human's side it raised goals against, 2.38 -> 2.70 a match at pro)
-		if (!bOn) { H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; H.Dodge9Share = 0.0; H.DropNoHit9Frames = 0; }
+		H.bDefendTeam9 = bOn && kEvo9DefendTeam;   // wave 4: on both sides again (with the crease keeper the mates' share lowers goals against: pro 2.67 -> 2.22 a match, 60)
+		H.bCreaseKeeper9 = bOn && kEvo9CreaseKeeper;
+		H.bMeetLine9 = bOn && kEvo9MeetLine;
+		H.bNetNeverEmpty9 = bOn && kEvo9CreaseKeeper;   // wave 3: the opponents only (on the human's side it raised goals against, 2.38 -> 2.70 a match at pro)
+		if (!bOn) { H.EarlyLongShot9Frames = 0; H.bScrumStay9 = false; H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; H.Dodge9Share = 0.0; H.DropNoHit9Frames = 0; }
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -652,6 +673,7 @@ namespace JamAI
 		int PuckLastTouch = -1;   // skater that touched the puck last, -1 since the faceoff
 		int PuckPassFrames = 0;   // lane A206 (evolution 9, wave 2): the sim's Puck.PassFrames (a pass in flight: frames left of it; lane A207), 0 = none
 		int PuckPassBy = -1;      // lane A206: the sim's Puck.PassBy (the passer of the pass in flight), -1 = none
+		int PuckPassTo = -1;      // lane A206 (READY 5): the sim's Puck.PassTo (the man the pass in flight is aimed at, under pass.catch_m), -1 = none
 		int NumSkaters = 0;
 		int PlayerIndex = -1;     // the human's skater (-1 = none)
 		// Lane A129 (track Q1): the second human, the guest of an online match (UJamSim::SeatGuest), or -1. The brain neither thinks for it nor gives it a
@@ -921,6 +943,9 @@ namespace JamAI
 		FVec2 DodgeHit(const FJamAIWorld& W, int Id, const FVec2& Dir) const;   // lane A206 (evolution 9, wave 2)
 		void PassCare(const FJamAIWorld& W, int Id, FJamAIInput& In) const;   // lane A206 (evolution 9, wave 3)
 		bool NoCarrierAlone(const FJamAIWorld& W, int Id) const;   // lane A206 (evolution 9, wave 3)
+		bool CreaseKeeper(const FJamAIWorld& W, int Id, FVec2& Out) const;   // lane A206 (evolution 9, wave 4)
+		bool MeetPass(const FJamAIWorld& W, int Id, FVec2& Out);   // lane A206 (evolution 9, READY 5)
+		int MeetBy9[kMaxSkaters] = {}; int64_t MeetStart9[kMaxSkaters] = {}; FVec2 MeetVel9[kMaxSkaters];   // lane A206 READY 5: the pass being met
 	private:
 		int DownNear[kMaxSkaters] = {};
 		int64_t DownNearFrame[kMaxSkaters] = {};
@@ -937,7 +962,7 @@ namespace JamAI
 		int Faceoffs = 0;             // faceoff countdowns seen
 		int64_t FaceoffStart = 0;     // frame the current faceoff countdown began (the draw knobs hash on it, so they vary per match)
 		bool bWasFaceoff = false;
-		int64_t DropFrame9 = -100000; bool bWasDrawOpen9 = false;   // lane A206 wave 3: the frame of the last faceoff drop (DropNoHit9Frames)
+		int64_t DropFrame9 = -100000; bool bWasDrawOpen9 = false; FVec2 DropPos9; int64_t FirstDrop9 = -1;   // lane A206 wave 3: the frame of the last faceoff drop (DropNoHit9Frames)
 		int LastPassBy9 = -1; int ReceivedFrom9[kMaxSkaters] = {}; int64_t ReceivedFrame9[kMaxSkaters] = {};   // lane A206 wave 3 (bPassCare9)
 		int AloneRun9[2] = {};   // lane A206 wave 3 (bDefendTeam9): frames an opposing carrier inside 35 m of this team's net has had nobody of it within 3 m
 

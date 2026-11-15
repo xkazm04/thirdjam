@@ -146,6 +146,8 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `contact.bot_cross_windup_frames` | 0..12 | 12 (lane A200 (track F1, evolution 11); ships on, the Director 15:53; neutral: the shared cross_windup_frames): the same rule as cross_windup_frames for every skater the game does not seat as a human (both sides' bots; the online guest is a human): the pressed cross-check's shove lands this many frames after the press. Absent = 12 (ships on). The neutral value is the shared cross_windup_frames. |
 | `contact.check_pull_m` | 0..2 | 1.0 (lane A209, track F1, the night; neutral 0): the human's hit finds its man in the wind-up (DEFAULTS.md) |
 | `contact.cross_any_man` | true/false | true (lane A209, track F1, the night; neutral false): the human's cross-check shoves a man without the puck (DEFAULTS.md) |
+| `contact.cross_live_frames` | integer 0..30 | 10 (lane A215, track F1, the night; neutral 0): the pressed cross-check stays live this many frames after its wind-up; the first man met takes it (DEFAULTS.md) |
+| `contact.cross_back_human` | true/false | true (lane A215, track F1, the night; neutral false): the human's tap takes a carrier's back: a stumble and the strip (DEFAULTS.md) |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
 | `rules.timer_frames` | 600..28800 | 10 s to 8 min at 60 Hz (lane A141: a clock above 29,400 could end past the 36,000-frame cap, R-0052 point 6; before 600..36000) (lane A72, ask A1: 5 min before; the HUD clock reads 10:00) |
 | `rules.penalty_frames` | 60..600 | 1 s to 10 s in the box (lane A72, ask A8); 300 when absent |

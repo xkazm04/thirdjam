@@ -211,6 +211,7 @@ namespace JamAI
 		W.PuckVel = V(S.GetPuck().Vel);
 		W.PuckLastTouch = S.GetPuck().LastTouch;
 		W.PuckPassFrames = S.GetPuck().PassFrames; W.PuckPassBy = S.GetPuck().PassBy;   // lane A206 (evolution 9, wave 2): A207's pass in flight, read by the brain
+		W.PuckPassTo = S.GetPuck().PassTo;   // lane A206 (READY 5): the man the pass in flight is aimed at
 		const TArray<FJamSkaterState>& Sk = S.GetSkaters();
 		W.NumSkaters = FMath::Min(Sk.Num(), kMaxSkaters);
 		W.PlayerIndex = S.GetHumanIndex();

@@ -1397,7 +1397,7 @@ bool FJamControlsFirstFiveMinutes::RunTest(const FString&)
 		{
 			FJamGameConfig Cfg = Cart->Game;
 			Cfg.Skater.bChargeDiesOnLoss = A.bKey;
-			Cfg.Stick.PickupArcM = 0.0; Cfg.Stick.bPickupBody = false;   // lane A208: re-staged at game.stick.pickup's neutral: this test measures the mapping; under the pickup seed 3 plays a path where five LMB taps of 4-9 frames read braced (frames 1979-2792, every arm alike: a finding for the contact / controls lanes, StepCrossHold)
+			// Lane A215: A208's re-staging at the pickup's neutral is taken out: the brace-on-a-tap fault it stepped round is fixed (A209, UJamSim::FaceoffReset, Jam.Core.Contact.TapNeverBraces).
 			UJamSim* Sim = NewObject<UJamSim>();
 			Sim->Init(Cfg, static_cast<uint64>(Seed));
 			UJamBrain* Brain = NewObject<UJamBrain>();

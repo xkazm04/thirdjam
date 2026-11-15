@@ -127,21 +127,31 @@ every HUD element; his team's colour when a mate is in the cone. Read by eye onl
 **The long shot, merged, before the fade** (100 matches at pro; the bots' shots at the human from 25-35 m): regular 46.4 % in (blocked 27.7 %, saved 10.9 %,
 a crease man at 4 % of them); large 53.1 % (blocked 3.1 %, saved 19.4 %, crease man 15 %).
 
-**The shot fades** (`game.shot.fade_m` 12; neutral 0): the added speed (what `speed_scale` put on top of the 1x shot) fades as e^(-x / 12 m) over the
-distance the puck travels (`FJamPuckState::ShotExcess`, hashed while not 0; any touch ends it): 2x off the stick, about 1.4x after 10 m, 1.1x after 30 m.
+**The shot fades** (`game.shot.fade_m` 6; neutral 0): the added speed (what `speed_scale` put on top of the 1x shot) fades as e^(-x / 6 m) over the
+distance the puck travels PAST 8 m from the shooter (`UJamSim::ShotFadeFromM`: the close shot keeps the full 2x, his order; a fade from 0 m slowed the 5.5 m
+deke shot and `Jam.Core.Payoffs.Deke` failed); about 1.5x at 12 m, 1.0x by 30 m (`FJamPuckState::ShotExcess`, hashed while not 0; any touch ends it).
 
-| bots' shots at the human, pro | under 12 m | 12-25 m | 25-35 m |
+| bots' shots at the human, pro (100 matches) | under 12 m | 12-25 m | 25-35 m |
 |---|---|---|---|
 | regular, no fade | 35.0 % | 34.9 % | 46.4 % |
-| regular, fade 25 | 42.2 | 31.1 | 34.8 |
-| regular, fade 12 (ships) | 46.2 | 33.5 | 21.4 |
+| regular, fade 12 from 8 m | 50.0 | 40.3 | 40.2 |
+| regular, fade 6 from 8 m (ships) | 47.3 | 29.9 | 32.1 |
 | large, no fade | 32.7 | 34.4 | 53.1 |
-| large, fade 25 | 30.2 | 33.2 | 44.8 |
-| large, fade 12 (ships) | 35.5 | 23.6 | 34.7 |
+| large, fade 12 from 8 m | 35.5 | 31.6 | 41.4 |
+| large, fade 6 from 8 m (ships) | 40.7 | 26.8 | 37.1 |
 
-The close shot keeps its danger (under 12 m: 46 % / 36 % in). The long one falls but not to the bar (15 % at pro): at 1x the large rink's long shot already
-went in 20.8 %: the shot's speed alone cannot get it under 15 % while the crease is empty at 84-98 % of those shots. What else must give: the crease man
-(A206 wave 2), the human's side in the lane (A208's bodies block 41.6 % on the regular rink, 5 % on the large one).
+The close shot keeps its danger. The long one falls but not to 15 %: at 1x the large rink's long shot already went in 20.8 %, and the crease is empty at
+83-98 % of those shots. With a man set in front of the goal (staged net, the read on) the doubled shot from 25-30 m is a save 18 of 18 (15 saved, 3 wide),
+from 12 m 3 of 9 go in. The last step is the brain's (a net never empty).
+
+**The pass in flight against opponents** (`game.stick.pickup.pass_arc_m` 1.0 / `pass_arc_deg` 60; neutral 0): an opponent takes a pass in flight only with
+his blade: the point of the pass's way nearest his blade within 1.0 m (+ the puck's radius) and inside 60 degrees of his stick's line; never in the pass's
+first 6 frames (it gets off the stick); his body still blocks. The Director ruled 0.7 m / 35 degrees: a man 1 m off the lane then stopped 18 of 30
+(`Jam.Core.PassStaged.OpponentInLane`); at 1.0 / 60, 30 of 30, and a man 2.5 m off lets 6 of 6 through.
+
+**The passer never takes his own pass back** (`OwnPuckClears`, under `pass.clear_own_body`): his pass in flight is never his again by arc, body, catch or
+carry; any release is locked 8 frames past its cooldown while it moves away from him; a powered pass leaves at least 6 m/s faster than him along its line.
+Back on the passer's stick within 10 frames: human 1.6-1.8 %, bots 3.8-5.3 % (13-23 % before).
 
 **A bot passes to nobody nearer than 3 m** (`UJamSim::BotPassMinM`; 2 m when an opponent within 2 m closes on him; the human keeps 2 m): no key (the Director's
 ruling 01:12).

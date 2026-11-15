@@ -501,3 +501,4 @@
 - link green 03:40: main 9e6815a0 (Merge dev-b at 29dd86bc; the carried puck is seen; the brain's wave 3; the screen teaches;) pushed.
 - link green 04:01: main b3284ba0 (Near the boards he sees ice and the play: the camera slides in and comes down instead of r) pushed.
 - link green 05:24: main ecbd48f1 (The faceoff is a faceoff: both centres at the dot, the winner keeps his feet; nobody score) pushed.
+- link green 05:46: main bf20d00e (The slab at his shoulder is gone; a loose puck is drawn where it is; device B's takes stan) pushed.

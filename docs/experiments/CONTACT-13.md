@@ -226,3 +226,35 @@ test-guards PASS; schema 99 / 99. The six cells at 600: rookie 86.7 / 91.0, pro 
   (pro 94.0 / 99.5 / 93.0 / 83.5, straight 0; all_star 99.5 / 99.5 / 99.0 / 93.0, straight 0); the full `Jam` filter 333 / 0 in a cleared environment
   (`gate4`); six cells at 600: rookie 84.2 / 94.5, pro 62.8 / 50.2, all_star 28.3 / 63.2 (regular / large: the merged game's; the curve lane's to read).
   m6 (+ the fix): `Jam.Core.Contact` 37 / 37.
+
+## 11. Lane A215 (part 3b): the drill's step 8, the cross-check's live window, the tap into a carrier's back
+
+**Step 8 of the acceptance drill** (H35 red twice): the driver's `lmb_hold` slept its 2200 ms, so step 7 k=3's W (1500 ms) and the held LMB stayed down
+about 30 frames into step 8's stage: the "standing" human skated 3.7 m into the man standing 7 m away and the row measured a touch at closing 0. Fixed
+in the driver (`ReleaseDue` during a hold) and in the drill (step 8: the human sends nothing from the settle to the verdict, `stray_in` counts what was
+taken; its stage waits for the man on his feet; step 7 k=1 holds the scene until the hand's W arrives); `JAMTRACE` lines (`jam.accept.Trace` 1). Two
+windowed runs in a row all ten green (down 95 = knock 95 at closing 12.57, with the puck: a bot's full hit on a standing carrier fells him).
+
+**The live window** (`game.contact.cross_live_frames`, ships 10, neutral 0; `UJamSim::StepCrossLive`, `TryCrossShove(S, O, bLive)`): a pressed
+cross-check whose shove finds nobody on the frame its wind-up ends stays live 10 frames; each frame the aimed man, then every other opponent nearest
+first, is tried at the stick's reach (centres 0.8 + stick.lift_range_m); the first who passes takes it; the miss is the window's end (the HUD's line,
+`HitRead.cpp`, waits for it). Every skater. New hashed field `FJamSkaterState::CrossLiveLeft`. Window length arms: 10 / 16 / 22 frames give rookie
+76.2 / 76.1 / 77.5 %, pro 72.3 / 71.6 / 72.0 %: the men left skate out of the stick's reach; length is not the limit.
+
+**The tap into a carrier's back** (the Director's rulings of 02:39 and 04:05; `game.contact.cross_back_human`, ships true, neutral false;
+`UJamSim::CrossBackHuman`, `LandCrossBack`, `ResolveContact`'s new `MaxOutcome`): the HUMAN's pressed cross-check (a tap: the button is up when it
+lands) that meets the back of a man who has the puck or had it within stick.foul_grace_frames is a stumble, never more, and the puck comes off his
+blade as a lift's strip unless he is inside his take grace (then the puck is kept). A hold never strips with it. A bot's pressed cross-check from behind
+is a bump at most (it closes A125's stick-only widening from behind for the bots: the carrier's body shield refuses a stick from behind, and the
+widening then shoved from any side, uncapped). Where `rules.penalties` is on, the from-behind foul is called on the human (ResolveContact's rule).
+
+| person hand, 100 a cell | cross inside 2.5 m landed | all presses landed | human on his back | bots' hits on him a match |
+|---|---|---|---|---|
+| neutral (= the tree before) rookie / pro | 60.5 / 55.0 % | 49.1 / 47.5 % | 3.0 / 6.1 % | 2.6 / 3.22 |
+| live window only (b2) | 65.7 / 57.7 % | 53.2 / 49.8 % | 2.7 / 6.3 % | 2.65 / 3.22 |
+| shipped (window + back) | **75.2 / 72.9 %** | 60.4 / 64.8 % | 2.9 / 6.0 % | 2.72 / 3.27 |
+
+The 80 % bar is not met: what is left inside 2.5 m is never in the stick's reach on any frame (8.0 / 9.2 %), shielded by the spin, the sweep or the
+ability (4.7 / 3.2), outside the cone (4.3 / 3.5), a man without the puck who turned his back in the wind-up (1.7 / 3.7), a back beyond the shove's reach
+at the press (2.2 / 2.6), the lift's cooldown (0.7 / 2.0). The pickup (A208) did not change the per-press rate (60.5 with, 62.0 without at rookie) but
+took the lift's strips from 34 to 2 per 100 matches and halved the presses at a man: the eye's drill chases and presses at a back.

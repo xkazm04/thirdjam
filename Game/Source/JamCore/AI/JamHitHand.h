@@ -49,6 +49,7 @@ namespace JamAI
 		// lane A209 wave 3: the hits TAKEN: every bot's pressed body check / cross-check whose man (the nearest opponent in front within 4 m) is the human
 		HT_BPress = HC25_End, HT_BLanded, HT_BDown, HT_BBump, HT_BEarly, HT_BGap03, HT_BGap06, HT_BGapFar, HT_BOther,
 		HT_CPress, HT_CLanded, HT_CBump, HT_CMiss, HT_BLate,
+		HT_CBack,   // lane A215: a bot's cross-check that stumbled or felled the human from behind (his back to the bot), whatever the audit followed
 		Hand_Count
 	};
 	inline int HC25Slot(int Reason) { return Reason >= HC_NoPuck && Reason <= HC_Cooldown ? HC25_Base + (Reason - HC_NoPuck) : Reason >= HC_LFar && Reason <= HC_LDown ? HC25_Base + 8 + (Reason - HC_LFar) : -1; }
@@ -65,7 +66,7 @@ namespace JamAI
 			"n_press", "n_landed", "x_elsewhere", "c_l_far", "c_l_cone", "c_l_back", "c_l_down", "c_accepted", "b_contact25", "c_contact25",
 			"c25_nopuck", "c25_reach", "c25_cone", "c25_arm", "c25_back", "c25_shield", "c25_moved", "c25_cooldown", "c25_l_far", "c25_l_cone", "c25_l_back", "c25_l_down",
 			"t_b_press", "t_b_landed", "t_b_down", "t_b_bump", "t_b_early", "t_b_gap03", "t_b_gap06", "t_b_gapfar", "t_b_other",
-			"t_c_press", "t_c_landed", "t_c_bump", "t_c_miss", "t_b_late" };
+			"t_c_press", "t_c_landed", "t_c_bump", "t_c_miss", "t_b_late", "t_c_back" };
 		return (i >= 0 && i < Hand_Count) ? Names[i] : "?";
 	}
 
@@ -136,6 +137,7 @@ namespace JamAI
 				if (O.Team == Me.Team) continue;
 				FBot& Bt = Bots[k];
 				const bool bHitMe = bOnMe && Me.ContactBy == k;
+				if (bHitMe && Me.bContactCross && !O.bHuman && Me.ContactOutcome >= UJamSim::ContactStumble && FVector2D::DotProduct((Me.Pos - O.Pos).GetSafeNormal(), Me.Forward()) > 0.5) ++H[HT_CBack];   // lane A215
 				if (Bt.B >= 0)
 				{
 					const double D = FVector2D::Distance(O.Pos, Me.Pos);
@@ -278,7 +280,7 @@ namespace JamAI
 						else if (Cf.Stick.LiftConeDeg < 180.0 && HandAngleOffFacing(Me, To) > Cf.Stick.LiftConeDeg) CReason = HC_LCone;
 						else if (FVector2D::DotProduct(To.GetSafeNormal(), O.Forward()) > 0.5) CReason = HC_LBack;
 					}
-					if (F - CFrame > CWu + 2) { const int Rs = CReason >= 0 ? CReason : HC_Moved; ++H[Rs]; if (bC25 && HC25Slot(Rs) >= 0) ++H[HC25Slot(Rs)]; bC = false; }
+					if (F - CFrame > CWu + 2 + Sim.GetConfig().Contact.CrossLiveFrames) { const int Rs = CReason >= 0 ? CReason : HC_Moved; ++H[Rs]; if (bC25 && HC25Slot(Rs) >= 0) ++H[HC25Slot(Rs)]; bC = false; }
 				}
 			}
 			if (Sent.bLift && !bC)

@@ -1257,6 +1257,8 @@ namespace
 			ReadInteger(Ct, TEXT("bot_cross_windup_frames"), C.Contact.BotCrossWindupFrames);   // lane A200: the bots' own; absent = the shared value
 			ReadNumber(Ct, TEXT("check_pull_m"), C.Contact.CheckPullM);   // lane A209: the human's hit finds its man in the wind-up; 0 = the neutral value
 			ReadBool(Ct, TEXT("cross_any_man"), C.Contact.bCrossAnyMan);   // lane A209: the human's cross-check shoves a man without the puck; false = the neutral value
+			ReadInteger(Ct, TEXT("cross_live_frames"), C.Contact.CrossLiveFrames);   // lane A215: the cross-check's live window after its wind-up; 0 = the neutral value
+			ReadBool(Ct, TEXT("cross_back_human"), C.Contact.bCrossBackHuman);   // lane A215: the human's tap in a carrier's back; false = the neutral value
 		}
 		// Lane A132 (track F1), measurement only (as JAM_PLAYTESTER_VERBS in JamPlaytester.cpp): with JAM_TEST_SHIELD_SHOVE=0 in the environment every cartridge
 		// loads with the shove rule at its neutral value (contact.bShieldShove false: the refusal of main before lane A125; the rule has no key), so the three
@@ -1293,6 +1295,9 @@ namespace
 					else if (Name == TEXT("cross_any")) C.Contact.bCrossAnyMan = V != 0.0;
 					else if (Name == TEXT("bot_pull")) C.Contact.BotCheckPullM = V;   // lane A209 wave 3
 					else if (Name == TEXT("hold_reset")) C.Contact.bHoldResetAtFaceoff = V != 0.0;   // lane A209: the brace fault's fix off (the neutral proof)
+					else if (Name == TEXT("cross_live")) C.Contact.CrossLiveFrames = FMath::RoundToInt32(V);   // lane A215: the live window's arms (measurement only)
+					else if (Name == TEXT("cross_back")) C.Contact.bCrossBackHuman = V != 0.0;   // lane A215: measurement only
+					else if (Name == TEXT("pickup_off")) { if (V != 0.0) { C.Stick.PickupArcM = 0.0; C.Stick.bPickupBody = false; } }   // lane A215: the cross-check with and without A208's pickup (measurement only)
 					// A151-SEAM-MORE
 				}
 			}

@@ -166,7 +166,10 @@ bool FJamBotBoostPickupsBundle::RunTest(const FString& Parameters)
 	TestTrue(TEXT("the bundle is built"), A.bBuilt);
 	TestTrue(TEXT("pickups spawned"), A.PickupsSpawned >= 1);
 	TestTrue(TEXT("at least one pickup taken"), A.PickupsTaken >= 1);
-	TestTrue(TEXT("every take started an effect"), A.EffectsStarted >= A.PickupsTaken);
+	// The Director, 15 Nov 06:25 (the night's last sim landing: seed 1 re-rolled to 10 taken, 9 started): a take of a kind that is already active on
+	// the same skater or team refreshes or extends it by the effect's stack rule (UJamEffectSystem::Apply returns before ++EffectsStarted), so
+	// "started" may be under "taken"; what must hold: takes start effects (at least one), and nothing starts without a take.
+	TestTrue(TEXT("takes start effects, and none starts without a take"), A.EffectsStarted >= 1 && A.EffectsStarted <= A.PickupsTaken);
 	TestEqual(TEXT("two runs agree (sim hash)"), A.Stats.Hash, B.Stats.Hash);
 	TestEqual(TEXT("two runs agree (systems hash)"), A.SystemsHash, B.SystemsHash);
 	// The world view the brain reads carries the pickups lying on the ice (BuildWorld reads the sim's modifier source).

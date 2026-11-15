@@ -159,6 +159,7 @@
     "contact.bot_check_windup_frames": "0..12",
     "contact.bot_cross_windup_frames": "0..12",
     "contact.check_pull_m": "0..2",
+    "contact.cross_live_frames": "0..30",
     "rules.mode": "first_to|timer",
     "rules.score_to_win": "1..9",
     "rules.timer_frames": "600..28800",

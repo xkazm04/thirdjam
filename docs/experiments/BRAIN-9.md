@@ -91,3 +91,30 @@ Switch: `brain9=0` (and every older `brainN=0`) = evolution 8 as shipped; `JamBa
   splits at 3 m after 20 frames; a carrier inside 35 m alone over 30 frames gets the nearest bot (`NoCarrierAlone`); the crease man steps onto a shot's
   line; the guard back stands in the crease (1.5 m) while an opposing carrier is inside 35 m. On the human's side it raised goals against (pro 2.38 ->
   2.70 a match): off there; the mates' defence and the far-shot crease bar (60 %) are open.
+
+## 8. Wave 4 (main 638d9b2a + waves 2 and 3; EYE 2, EYE 3, EYE LIST 3)
+- Why far shots went in: at a far shot (FARSHOT lines of the instrument) both backs stood together 16 m out with no job; nobody in the crease (held on 3 %).
+- `hk_crease_keeper9` + `hk_net_never_empty9` (`FJamBrain::CreaseKeeper`): the first back of a five keeps the crease (1.5 m out, squared to the carrier,
+  else the puck; never in or behind the net) while the puck is outside his side's attacking third, the other side carries it within 45 m, or a shot
+  comes; he steps onto a shot's line; he stands down to the old last man while a carrier is inside 12 m. The crease held while defending 10-14 % -> 61-77 %;
+  far shots with the crease held 3-15 % -> 9-65 % (bar 95 %: not met).
+- `hk_scrum_stay9` (rookie): the keeper stays back from a drop until the puck leaves the scrum. `hk_early_long_shot9_frames` (600, every level): no shot
+  from beyond 15 m in a match's first 10 s.
+- The mates' defend-team rule (wave 3) ON again: with the keeper it lowers goals against at pro (100 matches: 246 -> 231 with the keeper alone; 60: 2.67 ->
+  2.22 a match), the opposite of without it.
+- `NoCarrierAlone` never sends the crease keeper.
+
+## 9. Not done (after the jam)
+- The net hull: a bot whose path is blocked by a net hull for more than 10 frames goes round the post on the puck's side. Jam.Core.NetTrap's case exists
+  at NEUTRAL in 2 of 40 seeds of its diagnostic (seeds 31 and 40: a bot pressing into a net hull without moving for 30 to 46 frames); the crease keeper
+  met it once tonight (gatew4f: 221 frames with the puck behind the goal line; fixed in CreaseKeeper, the general rule is not written).
+- The keeper from the drop at every level (now rookie only, `hk_scrum_stay9`): far shots with the crease held are 45 / 65 % at pro (bar 95 %); most of the
+  rest come from the scrum before the keeper is back. Measure it against pro's cost (the never-empty net already costs about 0.2 goals a match there).
+- The pass re-read once A207's fix (a passer re-taking his own pass) is in the tree: tonight's completion numbers measure that fault.
+
+## 10. READY 5: the receiver meets the pass (`hk_meet_line9`, `FJamBrain::MeetPass`)
+The bot a pass in flight is aimed at (`Puck.PassTo`, read through `FJamAIWorld::PuckPassTo`) keeps his release velocity for 12 frames, then skates to the
+point where the puck's line passes nearest him and plays nothing else until the pass is caught or taken (90 frames at most); both sides, every level.
+A person's button path (`-run=JamHandCells -passlog`, 100 matches, regular rink, off -> on): the human's passes first touched by a mate 31 -> 37 % at
+rookie and at pro (bar 50: not met); taken by an opponent 63 -> 58 / 62 -> 57 %, half of them within 3 m of the passer at the release (the passer stripped,
+not the receiver). Bot passes completed at pro (60 matches): mates 49 -> 54 %, opponents 57 -> 55 % (bar 65: not met).

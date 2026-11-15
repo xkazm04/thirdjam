@@ -370,6 +370,9 @@ struct JAMCORE_API FJamSkaterState
 	// Lane A192: since evolution 10 LiftWindupLeft counts down to the cross-check's deferred SHOVE (the strip is the press's): CrossTarget, the man it lands on;
 	// bCrossTargetStickOnly, a stick-only shield had widened it at the press (from behind too). RULE STATE, hashed while LiftWindupLeft runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossTarget = -1;
+	// Lane A215 (game.contact.cross_live_frames): frames left of the pressed cross-check's live window after its wind-up (the shove not yet landed; CrossTarget
+	// is the man tried first). 0 = none. Rule state: hashed while above 0.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossLiveLeft = 0;
 	// Lane A209 wave 3: RULE STATE, hashed when not 0: frames left of a buffered check press / cross-check press (UJamSim::StepPressBuffer).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CheckBufferLeft = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LiftBufferLeft = 0;
@@ -759,6 +762,10 @@ public:
 	// Lane A192: the cross-check's shove at once (true) or deferred by cross_windup_frames (false), and its landing after the wind-up.
 	bool CrossShove(FJamSkaterState& S, FJamSkaterState& O, const FVector2D& Dir, bool bStickOnly);
 	void LandCrossShove(FJamSkaterState& S);
+	bool TryCrossShove(FJamSkaterState& S, FJamSkaterState& O, bool bLive = false);   // lane A215: the deferred shove's tests on one man (bLive: the live window's reach, the stick's); true = resolved on him
+	void StepCrossLive(FJamSkaterState& S);
+	bool CrossBackHuman(const FJamSkaterState& S) const;   // lane A215: game.contact.cross_back_human for this skater
+	void LandCrossBack(FJamSkaterState& S, FJamSkaterState& O, const FVector2D& Dir, bool bStrip);   // lane A215: the human's tap in a carrier's back: a stumble, the puck off his blade   // lane A215: game.contact.cross_live_frames, the stick out after the wind-up
 	// Lane A184: the wind-ups' clocks (game.contact.check_windup_frames, cross_windup_frames), in the skater's input step: a check whose wind-up ends opens
 	// its window (and its lunge) now; a cross-check whose wind-up ends swings now.
 	void StepWindups(FJamSkaterState& S, bool bStickLocked);
@@ -964,7 +971,7 @@ private:
 	// Lane A92: one hit resolved by momentum (a pressed check at contact, or a cross-check): the outcome by impulse / stability, the stumble or the knockdown,
 	// the loose puck, the speed that changes hands, the attacker's recoil, the check event and the foul. Returns ContactBump / ContactStumble / ContactDown.
 	// Lane A209: MinOutcome (default ContactNone: as before) raises the outcome before the grace, the shield and the stumble rules read it (LandCrossShove: a pulled human's shove is a stumble at least).
-	int32 ResolveContact(FJamSkaterState& Attacker, FJamSkaterState& Victim, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind, int32 MinOutcome = 0);
+	int32 ResolveContact(FJamSkaterState& Attacker, FJamSkaterState& Victim, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind, int32 MinOutcome = 0, int32 MaxOutcome = 3);   // lane A215: MaxOutcome (3 = ContactDown: none)
 	void TryShoot(FJamSkaterState& S, float Charge);
 	void StepCharge(FJamSkaterState& S, const FJamInput& In);
 	// Lane A77 (R-0036): the held pass charges like the shot and fires on the release; a saucer when held pass.saucer.half_frames or more.
@@ -1034,6 +1041,8 @@ private:
 	bool NetBetween(const FVector2D& A, const FVector2D& B) const;
 	// Lane A208 (pickup.body): another's carried puck inside S's body is pushed out of it; its carrier keeps it (R-0048).
 	void BlockCarried(const FJamSkaterState& S, double R);
+	// Lane A216 (A212's FAULT 02:08): the frame never ends with a carried puck inside another standing body (with pickup.body and pickup.block_carried).
+	void CarriedOutOfBodies();
 	// Lane A208 (contracts/events.md, R-0067 additions): the possess event at the frame's end, and shot_blocked Variant 1 from the pickup and the body.
 	void EmitPossess();
 	// Lane A208 (game.stick.faceoff): the centres at the dot (FaceoffReset), and the faceoff's no-hit time and place (a check or lift press refused).

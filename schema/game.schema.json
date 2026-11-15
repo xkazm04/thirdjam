@@ -1104,6 +1104,16 @@
         "cross_any_man": {
           "type": "boolean",
           "description": "The cross-check is a hit on any man in front (lane A209, track F1, the night): a human skater's pressed cross-check shoves the nearest opponent on his feet inside the lift's cone and the stick's reach (stick.lift_range_m) whether or not he has the puck, by the shove's own momentum rule (closing speed plus contact.thrust_mps against his stability: mostly a stumble, a knockdown at speed); a back stays a back. The strip of the puck stays the carrier's. Bots keep the carrier-only shove. false = the neutral value: the shove only on a carrier (or one who carried within stick.foul_grace_frames)."
+        },
+        "cross_back_human": {
+          "type": "boolean",
+          "description": "The human's cross-check takes a carrier's back (lane A215, track F1, the night; the Director's ruling of 15 Nov 02:39): a human skater's pressed cross-check (a tap: the button is up when it lands, so a hold never strips with it) that meets the back of a man who has the puck, or had it within stick.foul_grace_frames, when its wind-up ends or inside contact.cross_live_frames, is a shove: he stumbles, never more, and the puck comes off his blade as a stick lift that works leaves it. Where rules.penalties is on, the from-behind foul is called as for any hit from behind. Bots keep the law: their cross-check from behind is the stick lift. Part of the momentum model (contact.momentum true). Absent = true (ships on). false = the neutral value: a cross-check from behind at a carrier is the stick lift for everyone."
+        },
+        "cross_live_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "The cross-check's stick stays live (lane A215, track F1, the night): a pressed cross-check whose shove finds nobody inside its reach and cone on the frame its wind-up ends (contact.cross_windup_frames) stays live this many frames more: each frame the man it was aimed at is tried first, then every other opponent nearest first, by the same tests with the stick's reach (stick.lift_range_m) for the shaft's (on his feet, not shielded, inside the cone, not into a back with the puck); the first who passes takes the shove and the miss is declared only when the window closes. Every skater, bots and the human. Part of the momentum model (contact.momentum true). Absent = 10 (ships on). 0 = the neutral value: the shove is tried on that single frame."
         }
       }
     },

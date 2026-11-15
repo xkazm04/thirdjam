@@ -329,7 +329,7 @@ bool FJamHockey4Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off1 = Match("opp.hk_press_in_hunt=0"), Off2 = Match("brain4=0;brain7=1;brain8=1;brain9=1;opp.hk_dodge9_share=0.5");   // lane A193: brainN=0 also switches evolution 7 off; brain7=1 puts it back as shipped, so the pair compares only evolution N   // lane A206: and brain9=1 puts evolution 9 back
+	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off1 = Match("opp.hk_press_in_hunt=0"), Off2 = Match("brain4=0;brain7=1;brain8=1;brain9=1;opp.hk_dodge9_share=0.5;opp.hk_drop_no_hit9_frames=45;opp.hk_early_long_shot9_frames=600");   // lane A193: brainN=0 also switches evolution 7 off; brain7=1 puts it back as shipped, so the pair compares only evolution N   // lane A206: and brain9=1 puts evolution 9 back
 	AddInfo(FString::Printf(TEXT("hockey.regular at all_star, the good player, seed 1: as shipped %s; with opp.hk_press_in_hunt=0 %s; with brain4=0 %s"), *A1, *Off1, *Off2));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
 	if (kEvo4MateFinishM == 0.0 && kEvo4CarryClockS == 0.0 && kEvo4MateDriveM == 0.0 && kEvo4ScreenFrames == 0)

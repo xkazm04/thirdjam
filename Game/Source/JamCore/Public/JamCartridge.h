@@ -474,6 +474,14 @@ struct JAMCORE_API FJamContactConfig
 	// man in front of him with or without the puck (without: the shove's momentum rule, as on a carrier; the strip stays the carrier's).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckPullM = 1.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossAnyMan = true;
+	// Lane A215 (track F1, the night; the eye's list 2 item 4): game.contact.cross_live_frames (0 = the neutral value: the shove is tried on the one frame its
+	// wind-up ends; ships 10): a pressed cross-check whose shove found nobody on that frame stays live this many frames more: the man it was aimed at, then
+	// the first other opponent its stick meets inside the stick's reach (stick.lift_range_m) and the shove's cone, takes it (UJamSim::StepCrossLive). Every skater, bots and the human.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossLiveFrames = 10;
+	// Lane A215 (the Director's ruling of 15 Nov 02:39): game.contact.cross_back_human (false = the neutral value: a cross-check from behind at a carrier is the
+	// stick lift for everyone, A92 / R-0045; ships true): the HUMAN's pressed cross-check (a tap) that meets the back of a man who has or just had the puck is
+	// a shove: a stumble, never a knockdown, and the puck comes off his blade as a lift's strip. Bots keep the law. UJamSim::LandCrossBack.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossBackHuman = true;
 	bool bHoldResetAtFaceoff = true;   // lane A209: the faceoff resets the held cross-check's count (a fault fix; a rule, no key; seam hold_reset 0 = the old count)
 	double BotCheckPullM = 0.0;   // lane A209 wave 3: the bots' body-check pull (UJamSim::CheckPullFor); a rule with no key yet (measurement seam bot_pull); 0 = off
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge

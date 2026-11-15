@@ -290,7 +290,7 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 		if (P.bCross && S.IsDown()) { P.EndFrame = Frame; P.Result = EJamHitResult::None; continue; }
 		bool bOver = false;
 		if (!P.bCross) bOver = bMissedNow || (Frame > P.PressFrame && S.CheckWindupLeft == 0 && S.CheckWindow == 0);
-		else bOver = Frame >= P.PressFrame + P.Windup && S.LiftWindupLeft == 0;
+		else bOver = Frame >= P.PressFrame + P.Windup && S.LiftWindupLeft == 0 && S.CrossLiveLeft == 0;   // lane A215: the miss is the live window's end (contact.cross_live_frames)
 		if (!bOver) continue;
 		P.EndFrame = Frame;
 		if (!P.bCross && !bMissedNow) { P.Result = EJamHitResult::None; continue; }
