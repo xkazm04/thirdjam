@@ -1,0 +1,2 @@
+return = PASS last=[JAMMATCH level=rookie source=settings cut=hockey.regular id=hockey-regular] builds=1/1 looks=1 lit=0.989 mean=161.2
+click = PASS last=[JAMMATCH level=rookie source=settings cut=hockey.regular id=hockey-regular] builds=1/1 looks=1 lit=0.963 mean=135.4

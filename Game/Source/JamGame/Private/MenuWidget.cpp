@@ -1203,7 +1203,7 @@ UWidget* UJamMenuWidget::BuildCredits()
 		TEXT("Built with Unreal Engine.\n\n")
 		TEXT("One human directed two machines of agents; the agents wrote the game, its modes and this menu. ")
 		TEXT("The Designer (MAKE YOUR OWN) turns your sentence into a game through the Claude API with a key you type yourself; without a key it answers from games it made earlier.\n\n")
-		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Codex image generation for the menu and HUD art, ElevenLabs for the voices, the sound effects and the music, Hyper3D Rodin for the generated figure and Meshy for its rig, Node.js, Git with LFS, PowerShell.\n\n")
+		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Codex image generation for the menu, HUD and mode art, ElevenLabs for the voices, the sound effects and the music, Hyper3D Rodin for the generated figure and Meshy for its rig, Node.js, Git with LFS, PowerShell.\n\n")
 		TEXT("Uses NVIDIA DLSS technology, (c) NVIDIA Corporation.\n\n")
 		TEXT("No goalies harmed. Skaters flattened. No logos."),
 		L::Font(L::Body, FName("Regular")), L::Text());
