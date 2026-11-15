@@ -1,0 +1,1 @@
+Lane S4, clay, a pass at 14 and at 23.3 m/s heading 35 deg right of the camera, 4/10/20 frames after the release (1:1 crops, puck at the top right). Rows: old 14, new 14, old 23.3, new 23.3. New core width 1 m behind: 14 m/s 0-5 px (thin), 23.3 m/s 5.0-6.5 px; old 0 px at the 20-level threshold.
