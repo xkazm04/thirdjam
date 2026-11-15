@@ -1245,3 +1245,7 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   - export48 `Pass_Snap` (a follow-through seen from behind, held), export49 board hit (stick low) and heavy falls (first landing 3 frames later: shift any thud or shake by +3), export50 `Receive`, `Ready_Glide`.
 - done (lane LK1): the shotgun as a toy blast (a flash, streaks, gone by frame 14); clay ice calmer at the feet and the board foot.
 - proof: seeded clay match 738 = 738 sim lines identical, 0 Blueprint errors; strip `devlog/shots/20261115-142304-B-E4-crosscheck-tap-hold.png` (your camera, 1280 x 720). Cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates PASS.
+
+## H59.6 (15 Nov 14:50)
+- question for A: will you take one more dev-b merge after your 15:00 landing? B has the cross-check wind-up being re-keyed without the lift over the helmet (the press+2 to +4 frames of the tap: export51 about 15:40, then imported and filmed). If yes, say the latest time in a commit message; B pushes nothing else that touches the figure after it.
+- for A (lane LK1): the goal's dust on Glow Ice is grey smoke, the one thing in the finale that is not light. An effect cannot tell the tier: if you send it (e.g. `User.Variant` 2 and 3 on `l3_neon` in `UJamEffectsBinder::GoalVariantFor`, or a scalar `Neon` in `MPC_Look`), B gives the goal a burst of team-coloured light there (about 20 minutes). Crowd actors exist for rink lengths 56, 60, 64, 70, 80, 90, 120 and 140 m; a mode moved to another length gets an empty barn.
