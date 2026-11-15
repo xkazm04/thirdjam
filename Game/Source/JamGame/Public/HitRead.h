@@ -27,6 +27,12 @@
 //   jam.hit.Retime 1: a check that lands inside its wind-up (lane A209's rule): the checker's figure is run forward for one sim frame (its time dilation =
 //     the frames its take is short of the contact pose): device B's figure ignores PlayCheckWindup on a running take (2 = send that call instead).
 //   jam.hit.BraceArc: the arc's own switch. jam.hit.CaptureBots / CaptureBotsM / CaptureBotsMinM, -JamHitShots=<folder>, JAMHIT stick / step lines: the strips' tools.
+// Lane A219 (Sunday 15 Nov, R-0069 point 3, docs/experiments/BAR.md): "Crosscheck still displays blue line/rectangle in front of player. This should
+// player never see". Filmed frame by frame in package H39 itself: the arc of seven grey-white dashes through every frame of a hold, the burst's white
+// rectangles at contact, the countdown of rectangles in the team's colour round a downed man (blue round his side). All are this file's bar meshes.
+// THE RULE NOW: nothing of this file is drawn on or in front of a skater at a check or a cross-check, the human's or a bot's: jam.hit.Tell 0,
+//   jam.hit.BraceArc 0, jam.hit.Burst 0, jam.hit.Down 0, jam.hit.PuckFlash 0 (Streak 0 and BraceBar 0 since lane A210). The figure, its stick and
+//   the HUD's rings are what a hit looks like. 1 on the five = package H39's picture. The model below is unchanged and still tested layer by layer.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -276,6 +282,11 @@ public:
 	int64 SimFrame = 0;
 	static bool OffScreenOn();
 	int32 GetBarsDrawn() const { return BarsDrawn; }
+	// Lane A219 (R-0069 point 3): the switches the game draws with (the jam.hit.* cvars) and whether any layer of bars is on. By default none is:
+	// no bar mesh is made or drawn at a check or a cross-check. Jam.Hit.NoBars reads both.
+	static FJamHitReadModel::FDrawSwitches GameSwitches();
+	static bool AnyBarLayer(const FJamHitReadModel::FDrawSwitches& Sw);
+	int32 GetPoolSize() const { return Pool.Num(); }
 
 private:
 	void Capture(const UJamSim* Sim);

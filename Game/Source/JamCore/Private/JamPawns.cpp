@@ -108,6 +108,16 @@ namespace
 
 static TAutoConsoleVariable<int32> CVarJamBoardBumpTake(TEXT("jam.board.BumpTake"), 0,
 	TEXT("PlayBoardHit on a plain run into the boards (lane A210): 0 (default) only when the skater was checked into them or goes down; 1 = on every skater board event (package H34: the take throws the stick up on a bump)."), ECVF_Default);
+// Lane A219 (track F3, R-0070, 15 Nov: "the player animation should reflect the crosscheck movement and that should be all"). Filmed in package H39: a
+// cross-check is thrown INTO a man, so the two bodies meet within a frame or four of the press, the sim reports a collision (bBumpThisFrame, no stumble)
+// and the pawn sent PlayHitReaction to the HITTER: device B's reaction take replaced his cross-check take (drill, press f1338, reaction f1339: no frame of
+// the shove was drawn; the hand, press f391, reaction f395: the arms dropped two frames before the contact). 1 (default): a figure whose own check or
+// cross-check take is running (from the press to OwnHitTakeFollowFrames after its wind-up), or who holds the brace, is not told PlayHitReaction for a
+// mere collision; a stumble or a knockdown a hit caused goes out as before. 0 = package H39. Presentation only.
+static TAutoConsoleVariable<int32> CVarJamVisHitTakeGuard(TEXT("jam.vis.HitTakeGuard"), 1,
+	TEXT("Lane A219: 1 (default) a skater's own check or cross-check take (and the held brace) is not interrupted by PlayHitReaction for a mere collision; 0 = the reaction is always sent (package H39: it replaced the hitter's take)."));
+static constexpr int32 OwnHitTakeFollowFrames = 10;   // device B's takes: the drive and the follow-through after the wind-up
+
 static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
 	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
 
@@ -448,6 +458,8 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 			const bool bSent = CallFigure(V, NamePlayCrossCheck, { static_cast<double>(S.WindupFrames) });
 			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosscheck frame=%lld skater=%d team=%d human=1 to_contact=%d call=%s"), SimFrameForLog(), S.Index, S.Team, S.WindupFrames, bSent ? TEXT("PlayCrossCheck") : TEXT("PlayLift"));
 		}
+		// Lane A219: the frames this figure's own hit take runs (the guard below keeps a collision's reaction off it).
+		if ((S.bCheckThisFrame || S.bLiftThisFrame) && S.WindupFrames > 0) OwnHitTakeUntil = SimFrameForLog() + S.WindupFrames + OwnHitTakeFollowFrames;
 		if (S.bCrossBraced != bWasCrossBraced)
 		{
 			bWasCrossBraced = S.bCrossBraced;
@@ -482,7 +494,14 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		const int32 StumbleFrames = StumbleFramesFor(S);
 		static const FName NamePlayStumble(TEXT("PlayStumble"));
 		const bool bStumbleSent = StumbleFrames > 0 && CallFigure(V, NamePlayStumble, { S.BumpDir.X, S.BumpDir.Y, static_cast<double>(StumbleFrames) });
-		if (!bStumbleSent)
+		// Lane A219 (jam.vis.HitTakeGuard): a mere collision (no stumble) does not replace the take of his own check or cross-check, nor the held brace.
+		const bool bOwnTake = OwnHitTakeKeeps(CVarJamVisHitTakeGuard.GetValueOnGameThread() != 0, StumbleFrames, SimFrameForLog(), OwnHitTakeUntil, bWasCrossBraced);
+		if (!bStumbleSent && bOwnTake)
+		{
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS hit frame=%lld skater=%d team=%d dir=(%.2f, %.2f) kept=own_take until=%lld braced=%d (PlayHitReaction NOT sent: his own check or cross-check take is running)"),
+				SimFrameForLog(), S.Index, S.Team, S.BumpDir.X, S.BumpDir.Y, OwnHitTakeUntil, bWasCrossBraced ? 1 : 0);
+		}
+		else if (!bStumbleSent)
 		{
 		IJamSkaterVisual::Execute_PlayHitReaction(V, static_cast<float>(S.BumpDir.X), static_cast<float>(S.BumpDir.Y));
 		UE_LOG(LogJamSim, Log, TEXT("JAMVIS hit frame=%lld skater=%d team=%d dir=(%.2f, %.2f) (PlayHitReaction: a collision at 3 m/s closing or more, no check landed)"),

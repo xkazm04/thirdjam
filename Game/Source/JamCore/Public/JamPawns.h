@@ -193,6 +193,13 @@ private:
 	int32 SeenSoft = 0, SeenMissed = 0, SeenGraced = 0;   // lane A113: the sim's press counters at the last frame applied (the JAMVIS press line)
 	bool bWasBraking = false;   // lane A125: SetBraking level, sent on the change
 	bool bWasCrossBraced = false;   // lane A184: SetCrossCheckHold level, sent on the change
+	// Lane A219 (jam.vis.HitTakeGuard): the last sim frame of this figure's own check or cross-check take (press + wind-up + follow-through); -1 none.
+	int64 OwnHitTakeUntil = -1;
+public:
+	// Pure, for the test: is PlayHitReaction for a collision kept off this figure? Only a mere collision (no stumble frames), only with the guard on, and
+	// only while his own hit take runs (Frame <= TakeUntil) or he holds the brace.
+	static bool OwnHitTakeKeeps(bool bGuard, int32 StumbleFrames, int64 Frame, int64 TakeUntil, bool bBraced) { return bGuard && StumbleFrames <= 0 && (bBraced || (TakeUntil >= 0 && Frame >= 0 && Frame <= TakeUntil)); }
+private:
 	bool bWasTakeGrace = false, bWasStickLock = false;   // lane A163 (track F2): the take grace and the stick lock at the last frame applied (the JAMVIS takegrace / sticklock lines)
 	double LastSimSpeed = 0.0;   // lane A125: the sim speed at the last frame applied (SetBraking's Decel)
 	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.
