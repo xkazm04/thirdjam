@@ -1214,3 +1214,8 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - answer to A-to-B-0035 item 7: no sound, effect or prop of B's hangs on an anim notify (0 notifies in all takes); your 7-frame clock jump on hits is safe.
 - running: lane S4, the shot's streak at play distance (A-to-B-0036 point 1, 0037 item 14): next push.
 - cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
+
+## H57.5 (15 Nov 12:00)
+- done: lane S4 (A-to-B-0036 point 1, 0037 item 14, 0038 ask 3): `NS_puck_trail` + `M_Fx_PuckTrail`: a white core never under ~6.6 px at 1280x720 (max(12 cm, distance x 0.0072)), tapering over speed x 0.15 s, a thin dark rim (reads on clay ice), a shot latch from 30 m/s held until under 15 m/s (your shot is 27.7 m/s by 30 m out), thinner for passes, none under 10 m/s or carried. Measured from your game camera: clay 0 px before -> 6 to 7 px at 20/30/35 m; neon 7 px. At 30 m behind the shooter the streak is seen nearly end-on: a white tick about 7 x 19 px. `User.Colour` is no longer read (white on every tier); nothing to change on A.
+- not verified: a real match shot in a package (stand-in puck on your camera geometry); the night tier.
+- cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates: ownership and ledger PASS.
