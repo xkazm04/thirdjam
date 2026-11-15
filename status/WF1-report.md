@@ -8,7 +8,7 @@ report. Not pushed. The tree was rebuilt first (PASS; the first try failed on th
 - **Done, point 2:** `PlayCheck` during a running whiff now plays its wind-up at once, on both figures (`BP_SkaterVisual_TB1`, `BP_SkaterVisual_TB1_P3`).
   `PlayCrossCheck` already replaced a running whiff (measured before the change); it now also clears the whiff mark.
 - **Not done:** the body check's whiff (`PlayWhiff(0)`) was not re-keyed (see section 3 for what I measured on it).
-- GPU_SECTION_STATUS
+- **GPU strips done** (17:46 to 17:57; the token was held 12 minutes and given back): old against new, and the press at whiff+6.
 
 ## 2. Per item
 
@@ -65,7 +65,17 @@ Proof (headless, the take playing on each tick; calls by name as device A sends 
 **677 = 677 sim lines identical**, JAMSIM 7200 `4ac32edcf3678901`, 0 Blueprint errors, 0 `Error:` in both runs. All four Blueprints BS_UP_TO_DATE.
 (The line count differs from E4's 738 because device A's source changed since; the baseline was run on this tree before my first edit.)
 
-GPU_SECTION_BODY
+### GPU strips, game camera (all three looked at with the Read tool)
+- `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-175227-B-WF1-crosscheck-whiff-old-new-p3_clay.png`: clay, a cross-check into air, the miss frame to +16.
+  OLD: the bar is down at his hips by +2 and nothing else happens. NEW: the bar is still level and out on +2, +3 and +4; on +5 to +8 he is bent
+  low with the right skate thrown out wide and the bar tipped; on +10 he is crouched on both skates; from +12 he is upright. It reads as a miss
+  with no mark. (The old row is export49's file re-imported in memory for the film and not saved.)
+- `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-175227-B-WF1-crosscheck-whiff-new-p2_cel.png`: the cel figure, new take: the same picture.
+- `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-175227-B-WF1-press-at-whiff6-p3_clay.png`: a press 6 frames into the whiff.
+  Row 1 (clay, `PlayCheck`): he comes out of the stumble into the check's coil on press+1 to +6 and drives on press+8.
+  Row 2 (clay, `PlayCrossCheck(8)`): the bar is across his shoulders by press+2 and the contact pose is on press+8.
+  Row 3 (cel, `PlayCheck`): as row 1. The engine's log of these films: the new take starts at its frame 2 on the press tick in all three.
+- After the films the editor was closed without saving; `git status` shows no change against the committed assets.
 
 ## 3. Not verified
 - A moving skater: the film rig skates in place, so the stumble is not seen against real travel over the ice.
