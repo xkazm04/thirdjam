@@ -170,3 +170,13 @@ library. The game's own CREDITS screen says: "Uses NVIDIA DLSS technology, (c) N
   the regular rink, the pad is mapped but was not play-tested by a person, and the joined match was never played across two machines.
 
 The full list, with the numbers: [`docs/PLAY-ME.md`](docs/PLAY-ME.md), "Known limits, plainly".
+
+## License
+
+The team's own work in this repository (source code, data, tools, documents and the content made for the game) is licensed under the
+**Apache License, Version 2.0**: see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+Third-party material keeps its own terms and is not covered: Unreal Engine itself (not in this repository) and the few Epic template
+assets listed as "sourced" in [`submission/credits.md`](submission/credits.md) (Unreal Engine EULA; not shipped in the game), the Roboto
+fonts (Apache License 2.0, Google), and the NVIDIA DLSS plugin (not in this repository; NVIDIA RTX SDKs License). The details are in
+`NOTICE`.

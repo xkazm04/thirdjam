@@ -1,0 +1,41 @@
+HOKEJ
+Copyright 2026 Team Hokej
+
+Licensed under the Apache License, Version 2.0 (the "License"); see the file
+LICENSE in this repository. Unless required by applicable law or agreed to in
+writing, everything under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+What the License covers
+-----------------------
+The team's own work in this repository: the game's source code (Game/Source),
+its data (cartridges, schema, configuration), the tools (tools/, devlog/), the
+documents (contracts/, briefs/, status/, handoff/, docs/, submission/) and the
+content made for the game, including the content generated with AI tools.
+Generated content is listed, file by file and tool by tool, in ASSETS.md and
+submission/credits.md, and is declared as generated there.
+
+What the License does NOT cover (third-party material, under its own terms)
+---------------------------------------------------------------------------
+- Unreal Engine. The game is built with Unreal Engine 5.9 (Epic Games, Inc.).
+  The engine is not in this repository and is licensed by Epic under the
+  Unreal Engine End User License Agreement.
+- Epic template content. The files that ASSETS.md and submission/credits.md
+  list as "sourced" from Unreal Engine template content (template character
+  assets and animation clips, and copies or retargets of them, under
+  Game/Content/P4/) are Epic content under the Unreal Engine End User License
+  Agreement. They are not shipped in the packaged game, and the Apache License
+  grants no rights in them.
+- Roboto. The font faces under Game/Plugins/JamAssets/Content/UI/Fonts/ are
+  the Roboto fonts as shipped with Unreal Engine: font data copyright 2012
+  Google Inc., licensed under the Apache License, Version 2.0.
+- NVIDIA DLSS. The packaged game ships the NVIDIA DLSS library. The DLSS
+  Unreal plugin is NOT in this repository; tools/dlss/fetch-dlss.ps1 fetches
+  it from NVIDIA under the NVIDIA RTX SDKs License. "Uses NVIDIA DLSS
+  technology, (c) NVIDIA Corporation."
+- Names and marks. "Unreal Engine", "NVIDIA", "DLSS" and the names of the
+  tools listed in the credits are the marks of their owners; the License
+  grants no right to use them (section 6 of the License).
+
+The game's packaged build is distributed through the jam's page, not through
+this repository.
