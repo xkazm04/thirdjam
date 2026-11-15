@@ -1,29 +1,40 @@
-# Play me: Sunday afternoon, package H41 (R-0069, R-0070)
+# Play me: Sunday afternoon, package H43 (R-0069, R-0070)
 
 **Start it:** double-click `Game/Packaged/PLAY-LATEST.cmd` (every release rewrites it to the newest package), or unzip
-`Game/Packaged/Hokej_Hokej_H41/Hokej_Hokej_H41.zip` into a fresh folder and run the exe. HOME shows the package's name in the bottom-right
-corner (`H41`): if it says anything else, or nothing, you are in another build. If Windows asks about the firewall, that is the joined
-match's socket: Cancel is fine for solo play. The Development twin with the drills and the console (tilde key) is `Game/Packaged/Accept_H41`.
+`Game/Packaged/Hokej_Hokej_H43/Hokej_Hokej_H43.zip` into a fresh folder and run the exe. HOME shows the package's name in the bottom-right
+corner (`H43`): if it says anything else, or nothing, you are in another build. If Windows asks about the firewall, that is the joined
+match's socket: Cancel is fine for solo play. The Development twin with the drills and the console (tilde key) is `Game/Packaged/Accept_H43`.
+
+**H42 and H43 have NO DLSS.** The disk cleanup of 14:29 (the Director's fault) emptied the NVIDIA DLSS plugin's folders in the main checkout;
+the game builds and plays without it (the plugin is optional), but the package to SUBMIT and to record the trailer from must have it back:
+that needs the plugin fetched again (`tools/dlss/fetch-dlss.ps1`, a 1.09 GiB download: your word) and one more package. H41 has DLSS.
 
 **Why the tag and the launcher exist:** the package you played at 10:31 this morning was H34 (Saturday 19:02), not H39: Windows' own start
 record says so, and H35 to H39 were never started from the desktop. The grey / blue bar at a cross-check was H34's. Nothing on screen told
 you which build it was. Now it does.
 
-**The fallback:** `Hokej_Hokej_H40` (13:11, main b4b89f13): the puck rule, the MODES list and a clean ice, without the controls panel, the
-ladder's set 4, device B's afternoon work and the hold kept through braking.
+**The fallbacks:** `Hokej_Hokej_H41` (14:14, main cf828cad; WITH DLSS): the puck rule, MODES, a clean ice, the controls panel, the
+ladder's set 4; without device B's new cross-check take, the three looks for the trailer and the miss. `Hokej_Hokej_H40` (13:11): H41
+without the panel and the ladder.
 
 ## Your points of this morning, and where each stands
 
 | Your words | In this package | Not done, said plainly |
 |---|---|---|
 | "puck is not controlled by player if in his circle area, then player runs right through the puck and still does not have control" | A loose puck inside the ring drawn under you, or one you skate through, is yours on that frame: whatever your stick points at, at any speed, with LMB or RMB held. Your own pass or shot is locked only while it is still leaving you. Reproduced first with a hand like yours (stick aimed away, buttons held): 21 of 27 cases were not yours before, none after. | Bots keep the old pickup rules. A puck riding with another carrier is still taken by a poke or a hit, not by touch. An opponent's medium shot that passes inside your ring is now your puck (a block): under one a match. |
-| "Crosscheck still displays blue line/rectangle in front of player. This should player never see" and "no aim line needed, the player animation should reflect the crosscheck movement and that should be all" | Nothing is drawn at a hit any more, for you or for bots: no arc, chevron, dashes, burst, ring round a downed man, plate beside you, swell of your ring, pass line or stop line. Only the figure. A tap thrown into a man now plays the cross-check take (H39 replaced it with a collision flinch one frame later). A held cross-check keeps the stick level across the shoulders through skating, braking and standing. | **Press-and-hold is still two movements:** the stick goes up for the tap, drops for about a third of a second, and comes up again for the hold. **The tap reads as a lift of the stick over the head, not a shove forward.** Both are inside device B's figure (filmed five ways from our side: the same frame every time); asked of B at 13:10. A bot's cross-check was not caught near the camera on any film. |
+| "Crosscheck still displays blue line/rectangle in front of player. This should player never see" and "no aim line needed, the player animation should reflect the crosscheck movement and that should be all" | Nothing is drawn at a hit any more, for you or for bots: no arc, chevron, dashes, burst, ring round a downed man, plate beside you, swell of your ring, pass line or stop line. Only the figure. A tap thrown into a man now plays the cross-check take (H39 replaced it with a collision flinch one frame later). A held cross-check keeps the stick level across the shoulders through skating, braking and standing. | Device B re-made the take this afternoon and A stopped sending a miss into the hold: press-and-hold is now ONE movement (the stick comes up at the press and stays across the shoulders), the tap is a coil at chest height and a bar across the shoulders at contact, with no lift over the head, and the hold ends without the gloves thrown up. **Not done:** a tapped cross-check into AIR still reads weakly as a miss (the stick just comes down: asked of device B); a bot's cross-check was not caught near the camera on any film; seen on device B's strips and A's editor films, not yet in a package by a person. |
 | "For modes selection the previous images are deformed, rather create list with titles on left side ... and preview on right half" | MODES is a list of the twelve names A to Z on the left (then ALL RINKS and MAKE YOUR OWN under a rule); the chosen mode's picture whole in its own proportions on the right with its name, its line and the level it plays. Keys, pad and mouse. The cards had squashed 640 x 360 pictures into 320 x 88. | The pictures are 640 x 360 drawn larger: a little soft. A real pad's stick on the list was not tried (the D-pad walk was). |
 | "Improve visually panel to show key bindings for player and keep it visible throughout the game, switchable in settings to take off permanently" (to device B, 10:50) | One panel bottom left all match, in the menu's look: a keycap and a verb a row. With the puck SHOOT, PASS, DEKE, SPIN; without CROSS-CHECK, CHECK, POKE; always SKATE, SPRINT, BRAKE (ABILITY while you hold one). It follows rebinds and the pad's names; the row of a held button lights. It replaces the 8-second strip and the small pill. SETTINGS has `CONTROLS PANEL  ON / OFF`, saved. | No switch inside a match (the pause card has no settings screen). Not seen with a real pad attached. Gaining the puck swaps the top half at once; losing it swaps after a fifth of a second, or at once when you press a button, so it does not blink on contested pucks. |
 
 ## Also new since H39
 
-- **Device B (merged at 13:45):** the pass's take lets go on the frame the puck leaves; a white trail behind a shot puck, readable from the
+- **For the trailer:** Fog of War draws its fog (far skaters and the far boards fade, the near play stays clear); Glow Ice's penalty boxes
+  are dark with the sheet; Pond's board trim reads as paint, not as a light; a boxed skater leaves no ring on the ice; no engine message
+  can appear on screen in any packaged build.
+- **A miss is a take:** a check or cross-check that meets nobody plays device B's whiff.
+
+- **Device B (merged at 13:45, 15:10 and 16:00):** a goal on Glow Ice is a burst of light in the scoring team's colour; Pond has a day sky and
+  sun; stands on the small rink; the shotgun's fan; the pass's take lets go on the frame the puck leaves; a white trail behind a shot puck, readable from the
   far end; three commentator lines for your cross-check that meets nobody ("Shoves at air." and two more: not yet heard by anyone).
 - **The pass has no line on the ice any more** (your word): the mate who will get it is told by his ring turning your colour.
 - **The first-minute hints** ("RMB CHECK HIM", "RMB PASS: A MATE IS OPEN") now light the panel's row instead of a pill.
@@ -58,7 +69,7 @@ press again.
 
 | Try | You should see |
 |---|---|
-| Look at HOME's bottom-right corner, then open MODES | `H41`; a list of names on the left, the picture whole on the right |
+| Look at HOME's bottom-right corner, then open MODES | `H43`; a list of names on the left, the picture whole on the right |
 | Aim the stick anywhere and skate over a loose puck; then stand with one beside or behind you inside your ring | it is yours on that frame, both times |
 | Tap RMB with nobody on the line, then skate after your own slow puck | you pick it up as you reach it (before: you ran through it) |
 | Without the puck, tap LMB into a carrier; then hold LMB and skate, brake, stand | the figure's stick comes up; held, it stays level across the shoulders through the brake; nothing drawn on the ice |
@@ -82,18 +93,18 @@ times a minute (1.45 this morning: you carry the puck more, so you are hit more)
 
 ## Known limits, plainly
 
-- The cross-check's take: a lift, and two movements on a hold (above). Waiting on device B.
+- **No DLSS in H42 and H43** (above).
+- A tapped cross-check into air reads weakly as a miss. Waiting on device B.
 - Pro's knockdowns; rookie and all-star easier than their targets (above).
 - Your passes under pressure still arrive about one time in three to one in two.
 - A bot can press against a net's frame for a second or two before it goes round.
-- The net-direction chevrons at the left edge can slide onto the controls panel.
 - On the night look thin white streaks fly from a contact for about nine frames (a particle effect, left in: say if it should go).
 - On Glow Ice the camera can jump to the ice beside a boost beacon after your cross-check lands (seen on film in H39; not cured).
 - The large rink and the twelve modes were measured, not looked at as closely as PLAY NOW on the regular rink.
 
 ## How it was proven
 
-- **Tests:** the full automation filter green on every commit: 373 of 373 on the commit H41 is cut from. (That landing's own gate ran only
+- **Tests:** the full automation filter green on every commit: 379 of 379 on the commit H43 is cut from (373 on H41's). (That landing's own gate ran only
   214 of them: the disk had fallen under the gate's floor and the run was cut short and wrongly called green. Found at 14:15, the gate
   fixed to fail in that case, the filter re-run in full: 373 green.) Test bars moved today, with
   the reason in each commit: tests that pinned the marks at a hit, the 8-second strip and the pill now pin their absence and the panel; the
@@ -102,6 +113,7 @@ times a minute (1.45 this morning: you carry the puck more, so you are hit more)
   marks at a hit (every sim frame filmed from the game camera in the PACKAGED game, H39 above and the cure below, three looks, two sizes:
   `docs/experiments/bar/`); MODES and the panel (stills at both sizes: `docs/experiments/modes/`, `docs/experiments/panel/`).
 - **The package:** the cooked Development twin played a whole scripted match off screen (no window), no fatal line, the sim's hashes logged.
-  **The usual acceptance run through the cursor and the buttons was NOT made on H40 and H41**: you were at the machine and it takes the mouse
-  for several minutes. Say when you step away for ten minutes and it runs on the final package.
-- **Still said plainly:** all of it was measured and filmed by scripted hands. Nobody has played H40 or H41 with a mouse. You are the first.
+  The acceptance run through the cursor and the buttons was not made on H40, H41 and H42 (you were at the machine and it takes the mouse);
+  **H43 had it in full** at 16:02 while the machine was idle: ten steps and 18 verbs green, then the menu walked and the Shipping zip
+  started and played, both green.
+- **Still said plainly:** all of it was measured and filmed by scripted hands. Nobody has played H40 to H43 with a mouse. You are the first.
