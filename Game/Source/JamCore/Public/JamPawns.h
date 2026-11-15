@@ -193,6 +193,26 @@ private:
 	int32 SeenSoft = 0, SeenMissed = 0, SeenGraced = 0;   // lane A113: the sim's press counters at the last frame applied (the JAMVIS press line)
 	bool bWasBraking = false;   // lane A125: SetBraking level, sent on the change
 	bool bWasCrossBraced = false;   // lane A184: SetCrossCheckHold level, sent on the change
+	// Lane A219 (jam.vis.HitTakeGuard): the last sim frame of this figure's own check or cross-check take (press + wind-up + follow-through); -1 none.
+	int64 OwnHitTakeUntil = -1;
+	// Lane A219, wave 2 (jam.vis.HoldEarly): the sim frame of the cross-check press whose button may still be held (-1 none) and that press's wind-up.
+	int64 HoldPressFrame = -1;
+	int32 HoldPressWindup = 0;
+public:
+	// Wave 2, pure, for the test. HoldPoseWanted: is the hold's pose (SetCrossCheckHold) on this frame? Always while the sim braces; with the early hold on
+	// also from PressFrame + Windup + Lead while the button is still held (HoldFrames > 0) and he is up, until PressFrame + GiveUp if the sim never braces.
+	static bool HoldPoseWanted(bool bEarly, bool bSimBraced, int32 HoldFrames, bool bDown, int64 Frame, int64 PressFrame, int32 Windup, int32 Lead, int32 GiveUp)
+	{
+		if (bSimBraced) return true;
+		if (!bEarly || bDown || HoldFrames <= 0 || PressFrame < 0 || Frame < 0 || Windup <= 0) return false;
+		return Frame >= PressFrame + Windup + Lead && Frame <= PressFrame + GiveUp;
+	}
+	// BrakeLevelToSend: the SetBraking level for this frame: the sim's, except that mode 1 holds the braking pose back while the hold's pose is on.
+	static bool BrakeLevelToSend(int32 Mode, bool bSimBraking, bool bHoldPose) { return bSimBraking && !(Mode == 1 && bHoldPose); }
+	// Pure, for the test: is PlayHitReaction for a collision kept off this figure? Only a mere collision (no stumble frames), only with the guard on, and
+	// only while his own hit take runs (Frame <= TakeUntil) or he holds the brace.
+	static bool OwnHitTakeKeeps(bool bGuard, int32 StumbleFrames, int64 Frame, int64 TakeUntil, bool bBraced) { return bGuard && StumbleFrames <= 0 && (bBraced || (TakeUntil >= 0 && Frame >= 0 && Frame <= TakeUntil)); }
+private:
 	bool bWasTakeGrace = false, bWasStickLock = false;   // lane A163 (track F2): the take grace and the stick lock at the last frame applied (the JAMVIS takegrace / sticklock lines)
 	double LastSimSpeed = 0.0;   // lane A125: the sim speed at the last frame applied (SetBraking's Decel)
 	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.

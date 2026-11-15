@@ -28,6 +28,12 @@
 static TAutoConsoleVariable<int32> CVarJamHudMarks(TEXT("jam.hud.Marks"), 1,
 	TEXT("The two warnings on the ice (lane A166): 1 (default) the contested puck's ring and the stop's distance mark; 0 neither (the screen of before)."), ECVF_Default);
 
+// Lane A219 (R-0069 point 3 and R-0070, the Director's order of 15 Nov 11:36: every strip on the ice from the HUD's files that shows at its default goes):
+// the stop's line (a strip across his path ahead of him while he carries: paper-white, then the closing opponent's colour) has its own switch and is OFF
+// by default. The rule's state is still logged (JAMHUD mark=stop ..., shown=0); the contested puck's rings stay with jam.hud.Marks. 1 = package H39's line.
+static TAutoConsoleVariable<int32> CVarJamHudStopLine(TEXT("jam.hud.StopLine"), 0,
+	TEXT("The stop's distance line on the ice ahead of the carrying human (lane A166 / A171): 0 (default from lane A219, R-0070: no line of the game's mechanics on the ice) not drawn; 1 = drawn (package H39). The contested puck's rings are jam.hud.Marks."), ECVF_Default);
+
 static TAutoConsoleVariable<int32> CVarJamHudMarkStills(TEXT("jam.hud.MarkStills"), 0,
 	TEXT("Proof: N > 0 takes a still (with the HUD) N sim frames into every showing of a mark: u1-mark-<tag>-contest-f<frame>.png and u1-mark-<tag>-stop-f<frame>.png (the stop's when it is lit). 0 off."), ECVF_Default);
 static TAutoConsoleVariable<FString> CVarJamHudMarkStillTag(TEXT("jam.hud.MarkStillTag"), TEXT("p3_clay"),
@@ -177,7 +183,7 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	// The stop's distance.
 	const JamCarrierMarks::FStopMark Stop = JamCarrierMarks::StopMark(*Sim, Hi);
 	bool bStopShown = false;
-	if (Stop.bShow)
+	if (Stop.bShow && CVarJamHudStopLine.GetValueOnGameThread() != 0)   // lane A219: the line itself is off by default (jam.hud.StopLine)
 	{
 		// Lane A171: a line across his path at the mark's place: perpendicular to his travel (to the way to the opponent when he barely moves), two stick
 		// lengths wide; its four points go through the camera (the ends, and the near and far edge of its thickness).

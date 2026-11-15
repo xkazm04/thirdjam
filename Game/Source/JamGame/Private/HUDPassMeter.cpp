@@ -17,8 +17,12 @@
 #include "JamSim.h"
 #include "UnrealClient.h"
 
-static TAutoConsoleVariable<int32> CVarJamHudPassMeter(TEXT("jam.hud.PassMeter"), 1,
-	TEXT("Lane A207: the pass's power line on the ice while the pass is held (1, default); 0 = none."), ECVF_Default);
+// Lane A219 (R-0069 point 3 and R-0070, 15 Nov: "no aim line needed"): OFF by default. The line is a strip of the game's mechanics on the ice from the puck
+// along his aim: it lay across his own figure whenever the mate stood beyond him (package H39, f503: a translucent blue bar from his skates to his
+// shoulder), paper-white on a short hold, his team's blue once the hold found a mate. The mate's ring in his colour (jam.hud.ChargeLook) says who gets
+// the pass. 1 = package H39's line.
+static TAutoConsoleVariable<int32> CVarJamHudPassMeter(TEXT("jam.hud.PassMeter"), 0,
+	TEXT("Lane A207: the pass's power line on the ice while the pass is held: 0 (default from lane A219, R-0070: no line on the ice or across the figure; the target mate's ring says it) none; 1 = drawn (package H39)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudPassMeterDemo(TEXT("jam.hud.PassMeterDemo"), 0,
 	TEXT("Proof: N > 0 draws the line whenever the human carries, as if the pass were held N frames (for stills from a scripted human, who taps). 0 off."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudPassMeterStills(TEXT("jam.hud.PassMeterStills"), 0,

@@ -1,5 +1,6 @@
 // The front end (lane A8, re-made by lane A187, track U2 evolution 5, R-0064 point 3): a sports-game front end of the game's own. A landing screen
-// (HOKEJ large, one line, PRESS ENTER), then MAIN: PLAY NOW with its level switch, SEASON, MODES (twelve cards, ALL RINKS, MAKE YOUR OWN: the
+// (HOKEJ large, one line, PRESS ENTER), then MAIN: PLAY NOW with its level switch, SEASON, MODES (lane A220: a list of names A to Z with the selected
+// mode's preview on the right half; twelve modes, ALL RINKS, MAKE YOUR OWN: the
 // Designer's screen unchanged), PLAY WITH A FRIEND, CONTROLS, SETTINGS, CREDITS, QUIT. Every screen: a header (where am I), a footer with the live
 // key hints, one focused element always, Back from everywhere. One style table (FJamMenuLook) for every screen. C++-drawn UMG, no widget blueprints.
 #pragma once
@@ -74,11 +75,13 @@ struct JAMGAME_API FJamMenuLook
 	static constexpr float CardPad = 32.f;        // 4: inside a panel
 	static constexpr float MainColumnW = 640.f;   // 80
 	static constexpr float FeatureW = 704.f;      // 88
-	static constexpr float ModesW = 1680.f;       // 210: the modes grid
-	static constexpr int32 ModesPerRow = 5;
-	static constexpr float ModePictureH = 88.f;   // 11
-	static constexpr float ModeSlotPad = 8.f;     // 1
-	static constexpr float ModeCardPadX = 16.f;   // 2
+	// Lane A220 (R-0069 point 4): MODES is a list of the names on the left and the chosen mode's preview on the right half of the screen.
+	static constexpr float ModesW = 1728.f;       // 216: the screen between the side margins (1920 - 2 x 96)
+	static constexpr float ModeListW = 640.f;     // 80: the list of names, at the left margin
+	static constexpr float ModeRowPadY = 8.f;     // 1: a row's padding above and below its name
+	static constexpr float ModePreviewW = 864.f;  // 108: the right half (x 960 to 1824)
+	static constexpr float ModePictureW = 800.f;  // 100: the box a picture is fitted into, whole, in its own proportions
+	static constexpr float ModePictureH = 448.f;  // 56
 	static constexpr float SeasonW = 1280.f;      // 160
 	static constexpr float PanelW = 880.f;        // 110: settings, credits, make your own
 	static constexpr float WidePanelW = 1280.f;   // 160: the controls, all rinks
@@ -221,8 +224,41 @@ public:
 	// Lane A187: what the footer says now, and what the header says (tests and QA).
 	FString GetHintLine() const;
 	FString GetHeaderTitle() const;
-	// MODES: every card in order (the twelve modes, ALL RINKS, MAKE YOUR OWN), by the name it shows.
+	// MODES: every row of the list in order (lane A220: the twelve modes A to Z, then ALL RINKS and MAKE YOUR OWN), by the name it shows.
 	TArray<FString> GetModeCardNames() const;
+	// Lane A220 (R-0069 point 4): the preview on the right half: what it shows for the selected row. Drawn is the picture's size as laid out
+	// (FitWhole of its source into the picture box), Source the texture's own pixels; bPicture false: the plain panel with the name.
+	struct FModePreview
+	{
+		FString Payload;
+		FString Name;
+		FString Lines;
+		FString Facts;
+		FString Level;
+		FString Picture;
+		bool bPicture = false;
+		FVector2D Source = FVector2D::ZeroVector;
+		FVector2D Drawn = FVector2D::ZeroVector;
+	};
+	FModePreview GetModePreview() const;
+	int32 GetModeSelection() const { return ModeSel; }
+	int32 GetModeRowCount() const { return ModeRows.Num(); }
+	// Selects a row (the preview follows at once); bFocus also gives it the keyboard focus. MoveModeSelection: up (-1) or down (+1), ends hold
+	// (W / S and the mouse wheel; the arrows, the D-pad and the stick go by the rows' own navigation rules to the same rows).
+	void SelectModeRow(int32 Index, bool bFocus);
+	void MoveModeSelection(int32 Delta);
+	// The selected row follows the focus: the focused row of the list becomes the selection (BACK keeps the last one). Every tick.
+	void SyncModePreviewToFocus();
+	// A picture shown whole inside a box: the largest size with the source's proportions that fits (letterboxed, never stretched or cropped).
+	static FVector2D FitWhole(const FVector2D& Source, const FVector2D& Box);
+	// A texture's own proportions: the imported file's pixels in the editor, the cooked top mip in a package.
+	static FVector2D PictureSourceSize(const UTexture2D* Tex);
+	// jam.menu.ModesOpenersLast (1 default): ALL RINKS and MAKE YOUR OWN after the twelve modes; 0: one A to Z list of all fourteen.
+	static bool ModesOpenersLast();
+	// QA (jam.menuscreen preview): one JAMMENU preview line: the row, the picture, its source and painted sizes, their proportions.
+	void PrintModePreviewForQa() const;
+	// QA (jam.menuscreen wheel <n>): n notches of the mouse wheel over the list (n > 0 up), routed by Slate down the selected row's path.
+	void WheelForQa(int32 Notches);
 	// SEASON: the rows as shown ("1  ROUGH CUT  WON").
 	TArray<FString> GetSeasonRows() const;
 
@@ -299,27 +335,31 @@ public:
 	TArray<FString> GetPlacesForQa() const;
 	void PrintPlacesForQa() const;
 	// The widths the cards' words are wrapped at (slate units).
-	static float ModeTextWidth();
 	static float CutTextWidth();
 	// The height the cut list is capped at: rows of cut cards.
 	static float CutListHeight();
-	// The cards' type, one place for the widget and for the test that measures the words against the widths above.
+	// The type, one place for the widget and for the test that measures the words against the widths. Lane A220: ModeNameFont is a row of the
+	// list, ModePreviewNameFont the preview's name, ModePitchFont its lines, ModeFactFont its facts and its level line.
 	static FSlateFontInfo ModeNameFont();
+	static FSlateFontInfo ModePreviewNameFont();
 	static FSlateFontInfo ModePitchFont();
 	static FSlateFontInfo ModeFactFont();
 	static FSlateFontInfo CutNameFont();
 	static FSlateFontInfo CutLineFont();
-	// Lane A187: the width of the line under the modes grid that carries the focused card's facts.
+	// Lane A220: the width the preview's words wrap at, and the width a row's name has.
 	static float ModeDetailWidth();
-	// The height of a mode card's two-line description box (two full lines of ModePitchFont, descenders included).
-	static float ModePitchBoxHeight();
-	// Every MODES card's description as laid out (its desired size after a prepass: the wrapped lines' real height), for the fit test.
-	TArray<FVector2D> GetModePitchSizes() const;
+	static float ModeRowTextWidth();
 	// Lane A195 (evolution 7): HOME's returning panel. Pure: the title and lines from the season, the last match of this process and the lit level's
 	// line; a first run (no take played, no match yet) gets the two mouse buttons from the bindings. GetReturningText: the title and body as shown.
 	static FString ReturningText(const FJamSeasonState& Season, bool bHasLast, int32 Mine, int32 Theirs, const FString& Level, const FString& Rink,
 		const FString& LevelLine, FString& OutTitle);
 	FString GetReturningText() const;
+	// Lane A220 (Director 11:10): HOME's build tag, so the player can see which package he plays. BuildTagFromPath: the <X> of the last folder of
+	// Dir named Hokej_Hokej_<X> or Accept_<X> (letters, digits, '.', '-', '_', at most 16), else empty (never a path, never a user name).
+	// BuildTag: from FPlatformProcess::BaseDir(), else the launch dir. GetBuildTagText: what HOME shows (empty: nothing is drawn).
+	static FString BuildTagFromPath(const FString& Dir);
+	static FString BuildTag();
+	FString GetBuildTagText() const;
 	void RefreshReturning();
 	// Lane A195 (F6): QUIT asks once ("QUIT THE GAME?", NO focused, YES beside it; Esc / B is NO). jam.menuscreen click quit | no | yes.
 	// Lane A195 (FAULT 6): the lobby closed by BACK, Esc or B: HOME's focus goes back to PLAY WITH A FRIEND.
@@ -339,6 +379,8 @@ protected:
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 	// Lane A187: a click anywhere on the landing is its press.
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	// Lane A220: on MODES the wheel moves the selection one row a notch.
+	virtual FReply NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 private:
 	void BuildTree();
@@ -369,8 +411,10 @@ private:
 	UWidget* BuildCredits();
 	UWidget* BuildControls();
 	void RefreshCuts();
-	// Lane A67 (R-0036), lane A187: the twelve mode cards and the two that open a screen, on MODES.
+	// Lane A67 (R-0036), lane A187, lane A220: the twelve modes and the two that open a screen, a list of names on MODES.
 	void RefreshModes();
+	// Lane A220: the preview on the right half shows row Index (the picture fitted whole, the name, the lines, the facts, the level).
+	void ShowModePreview(int32 Index);
 	void RefreshDirect();
 	void OnResult(const FJamDesignerResult& R);
 	UJamDesignerSubsystem* Designer() const;
@@ -475,7 +519,19 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UScrollBox> CutList;
 	// Lane A144: the cuts as compact cards, three a row, inside the scroll box.
 	UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> CutGrid;
-	UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> ModeGrid;
+	// Lane A220: the list of names (rows and the thin rule before ALL RINKS) and its rows in order.
+	UPROPERTY(Transient) TObjectPtr<UVerticalBox> ModeList;
+	UPROPERTY(Transient) TArray<TObjectPtr<UJamMenuRowButton>> ModeRows;
+	// Lane A220: the preview: the picture's box, the fitted size, the image, the plain panel when a mode has no picture, and the words.
+	UPROPERTY(Transient) TObjectPtr<class USizeBox> PreviewPicSize;
+	UPROPERTY(Transient) TObjectPtr<class UImage> PreviewImage;
+	UPROPERTY(Transient) TObjectPtr<class UBorder> PreviewPlain;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PreviewPlainText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PreviewName;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PreviewLines;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PreviewLevel;
+	// Lane A220: HOME's build tag (bottom right, small and dim; collapsed when there is no tag).
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> BuildTagText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CutsStatus;
 	UPROPERTY(Transient) TObjectPtr<UEditableTextBox> SentenceBox;
 	UPROPERTY(Transient) TObjectPtr<UButton> RollButton;
@@ -518,5 +574,17 @@ private:
 	// Lane A187: the controls lane's rebinding screen (UJamSettingsWidget::MakeControlsScreen, A183) when it is in the tree; null until then.
 	UPROPERTY(Transient) TObjectPtr<UUserWidget> ControlsScreen;
 	TFunction<UWidget*()> ControlsFirst;
-	TArray<TWeakObjectPtr<UTextBlock>> ModePitchTexts;
+	// Lane A220: what each row stands for (the preview's words and its picture's name), in the rows' order, and the row selected.
+	struct FModeEntry
+	{
+		FString Payload;
+		FString Display;
+		FString Lines;
+		FString Facts;
+		FString Picture;
+		EJamMenuRowKind Kind = EJamMenuRowKind::Cut;
+	};
+	TArray<FModeEntry> ModeEntries;
+	int32 ModeSel = -1;
+	FModePreview Preview;
 };

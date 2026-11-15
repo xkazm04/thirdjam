@@ -40,6 +40,7 @@ Match counts (`Bar.Possession.Trace`, 100 matches each, the scripted human again
 | `stick.pickup.sting_mps` | 18 | (any) | an opposing puck faster than this (relative) rings off the blade (keeps 0.4 of its speed) or bounces off the body (e 0.3): a loose rebound; a team-mate's puck rings off only above 1.5 times this (27 m/s: a shot through him, no pass is that fast) |
 | `stick.pickup.body_catch_mps` | 18 | (any) | the body seats a loose puck only when it meets him slower than this (into the body); faster it bounces off as a rebound |
 | `stick.pickup.block_carried` | true | (any) | with body: another's carried puck is pushed out of a body it meets, on the carrier's side (he keeps it); false = it passes through as before |
+| `stick.pickup.ring_m` | 1.1 | 0 | lane A218 (R-0069 point 2): for the HUMAN, a loose puck whose centre comes within this of his centre (the ring drawn under him) is his on that frame, whatever his stick points at, at any speed he skates, braced or not; see section 2b |
 
 - A puck nobody carries (not riding with a carrier) under the blades (0.2 m), in play, no draw, no shotgun, that crosses a standing, unbraced skater's arc in a
   substep is his: the nearest such skater takes it, seated with his motion (SettleFrames 4), on his blade within a few frames. His own puck only when it comes
@@ -117,3 +118,27 @@ Seam rules: the passer's own puck is never his arc's while lane A207's clear_own
 (the arc skips it); a puck over the crease man's block height passes his arc; a deke's carried puck is not blocked by a body; a hard puck at a body is
 the old push (`PickupBodyBounce` 0: a doubled shot glancing off the crease man slides on as before). Gate 337 / 337; neutral = main d0d132bf to the hash
 (600 of 600). Opponents' long shots (20-35 m) at pro: the bodies of the human's side block 46 % (neutral 43 %).
+
+## 2b. The human's ring (lane A218, R-0069 point 2: `stick.pickup.ring_m` 1.1, neutral 0)
+
+The operator (15 Nov, H39): "puck is not controlled by player if in his circle area, then player runs right through the pack and still does not have
+control". The night's 99.6 % was counted with scripted hands whose stick always points at the puck and who hold no button. A person's cursor is elsewhere:
+with the stick aimed 90 or 180 degrees away, the arc (60 degrees either side of the facing or the blade) never covers a puck beside or behind him, and the
+body (0.44 m) misses a puck 0.7 m to his side as he skates by; a held LMB (the brace) refused every pickup; a poke's cooldown and his own pass in flight
+(locked until it slowed under 1 m/s) kept a puck in his ring from him.
+
+`UJamSim::TryHumanRing` (once a substep, before the stick arc): for every human skater (the online guest's seat too), a puck whose path this substep comes
+within ring_m (+ the puck's radius) of his centre is his on that frame: seated with his motion, settle 4, possess Variant 0 (the stick), or 1 at his body or
+behind his blade's half. Not: a puck riding with a carrier (R-0048, a press takes it), over the blades, in the draw, a shotgun, another's pass in flight
+faster than 6 m/s against him (lane A207's catch for a mate's, the pass arc for an opponent's), a puck faster than the sting against him (an opponent's hard
+shot rings off), a stumbling carrier's puck in his reach, through a net's wall, while he is down or boxed, a puck a press (poke, lift) just took from him while
+the presser (an opponent who can act) is still within his reach + 1.5 m of it (the press's 15-frame cooldown; without this a lift from behind, which sends the
+puck 2-3 m back to the lifter, was taken straight back: Jam.Core.Movement.LateAnswer 95 % for the spin). A held LMB / RMB and the stick's direction play no part.
+
+His own release (`HumanReleaseLeaving`, read by `OwnPuckClears` only for a puck inside his ring): kept from him while it moves away from him and either in its
+first 8 frames (it gets off the stick: a pass leaves only 6 m/s faster than him) or still faster than 6 m/s against him, and never past 20 frames after it
+left. Outside his ring the lock is as before, so the carry assist never pulls back a pass on its way (measured: his tap to a mate 9 m ahead while he follows
+arrives at the same frame as at the neutral, 19 / 18).
+
+Bots: unchanged (the rule reads `bHuman`). The staged table (Jam.Core.Possession.HumanRing, 27 rows, frames from inside his ring to riding with him):
+neutral 21 rows never or over 2 frames, the rule 0 (every row 0 frames). The table is in status/A218.md.

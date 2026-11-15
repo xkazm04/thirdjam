@@ -1037,6 +1037,22 @@ private:
 	bool MayPlayLoose(const FJamSkaterState& S) const;
 	int32 TryLoosePickup(const FVector2D& From, double R);
 	bool BodyMeetsPuck(FJamSkaterState& S, const FVector2D& From, double R);
+	// Lane A218 (R-0069 point 2, game.stick.pickup.ring_m): for the HUMAN, a loose puck inside the ring drawn under him (or that his body skates through) is his
+	// on that frame, whatever his stick points at and whatever button he holds. TryHumanRing: one substep's test for every human skater (the nearest takes it);
+	// returns the taker, -1 = none. Exceptions kept: a puck riding with a carrier (R-0048), over the blades, during the draw, another's pass in flight (A207's
+	// catch and pass arc), a puck faster than the sting against him, a stumbling carrier's puck in his reach, through a net's wall, a puck a press just took
+	// from him while the presser is still near it (PickupLostFrames, his reach + HumanPressNearM; once the presser is away it is his). HumanReleaseLeaving: his own
+	// release is kept from him only while it is still leaving him: opening, under HumanReleaseLockFrames since it left, and either inside its first
+	// HumanReleaseGetOffFrames (it gets off his stick: a pass leaves only PassExitRelMps faster than him) or still faster than HumanReleaseFreeMps against him.
+	// OwnPuckClears reads it for a puck inside his ring (outside it the lock is as before, so the carry assist never pulls back a pass that is on its way).
+	// ring_m 0 = the neutral value (nothing here runs; OwnPuckClears as before).
+	int32 TryHumanRing(const FVector2D& From, double R);
+	bool HumanReleaseLeaving(const FJamSkaterState& S) const;
+	bool HumanRingOn(const FJamSkaterState& S) const { return S.bHuman && Config.Stick.PickupRingM > 0.0; }
+	static constexpr int32 HumanReleaseLockFrames = 20;
+	static constexpr double HumanReleaseFreeMps = 6.0;
+	static constexpr int32 HumanReleaseGetOffFrames = 8;
+	static constexpr double HumanPressNearM = 1.5;   // beyond the presser's carry reach: how near he must be for the press's cooldown to keep the puck from the human
 	// Lane A208: a net's wall (either net's sides or back) lies across the segment A-B: the arc never takes a puck through a net.
 	bool NetBetween(const FVector2D& A, const FVector2D& B) const;
 	// Lane A208 (pickup.body): another's carried puck inside S's body is pushed out of it; its carrier keeps it (R-0048).

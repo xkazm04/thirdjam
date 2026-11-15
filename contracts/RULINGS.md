@@ -868,3 +868,49 @@ plays at 10:00**; from 08:30 only faults found in that package are fixed; `docs/
 (5) **Standing rules of the night** (learned between 20:30 and midnight): a combined landing is rehearsed with the full gate in a scratch tree
 before the real one; a lane's work is taken at a READY line with its source closed, or file by file by name; nothing runs from the main checkout
 but the Director's landings and releases; a watcher is restarted in the same turn that reads its catch.
+
+## R-0069 (15 Nov, 10:35): the operator played H39: two of his three points are still there in his hands; the modes screen
+
+His words, verbatim: "Still two same issues 1. puck is not controlled by player if in his circle area, then player runs right through the pack and
+still does not have control 2. Crosscheck still displays blue line/rectangle in front of player. This should player never see ... For modes selection
+the previous images are deformed, rather create list with titles on left side with mode names sorted asc, and preview on right half of the screen."
+
+The Director's reading, before any lane works:
+(1) **The night's measures called both fixed and his hand says no.** "Loose pucks taken 99.6 %" and "no rectangle or slab in 42 hit strips" were
+counted with scripted hands whose stick points at the puck and whose films were judged by lanes. A person's cursor is somewhere else, and his eye is
+the bar (R-0067). So each of the two is first REPRODUCED AS HE MEETS IT (a skater whose stick aims away from the puck skating through a puck inside
+his ring; LMB without the puck, tapped and held, from the game camera, in the package's own look) and shown in stills to the Director before a
+cure is written; a cure is accepted only on the same stills.
+(2) **The puck inside his ring is his.** Whatever his stick points at: a loose puck that is inside the ring drawn under him, or that he skates
+through, becomes his on that frame, at any speed he can skate; nothing of his own (a pass or a shot he released, a button he holds, a check he
+threw) may keep it from him for longer than the release needs to leave.
+(3) **Nothing technical is ever drawn on or in front of a skater.** No line, bar, rectangle, arc or strip that belongs to the game's mechanics is
+drawn at a cross-check, tapped or held, by A or by a take of device B: only the figure and its stick. What he sees must be found by looking,
+not by listing switches.
+(4) **MODES**: a list of the modes' names on the left, sorted ascending; the chosen mode's preview on the right half of the screen, its picture
+shown whole in its own proportions (never stretched), with its name and its lines; keys, pad and mouse as on the other screens.
+
+**R-0069, addition of 11:05 (which package he played).** Lane A219 read Windows' own record of what was started from the desktop
+(`tools/qa/eye2/which-exe.ps1`, read only; the Director ran it again): the last package started by hand is
+`Game\Packaged\Hokej_Hokej_H34\Windows\ThirdJam.exe` at 10:31:06 on 15 Nov, four minutes before his words; no start of H35 to H39 is recorded.
+H34 is the package of 14 Nov 19:02, from before the night. Its cross-check draws the streak across the stick (team colour, grey on a miss) and
+the bar across the chest of a held one (team colour, blue): "first gray on tap, blue on hold". H39 draws neither. So, until he says otherwise:
+- point (3) as he saw it is H34's and was gone from H35 on; what H39 still draws (the arc of dashes ahead of a held cross-check, the burst's
+  rectangles, the down rings made of rectangles, filmed by A219 in the package) goes all the same: the rule stands as written;
+- point (2) is real on main whatever he played: A218's person-hand table has 21 of 27 cases not his within 2 frames on dd441d9a;
+- point (4) stands as asked;
+- the night's work has NOT yet been played by him. Two cures so this cannot recur: `Game/Packaged/PLAY-LATEST.cmd` (written by every release)
+  starts the newest package, and HOME shows the package's name in a corner (lane A220).
+
+## R-0070 (15 Nov 11:38, the operator, on the pass line and what a cross-check shows)
+Asked whether an aim line for held passes should come back in a form that never crosses his figure, he wrote, verbatim:
+"no aim line needed, the player animation should reflect the crosscheck movement and that should be all"
+
+The Director's reading:
+(1) The pass line (`jam.hud.PassMeter`) is off by default and stays off; the target mate's ring says who gets the pass.
+(2) At a cross-check, tapped or held, landed or missed, his or a bot's, the figure's animation is the whole message. Nothing else is drawn for
+    it: no arc, chevron, burst, down ring, swell of the hitter's ring, or plate beside him. The body check follows the same rule. The control
+    legend at the bottom left stays.
+(3) Therefore the animation has to read by itself at game distance: the tap as a shove with the stick in both gloves, the hold as the stick held
+    across the chest from press to release. Judged on film of the package, frame by frame (lane A219); what only device B's takes can cure goes
+    to B by handoff.

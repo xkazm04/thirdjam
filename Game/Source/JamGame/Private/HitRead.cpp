@@ -21,16 +21,21 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamHit, Log, All);
 
-static TAutoConsoleVariable<int32> CVarJamHitTell(TEXT("jam.hit.Tell"), 1,
-	TEXT("The tell before a hit (lane A196): 1 (default) a chevron of light on the ice 1.4 to 2.4 m ahead of a body checker through his wind-up and window (grey out on a miss), a streak across a cross-checker's stick, the held brace's streak and arc; 0 none (before). Presentation only."), ECVF_Default);
+// Lane A219 (R-0069 point 3, 15 Nov: "Crosscheck still displays blue line/rectangle in front of player. This should player never see"): NOTHING of this
+// file's bar meshes is drawn at a check or a cross-check by default, for the human and for the bots, on every look: no chevron, streak, chest bar, arc of
+// dashes, burst of rectangles, countdown of rectangles round a downed man, ring of rectangles round a stripped puck. The figure and its stick say it
+// (device B's takes), the hitter's own ring swells (the HUD's). Each layer keeps its switch: 1 on all five below (jam.hit.Tell, BraceArc, Burst, Down,
+// PuckFlash) is package H39's picture. AJamHitRead::GameSwitches() is what the game draws with; Jam.Hit.NoBars holds it at zero bars.
+static TAutoConsoleVariable<int32> CVarJamHitTell(TEXT("jam.hit.Tell"), 0,
+	TEXT("The tell before a hit (lane A196): 0 (default from lane A219, R-0069 point 3: nothing technical is drawn at a check or a cross-check) none; 1 (package H39) a chevron of light on the ice 1.4 to 2.4 m ahead of a body checker through his wind-up and window (grey out on a miss), a streak across a cross-checker's stick, the held brace's streak and arc. Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitLean(TEXT("jam.hit.Lean"), 1,
 	TEXT("The figure's lean through a check (lane A196): 1 (default) while the figure lacks device B's PlayCheckWindup / PlayCrossCheck / SetCrossCheckHold: back over the wind-up, forward through the window or the brace; 2 always; 0 none (before). Presentation only."), ECVF_Default);
-static TAutoConsoleVariable<int32> CVarJamHitBurst(TEXT("jam.hit.Burst"), 1,
-	TEXT("The burst at contact (lane A196): 1 (default) a ring on the ice sized by the closing speed and shards away from the victim's fall; 0 none (before). Presentation only."), ECVF_Default);
-static TAutoConsoleVariable<int32> CVarJamHitDown(TEXT("jam.hit.Down"), 1,
-	TEXT("The downed skater's countdown (lane A196): 1 (default) a ring of 12 bars on the ice round him that go out as his down frames run; 0 none (before). Presentation only."), ECVF_Default);
-static TAutoConsoleVariable<int32> CVarJamHitPuckFlash(TEXT("jam.hit.PuckFlash"), 1,
-	TEXT("The stripped puck's flash (lane A196): 1 (default) a gold ring out from the puck a stick lift took; 0 none (before). Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitBurst(TEXT("jam.hit.Burst"), 0,
+	TEXT("The burst at contact (lane A196): 0 (default from lane A219, R-0069: its ring of dashes and its shards are rectangles lying on the ice in front of him) none; 1 (package H39) a ring on the ice sized by the closing speed and shards away from the victim's fall. Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitDown(TEXT("jam.hit.Down"), 0,
+	TEXT("The downed skater's countdown (lane A196): 0 (default from lane A219, R-0069: a ring of rectangles in his team's colour, blue round the human's side) none: the figure lying on the ice says it; 1 (package H39) a ring of 12 bars on the ice round him that go out as his down frames run. Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitPuckFlash(TEXT("jam.hit.PuckFlash"), 0,
+	TEXT("The stripped puck's flash (lane A196): 0 (default from lane A219, R-0069: a ring of ten gold rectangles at a cross-check's strip) none; 1 (package H39) a gold ring out from the puck a stick lift took. Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitScale(TEXT("jam.hit.Scale"), 1.f,
 	TEXT("Size factor of the hits' marks (lane A196, tuning in a window): 1 (default)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitBTakes(TEXT("jam.hit.BTakes"), 2,
@@ -67,8 +72,8 @@ static TAutoConsoleVariable<int32> CVarJamHitRingFar(TEXT("jam.hit.RingFar"), 1,
 	TEXT("With jam.hit.Quiet 1: 1 (default) the contact ring grows back with the distance from the camera: the small ring within 10 m (the human's own hits), package H34's size and 14 frames from 30 m (a hit across the rink is 30 px of bodies: the ring says where), white at any distance; 0 = the small ring everywhere."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitRingScale(TEXT("jam.hit.RingScale"), 0.45f,
 	TEXT("With jam.hit.Quiet 1: the contact ring's radius as a share of package H34's (0.8 to 3.0 m by closing speed), never under 0.95 m. Default 0.45."), ECVF_Default);
-static TAutoConsoleVariable<int32> CVarJamHitBraceArc(TEXT("jam.hit.BraceArc"), 1,
-	TEXT("The arc on the ice ahead of a held cross-check (1 drawn, 0 not)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitBraceArc(TEXT("jam.hit.BraceArc"), 0,
+	TEXT("The arc of seven dashes on the ice ahead of a held cross-check: 0 (default from lane A219, R-0069: the grey-white rectangles in front of him through every frame of a hold) not drawn; 1 drawn (package H39; it also needs jam.hit.Tell 1)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitOffScreen(TEXT("jam.hit.OffScreen"), 1,
 	TEXT("A man down outside the frame (lane A196, evolution 10): 1 (default) an arrow on the screen's edge pointing at him (the human's mates a hollow diamond, opponents a solid triangle) and his mark on the radar; 0 none (before). Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitCapture(TEXT("jam.hit.Capture"), 0,
@@ -938,6 +943,31 @@ void AJamHitRead::Capture(const UJamSim* Sim)
 	}
 }
 
+// Lane A219: the switches the game draws with (the cvars; the camera's place for the far ring is added in Render). The tests read the same function.
+FJamHitReadModel::FDrawSwitches AJamHitRead::GameSwitches()
+{
+	FJamHitReadModel::FDrawSwitches Sw;
+	Sw.bTell = CVarJamHitTell.GetValueOnGameThread() != 0;
+	Sw.bBurst = CVarJamHitBurst.GetValueOnGameThread() != 0;
+	Sw.bDown = CVarJamHitDown.GetValueOnGameThread() != 0;
+	Sw.bFlash = CVarJamHitPuckFlash.GetValueOnGameThread() != 0;
+	Sw.Scale = CVarJamHitScale.GetValueOnGameThread();
+	Sw.bStreak = CVarJamHitStreak.GetValueOnGameThread() != 0;
+	Sw.bBraceBar = CVarJamHitBraceBar.GetValueOnGameThread() != 0;
+	Sw.bBraceArc = CVarJamHitBraceArc.GetValueOnGameThread() != 0;
+	if (CVarJamHitQuiet.GetValueOnGameThread() != 0)
+	{
+		Sw.bThinTell = true; Sw.bRingTeam = false; Sw.RingLife = 8.f / BurstFramesF; Sw.RingScale = FMath::Clamp(CVarJamHitRingScale.GetValueOnGameThread(), 0.1f, 0.99f);
+	}
+	return Sw;
+}
+
+bool AJamHitRead::AnyBarLayer(const FJamHitReadModel::FDrawSwitches& Sw)
+{
+	// The Tell layer holds the chevron, the streak, the chest bar and the arc: with bTell off none of the four is reached, whatever their own switches say.
+	return Sw.bTell || Sw.bBurst || Sw.bDown || Sw.bFlash;
+}
+
 void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters, const FVector& PuckAtCm, double FrameF)
 {
 	if (!Sim) return;
@@ -963,23 +993,15 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 		Yaw[Sk->GetSimIndex()] = static_cast<float>(Sk->GetActorRotation().Yaw);
 	}
 	DrawnAtCm = At;
-	FJamHitReadModel::FDrawSwitches Sw;
-	Sw.bTell = CVarJamHitTell.GetValueOnGameThread() != 0;
-	Sw.bBurst = CVarJamHitBurst.GetValueOnGameThread() != 0;
-	Sw.bDown = CVarJamHitDown.GetValueOnGameThread() != 0;
-	Sw.bFlash = CVarJamHitPuckFlash.GetValueOnGameThread() != 0;
-	Sw.Scale = CVarJamHitScale.GetValueOnGameThread();
-	Sw.bStreak = CVarJamHitStreak.GetValueOnGameThread() != 0;
-	Sw.bBraceBar = CVarJamHitBraceBar.GetValueOnGameThread() != 0;
-	Sw.bBraceArc = CVarJamHitBraceArc.GetValueOnGameThread() != 0;
-	if (CVarJamHitQuiet.GetValueOnGameThread() != 0)
+	FJamHitReadModel::FDrawSwitches Sw = GameSwitches();
+	if (Sw.bThinTell)
 	{
-		Sw.bThinTell = true; Sw.bRingTeam = false; Sw.RingLife = 8.f / BurstFramesF; Sw.RingScale = FMath::Clamp(CVarJamHitRingScale.GetValueOnGameThread(), 0.1f, 0.99f);
 		const APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
 		if (PC && PC->PlayerCameraManager && CVarJamHitRingFar.GetValueOnGameThread() != 0) { Sw.bRingByDistance = true; Sw.EyeAtCm = PC->PlayerCameraManager->GetCameraLocation(); }
 	}
+	// Lane A219: with no layer switched on (the default) the model is not asked and no bar mesh is ever made (ApplyBars grows its pool only for a bar).
 	TArray<FJamHitBar> Bars;
-	Model.Draw(FrameF, At, Yaw, PuckAtCm, Sw, Bars);
+	if (AnyBarLayer(Sw)) Model.Draw(FrameF, At, Yaw, PuckAtCm, Sw, Bars);
 	ApplyBars(Bars);
 	// Lane A210: the drawn figure's own size: the braced set (jam.hit.BraceSet / jam.hit.BraceLean) and the hit's coil and drive (jam.hit.Pop). All 0:
 	// nothing is touched. The scale is set on every frame a figure is off its own size and put back to 1 once; through a hit-stop it keeps the contact
@@ -1195,6 +1217,22 @@ namespace JamHitTest
 		Out.Reset();
 		M.Draw(FrameF, At, Yaw, FVector(500, 0, 0), FJamHitReadModel::FDrawSwitches(), Out);
 	}
+	// Lane A219 (R-0069 point 3): the same frame as the GAME draws it: the cvars' switches, and the model asked only when a layer is on (Render's path).
+	void DrawGame(const FJamHitReadModel& M, double FrameF, const TArray<FJamSkaterState>& S, TArray<FJamHitBar>& Out)
+	{
+		TArray<FVector> At; TArray<float> Yaw;
+		for (const FJamSkaterState& X : S) { At.Add(FVector(X.Pos.X * 100.0, X.Pos.Y * 100.0, 0.0)); Yaw.Add(static_cast<float>(FMath::RadiansToDegrees(X.Yaw))); }
+		Out.Reset();
+		const FJamHitReadModel::FDrawSwitches Sw = AJamHitRead::GameSwitches();
+		if (AJamHitRead::AnyBarLayer(Sw)) M.Draw(FrameF, At, Yaw, FVector(500, 0, 0), Sw, Out);
+	}
+	// Package H39's switches (the quiet marks of lane A210: every layer on, no streak, no chest bar, thin and white).
+	FJamHitReadModel::FDrawSwitches H39()
+	{
+		FJamHitReadModel::FDrawSwitches Sw;
+		Sw.bStreak = false; Sw.bBraceBar = false; Sw.bThinTell = true; Sw.bRingTeam = false; Sw.RingScale = 0.45f; Sw.RingLife = 8.f / FJamHitReadModel::BurstFrames;
+		return Sw;
+	}
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHitBurstSize, "Jam.Hit.BurstSize", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
@@ -1269,7 +1307,9 @@ bool FJamHitMissNoBurst::RunTest(const FString&)
 	M.Step(10, S, None, 8.0, Cols);
 	TArray<FJamHitBar> Bars;
 	Draw(M, 10.0, S, Bars);
-	TestEqual(TEXT("the wind-up shows the chevron (2 bars)"), Count(Bars, EJamHitLayer::Tell), 2);
+	TestEqual(TEXT("the layer on: the wind-up shows the chevron (2 bars)"), Count(Bars, EJamHitLayer::Tell), 2);
+	DrawGame(M, 10.0, S, Bars);
+	TestEqual(TEXT("the game (R-0069): nothing is drawn through a check's wind-up"), Bars.Num(), 0);
 	int64 MissAt = -1;
 	for (int64 F = 11; F <= 30; ++F)
 	{
@@ -1303,10 +1343,12 @@ bool FJamHitMissNoBurst::RunTest(const FString&)
 	TestEqual(TEXT("no hit"), M.Hits, 0);
 	Draw(M, 27.0, S, Bars);
 	TestEqual(TEXT("no burst drawn"), Count(Bars, EJamHitLayer::Burst) + Count(Bars, EJamHitLayer::Shard), 0);
-	TestEqual(TEXT("the chevron fades out after the miss"), Count(Bars, EJamHitLayer::Tell), 2);
+	TestEqual(TEXT("the layer on: the chevron fades out after the miss"), Count(Bars, EJamHitLayer::Tell), 2);
 	bool bGrey = true;
 	for (const FJamHitBar& B : Bars) if (B.Layer == static_cast<uint8>(EJamHitLayer::Tell)) bGrey &= B.Emissive < 3.f;   // the live chevron burns at 8.4 through the window
-	TestTrue(TEXT("the missed chevron is dim"), bGrey);
+	TestTrue(TEXT("the layer on: the missed chevron is dim"), bGrey);
+	DrawGame(M, 27.0, S, Bars);
+	TestEqual(TEXT("the game (R-0069): no grey mark after a miss"), Bars.Num(), 0);
 	Draw(M, 26.0 + FJamHitReadModel::MissFadeFrames + 0.5, S, Bars);
 	TestEqual(TEXT("and gone after its fade"), Count(Bars, EJamHitLayer::Tell), 0);
 	// A cross-check whose stick took the puck and whose shove found nobody: the strip, the puck's flash, no burst.
@@ -1321,7 +1363,131 @@ bool FJamHitMissNoBurst::RunTest(const FString&)
 	TestEqual(TEXT("a strip with no shove is no miss"), X.Misses, 0);
 	TestEqual(TEXT("and gives no burst"), X.GetBursts().Num(), 0);
 	Draw(X, 52.0, T, Bars);
-	TestEqual(TEXT("the stripped puck flashes"), Count(Bars, EJamHitLayer::PuckFlash), 10);
+	TestEqual(TEXT("the layer on: the stripped puck flashes"), Count(Bars, EJamHitLayer::PuckFlash), 10);
+	DrawGame(X, 52.0, T, Bars);
+	TestEqual(TEXT("the game (R-0069): no ring of bars round a stripped puck"), Bars.Num(), 0);
+	return true;
+}
+
+// Lane A219 (R-0069 point 3: "Crosscheck still displays blue line/rectangle in front of player. This should player never see"). The game's own switches
+// (the cvars' defaults, through AJamHitRead::GameSwitches as Render reads them) draw NO bar at any frame of: a body check that misses, a cross-check
+// that strips the puck and meets nobody, a hold of 60 frames at speed (the arc's case, with and without a tap before it), a braced hit that floors the
+// man and his 90 frames down; thrown by the human and thrown by a bot. The same frames drawn with package H39's switches show every one of the layers:
+// the film's frames are what this test walks, so a layer switched back on by default fails here by name.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHitNoBars, "Jam.Hit.NoBars", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHitNoBars::RunTest(const FString&)
+{
+	using namespace JamHitTest;
+	TestEqual(TEXT("ships: no tell (chevron, streak, chest bar, arc)"), CVarJamHitTell.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no arc of dashes ahead of a held cross-check"), CVarJamHitBraceArc.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no bar across the stick"), CVarJamHitStreak.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no bar across the chest"), CVarJamHitBraceBar.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no burst of rectangles at contact"), CVarJamHitBurst.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no countdown of rectangles round a downed man"), CVarJamHitDown.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no ring of rectangles round a stripped puck"), CVarJamHitPuckFlash.GetValueOnGameThread(), 0);
+	TestFalse(TEXT("the game's switches: no layer of bars is on"), AJamHitRead::AnyBarLayer(AJamHitRead::GameSwitches()));
+	TestTrue(TEXT("package H39's switches: layers of bars are on"), AJamHitRead::AnyBarLayer(H39()));
+	// A switch of the Tell layer left on alone reaches nothing while the layer is off (the streak, the chest bar and the arc live inside it).
+	{
+		FJamHitReadModel::FDrawSwitches Only;
+		Only.bTell = false; Only.bBurst = false; Only.bDown = false; Only.bFlash = false; Only.bStreak = true; Only.bBraceBar = true; Only.bBraceArc = true;
+		TestFalse(TEXT("streak, chest bar and arc switched on with the Tell layer off: still no layer"), AJamHitRead::AnyBarLayer(Only));
+		FJamHitReadModel M;
+		TArray<FJamSkaterState> S = Two();
+		TArray<FJamSimEvent> None;
+		S[0].bLiftThisFrame = true; S[0].WindupFrames = 8;
+		M.Step(100, S, None, 8.0, Cols);
+		ClearFrame(S);
+		S[0].bCrossBraced = true; S[0].Vel = FVector2D(7, 0);
+		M.Step(160, S, None, 8.0, Cols);
+		TArray<FVector> At; TArray<float> Yaw;
+		for (const FJamSkaterState& X : S) { At.Add(FVector(X.Pos.X * 100.0, X.Pos.Y * 100.0, 0.0)); Yaw.Add(0.f); }
+		TArray<FJamHitBar> Bars;
+		M.Draw(160.5, At, Yaw, FVector(500, 0, 0), Only, Bars);
+		TestEqual(TEXT("and the model itself draws nothing for them"), Bars.Num(), 0);
+	}
+	const FJamHitReadModel::FDrawSwitches Old = H39();
+	for (int32 Who = 0; Who < 2; ++Who)
+	{
+		const int32 Other = 1 - Who;
+		const TCHAR* Name = Who == 0 ? TEXT("the human") : TEXT("a bot");
+		FJamHitReadModel M;
+		TArray<FJamSkaterState> S = Two();
+		TArray<FJamSimEvent> None;
+		TArray<FVector> At; TArray<float> Yaw;
+		int32 GameBars = 0, Frames = 0;
+		int32 OldTell = 0, OldBrace = 0, OldBurst = 0, OldDown = 0, OldFlash = 0, OldOverFigure = 0;
+		const auto Look = [&](double FrameF)
+		{
+			TArray<FJamHitBar> Bars;
+			DrawGame(M, FrameF, S, Bars);
+			GameBars += Bars.Num(); ++Frames;
+			At.Reset(); Yaw.Reset();
+			for (const FJamSkaterState& X : S) { At.Add(FVector(X.Pos.X * 100.0, X.Pos.Y * 100.0, 0.0)); Yaw.Add(static_cast<float>(FMath::RadiansToDegrees(X.Yaw))); }
+			Bars.Reset();
+			M.Draw(FrameF, At, Yaw, FVector(500, 0, 0), Old, Bars);
+			OldTell += Count(Bars, EJamHitLayer::Tell); OldBrace += Count(Bars, EJamHitLayer::Brace);
+			OldBurst += Count(Bars, EJamHitLayer::Burst) + Count(Bars, EJamHitLayer::Shard); OldDown += Count(Bars, EJamHitLayer::Down); OldFlash += Count(Bars, EJamHitLayer::PuckFlash);
+			for (const FJamHitBar& B : Bars) if (B.CentreCm.Z > 50.0) ++OldOverFigure;
+		};
+		const auto StepLook = [&](int64 F, const TArray<FJamSimEvent>& Ev) { M.Step(F, S, Ev, 8.0, Cols); Look(static_cast<double>(F)); Look(F + 0.5); };
+		// 1. A body check into open ice: 8 frames of wind-up, a window of 12, the miss, its fade.
+		S[Other].Pos = S[Who].Pos + FVector2D(9, 0);
+		S[Who].bCheckThisFrame = true; S[Who].WindupFrames = 8; S[Who].CheckWindupLeft = 8;
+		StepLook(100, None);
+		for (int64 F = 101; F <= 140; ++F)
+		{
+			ClearFrame(S);
+			const int32 Wu = FMath::Max(0, 108 - static_cast<int32>(F));
+			S[Who].CheckWindupLeft = Wu; S[Who].CheckWindow = Wu > 0 ? 0 : FMath::Max(0, 120 - static_cast<int32>(F));
+			if (F >= 120) S[Who].ChecksMissed = 1;
+			StepLook(F, None);
+		}
+		// 2. A cross-check tapped with the man in reach: the stick takes the puck, the shove meets nobody.
+		S[Other].Pos = S[Who].Pos + FVector2D(1.6, 0);
+		ClearFrame(S);
+		S[Who].bLiftThisFrame = true; S[Who].WindupFrames = 8;
+		{
+			TArray<FJamSimEvent> Lift;
+			FJamSimEvent E; E.Name = JamEvents::Lift; E.Who = Who; E.Strength = 1.f; Lift.Add(E);
+			StepLook(200, Lift);
+		}
+		for (int64 F = 201; F <= 230; ++F) { ClearFrame(S); StepLook(F, None); }
+		// 3. The hold: braced by the sim 13 frames after a tap, held for 60 frames at 7 m/s (the arc's frames: from 40 after the tap).
+		ClearFrame(S);
+		S[Who].bLiftThisFrame = true; S[Who].WindupFrames = 8;
+		StepLook(300, None);
+		for (int64 F = 301; F <= 372; ++F)
+		{
+			ClearFrame(S);
+			S[Who].bCrossBraced = F >= 313; S[Who].Vel = FVector2D(7, 0);
+			StepLook(F, None);
+		}
+		// 4. The braced hit: the man goes down for 90 frames.
+		ClearFrame(S);
+		S[Who].bCrossBraced = false;
+		S[Other].Pos = S[Who].Pos + FVector2D(1.2, 0);
+		S[Other].ContactBy = Who; S[Other].ContactOutcome = UJamSim::ContactDown; S[Other].bContactCross = true; S[Other].bCrossBraceHit = true;
+		S[Other].KnockFrames = 90; S[Other].KnockDir = FVector2D(1, 0);
+		{
+			TArray<FJamSimEvent> Hit;
+			FJamSimEvent E; E.Name = JamEvents::Check; E.Who = Who; E.Where = S[Who].Pos + FVector2D(0.6, 0); E.Strength = 11.f / 8.f; E.Dir = FVector2D(1, 0); Hit.Add(E);
+			StepLook(373, Hit);
+		}
+		for (int64 F = 374; F <= 470; ++F)
+		{
+			ClearFrame(S);
+			S[Other].KnockFrames = FMath::Max(0, 90 - static_cast<int32>(F - 373));
+			StepLook(F, None);
+		}
+		TestEqual(FString::Printf(TEXT("%s: the game draws no bar in any of the %d frames looked at"), Name, Frames), GameBars, 0);
+		TestTrue(FString::Printf(TEXT("%s: the frames are the chevron's (package H39 drew %d bars of it)"), Name, OldTell), OldTell > 0);
+		TestTrue(FString::Printf(TEXT("%s: the frames are the arc's (package H39 drew %d dashes)"), Name, OldBrace), OldBrace > 0);
+		TestTrue(FString::Printf(TEXT("%s: the frames are the burst's (package H39 drew %d rectangles)"), Name, OldBurst), OldBurst > 0);
+		TestTrue(FString::Printf(TEXT("%s: the frames are the countdown's (package H39 drew %d rectangles round the downed man)"), Name, OldDown), OldDown > 0);
+		TestTrue(FString::Printf(TEXT("%s: the frames are the stripped puck's (package H39 drew %d rectangles)"), Name, OldFlash), OldFlash > 0);
+		TestEqual(FString::Printf(TEXT("%s: package H39 already drew nothing over the figure"), Name), OldOverFigure, 0);
+	}
 	return true;
 }
 
@@ -1433,7 +1599,12 @@ bool FJamHitQuiet::RunTest(const FString&)
 	using namespace JamHitTest;
 	TestEqual(TEXT("ships: no bar across the stick of a pressed cross-check"), CVarJamHitStreak.GetValueOnGameThread(), 0);
 	TestEqual(TEXT("ships: no bar across the chest of a held cross-check"), CVarJamHitBraceBar.GetValueOnGameThread(), 0);
-	TestEqual(TEXT("ships: the quiet marks"), CVarJamHitQuiet.GetValueOnGameThread(), 1);
+	TestEqual(TEXT("ships: the quiet marks (for a layer someone switches back on)"), CVarJamHitQuiet.GetValueOnGameThread(), 1);
+	// Lane A219 (R-0069 point 3): the layers themselves ship OFF: "Now" below is package H39's picture, kept as the model's test; Jam.Hit.NoBars is the game's.
+	TestEqual(TEXT("ships: no tell"), CVarJamHitTell.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no arc ahead of a held cross-check"), CVarJamHitBraceArc.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no burst of bars"), CVarJamHitBurst.GetValueOnGameThread(), 0);
+	TestEqual(TEXT("ships: no countdown of bars"), CVarJamHitDown.GetValueOnGameThread(), 0);
 	TestEqual(TEXT("ships: device B's takes on every figure, the human's too"), CVarJamHitBTakes.GetValueOnGameThread(), 2);
 	// The bridge for the brace: the figure itself sets (nothing drawn on it).
 	TestEqual(TEXT("ships: no set on the braced figure (device B's H56.5 hold reads from behind)"), CVarJamHitBraceSet.GetValueOnGameThread(), 0.f, 1e-6f);
@@ -1490,8 +1661,8 @@ bool FJamHitQuiet::RunTest(const FString&)
 		TestEqual(TEXT("package H34: one bar across the stick"), Count(Bars, EJamHitLayer::Streak), 1);
 		TestTrue(TEXT("package H34: it hangs over the figure (chest height)"), Above(Bars, 50.0) >= 1);
 		DrawWith(M, 101.5, S, Now, Bars);
-		TestEqual(TEXT("now: no bar across the stick"), Count(Bars, EJamHitLayer::Streak), 0);
-		TestEqual(TEXT("now: nothing drawn above the ice while he winds up"), Above(Bars, 50.0), 0);
+		TestEqual(TEXT("package H39: no bar across the stick"), Count(Bars, EJamHitLayer::Streak), 0);
+		TestEqual(TEXT("package H39: nothing drawn above the ice while he winds up"), Above(Bars, 50.0), 0);
 	}
 	{
 		// A held cross-check at 7 m/s.
@@ -1503,7 +1674,7 @@ bool FJamHitQuiet::RunTest(const FString&)
 		TestEqual(TEXT("package H34: the bar across the chest and seven bars of arc"), Count(Bars, EJamHitLayer::Brace), 8);
 		TestEqual(TEXT("package H34: the bar is over the figure"), Above(Bars, 50.0), 1);
 		DrawWith(M, 100.5, S, Now, Bars);
-		TestEqual(TEXT("now: the arc alone"), Count(Bars, EJamHitLayer::Brace), 7);
+		TestEqual(TEXT("package H39: the arc alone"), Count(Bars, EJamHitLayer::Brace), 7);
 		// The eye's third list: a tap that ran on into a brace shows no dashes for ArcAfterTapFrames after the press; a hold that began without a tap does.
 		{
 			FJamHitReadModel T;
@@ -1520,11 +1691,11 @@ bool FJamHitQuiet::RunTest(const FString&)
 			DrawWith(T, 100.5 + FJamHitReadModel::ArcAfterTapFrames, S2, Now, B2);
 			TestEqual(TEXT("still held 40 frames after the tap: the dashes"), Count(B2, EJamHitLayer::Brace), 7);
 		}
-		TestEqual(TEXT("now: nothing over the figure while he holds"), Above(Bars, 50.0), 0);
+		TestEqual(TEXT("package H39: nothing over the figure while he holds"), Above(Bars, 50.0), 0);
 		for (const FJamHitBar& B : Bars)
 		{
-			TestTrue(TEXT("now: the arc is thin (7 cm)"), B.SizeCm.Y <= 7.0 + 1e-6);
-			TestTrue(TEXT("now: the arc is the ice's white, not the team's colour"), B.Colour.Equals(FLinearColor::White, 0.001f));
+			TestTrue(TEXT("package H39: the arc is thin (7 cm)"), B.SizeCm.Y <= 7.0 + 1e-6);
+			TestTrue(TEXT("package H39: the arc is the ice's white, not the team's colour"), B.Colour.Equals(FLinearColor::White, 0.001f));
 		}
 		FJamHitReadModel::FDrawSwitches NoArc = Now; NoArc.bBraceArc = false;
 		DrawWith(M, 100.5, S, NoArc, Bars);
@@ -1537,12 +1708,12 @@ bool FJamHitQuiet::RunTest(const FString&)
 		S[0].bCheckThisFrame = true; S[0].WindupFrames = 8; S[0].CheckWindupLeft = 8;
 		M.Step(100, S, None, 8.0, Cols);
 		DrawWith(M, 100.5, S, Now, Bars);
-		TestEqual(TEXT("now: the chevron is still two bars"), Count(Bars, EJamHitLayer::Tell), 2);
+		TestEqual(TEXT("package H39: the chevron is still two bars"), Count(Bars, EJamHitLayer::Tell), 2);
 		for (const FJamHitBar& B : Bars)
 		{
-			TestTrue(TEXT("now: the chevron is thin (7 cm against 18)"), B.SizeCm.Y <= 7.0 + 1e-6);
-			TestTrue(TEXT("now: the chevron is white"), B.Colour.Equals(FLinearColor::White, 0.001f));
-			TestTrue(TEXT("now: the chevron lies on the ice"), B.CentreCm.Z < 20.0);
+			TestTrue(TEXT("package H39: the chevron is thin (7 cm against 18)"), B.SizeCm.Y <= 7.0 + 1e-6);
+			TestTrue(TEXT("package H39: the chevron is white"), B.Colour.Equals(FLinearColor::White, 0.001f));
+			TestTrue(TEXT("package H39: the chevron lies on the ice"), B.CentreCm.Z < 20.0);
 		}
 		// The contact at 11 m/s (Strength 11 / 8), the victim down.
 		for (int64 F = 101; F <= 108; ++F)
@@ -1568,19 +1739,19 @@ bool FJamHitQuiet::RunTest(const FString&)
 			DrawWith(M, 112.0, S, Now, Bars);
 			const double After = Reach(Bars);
 			TestTrue(FString::Printf(TEXT("package H34: the ring of a hard hit reaches past 2 m (%.2f m)"), Before), Before > 2.0);
-			TestTrue(FString::Printf(TEXT("now: the ring keeps to 1.35 m (%.2f m)"), After), After <= 1.35 + 1e-6 && After >= FJamHitReadModel::RingMinM * 0.8 - 1e-6);
-			TestTrue(TEXT("now: the ring is drawn"), Count(Bars, EJamHitLayer::Burst) > 0 && BarsBefore > 0);
+			TestTrue(FString::Printf(TEXT("package H39: the ring keeps to 1.35 m (%.2f m)"), After), After <= 1.35 + 1e-6 && After >= FJamHitReadModel::RingMinM * 0.8 - 1e-6);
+			TestTrue(TEXT("package H39: the ring is drawn"), Count(Bars, EJamHitLayer::Burst) > 0 && BarsBefore > 0);
 			for (const FJamHitBar& B : Bars)
 			{
 				if (B.Layer != static_cast<uint8>(EJamHitLayer::Burst) && B.Layer != static_cast<uint8>(EJamHitLayer::Shard)) continue;
-				TestTrue(TEXT("now: the ring and its spray are white, never the checker's colour"), B.Colour.Equals(FLinearColor::White, 0.001f));
-				TestTrue(TEXT("now: the ring's bars at most 12 cm wide (28 before)"), B.Layer != static_cast<uint8>(EJamHitLayer::Burst) || B.SizeCm.Y <= 12.0);
+				TestTrue(TEXT("package H39: the ring and its spray are white, never the checker's colour"), B.Colour.Equals(FLinearColor::White, 0.001f));
+				TestTrue(TEXT("package H39: the ring's bars at most 12 cm wide (28 before)"), B.Layer != static_cast<uint8>(EJamHitLayer::Burst) || B.SizeCm.Y <= 12.0);
 				const FVector2D P(B.CentreCm.X / 100.0, B.CentreCm.Y / 100.0);
-				TestTrue(TEXT("now: still clear of the checker"), FJamHitReadModel::ClearOfBody(P, S[0].Pos, FVector2D::ZeroVector, FJamHitReadModel::BodyClearM - 1e-6));
-				TestTrue(TEXT("now: still clear of the victim"), FJamHitReadModel::ClearOfBody(P, S[1].Pos, S[1].KnockDir, FJamHitReadModel::BodyClearM - 1e-6));
+				TestTrue(TEXT("package H39: still clear of the checker"), FJamHitReadModel::ClearOfBody(P, S[0].Pos, FVector2D::ZeroVector, FJamHitReadModel::BodyClearM - 1e-6));
+				TestTrue(TEXT("package H39: still clear of the victim"), FJamHitReadModel::ClearOfBody(P, S[1].Pos, S[1].KnockDir, FJamHitReadModel::BodyClearM - 1e-6));
 			}
 			DrawWith(M, 108.0 + 8.5, S, Now, Bars);
-			TestEqual(TEXT("now: the ring is gone 8 frames after the contact"), Count(Bars, EJamHitLayer::Burst) + Count(Bars, EJamHitLayer::Shard), 0);
+			TestEqual(TEXT("package H39: the ring is gone 8 frames after the contact"), Count(Bars, EJamHitLayer::Burst) + Count(Bars, EJamHitLayer::Shard), 0);
 			DrawWith(M, 108.0 + 8.5, S, H34, Bars);
 			TestTrue(TEXT("package H34: it burned on to 14"), Count(Bars, EJamHitLayer::Burst) > 0);
 			// The same hit 40 m from the eye: the ring at package H34's size and life again, still white; 5 m from the eye: the small one.

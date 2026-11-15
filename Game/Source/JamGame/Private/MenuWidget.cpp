@@ -1,6 +1,8 @@
 #include "MenuWidget.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+#include "Misc/Paths.h"
+#include "HAL/PlatformProcess.h"
 #include "MenuStyle.h"
 #include "SettingsWidget.h"
 #include "InputMapping.h"
@@ -79,8 +81,8 @@ FLinearColor FJamMenuLook::Scrim() { return FLinearColor(0.f, 0.f, 0.f, 0.62f); 
 
 TArray<float> FJamMenuLook::GridValues()
 {
-	return { HeaderH, FooterH, SideMargin, FocusBarW, ItemPadX, ItemPadY, Gap, CardPad, MainColumnW, FeatureW, ModesW, ModePictureH, ModeSlotPad,
-		ModeCardPadX, SeasonW, PanelW, WidePanelW, TransitionSlide };
+	return { HeaderH, FooterH, SideMargin, FocusBarW, ItemPadX, ItemPadY, Gap, CardPad, MainColumnW, FeatureW, ModesW, ModeListW, ModeRowPadY,
+		ModePreviewW, ModePictureW, ModePictureH, SeasonW, PanelW, WidePanelW, TransitionSlide };
 }
 
 namespace
@@ -126,6 +128,9 @@ static TAutoConsoleVariable<int32> CVarJamMenuKitPlates(TEXT("jam.menu.KitPlates
 	TEXT("1 (default): device B's plates (panel, buttons, segments, mode card, header bar). 0: the flat fills of the style table."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamMenuKitPictures(TEXT("jam.menu.KitPictures"), 1,
 	TEXT("1 (default): device B's mode pictures (Modes/T_UI_Mode_<slug>). 0: the team-colour bands with the sides."), ECVF_Default);
+// Lane A220 (R-0069 point 4): MODES' list order.
+static TAutoConsoleVariable<int32> CVarJamMenuModesOpenersLast(TEXT("jam.menu.ModesOpenersLast"), 1,
+	TEXT("1 (default): MODES lists the twelve modes A to Z, then (under a thin rule) ALL RINKS and MAKE YOUR OWN, the two that open a screen. 0: one A to Z list of all fourteen. Read when MODES opens."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamMenuKitFont(TEXT("jam.menu.KitFont"), 1,
 	TEXT("1 (default): device B's display font (Fonts/F_Hokej_Display: Regular, Bold = Roboto Bold Condensed, Black). 0: the engine's Roboto."), ECVF_Default);
 
@@ -391,7 +396,6 @@ namespace
 {
 	// ---- widths in slate units (lane A144's measures, re-laid on lane A187's panels)
 	constexpr float ScreenPadX = L::CardPad;     // inside a panel
-	constexpr float ModeTextW = L::ModesW / L::ModesPerRow - 2.f * L::ModeSlotPad - 2.f * L::ModeCardPadX;   // 288
 	constexpr int32 CutsPerRow = 3;
 	constexpr float CutIcon = 36.f;
 	constexpr float CutPadX = 12.f;
@@ -707,7 +711,16 @@ void UJamMenuWidget::BuildTree()
 		}
 	};
 	const FMargin Below(0, L::Unit * 3.f, 0, 0);
-	Put(BuildMain(), HAlign_Fill, VAlign_Fill, FMargin(0, L::Unit * 5.f, 0, 0));
+	{
+		// Lane A220 (Director 11:10): HOME carries the package's build tag in its bottom right corner, small and dim; nothing when there is none.
+		UOverlay* Home = T->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("HomeWithTag"));
+		S::AddO(Home, BuildMain());
+		const FString Tag = BuildTag();
+		BuildTagText = Txt(T, Tag, L::Font(L::Caption, FName("Bold"), L::TrackLabel), FLinearColor(L::TextDim().R, L::TextDim().G, L::TextDim().B, 0.55f));
+		BuildTagText->SetVisibility(Tag.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		S::AddO(Home, BuildTagText, HAlign_Right, VAlign_Bottom, FMargin(0, 0, L::SideMargin, L::Unit * 2.f));
+		Put(Home, HAlign_Fill, VAlign_Fill, FMargin(0, L::Unit * 5.f, 0, 0));
+	}
 	Put(OnPanel(BuildCuts(), L::WidePanelW), HAlign_Center, VAlign_Top, Below);
 	Put(OnPanel(BuildDirect(), L::PanelW), HAlign_Center, VAlign_Top, Below);
 	Put(OnPanel(BuildSettings(), L::PanelW), HAlign_Center, VAlign_Top, Below);
@@ -956,18 +969,47 @@ UWidget* UJamMenuWidget::BuildMain()
 
 UWidget* UJamMenuWidget::BuildModes()
 {
+	// Lane A220 (R-0069 point 4): the list of the modes' names on the left (at the side margin, HOME's column width), the selected mode's preview
+	// on the right half of the screen (x 960 to 1824 at 1920 units): its picture whole in its own proportions, its name, its lines, the level.
 	UWidgetTree* T = WidgetTree;
-	UVerticalBox* V = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ModesScreen"));
-	ModeGrid = T->ConstructWidget<UUniformGridPanel>(UUniformGridPanel::StaticClass(), TEXT("ModeGrid"));
-	ModeGrid->SetSlotPadding(FMargin(L::ModeSlotPad));
-	AddV(V, ModeGrid, FMargin(0));
-	// The focused card's facts, one line under the grid.
-	UBorder* DetailBar = Box(T, Fill(FLinearColor(L::Ink().R, L::Ink().G, L::Ink().B, 0.80f), false), FMargin(L::ItemPadX, L::Unit + 4.f));
-	ModeDetail = Wrapped(Txt(T, TEXT(""), L::Font(L::Body - 1, FName("Bold"), 20), L::Text()), ModeDetailWidth());
-	DetailBar->SetContent(ModeDetail);
-	AddV(V, DetailBar, FMargin(L::ModeSlotPad, L::Unit, L::ModeSlotPad, L::Unit * 2.f));
-	AddV(V, MakeBack(EJamMenuScreen::Modes), FMargin(L::ModeSlotPad, 0), HAlign_Left);
-	return Sized(T, V, L::ModesW);
+	UHorizontalBox* Screen0 = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("ModesScreen"));
+	UVerticalBox* Left = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ModeListColumn"));
+	ModeList = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ModeList"));
+	AddV(Left, ModeList, FMargin(0));
+	AddV(Left, MakeBack(EJamMenuScreen::Modes), FMargin(0, L::Unit * 2.f, 0, 0), HAlign_Left);
+	AddH(Screen0, Sized(T, Left, L::ModeListW), FMargin(0), false, VAlign_Top);
+	AddH(Screen0, T->ConstructWidget<USpacer>(USpacer::StaticClass()), FMargin(0), true);
+
+	UVerticalBox* P = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ModePreview"));
+	// The picture's box: the ink behind it shows as the letterbox; the picture is sized to FitWhole(source, box) and centred, never stretched.
+	UBorder* Frame = Box(T, Fill(FLinearColor(L::Ink().R, L::Ink().G, L::Ink().B, 0.92f), false), FMargin(0));
+	Frame->SetHorizontalAlignment(HAlign_Fill);
+	Frame->SetVerticalAlignment(VAlign_Fill);
+	UOverlay* Pic = T->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("ModePictureBox"));
+	PreviewImage = T->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("ModePicture"));
+	PreviewImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+	PreviewPicSize = Sized(T, PreviewImage, L::ModePictureW, L::ModePictureH);
+	S::AddO(Pic, PreviewPicSize, HAlign_Center, VAlign_Center);
+	// A mode without a picture: a plain panel in the look's colour with the mode's name (never a neighbour's picture).
+	PreviewPlain = Box(T, Fill(FLinearColor(L::Home().R * 0.35f, L::Home().G * 0.35f, L::Home().B * 0.35f, 1.f), false), FMargin(L::CardPad));
+	PreviewPlain->SetHorizontalAlignment(HAlign_Center);
+	PreviewPlain->SetVerticalAlignment(VAlign_Center);
+	PreviewPlainText = Txt(T, TEXT(""), ModePreviewNameFont(), FLinearColor(1, 1, 1, 0.92f));
+	PreviewPlain->SetContent(PreviewPlainText);
+	PreviewPlain->SetVisibility(ESlateVisibility::Collapsed);
+	S::AddO(Pic, PreviewPlain);
+	Frame->SetContent(Pic);
+	AddV(P, Sized(T, Frame, L::ModePictureW, L::ModePictureH), FMargin(0));
+	PreviewName = Txt(T, TEXT(""), ModePreviewNameFont(), L::Text());
+	AddV(P, PreviewName, FMargin(0, L::Unit * 3.f, 0, 0));
+	PreviewLines = Wrapped(Txt(T, TEXT(""), ModePitchFont(), L::Text()), ModeDetailWidth());
+	AddV(P, PreviewLines, FMargin(0, L::Unit, 0, 0));
+	ModeDetail = Wrapped(Txt(T, TEXT(""), ModeFactFont(), L::TextDim()), ModeDetailWidth());
+	AddV(P, ModeDetail, FMargin(0, L::Unit * 2.f, 0, 0));
+	PreviewLevel = Wrapped(Txt(T, TEXT(""), ModeFactFont(), L::Chosen()), ModeDetailWidth());
+	AddV(P, PreviewLevel, FMargin(0, L::Unit, 0, 0));
+	AddH(Screen0, L::MakePanel(T, P, L::ModePreviewW, FMargin(L::CardPad)), FMargin(0), false, VAlign_Top);
+	return Sized(T, Screen0, L::ModesW);
 }
 
 UWidget* UJamMenuWidget::BuildSeason()
@@ -1230,6 +1272,7 @@ void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 		break;
 	}
 	RefreshLevelSwitch();
+	if (Screen == EJamMenuScreen::Modes && ModeSel >= 0) ShowModePreview(ModeSel);   // lane A220: the level line names the level lit on HOME
 	PendingFocus = GetHomeFocus(Screen);
 	FeatureFor = nullptr;
 	RefreshFooter();
@@ -1244,7 +1287,7 @@ UWidget* UJamMenuWidget::GetHomeFocus(EJamMenuScreen InScreen) const
 	case EJamMenuScreen::Landing: return LandingButton;
 	case EJamMenuScreen::Main: return PlayNowButton;
 	case EJamMenuScreen::Cuts: return CutGrid && CutGrid->GetChildrenCount() ? CutGrid->GetChildAt(0) : Back();
-	case EJamMenuScreen::Modes: return ModeGrid && ModeGrid->GetChildrenCount() ? ModeGrid->GetChildAt(0) : Back();
+	case EJamMenuScreen::Modes: return ModeRows.Num() && ModeRows[0] ? static_cast<UWidget*>(ModeRows[0].Get()) : Back();
 	case EJamMenuScreen::Season:
 		if (ContinueButton && ContinueButton->GetIsEnabled()) return ContinueButton;
 		return Back();
@@ -1272,10 +1315,10 @@ void UJamMenuWidget::GoBack()
 			: From == EJamMenuScreen::Credits ? static_cast<UWidget*>(CreditsButton.Get()) : nullptr;
 		if (Entry) PendingFocus = Entry;
 	}
-	else if (To == EJamMenuScreen::Modes && ModeGrid)
+	else if (To == EJamMenuScreen::Modes)
 	{
-		for (UWidget* W : ModeGrid->GetAllChildren())
-			if (const UJamMenuRowButton* R = Cast<UJamMenuRowButton>(W)) if (R->Kind == EJamMenuRowKind::Open && R->Payload == ScreenName(From)) PendingFocus = W;
+		for (int32 i = 0; i < ModeRows.Num(); ++i)
+			if (UJamMenuRowButton* R = ModeRows[i]) if (R->Kind == EJamMenuRowKind::Open && R->Payload == ScreenName(From)) { PendingFocus = R; ShowModePreview(i); }
 	}
 	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU back from=%s to=%s"), *ScreenName(From), *ScreenName(To));
 }
@@ -1319,6 +1362,8 @@ void UJamMenuWidget::RefreshFooter()
 		else Hints = { { TEXT("ENTER / A"), TEXT("SELECT") }, { TEXT("ARROWS / STICK"), TEXT("MOVE") }, { TEXT("ESC / B"), TEXT("TITLE") } };
 		break;
 	case EJamMenuScreen::Modes:
+		Hints = { { TEXT("ENTER / A"), Row && Row->Kind == EJamMenuRowKind::Open ? TEXT("OPEN") : TEXT("PLAY") }, { TEXT("UP / DOWN"), TEXT("CHOOSE") }, { TEXT("ESC / B"), TEXT("BACK") } };
+		break;
 	case EJamMenuScreen::Cuts:
 		Hints = { { TEXT("ENTER / A"), Row && Row->Kind == EJamMenuRowKind::Open ? TEXT("OPEN") : TEXT("PLAY") }, { TEXT("ARROWS / STICK"), TEXT("MOVE") }, { TEXT("ESC / B"), TEXT("BACK") } };
 		break;
@@ -1396,18 +1441,6 @@ void UJamMenuWidget::RefreshModeDetail()
 {
 	APlayerController* PC = GetOwningPlayer();
 	if (!PC) return;
-	if (Screen == EJamMenuScreen::Modes && ModeDetail && ModeGrid)
-	{
-		for (UWidget* W : ModeGrid->GetAllChildren())
-		{
-			const UJamMenuRowButton* R = Cast<UJamMenuRowButton>(W);
-			if (R && R->HasUserFocus(PC))
-			{
-				if (ModeDetail->GetText().ToString() != R->Detail) ModeDetail->SetText(FText::FromString(R->Detail));
-				return;
-			}
-		}
-	}
 	if (Screen == EJamMenuScreen::Season && SeasonDetail)
 	{
 		for (int32 i = 0; i < SeasonRowButtons.Num(); ++i)
@@ -1468,81 +1501,299 @@ void UJamMenuWidget::RefreshCuts()
 
 void UJamMenuWidget::RefreshModes()
 {
-	if (!ModeGrid) return;
-	ModeGrid->ClearChildren();
-	ModePitchTexts.Reset();
+	// Lane A220 (R-0069 point 4): the twelve modes and the two that open a screen as a list of names, sorted A to Z by the name shown
+	// (jam.menu.ModesOpenersLast: the two openers after the twelve, under a thin rule); the first row is selected and its preview shown.
+	if (!ModeList) return;
+	ModeList->ClearChildren();
+	ModeRows.Reset();
+	ModeEntries.Reset();
+	ModeSel = -1;
 	Items.RemoveAll([](const FItem& I) { return !I.Button.IsValid() || (I.Button->IsA<UJamMenuRowButton>() && !I.Button->GetParent()); });
 	UWidgetTree* T = WidgetTree;
-	struct FCard { FString Name; FString Display; FString Pitch; FString Side; FString Detail; EJamMenuRowKind Kind; FString Picture; FString Band; };
-	TArray<FCard> Cards;
 	for (const FJamModeCard& M : UJamMenuFlow::AvailableModeCards())
 	{
-		FCard C;
-		C.Name = M.Name;
-		C.Display = M.Display.ToUpper();
-		C.Pitch = M.Pitch;
+		FModeEntry E;
+		E.Payload = M.Name;
+		E.Display = M.Display.ToUpper();
+		E.Lines = M.Pitch;
 		const int32 H = M.HomeSkaters, A = M.AwaySkaters;
-		C.Band = H > 0 ? FString::Printf(TEXT("%d v %d"), H, A > 0 ? A : H) : FString(TEXT("HOKEJ"));
-		C.Side = H > 0 ? (A > 0 && A != H ? FString::Printf(TEXT("%d AGAINST %d"), H, A) : FString::Printf(TEXT("%d A SIDE"), H)) : FString();
-		C.Detail = FString::Printf(TEXT("%s   /   %s"), *C.Display, *FString::Join(M.Facts, TEXT("   /   ")));
-		C.Kind = EJamMenuRowKind::Cut;
-		C.Picture = FString::Printf(TEXT("Modes/T_UI_Mode_%s"), *ModeSlug(M.Name));
-		Cards.Add(C);
+		TArray<FString> Bits;
+		if (H > 0) Bits.Add(A > 0 && A != H ? FString::Printf(TEXT("%d AGAINST %d"), H, A) : FString::Printf(TEXT("%d A SIDE"), H));
+		Bits.Append(M.Facts);
+		E.Facts = FString::Join(Bits, TEXT("   /   "));
+		E.Picture = FString::Printf(TEXT("Modes/T_UI_Mode_%s"), *ModeSlug(M.Name));
+		E.Kind = EJamMenuRowKind::Cut;
+		ModeEntries.Add(E);
 	}
-	Cards.Add({ TEXT("cuts"), TEXT("ALL RINKS"), TEXT("Every shipped rink, a rink you saved, the takes you played."), TEXT("5 A SIDE"),
-		TEXT("ALL RINKS   /   the regular rink and its variants   /   your saved game   /   the season's takes you played"), EJamMenuRowKind::Open, TEXT("Modes/T_UI_Mode_rinks"), TEXT("RINKS") });
-	Cards.Add({ TEXT("direct"), TEXT("MAKE YOUR OWN"), TEXT("One sentence, and the Designer rewrites the game."), TEXT("THE DESIGNER"),
-		TEXT("MAKE YOUR OWN   /   type a sentence, or pick one the Designer already made   /   play it, save it"), EJamMenuRowKind::Open, TEXT("Modes/T_UI_Mode_make_your_own"), TEXT("+") });
-	for (int32 i = 0; i < Cards.Num(); ++i)
 	{
-		const FCard& M = Cards[i];
-		UJamMenuRowButton* B = T->ConstructWidget<UJamMenuRowButton>(UJamMenuRowButton::StaticClass());
-		B->Bind(this, M.Kind, M.Name);
-		B->Detail = M.Detail;
-		UVerticalBox* Body = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		// The picture slot: device B's picture of the mode by name, a band in a team colour with the sides until it is there.
-		UWidget* Pic = nullptr;
-		if (UTexture2D* Tex = L::Kit(M.Picture))
-		{
-			UImage* I = T->ConstructWidget<UImage>(UImage::StaticClass());
-			I->SetBrushFromTexture(Tex, false);
-			I->SetVisibility(ESlateVisibility::HitTestInvisible);
-			Pic = I;
-		}
-		else
-		{
-			// Opaque (a see-through band took the focus fill's orange under it).
-			const FLinearColor Team = i % 2 ? L::Away() : L::Home();
-			const FLinearColor C = M.Kind == EJamMenuRowKind::Open ? FLinearColor(0.035f, 0.040f, 0.050f, 1.f) : FLinearColor(Team.R * 0.55f, Team.G * 0.55f, Team.B * 0.55f, 1.f);
-			UBorder* Band = Box(T, FSlateBrush(FSlateRoundedBoxBrush(C, FVector4(4.f, 4.f, 0.f, 0.f))), FMargin(0));
-			Band->SetHorizontalAlignment(HAlign_Center);
-			Band->SetVerticalAlignment(VAlign_Center);
-			Band->SetContent(Txt(T, M.Band, L::Font(L::Title + 4, FName("Black"), 40), FLinearColor(1, 1, 1, 0.92f)));
-			Band->SetVisibility(ESlateVisibility::HitTestInvisible);
-			Pic = Band;
-		}
-		AddV(Body, Sized(T, Pic, 0.f, L::ModePictureH), FMargin(0));
-		UVerticalBox* Words = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		UTextBlock* Name = Txt(T, M.Display, ModeNameFont(), L::Text());
-		B->TintText = Name;
-		AddV(Words, Name, FMargin(0, 0, 0, 2));
-		UTextBlock* Pitch = Wrapped(Txt(T, M.Pitch, ModePitchFont(), L::TextDim()), ModeTextW - 4.f);   // 4 units kept: a wrapped line measured 290 at 288
-		ModePitchTexts.Add(Pitch);
-		USizeBox* PitchBox = Sized(T, Pitch, 0.f, ModePitchBoxHeight());   // two full lines of the pitch (Jam.Menu.FitsTheScreen measures it), never a third
-		PitchBox->SetClipping(EWidgetClipping::ClipToBounds);
-		AddV(Words, PitchBox, FMargin(0, 0, 0, 6));
-		UTextBlock* Side = Txt(T, M.Side, ModeFactFont(), L::TextDim());
-		AddV(Words, Side, FMargin(0));
-		AddV(Body, Words, FMargin(L::ModeCardPadX, L::Unit + 2.f, L::ModeCardPadX, L::Unit + 4.f));
-		B->AddChild(Body);
-		ToTop(Body);
-		ModeGrid->AddChildToUniformGrid(B, i / L::ModesPerRow, i % L::ModesPerRow);
-		if (UUniformGridSlot* GS = Cast<UUniformGridSlot>(B->Slot)) { GS->SetHorizontalAlignment(HAlign_Fill); GS->SetVerticalAlignment(VAlign_Fill); }
-		AddItem(B, Name);
-		AddSub(B, Pitch);
-		AddSub(B, Side);
+		FModeEntry E;
+		E.Payload = TEXT("cuts");
+		E.Display = TEXT("ALL RINKS");
+		E.Lines = TEXT("Every shipped rink, a rink you saved, the takes you played.");
+		E.Facts = TEXT("the regular rink and its variants   /   your saved game   /   the season's takes you played");
+		E.Picture = TEXT("Modes/T_UI_Mode_rinks");
+		E.Kind = EJamMenuRowKind::Open;
+		ModeEntries.Add(E);
+		E.Payload = TEXT("direct");
+		E.Display = TEXT("MAKE YOUR OWN");
+		E.Lines = TEXT("One sentence, and the Designer rewrites the game.");
+		E.Facts = TEXT("type a sentence, or pick one the Designer already made   /   play it, save it");
+		E.Picture = TEXT("Modes/T_UI_Mode_make_your_own");
+		ModeEntries.Add(E);
 	}
-	if (ModeDetail) ModeDetail->SetText(FText::FromString(Cards.Num() ? Cards[0].Detail : FString()));
+	const bool bOpenersLast = ModesOpenersLast();
+	ModeEntries.StableSort([bOpenersLast](const FModeEntry& A, const FModeEntry& B)
+	{
+		const bool bOa = A.Kind == EJamMenuRowKind::Open, bOb = B.Kind == EJamMenuRowKind::Open;
+		if (bOpenersLast && bOa != bOb) return bOb;
+		return A.Display.Compare(B.Display, ESearchCase::IgnoreCase) < 0;
+	});
+	for (int32 i = 0; i < ModeEntries.Num(); ++i)
+	{
+		const FModeEntry& E = ModeEntries[i];
+		if (bOpenersLast && i > 0 && E.Kind == EJamMenuRowKind::Open && ModeEntries[i - 1].Kind != EJamMenuRowKind::Open)
+		{
+			UWidget* Rule = Sized(T, Solid(T, L::PanelEdge()), 0.f, 2.f);
+			Rule->SetVisibility(ESlateVisibility::HitTestInvisible);
+			AddV(ModeList, Rule, FMargin(L::ItemPadX, L::Unit, L::ItemPadX, L::Unit + 4.f));
+		}
+		UJamMenuRowButton* B = T->ConstructWidget<UJamMenuRowButton>(UJamMenuRowButton::StaticClass());
+		B->Bind(this, E.Kind, E.Payload);
+		B->Detail = E.Facts;
+		UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		UBorder* Bar = Solid(T, FLinearColor::Transparent);
+		AddH(Row, Sized(T, Bar, L::FocusBarW), FMargin(0), false, VAlign_Fill);
+		UTextBlock* Name = Txt(T, E.Display, ModeNameFont(), L::Text());
+		AddH(Row, Name, FMargin(L::ItemPadX, L::ModeRowPadY, L::ItemPadX, L::ModeRowPadY), true, VAlign_Center);
+		B->AddChild(Row);
+		ToTop(Row);
+		B->TintText = Name;
+		AddV(ModeList, B, FMargin(0, 0, 0, 2.f));
+		AddItem(B, Name, Bar);
+		ModeRows.Add(B);
+	}
+	// The rows' own navigation: up and down to the neighbour (the arrows, the D-pad and the stick alike, with no hit-test grid needed), the last row
+	// down to BACK, the ends hold; left and right stay on the list.
+	const int32 BackI = static_cast<int32>(EJamMenuScreen::Modes);
+	UButton* BackB = BackButtons.IsValidIndex(BackI) ? BackButtons[BackI].Get() : nullptr;
+	for (int32 i = 0; i < ModeRows.Num(); ++i)
+	{
+		UJamMenuRowButton* R = ModeRows[i];
+		if (i > 0) R->SetNavigationRuleExplicit(EUINavigation::Up, ModeRows[i - 1]);
+		else R->SetNavigationRuleBase(EUINavigation::Up, EUINavigationRule::Stop);
+		if (i + 1 < ModeRows.Num()) R->SetNavigationRuleExplicit(EUINavigation::Down, ModeRows[i + 1]);
+		else if (BackB) R->SetNavigationRuleExplicit(EUINavigation::Down, BackB);
+		R->SetNavigationRuleBase(EUINavigation::Left, EUINavigationRule::Stop);
+		R->SetNavigationRuleBase(EUINavigation::Right, EUINavigationRule::Stop);
+	}
+	if (BackB && ModeRows.Num())
+	{
+		BackB->SetNavigationRuleExplicit(EUINavigation::Up, ModeRows.Last());
+		BackB->SetNavigationRuleBase(EUINavigation::Down, EUINavigationRule::Stop);
+		BackB->SetNavigationRuleBase(EUINavigation::Left, EUINavigationRule::Stop);
+		BackB->SetNavigationRuleBase(EUINavigation::Right, EUINavigationRule::Stop);
+	}
+	ShowModePreview(0);
+}
+
+FString UJamMenuWidget::BuildTagFromPath(const FString& Dir)
+{
+	TArray<FString> Parts;
+	Dir.Replace(TEXT("\\"), TEXT("/")).ParseIntoArray(Parts, TEXT("/"), true);
+	for (int32 i = Parts.Num() - 1; i >= 0; --i)
+	{
+		FString X;
+		if (Parts[i].StartsWith(TEXT("Hokej_Hokej_"), ESearchCase::CaseSensitive)) X = Parts[i].Mid(12);
+		else if (Parts[i].StartsWith(TEXT("Accept_"), ESearchCase::CaseSensitive)) X = Parts[i].Mid(7);
+		else continue;
+		if (X.IsEmpty() || X.Len() > 16) return FString();
+		for (const TCHAR Ch : X) if (!FChar::IsAlnum(Ch) && Ch != TEXT('.') && Ch != TEXT('-') && Ch != TEXT('_')) return FString();
+		return X;
+	}
+	return FString();
+}
+
+FString UJamMenuWidget::BuildTag()
+{
+	const FString FromBase = BuildTagFromPath(FPlatformProcess::BaseDir());
+	return FromBase.IsEmpty() ? BuildTagFromPath(FPaths::LaunchDir()) : FromBase;
+}
+
+FString UJamMenuWidget::GetBuildTagText() const
+{
+	return BuildTagText && BuildTagText->GetVisibility() != ESlateVisibility::Collapsed ? BuildTagText->GetText().ToString() : FString();
+}
+
+bool UJamMenuWidget::ModesOpenersLast() { return CVarJamMenuModesOpenersLast.GetValueOnGameThread() != 0; }
+
+FVector2D UJamMenuWidget::FitWhole(const FVector2D& Source, const FVector2D& Box)
+{
+	if (Source.X <= 0.0 || Source.Y <= 0.0 || Box.X <= 0.0 || Box.Y <= 0.0) return FVector2D::ZeroVector;
+	const double Scale = FMath::Min(Box.X / Source.X, Box.Y / Source.Y);
+	return Source * Scale;
+}
+
+FVector2D UJamMenuWidget::PictureSourceSize(const UTexture2D* Tex)
+{
+	if (!Tex) return FVector2D::ZeroVector;
+#if WITH_EDITORONLY_DATA
+	if (Tex->Source.IsValid()) return FVector2D(static_cast<double>(Tex->Source.GetSizeX()), static_cast<double>(Tex->Source.GetSizeY()));
+#endif
+	return FVector2D(static_cast<double>(Tex->GetSizeX()), static_cast<double>(Tex->GetSizeY()));
+}
+
+void UJamMenuWidget::ShowModePreview(int32 Index)
+{
+	if (!ModeEntries.IsValidIndex(Index)) return;
+	ModeSel = Index;
+	const FModeEntry& E = ModeEntries[Index];
+	FModePreview P;
+	P.Payload = E.Payload;
+	P.Name = E.Display;
+	P.Lines = E.Lines;
+	P.Facts = E.Facts;
+	P.Picture = E.Picture;
+	// The level it will play: a Director's mode plays the level lit on HOME (lane A213, jam.menu.ModeLevel), the rinks the player's level.
+	const FString Level = FJamSettings::DifficultyLabel(SwitchLevel).ToUpper();
+	if (E.Kind == EJamMenuRowKind::Cut) P.Level = UJamMenuFlow::ModeLevelFromHome() ? FString::Printf(TEXT("PLAYS AT %s, THE LEVEL LIT ON HOME"), *Level) : FString(TEXT("PLAYS AT ITS OWN LEVEL"));
+	else if (E.Payload == TEXT("cuts")) P.Level = FString::Printf(TEXT("OPENS THE RINKS: THEY PLAY AT %s"), *Level);
+	else P.Level = TEXT("OPENS THE DESIGNER: ONE SENTENCE MAKES THE GAME");
+	UTexture2D* Tex = L::Kit(E.Picture);
+	if (Tex) P.Source = PictureSourceSize(Tex);
+	P.bPicture = Tex && P.Source.X >= 1.0 && P.Source.Y >= 1.0;
+	if (P.bPicture) P.Drawn = FitWhole(P.Source, FVector2D(L::ModePictureW, L::ModePictureH));
+	if (PreviewImage && PreviewPicSize)
+	{
+		if (P.bPicture)
+		{
+			// The brush asks for the texture's own pixels; the size box gives it exactly the fitted size: the drawn proportions are the source's.
+			FSlateBrush B;
+			B.SetResourceObject(Tex);
+			B.ImageSize = P.Source;
+			B.DrawAs = ESlateBrushDrawType::Image;
+			B.Tiling = ESlateBrushTileType::NoTile;
+			PreviewImage->SetBrush(B);
+			PreviewPicSize->SetWidthOverride(static_cast<float>(P.Drawn.X));
+			PreviewPicSize->SetHeightOverride(static_cast<float>(P.Drawn.Y));
+			PreviewPicSize->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else PreviewPicSize->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (PreviewPlain) PreviewPlain->SetVisibility(P.bPicture ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	if (PreviewPlainText) PreviewPlainText->SetText(FText::FromString(P.Name));
+	if (PreviewName) PreviewName->SetText(FText::FromString(P.Name));
+	if (PreviewLines) PreviewLines->SetText(FText::FromString(P.Lines));
+	if (ModeDetail) ModeDetail->SetText(FText::FromString(P.Facts));
+	if (PreviewLevel) PreviewLevel->SetText(FText::FromString(P.Level));
+	Preview = P;
+}
+
+UJamMenuWidget::FModePreview UJamMenuWidget::GetModePreview() const { return Preview; }
+
+void UJamMenuWidget::SelectModeRow(int32 Index, bool bFocus)
+{
+	if (!ModeRows.Num()) return;
+	Index = FMath::Clamp(Index, 0, ModeRows.Num() - 1);
+	if (Index != ModeSel) ShowModePreview(Index);
+	if (bFocus && ModeRows[Index]) ModeRows[Index]->SetFocus();
+}
+
+namespace
+{
+	// Lane A220: the row of the list that has the keyboard focus of the menu's player (or of Slate's first user, in a test world), else -1.
+	int32 FocusedModeRow(const UJamMenuWidget* Menu, const TArray<TObjectPtr<UJamMenuRowButton>>& Rows)
+	{
+		APlayerController* PC = Menu ? Menu->GetOwningPlayer() : nullptr;
+		const TSharedPtr<SWidget> F = FSlateApplication::IsInitialized() ? FSlateApplication::Get().GetUserFocusedWidget(0) : nullptr;
+		for (int32 i = 0; i < Rows.Num(); ++i)
+		{
+			const UJamMenuRowButton* R = Rows[i];
+			if (!R) continue;
+			if (PC && R->HasUserFocus(PC)) return i;
+			const TSharedPtr<SWidget> Mine = R->GetCachedWidget();
+			if (!Mine.IsValid()) continue;
+			for (TSharedPtr<SWidget> W = F; W.IsValid(); W = W->GetParentWidget()) if (W == Mine) return i;
+		}
+		return -1;
+	}
+}
+
+void UJamMenuWidget::MoveModeSelection(int32 Delta)
+{
+	if (!ModeRows.Num()) return;
+	const int32 Base = ModeSel >= 0 ? ModeSel : 0;
+	// From BACK (no row focused) the first press comes back to the selected row.
+	if (FocusedModeRow(this, ModeRows) < 0) { SelectModeRow(Base, true); return; }
+	SelectModeRow(Base + Delta, true);
+}
+
+void UJamMenuWidget::SyncModePreviewToFocus()
+{
+	if (Screen != EJamMenuScreen::Modes || !ModeRows.Num()) return;
+	const int32 I = FocusedModeRow(this, ModeRows);
+	if (I >= 0 && I != ModeSel) ShowModePreview(I);
+}
+
+void UJamMenuWidget::PrintModePreviewForQa() const
+{
+	// The picture as Slate painted it (paint space: the window's pixels) against its source's proportions, and the focused row.
+	FVector2D Painted = FVector2D::ZeroVector;
+	if (PreviewImage && Preview.bPicture)
+	{
+		const TSharedPtr<SWidget> W = PreviewImage->GetCachedWidget();
+		if (W.IsValid()) Painted = FVector2D(W->GetPaintSpaceGeometry().GetAbsoluteSize());
+	}
+	const double SrcR = Preview.Source.Y > 0.0 ? Preview.Source.X / Preview.Source.Y : 0.0;
+	const double DrawnR = Preview.Drawn.Y > 0.0 ? Preview.Drawn.X / Preview.Drawn.Y : 0.0;
+	const double PaintR = Painted.Y > 0.0 ? Painted.X / Painted.Y : 0.0;
+	const double Off = SrcR > 0.0 && PaintR > 0.0 ? 100.0 * FMath::Abs(PaintR / SrcR - 1.0) : -1.0;
+	const int32 Focused = FocusedModeRow(this, ModeRows);
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU preview row=%d/%d focused_row=%d name=\"%s\" picture=%s shown=%d source=%.0fx%.0f drawn=%.1fx%.1f painted=%.1fx%.1f source_ratio=%.4f drawn_ratio=%.4f painted_ratio=%.4f off_pct=%.3f level=\"%s\""),
+		ModeSel + 1, ModeRows.Num(), Focused + 1, *Preview.Name, *Preview.Picture, Preview.bPicture ? 1 : 0, Preview.Source.X, Preview.Source.Y, Preview.Drawn.X, Preview.Drawn.Y,
+		Painted.X, Painted.Y, SrcR, DrawnR, PaintR, Off, *Preview.Level);
+}
+
+FReply UJamMenuWidget::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	// Lane A220: on MODES a notch of the wheel moves the selection one row (up the list for a notch away from the player).
+	if (Screen == EJamMenuScreen::Modes && WalkScreen < 0 && ModeRows.Num())
+	{
+		const float D = InMouseEvent.GetWheelDelta();
+		if (D != 0.f)
+		{
+			MoveModeSelection(D > 0.f ? -1 : 1);
+			return FReply::Handled();
+		}
+	}
+	return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
+}
+
+void UJamMenuWidget::WheelForQa(int32 Notches)
+{
+	// QA (jam.menuscreen wheel <n>): n notches of the wheel (n > 0 away from the player, up the list) routed by Slate down the selected row's path,
+	// as the wheel over the list gives them; no cursor.
+	if (!FSlateApplication::IsInitialized() || !ModeRows.Num() || Notches == 0) return;
+	UJamMenuRowButton* R = ModeRows[FMath::Clamp(ModeSel, 0, ModeRows.Num() - 1)];
+	const TSharedPtr<SWidget> Slate = R ? R->GetCachedWidget() : nullptr;
+	FWidgetPath Full;
+	if (!Slate.IsValid() || !FSlateApplication::Get().GeneratePathToWidgetUnchecked(Slate.ToSharedRef(), Full) || !Full.IsValid())
+	{
+		UE_LOG(LogJamMenuUi, Warning, TEXT("JAMMENU wheel: no path to the selected row"));
+		return;
+	}
+	// The path rebuilt with no virtual pointer on each step, as ClickForQa routes its click (Slate reads one per widget of the path).
+	TArray<FWidgetAndPointer> Steps;
+	for (int32 i = 0; i < Full.Widgets.Num(); ++i) Steps.Add(FWidgetAndPointer(Full.Widgets[i], TOptional<FVirtualPointerPosition>()));
+	const FWidgetPath Path(Steps);
+	if (!Path.IsValid()) return;
+	const FGeometry G = Path.Widgets.Last().Geometry;
+	const FVector2D At = FVector2D(G.GetAbsolutePosition()) + FVector2D(G.GetAbsoluteSize()) * 0.5;
+	for (int32 n = 0; n < FMath::Abs(Notches); ++n)
+	{
+		const FPointerEvent Ev(0, FSlateApplicationBase::CursorPointerIndex, At, At, TSet<FKey>(), EKeys::MouseWheelAxis, Notches > 0 ? 1.f : -1.f, FModifierKeysState());
+		FSlateApplication::Get().RouteMouseWheelOrGestureEvent(Path, Ev, nullptr);
+	}
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU wheel notches=%d row=%d"), Notches, ModeSel + 1);
 }
 
 void UJamMenuWidget::RefreshSeasonScreen()
@@ -1625,31 +1876,22 @@ TArray<FString> UJamMenuWidget::GetSeasonRows() const
 TArray<FString> UJamMenuWidget::GetModeCardNames() const
 {
 	TArray<FString> Out;
-	if (ModeGrid) for (UWidget* W : ModeGrid->GetAllChildren()) if (const UJamMenuRowButton* B = Cast<UJamMenuRowButton>(W)) Out.Add(B->TintText ? B->TintText->GetText().ToString() : B->Payload);
+	for (const UJamMenuRowButton* B : ModeRows) if (B) Out.Add(B->TintText ? B->TintText->GetText().ToString() : B->Payload);
 	return Out;
 }
 
 // ---------------------------------------------------------------- the measures the tests read (lane A144)
 
-float UJamMenuWidget::ModeTextWidth() { return ModeTextW; }
 float UJamMenuWidget::CutTextWidth() { return CutTextW; }
 float UJamMenuWidget::CutListHeight() { return CutListH; }
-float UJamMenuWidget::ModePitchBoxHeight() { return 56.f; }
-TArray<FVector2D> UJamMenuWidget::GetModePitchSizes() const
-{
-	TArray<FVector2D> Out;
-	for (const TWeakObjectPtr<UTextBlock>& Tb : ModePitchTexts)
-	{
-		const TSharedPtr<SWidget> W = Tb.IsValid() ? TSharedPtr<SWidget>(const_cast<UTextBlock*>(Tb.Get())->TakeWidget()) : nullptr;
-		if (W.IsValid()) W->SlatePrepass(1.f);   // the text's own layout at its fixed wrap width
-		Out.Add(W.IsValid() ? FVector2D(W->GetDesiredSize()) : FVector2D::ZeroVector);
-	}
-	return Out;
-}
-float UJamMenuWidget::ModeDetailWidth() { return L::ModesW - 2.f * L::ModeSlotPad - 2.f * L::ItemPadX; }
-FSlateFontInfo UJamMenuWidget::ModeNameFont() { return L::Font(L::Body + 4, FName("Black"), 40); }
-FSlateFontInfo UJamMenuWidget::ModePitchFont() { return L::Font(L::Body - 2, FName("Italic")); }
-FSlateFontInfo UJamMenuWidget::ModeFactFont() { return L::Font(L::Caption, FName("Bold"), L::TrackLabel); }
+// Lane A220: the preview's words wrap at the picture's width (the panel's 864 less its 32 a side); a row's name has the list's width less the bar
+// and the row's padding.
+float UJamMenuWidget::ModeDetailWidth() { return L::ModePictureW; }
+float UJamMenuWidget::ModeRowTextWidth() { return L::ModeListW - L::FocusBarW - 2.f * L::ItemPadX; }
+FSlateFontInfo UJamMenuWidget::ModeNameFont() { return L::Font(L::Item - 6, FName("Bold"), 40); }
+FSlateFontInfo UJamMenuWidget::ModePreviewNameFont() { return L::Font(L::Display, FName("Black"), 40); }
+FSlateFontInfo UJamMenuWidget::ModePitchFont() { return L::Font(L::Body + 4, FName("Regular")); }
+FSlateFontInfo UJamMenuWidget::ModeFactFont() { return L::Font(L::Body, FName("Bold"), 20); }
 FSlateFontInfo UJamMenuWidget::CutNameFont() { return L::Font(L::Body + 2, FName("Black")); }
 FSlateFontInfo UJamMenuWidget::CutLineFont() { return L::Font(L::Body - 3, FName("Regular")); }
 
@@ -1663,7 +1905,7 @@ TArray<FString> UJamMenuWidget::GetMainLabels() const
 TArray<UJamMenuRowButton*> UJamMenuWidget::GetModeButtons() const
 {
 	TArray<UJamMenuRowButton*> Out;
-	if (ModeGrid) for (UWidget* W : ModeGrid->GetAllChildren()) if (UJamMenuRowButton* B = Cast<UJamMenuRowButton>(W)) if (B->Kind == EJamMenuRowKind::Cut) Out.Add(B);
+	for (UJamMenuRowButton* B : ModeRows) if (B && B->Kind == EJamMenuRowKind::Cut) Out.Add(B);
 	return Out;
 }
 
@@ -2109,6 +2351,7 @@ void UJamMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	PaintItems();
 	RefreshFooter();
 	RefreshFeature();
+	SyncModePreviewToFocus();   // lane A220: the preview follows the selected row on the frame the focus moves
 	RefreshModeDetail();
 }
 
@@ -2131,6 +2374,12 @@ FReply UJamMenuWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEv
 			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU landing key %s"), *K.ToString());
 			PressStart();
 		}
+		return FReply::Handled();
+	}
+	// Lane A220: W and S move MODES' selection as the arrows do (the arrows, the D-pad and the stick go by the rows' navigation rules).
+	if (Screen == EJamMenuScreen::Modes && WalkScreen < 0 && (K == EKeys::W || K == EKeys::S))
+	{
+		MoveModeSelection(K == EKeys::W ? -1 : 1);
 		return FReply::Handled();
 	}
 	if (IsBackKey(K))
@@ -2215,7 +2464,7 @@ TArray<UWidget*> UJamMenuWidget::FocusablesOf(EJamMenuScreen InScreen) const
 		Back();
 		break;
 	case EJamMenuScreen::Modes:
-		if (ModeGrid) for (UWidget* W : ModeGrid->GetAllChildren()) All.Add(W);
+		for (UJamMenuRowButton* R : ModeRows) All.Add(R);   // lane A220: the rows of the list (the thin rule is no place)
 		Back();
 		break;
 	case EJamMenuScreen::Cuts:
@@ -2338,7 +2587,7 @@ bool UJamMenuWidget::ClickPlaceForQa(const FString& Name)
 	else if (Name == TEXT("make") || Name == TEXT("rinks"))
 	{
 		const FString Payload = Name == TEXT("make") ? TEXT("direct") : TEXT("cuts");
-		if (ModeGrid) for (UWidget* C : ModeGrid->GetAllChildren()) if (const UJamMenuRowButton* R = Cast<UJamMenuRowButton>(C)) if (R->Kind == EJamMenuRowKind::Open && R->Payload == Payload) W = C;
+		for (UJamMenuRowButton* R : ModeRows) if (R && R->Kind == EJamMenuRowKind::Open && R->Payload == Payload) W = R;
 	}
 	else if (Name == TEXT("settingslevel") && SettingsPanel) W = SettingsPanel->GetFirstFocusable();
 	else if (Name == TEXT("quit")) W = QuitButton.Get();   // lane A195 (F6): QUIT and its question's two answers

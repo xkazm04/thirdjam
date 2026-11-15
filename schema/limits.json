@@ -86,6 +86,7 @@
     "stick.pickup.pass_arc_deg": "0..180",
     "stick.pickup.sting_mps": "0..80",
     "stick.pickup.body_catch_mps": "0..80",
+    "stick.pickup.ring_m": "0..2",
     "stick.faceoff.centre_gap_m": "0..6",
     "stick.faceoff.winner_shield_frames": "0..300",
     "stick.faceoff.no_hit_frames": "0..300",

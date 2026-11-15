@@ -235,6 +235,10 @@ struct JAMCORE_API FJamStickConfig
 	// game.stick.pickup.body_catch_mps (lane A208): the body seats a loose puck (it stops at him and is his) only when it meets him slower than this (relative,
 	// into the body); faster it bounces off him (e 0.3) as a loose rebound. The stick arc is not limited by it.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupBodyCatchMps = 18.0;
+	// game.stick.pickup.ring_m (lane A218, R-0069 point 2): for the human, a loose puck whose centre comes within this many metres of his centre (the ring drawn
+	// under him, 1.1 m) is his on that frame, whatever his stick points at, at any speed he skates, while he holds a button; his own pass or shot only once it
+	// no longer leaves him (UJamSim::TryHumanRing, HumanReleaseLeaving). 0 = the neutral value (the game before the lane). Bots: never.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupRingM = 1.1;
 	// game.stick.pickup.block_carried (lane A208): with pickup.body, another skater's CARRIED puck is pushed out of a body it meets (no pass-through; the carrier
 	// keeps it in his reach, R-0048). false = a carried puck passes through other bodies as before (R-0048's skip).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPickupBlockCarried = true;

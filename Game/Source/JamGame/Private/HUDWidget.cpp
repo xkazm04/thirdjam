@@ -1757,9 +1757,23 @@ void UJamHudWidget::ShowToast(const FString& Text)
 
 // Lane A101 (track F1): the contact line. The human's counters in the sim say what happened (a counter survives a frame the hit-stop held; a restart sets
 // it back and shows nothing).
+// Lane A219 (R-0070, 15 Nov: "the player animation should reflect the crosscheck movement and that should be all"): at a hit only the figures speak.
+//   jam.hud.ContactPlate 0 (default): the plate of the contact line (BRACED HIT, MISSED, TOO SOFT, JUST GOT UP, the stick lock's line) is not shown; the
+//     callers still log their JAMHUD lines. 1 = package H39's plate.
+//   jam.hud.SwellAtHit 0 (default): a take grace won BY A HIT (the carrier's own check or cross-check landed on the frame the grace began) does not swell
+//     his ring to 1.5 x: the ring under him stays the ring it always is. A grace won any other way closes its ring as before. 1 = package H39.
+static TAutoConsoleVariable<int32> CVarJamHudContactPlate(TEXT("jam.hud.ContactPlate"), 0,
+	TEXT("The contact line's plate (BRACED HIT, MISSED, TOO SOFT, JUST GOT UP, the stick lock): 0 (default from lane A219, R-0070: nothing but the figures at a hit) not shown; 1 = shown (package H39)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudSwellAtHit(TEXT("jam.hud.SwellAtHit"), 0,
+	TEXT("The take grace's ring when the puck was won by the carrier's own hit: 0 (default from lane A219, R-0070) the ring keeps its size; 1 = it swells to 1.5 x and closes (package H39). A grace won without a hit always closes its ring."), ECVF_Default);
+bool UJamHudWidget::ContactPlateOn() { return CVarJamHudContactPlate.GetValueOnGameThread() != 0; }
+bool UJamHudWidget::SwellAtHitOn() { return CVarJamHudSwellAtHit.GetValueOnGameThread() != 0; }
+namespace { bool GGraceFromHit = false; }   // one HUD at a time: the running take grace began on the frame its carrier's own hit landed
+
 void UJamHudWidget::ShowContactLine(const FString& Text)
 {
 	if (!ContactText || !ContactPlate || Text.IsEmpty()) return;
+	if (!ContactPlateOn()) return;   // lane A219: no plate at a hit by default
 	ContactText->SetText(FText::FromString(Text));
 	bContactPending = true;
 	ContactStart = -1;
@@ -1836,16 +1850,25 @@ void UJamHudWidget::UpdateCarrierCues(const FJamPresentationFrame& F)
 		const int32 Left = Sk[Ci].TakeGraceLeft > 0 ? Sk[Ci].TakeGraceLeft : Total;   // the frame the puck is won in: the grace stands, its count starts with the next
 		UImage* Ring = Ci == Hi ? YouRing.Get() : CarrierRing.Get();
 		const bool bRing = Ring && Ring->GetVisibility() != ESlateVisibility::Collapsed;
+		// Lane A219: a grace that begins on the frame the carrier's own hit landed (the sim's check event of this frame names him, or a victim's ContactBy
+		// does) is a grace won by a hit: its ring does not swell (jam.hud.SwellAtHit 0).
+		if (CueGraceCarrier != Ci)
+		{
+			GGraceFromHit = false;
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Check && E.Who == Ci) GGraceFromHit = true;
+			for (const FJamSkaterState& V : Sk) if (V.ContactBy == Ci && V.Index != Ci) GGraceFromHit = true;
+		}
+		const float GraceScale = GraceRingScaleFor(GGraceFromHit, SwellAtHitOn(), Left, Total);
 		if (bRing)
 		{
 			const FLinearColor Y = S::Yellow();
 			Ring->SetColorAndOpacity(FLinearColor(Y.R, Y.G, Y.B, Ring->GetColorAndOpacity().A));
-			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot)) CS->SetSize(CS->GetSize() * TakeGraceRingScale(Left, Total));
+			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot)) CS->SetSize(CS->GetSize() * GraceScale);
 		}
 		if (CueGraceCarrier != Ci)
 		{
-			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld cue=take_grace carrier=%d human=%d frames=%d ring=%s shown=%d scale=%.2f"), F.SimFrame, Ci, Ci == Hi ? 1 : 0, Left, Ci == Hi ? TEXT("YouRing") : TEXT("CarrierRing"),
-				bRing ? 1 : 0, TakeGraceRingScale(Left, Total));
+			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld cue=take_grace carrier=%d human=%d frames=%d ring=%s shown=%d scale=%.2f from_hit=%d"), F.SimFrame, Ci, Ci == Hi ? 1 : 0, Left, Ci == Hi ? TEXT("YouRing") : TEXT("CarrierRing"),
+				bRing ? 1 : 0, GraceScale, GGraceFromHit ? 1 : 0);
 		}
 	}
 	CueGraceCarrier = bGrace ? Ci : -1;

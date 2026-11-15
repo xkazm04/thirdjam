@@ -335,6 +335,11 @@ public:
 	// (YouRing for the human, CarrierRing for anybody else) is drawn in the HUD's yellow at TakeGraceRingScale times its size: 1.5 as the grace begins, its
 	// own size as it ends, so the ring closes like a clock. A ring UpdateYours hid this frame stays hidden.
 	static constexpr float TakeGraceRingGrow = 0.5f;
+	// Lane A219 (R-0070: at a hit only the figures speak): the grace ring's size factor this frame. A grace won by the carrier's own hit keeps the ring at
+	// its own size unless jam.hud.SwellAtHit is on; any other grace closes from 1.5 x as before. Pure. ContactPlateOn: jam.hud.ContactPlate.
+	static float GraceRingScaleFor(bool bFromHit, bool bSwellAtHit, int32 GraceLeft, int32 GraceFrames) { return bFromHit && !bSwellAtHit ? 1.f : TakeGraceRingScale(GraceLeft, GraceFrames); }
+	static bool ContactPlateOn();
+	static bool SwellAtHitOn();
 	static float TakeGraceRingScale(int32 GraceLeft, int32 GraceFrames)
 	{
 		return GraceLeft <= 0 || GraceFrames <= 0 ? 1.f : 1.f + TakeGraceRingGrow * FMath::Clamp(static_cast<float>(GraceLeft) / static_cast<float>(GraceFrames), 0.f, 1.f);

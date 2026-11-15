@@ -38,6 +38,8 @@
 #include "Fonts/FontMeasure.h"
 #include "Rendering/SlateRenderer.h"
 #include "Framework/Application/SlateApplication.h"
+#include "HAL/IConsoleManager.h"
+#include "Engine/Texture2D.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -415,45 +417,40 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		if (Sc.Key == EJamMenuScreen::Main) TestTrue(*FString::Printf(TEXT("the first screen is at most 1000 high (%.0f)"), Size.Y), Size.Y <= 1000.f);
 	}
 
-	// The twelve cards are on MODES (lane A187), and their words fit the card's own text width with the card's own type: the name on one line, the
-	// pitch on two; the facts, one line under the grid for the focused card, fit that line.
+	// Lane A220 (R-0069 point 4): MODES is a list of names and a preview. The twelve modes are rows; every name fits its row on one line at the
+	// row's type; every mode's lines fit two lines of the preview at its type, its facts two lines, its name one line; the screen's height is held
+	// above (the fourteen rows, the rule and BACK under the header, no scroll at 1280 x 720 or 1920 x 1080: both are 1920 x 1080 units).
 	F.Menu->MeasureScreen(EJamMenuScreen::Modes);
-	TestEqual(TEXT("twelve mode cards on MODES"), F.Menu->GetModeButtons().Num(), 12);
-	// Director 13:35: every card's description inside its box, descenders included: its laid-out height (the wrapped lines at the card's type) against
-	// the box, and two full lines of the face against the box. Slate units: the same at 1280 x 720 and 1920 x 1080.
-	{
-		const TArray<FVector2D> Pitches = F.Menu->GetModePitchSizes();
-		TestEqual(TEXT("fourteen card descriptions laid out"), Pitches.Num(), 14);
-		const float Box = UJamMenuWidget::ModePitchBoxHeight();
-		const float LineH = static_cast<float>(FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->GetMaxCharacterHeight(UJamMenuWidget::ModePitchFont()));
-		AddInfo(FString::Printf(TEXT("JAMMENU measure card description: line %.1f, box %.0f"), LineH, Box));
-		TestTrue(*FString::Printf(TEXT("two full lines (%.1f) fit the description box (%.0f)"), 2.f * LineH, Box), LineH > 0.f && 2.f * LineH <= Box);
-		for (int32 i = 0; i < Pitches.Num(); ++i)
-			TestTrue(*FString::Printf(TEXT("card %d description %.0f x %.1f inside %.0f x %.0f"), i + 1, Pitches[i].X, Pitches[i].Y, UJamMenuWidget::ModeTextWidth(), Box),
-				Pitches[i].Y > 0.f && Pitches[i].Y <= Box && Pitches[i].X <= UJamMenuWidget::ModeTextWidth() + 0.5f);
-	}
+	TestEqual(TEXT("twelve modes on MODES"), F.Menu->GetModeButtons().Num(), 12);
 	const TSharedRef<FSlateFontMeasure> Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
-	const float TextW = UJamMenuWidget::ModeTextWidth();
+	const float ModeRowW = UJamMenuWidget::ModeRowTextWidth();
+	const float TextW = UJamMenuWidget::ModeDetailWidth();
 	float WidestName = 0.f, WidestPitch = 0.f, WidestFact = 0.f;
 	FString WidestNameIs;
 	for (const FJamModeCard& M : UJamMenuFlow::AvailableModeCards())
 	{
 		const float NameW = static_cast<float>(Measure->Measure(M.Display.ToUpper(), UJamMenuWidget::ModeNameFont()).X);
+		const float BigW = static_cast<float>(Measure->Measure(M.Display.ToUpper(), UJamMenuWidget::ModePreviewNameFont()).X);
 		const float PitchW = static_cast<float>(Measure->Measure(M.Pitch, UJamMenuWidget::ModePitchFont()).X);
 		if (NameW > WidestName) { WidestName = NameW; WidestNameIs = M.Display; }
 		WidestPitch = FMath::Max(WidestPitch, PitchW);
-		TestTrue(*FString::Printf(TEXT("%s fits its card on one line (%.0f of %.0f)"), *M.Display, NameW, TextW), NameW > 0.f && NameW <= TextW);
+		TestTrue(*FString::Printf(TEXT("%s fits its row on one line (%.0f of %.0f)"), *M.Display, NameW, ModeRowW), NameW > 0.f && NameW <= ModeRowW);
+		TestTrue(*FString::Printf(TEXT("%s fits the preview's name line (%.0f of %.0f)"), *M.Display, BigW, TextW), BigW > 0.f && BigW <= TextW);
 		// Two lines hold at most 1.75 widths of words (the break between them costs up to a word).
-		TestTrue(*FString::Printf(TEXT("%s pitch fits two lines (%.0f of %.0f)"), *M.Display, PitchW, 1.75f * TextW), PitchW > 0.f && PitchW <= 1.75f * TextW);
-		{
-			const FString Line = FString::Printf(TEXT("%s   /   %s"), *M.Display.ToUpper(), *FString::Join(M.Facts, TEXT("   /   ")));
-			const float FactW = static_cast<float>(Measure->Measure(Line, FJamMenuLook::Font(FJamMenuLook::Body - 1, FName("Bold"), 20)).X);
-			WidestFact = FMath::Max(WidestFact, FactW);
-			TestTrue(*FString::Printf(TEXT("%s facts fit the line under the grid (%.0f of %.0f)"), *M.Display, FactW, UJamMenuWidget::ModeDetailWidth()), FactW > 0.f && FactW <= UJamMenuWidget::ModeDetailWidth());
-			TestTrue(*FString::Printf(TEXT("%s sides read (%d v %d)"), *M.Display, M.HomeSkaters, M.AwaySkaters), M.HomeSkaters > 0 && M.AwaySkaters > 0);
-		}
+		TestTrue(*FString::Printf(TEXT("%s lines fit two lines of the preview (%.0f of %.0f)"), *M.Display, PitchW, 1.75f * TextW), PitchW > 0.f && PitchW <= 1.75f * TextW);
+		const FString Facts = FString::Join(M.Facts, TEXT("   /   ")) + TEXT("   /   5 AGAINST 5");
+		const float FactW = static_cast<float>(Measure->Measure(Facts, UJamMenuWidget::ModeFactFont()).X);
+		WidestFact = FMath::Max(WidestFact, FactW);
+		TestTrue(*FString::Printf(TEXT("%s facts fit two lines of the preview (%.0f of %.0f)"), *M.Display, FactW, 1.75f * TextW), FactW > 0.f && FactW <= 1.75f * TextW);
+		TestTrue(*FString::Printf(TEXT("%s sides read (%d v %d)"), *M.Display, M.HomeSkaters, M.AwaySkaters), M.HomeSkaters > 0 && M.AwaySkaters > 0);
 	}
-	AddInfo(FString::Printf(TEXT("JAMMENU measure cards: widest name %.0f (%s), widest pitch %.0f, widest fact %.0f, text width %.0f"), WidestName, *WidestNameIs, WidestPitch, WidestFact, TextW));
+	for (const TCHAR* Opener : { TEXT("ALL RINKS"), TEXT("MAKE YOUR OWN") })
+	{
+		const float NameW = static_cast<float>(Measure->Measure(Opener, UJamMenuWidget::ModeNameFont()).X);
+		TestTrue(*FString::Printf(TEXT("%s fits its row on one line (%.0f of %.0f)"), Opener, NameW, ModeRowW), NameW > 0.f && NameW <= ModeRowW);
+	}
+	AddInfo(FString::Printf(TEXT("JAMMENU measure modes: widest row name %.0f (%s) of %.0f, widest lines %.0f, widest facts %.0f, preview text width %.0f"),
+		WidestName, *WidestNameIs, ModeRowW, WidestPitch, WidestFact, TextW));
 
 	// Evolution 3: what a level means fits one line under the switch (816 units, the card's text width).
 	for (const TCHAR* Level : { TEXT("rookie"), TEXT("pro"), TEXT("all_star") })
@@ -613,6 +610,139 @@ bool FJamMenuFrontEnd::RunTest(const FString&)
 	for (const FString& W : Words)
 		for (const TCHAR* Mark : { TEXT("NHL"), TEXT("NATIONAL HOCKEY"), TEXT("EA SPORTS"), TEXT("ESPN"), TEXT("STANLEY") })
 			TestFalse(*FString::Printf(TEXT("'%s' carries no mark (%s)"), *W, Mark), W.ToUpper().Contains(Mark));
+	return true;
+}
+
+// Lane A220 (R-0069 point 4): MODES is a list of the modes' names sorted A to Z on the left and the selected mode's preview on the right half: every
+// mode of the old cards in it exactly once, the first row selected on open, the preview always the selected row's, and each picture drawn whole in its
+// own proportions (within 1 % of its source's: the old cards drew every picture at 320 x 88 units, whatever its own shape).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuModesList, "Jam.Menu.ModesList", JamMenuTests::MenuTestFlags)
+bool FJamMenuModesList::RunTest(const FString&)
+{
+	const FJamSettings Fresh = FJamSettings();
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
+	IConsoleVariable* Openers = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.menu.ModesOpenersLast"));
+	if (!TestNotNull(TEXT("jam.menu.ModesOpenersLast exists"), Openers)) return false;
+	const int32 OpenersWas = Openers->GetInt();
+	ON_SCOPE_EXIT { Openers->Set(OpenersWas, ECVF_SetByCode); };
+	Openers->Set(1, ECVF_SetByCode);
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+
+	// The fit itself: the largest size with the source's proportions inside the box, touching it on one side.
+	const FVector2D Box(FJamMenuLook::ModePictureW, FJamMenuLook::ModePictureH);
+	for (const FVector2D Src : { FVector2D(1920, 1080), FVector2D(1024, 768), FVector2D(1536, 512), FVector2D(512, 1024), FVector2D(800, 448) })
+	{
+		const FVector2D D = UJamMenuWidget::FitWhole(Src, Box);
+		const double Off = FMath::Abs((D.X / D.Y) / (Src.X / Src.Y) - 1.0);
+		TestTrue(*FString::Printf(TEXT("%.0f x %.0f fits whole into %.0f x %.0f as %.1f x %.1f (off %.4f %%)"), Src.X, Src.Y, Box.X, Box.Y, D.X, D.Y, 100.0 * Off),
+			Off < 1e-6 && D.X <= Box.X + 1e-3 && D.Y <= Box.Y + 1e-3 && (FMath::IsNearlyEqual(D.X, Box.X, 1e-3) || FMath::IsNearlyEqual(D.Y, Box.Y, 1e-3)));
+	}
+	TestTrue(TEXT("no source, no size"), UJamMenuWidget::FitWhole(FVector2D::ZeroVector, Box).IsZero());
+
+	F.Menu->ShowScreen(EJamMenuScreen::Modes);
+	const TArray<FString> Names = F.Menu->GetModeCardNames();
+	const TArray<FJamModeCard> Cards = UJamMenuFlow::AvailableModeCards();
+	// Every mode of the old cards exactly once: the twelve modes, ALL RINKS, MAKE YOUR OWN.
+	TArray<FString> Want;
+	for (const FJamModeCard& M : Cards) Want.Add(M.Display.ToUpper());
+	Want.Add(TEXT("ALL RINKS"));
+	Want.Add(TEXT("MAKE YOUR OWN"));
+	TestEqual(TEXT("fourteen rows on MODES"), Names.Num(), 14);
+	TestEqual(TEXT("twelve modes"), Cards.Num(), 12);
+	for (const FString& W : Want)
+	{
+		int32 N = 0;
+		for (const FString& R : Names) if (R == W) ++N;
+		TestEqual(*FString::Printf(TEXT("%s is in the list once"), *W), N, 1);
+	}
+	// Sorted ascending: the twelve modes A to Z, then the two that open a screen, A to Z.
+	auto Ascending = [](const TArray<FString>& L, int32 From, int32 To)
+	{
+		for (int32 i = From + 1; i < To; ++i) if (L[i - 1].Compare(L[i], ESearchCase::IgnoreCase) > 0) return false;
+		return true;
+	};
+	TestTrue(*FString::Printf(TEXT("the twelve modes are sorted A to Z (%s)"), *FString::Join(Names, TEXT(", "))), Names.Num() == 14 && Ascending(Names, 0, 12));
+	TestTrue(TEXT("ALL RINKS and MAKE YOUR OWN close the list"), Names.Num() == 14 && Names[12] == TEXT("ALL RINKS") && Names[13] == TEXT("MAKE YOUR OWN"));
+	// The first row is selected when the screen opens, and it is where the focus goes.
+	TestEqual(TEXT("the first row is selected on open"), F.Menu->GetModeSelection(), 0);
+	TestTrue(TEXT("the first row is the screen's home focus"), F.Menu->GetHomeFocus(EJamMenuScreen::Modes) == static_cast<UWidget*>(F.Menu->GetModeButtons().Num() ? F.Menu->GetModeButtons()[0] : nullptr));
+	TestTrue(*FString::Printf(TEXT("the footer says what the list does (%s)"), *F.Menu->GetHintLine()), F.Menu->GetHintLine().Contains(TEXT("ESC / B BACK")));
+
+	// The preview is the selected row's, for every row; its picture is that mode's own, drawn whole in its own proportions.
+	const FString Level = FJamSettings::DifficultyLabel(EJamMenuDifficulty::Rookie).ToUpper();
+	for (int32 i = 0; i < Names.Num(); ++i)
+	{
+		F.Menu->SelectModeRow(i, false);
+		const UJamMenuWidget::FModePreview P = F.Menu->GetModePreview();
+		TestEqual(*FString::Printf(TEXT("row %d selected"), i + 1), F.Menu->GetModeSelection(), i);
+		TestEqual(*FString::Printf(TEXT("row %d: the preview names %s"), i + 1, *Names[i]), P.Name, Names[i]);
+		FString Slug = P.Payload == TEXT("cuts") ? FString(TEXT("rinks")) : P.Payload == TEXT("direct") ? FString(TEXT("make_your_own")) : P.Payload;
+		const int32 At = Slug.Find(TEXT("hockey.mode."));
+		if (At != INDEX_NONE) Slug = Slug.Mid(At + 12).Replace(TEXT("-"), TEXT("_"));
+		TestEqual(*FString::Printf(TEXT("%s shows its own picture"), *Names[i]), P.Picture, FString::Printf(TEXT("Modes/T_UI_Mode_%s"), *Slug));
+		const FJamModeCard* Card = Cards.FindByPredicate([&](const FJamModeCard& M) { return M.Name == P.Payload; });
+		if (Card)
+		{
+			TestEqual(*FString::Printf(TEXT("%s: the preview's lines are its own"), *Names[i]), P.Lines, Card->Pitch);
+			TestTrue(*FString::Printf(TEXT("%s: the preview's facts are its own"), *Names[i]), Card->Facts.Num() > 0 && P.Facts.Contains(Card->Facts[0]));
+			if (UJamMenuFlow::ModeLevelFromHome())
+				TestTrue(*FString::Printf(TEXT("%s: it plays the level lit on HOME (%s)"), *Names[i], *P.Level), P.Level.Contains(Level));
+		}
+		else TestTrue(*FString::Printf(TEXT("%s opens a screen"), *Names[i]), P.Payload == TEXT("cuts") || P.Payload == TEXT("direct"));
+		UTexture2D* Tex = FJamMenuLook::Kit(P.Picture);
+		if (Tex)
+		{
+			const FVector2D Src = UJamMenuWidget::PictureSourceSize(Tex);
+			TestTrue(*FString::Printf(TEXT("%s: the picture is shown"), *Names[i]), P.bPicture);
+			TestTrue(*FString::Printf(TEXT("%s: its source is the texture's own %.0f x %.0f"), *Names[i], Src.X, Src.Y), P.Source.Equals(Src, 0.01));
+			const double SrcR = Src.X / FMath::Max(Src.Y, 1.0), DrawnR = P.Drawn.X / FMath::Max(P.Drawn.Y, 1e-6);
+			const double Off = 100.0 * FMath::Abs(DrawnR / SrcR - 1.0);
+			TestTrue(*FString::Printf(TEXT("%s: drawn %.1f x %.1f (%.4f) against its source %.0f x %.0f (%.4f): off %.3f %% (at most 1 %%)"), *Names[i], P.Drawn.X, P.Drawn.Y, DrawnR, Src.X, Src.Y, SrcR, Off),
+				Off <= 1.0 && P.Drawn.X <= Box.X + 0.5 && P.Drawn.Y <= Box.Y + 0.5);
+			// What the old card did with the same picture: 320 x 88 units whatever its shape.
+			AddInfo(FString::Printf(TEXT("JAMMENU picture %s source %.0f x %.0f (%.3f) drawn %.1f x %.1f; the old card drew it at 320 x 88 (3.636): %.0f %% off"),
+				*P.Picture, Src.X, Src.Y, SrcR, P.Drawn.X, P.Drawn.Y, 100.0 * FMath::Abs((320.0 / 88.0) / SrcR - 1.0)));
+		}
+		else
+		{
+			// No picture: the plain panel with the name, never a neighbour's picture.
+			TestFalse(*FString::Printf(TEXT("%s has no picture: the plain panel"), *Names[i]), P.bPicture);
+			AddWarning(FString::Printf(TEXT("%s: no picture in the kit (%s)"), *Names[i], *P.Picture));
+		}
+	}
+	// The selection's ends hold.
+	F.Menu->SelectModeRow(99, false);
+	TestEqual(TEXT("past the last row: the last"), F.Menu->GetModeSelection(), Names.Num() - 1);
+	F.Menu->SelectModeRow(-3, false);
+	TestEqual(TEXT("before the first row: the first"), F.Menu->GetModeSelection(), 0);
+
+	// jam.menu.ModesOpenersLast 0: one A to Z list of all fourteen.
+	Openers->Set(0, ECVF_SetByCode);
+	F.Menu->ShowScreen(EJamMenuScreen::Main);
+	F.Menu->ShowScreen(EJamMenuScreen::Modes);
+	const TArray<FString> One = F.Menu->GetModeCardNames();
+	TestTrue(*FString::Printf(TEXT("at 0 all fourteen are one A to Z list (%s)"), *FString::Join(One, TEXT(", "))), One.Num() == 14 && Ascending(One, 0, 14));
+	return true;
+}
+
+// Lane A220 (Director 11:10): HOME's build tag is the package folder's <X> (Hokej_Hokej_<X>, Accept_<X>), and nothing anywhere else.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuBuildTag, "Jam.Menu.BuildTag", JamMenuTests::MenuTestFlags)
+bool FJamMenuBuildTag::RunTest(const FString&)
+{
+	TestEqual(TEXT("a release package"), UJamMenuWidget::BuildTagFromPath(TEXT("C:\\Users\\someone\\kiro\\thirdjam\\Game\\Packaged\\Hokej_Hokej_H40\\Windows\\ThirdJam\\Binaries\\Win64\\")), FString(TEXT("H40")));
+	TestEqual(TEXT("forward slashes"), UJamMenuWidget::BuildTagFromPath(TEXT("C:/x/Game/Packaged/Hokej_Hokej_H40/Windows/ThirdJam/Binaries/Win64/")), FString(TEXT("H40")));
+	TestEqual(TEXT("an acceptance package"), UJamMenuWidget::BuildTagFromPath(TEXT("C:\\x\\Game\\Packaged\\Accept_H30\\Windows\\ThirdJam\\Binaries\\Win64\\")), FString(TEXT("H30")));
+	TestEqual(TEXT("a judge's unzipped copy: nothing"), UJamMenuWidget::BuildTagFromPath(TEXT("C:\\Games\\Hokej\\Windows\\ThirdJam\\Binaries\\Win64\\")), FString());
+	TestEqual(TEXT("the editor: nothing"), UJamMenuWidget::BuildTagFromPath(TEXT("C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/")), FString());
+	TestEqual(TEXT("an empty tag: nothing"), UJamMenuWidget::BuildTagFromPath(TEXT("C:\\x\\Hokej_Hokej_\\Win64\\")), FString());
+	TestEqual(TEXT("a tag with a space or a path in it: nothing"), UJamMenuWidget::BuildTagFromPath(TEXT("C:\\x\\Accept_my build\\Win64\\")), FString());
+	TestEqual(TEXT("an empty path: nothing"), UJamMenuWidget::BuildTagFromPath(FString()), FString());
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+	// The editor's test process runs from the engine's binaries: HOME shows what BuildTag() says (nothing here).
+	TestEqual(TEXT("HOME shows the process's own tag"), F.Menu->GetBuildTagText(), UJamMenuWidget::BuildTag());
 	return true;
 }
 
