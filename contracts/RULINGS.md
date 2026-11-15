@@ -868,3 +868,24 @@ plays at 10:00**; from 08:30 only faults found in that package are fixed; `docs/
 (5) **Standing rules of the night** (learned between 20:30 and midnight): a combined landing is rehearsed with the full gate in a scratch tree
 before the real one; a lane's work is taken at a READY line with its source closed, or file by file by name; nothing runs from the main checkout
 but the Director's landings and releases; a watcher is restarted in the same turn that reads its catch.
+
+## R-0069 (15 Nov, 10:35): the operator played H39: two of his three points are still there in his hands; the modes screen
+
+His words, verbatim: "Still two same issues 1. puck is not controlled by player if in his circle area, then player runs right through the pack and
+still does not have control 2. Crosscheck still displays blue line/rectangle in front of player. This should player never see ... For modes selection
+the previous images are deformed, rather create list with titles on left side with mode names sorted asc, and preview on right half of the screen."
+
+The Director's reading, before any lane works:
+(1) **The night's measures called both fixed and his hand says no.** "Loose pucks taken 99.6 %" and "no rectangle or slab in 42 hit strips" were
+counted with scripted hands whose stick points at the puck and whose films were judged by lanes. A person's cursor is somewhere else, and his eye is
+the bar (R-0067). So each of the two is first REPRODUCED AS HE MEETS IT (a skater whose stick aims away from the puck skating through a puck inside
+his ring; LMB without the puck, tapped and held, from the game camera, in the package's own look) and shown in stills to the Director before a
+cure is written; a cure is accepted only on the same stills.
+(2) **The puck inside his ring is his.** Whatever his stick points at: a loose puck that is inside the ring drawn under him, or that he skates
+through, becomes his on that frame, at any speed he can skate; nothing of his own (a pass or a shot he released, a button he holds, a check he
+threw) may keep it from him for longer than the release needs to leave.
+(3) **Nothing technical is ever drawn on or in front of a skater.** No line, bar, rectangle, arc or strip that belongs to the game's mechanics is
+drawn at a cross-check, tapped or held, by A or by a take of device B: only the figure and its stick. What he sees must be found by looking,
+not by listing switches.
+(4) **MODES**: a list of the modes' names on the left, sorted ascending; the chosen mode's preview on the right half of the screen, its picture
+shown whole in its own proportions (never stretched), with its name and its lines; keys, pad and mouse as on the other screens.
