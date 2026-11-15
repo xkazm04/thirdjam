@@ -275,6 +275,22 @@ namespace JamAI
 		bool bOneTimer9 = false;
 		// Poke9Frames: > 0 = the bot pokes an opposing carrier's puck only after it has sat this many frames in its blade's reach (at least; a slower stick).
 		int Poke9Frames = 0;
+		// bMeetPass9 (wave 2): the bot chasing a team-mate's pass in flight (no carrier, the mate its last toucher, faster than 4 m/s) skates to where the
+		// puck will be (the intercept solve, up to 2 s ahead) instead of the plain lead (distance / 8 m/s, capped at LeadFrames).
+		bool bMeetPass9 = false;
+		// bAheadWeak9 (wave 2): the Far job's second skater goes 7 m ahead of the puck on the weak side (a pass lane ahead), not 2 m behind it wide on the boards.
+		bool bAheadWeak9 = false;
+		// bMarkMan9 (wave 2): the second back of a five marks the opponent nearest our net (goal-side, moving with him) instead of standing on the slot spot.
+		bool bMarkMan9 = false;
+		// bShotLane9 (wave 2, R-0067 after the doubled shot): the Weak job's first skater stands in the shooting lane (on the line carrier -> our net, 9 m or
+		// a third of the way out from the carrier) while an opposing carrier is inside 35 m of our net, instead of on the far side (the back door).
+		bool bShotLane9 = false;
+		// bDriveFirst9 (wave 2): a mate driving at the net (DriveNet) passes to the human only when he is set up for the one-timer (not by the share's coin).
+		bool bDriveFirst9 = false;
+		// Dodge9Share (wave 2, R-0067 after A209's hits): > 0 = in that share of the two-second windows (a fixed coin per bot) a bot without the puck that
+		// reads the human's hit coming (the human within 4.5 m closing on it at 3 m/s or more, or his check / cross-check winding up at it) steps off the line
+		// of the hit at full stride, as a player does. 0 = it takes the hit (rookie). A level's number (the profile's).
+		double Dodge9Share = 0.0;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -394,6 +410,11 @@ namespace JamAI
 	// own numbers (OppPace9, AimError9Deg, React9Frames) are its profile's; off zeroes them too.
 	constexpr double kEvo9MateShootExtraM = 15.0;   // the human's mates shoot from inside 16.5 m (reach 1.5 + 15), with the aim cone
 	constexpr double kEvo9DriveNetM = 22.0;
+	constexpr bool kEvo9MeetPass = true;   // wave 2
+	constexpr bool kEvo9AheadWeak = true;  // wave 2
+	constexpr bool kEvo9MarkMan = true;    // wave 2
+	constexpr bool kEvo9ShotLane = true;   // wave 2
+	constexpr bool kEvo9DriveFirst = true; // wave 2
 	constexpr double kEvo9MatePressureS = 0.6;      // the opposing side's at rookie and pro
 	inline void SetEvolution9(FJamHockeySense& H, bool bOn, bool bMate)
 	{
@@ -402,9 +423,14 @@ namespace JamAI
 		H.bOneTimer9 = bOn && bMate;
 		H.bNetFront9 = bOn;
 		H.bChipUp9 = bOn;
+		H.bMeetPass9 = bOn && kEvo9MeetPass;
+		H.bAheadWeak9 = bOn && kEvo9AheadWeak;
+		H.bMarkMan9 = bOn && kEvo9MarkMan;
+		H.bShotLane9 = bOn && kEvo9ShotLane;
+		H.bDriveFirst9 = bOn && kEvo9DriveFirst;
 		H.DriveNet9M = bOn ? kEvo9DriveNetM : 0.0;
 		H.Pressure9S = (bOn && bMate) ? kEvo9MatePressureS : 0.0;
-		if (!bOn) { H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; }
+		if (!bOn) { H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; H.Dodge9Share = 0.0; }
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -608,6 +634,8 @@ namespace JamAI
 		FVec2 PuckPos;
 		FVec2 PuckVel;
 		int PuckLastTouch = -1;   // skater that touched the puck last, -1 since the faceoff
+		int PuckPassFrames = 0;   // lane A206 (evolution 9, wave 2): the sim's Puck.PassFrames (a pass in flight: frames left of it; lane A207), 0 = none
+		int PuckPassBy = -1;      // lane A206: the sim's Puck.PassBy (the passer of the pass in flight), -1 = none
 		int NumSkaters = 0;
 		int PlayerIndex = -1;     // the human's skater (-1 = none)
 		// Lane A129 (track Q1): the second human, the guest of an online match (UJamSim::SeatGuest), or -1. The brain neither thinks for it nor gives it a
@@ -874,6 +902,7 @@ namespace JamAI
 		FVec2 SplitClump(const FJamAIWorld& W, int Id, const FVec2& Dir);
 		void LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const;
 		bool DriveNet(const FJamAIWorld& W, int Id, const FVec2& Aim, double Dgoal) const;   // lane A206 (evolution 9)
+		FVec2 DodgeHit(const FJamAIWorld& W, int Id, const FVec2& Dir) const;   // lane A206 (evolution 9, wave 2)
 	private:
 		int DownNear[kMaxSkaters] = {};
 		int64_t DownNearFrame[kMaxSkaters] = {};

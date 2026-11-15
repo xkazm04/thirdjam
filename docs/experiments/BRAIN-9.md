@@ -56,3 +56,26 @@ Switch: `brain9=0` (and every older `brainN=0`) = evolution 8 as shipped; `JamBa
   rookie large 86.8 -> 83.3, pro regular 48.0 -> 49.2, pro large 50.8 -> 48.3, all_star regular 27.5 -> 21.3, all_star large 24.5 -> 23.5 (pro and
   all_star on 9a: 9b-9d change rookie's profile only). Rookie regular and all_star regular are more than 4 points off: the curve lane re-sets them.
 - Stills after: `docs/experiments/brain9/ready1-rookie-f*.jpg` (the orange side on him in his corner, at the boards, in front of his net).
+
+## 5. Wave 2 (on 9d; each rule a FJamHockeySense value inside brain9, its own key)
+- `hk_meet_pass9`: a team-mate's pass in flight is met where it will be (the intercept solve, up to 2 s), not chased where it is (lane A207: the aim is
+  right, the receiver's blade still 4-6 m from the puck because he changes course). 40 seeds: passes completed rookie mates 36 -> 41 %, pro 39 -> 37 %:
+  re-read on A207's tree.
+- `hk_ahead_weak9`: the Far job's second skater 7 m ahead of the puck on the weak side, not 2 m behind it on the boards. The open man ahead of the human
+  rookie 37.7 -> 41.0 %, pro 32.0 -> 38.8 % (40 seeds).
+- `hk_mark_man9`: the second back of a five marks the opponent nearest our net (goal-side, moving with him) instead of standing on the slot spot
+  (`MarkSlotMan`, one call line in Decide's back branch). Skaters over 10 % standing at pro 20 -> 9 of 360.
+- Outside the family, one test: `Jam.Core.ModeKeys.Sprint` pinned a one-match sprint count (52 against 51 on the new match): its three matches play
+  `brain9=0` explicitly (ModeKeysTests.cpp, Play() takes an optional tune).
+
+## 6. Wave 2 on the merged tree (main d0d132bf: A207's pass and doubled shot, A209's hits; my w2b four files)
+- The pass arrives now (bot passes completed 65-76 %, were 37-46 %); the opponents hardly enter the zone (2.3-2.9 s a match) and shoot from 20-30 m.
+- `hk_meet_pass9` reads the sim's own pass in flight: `FJamAIWorld::PuckPassFrames / PuckPassBy`, filled in `FJamSimAdapter::BuildWorld` from
+  `Puck.PassFrames / PassBy` (one line). 60 seeds: mates' shots a minute pro 0.80 -> 0.94, human wins pro 36 -> 42 of 60.
+- `hk_shot_lane9`: the Weak job's first skater in the shooting lane (on the line carrier -> net, 9 m or a third of the way out) while an opposing
+  carrier is inside 35 m of the net, both sides. 60 seeds: pro human wins 35 -> 43, opponents' aimed shots from 20-30 m 95 -> 80.
+- `hk_drive_first9`: a driving mate passes to the human only when he is set up for the one-timer (no measurable change; kept, harmless).
+- `hk_dodge9_share` (pro 0.3, all_star 0.5, rookie 0): a bot without the puck that reads the human's hit coming (closing at 3 m/s inside 4.5 m, or his
+  check / cross-check winding up at it) steps off the line (`FJamBrain::DodgeHit`, one call line in Think), never against the human carrier (that first
+  version emptied all_star's large rink: 59 -> 86.5 for the good player). Pro: bots felled by the human 6.70 -> 4.95 a match (my instrument).
+- Not shipped: the mates' reach 24.5 m (no shot gained). Why the mates stay near 1 shot a minute: they carry inside 22 m about 3 times a match.

@@ -420,8 +420,8 @@ bool FJamBarBrainInterest::RunTest(const FString& Parameters)
 				const FJamPlaytestStats S = RunPlaytestMatch(Sim, Cfg, static_cast<uint64>(Seed), Kind, 36000, C->Game.Shot.ChargeFramesMax, false, &Trace, T, 1);
 				Finish(*T);
 				++Matches; if (S.GoalsFor > S.GoalsAgainst) ++Wins;
-				AddInfo(FString::Printf(TEXT("INTEREST match %s@%s seed %d: %lld frames, %d:%d, hash %016llx%s"), *CartName, *Lv, Seed, static_cast<long long>(S.Frames), S.GoalsFor, S.GoalsAgainst,
-					static_cast<unsigned long long>(S.Hash), *Summary(T->A, 1)));
+				AddInfo(FString::Printf(TEXT("INTEREST match %s@%s seed %d: %lld frames, %d:%d, hash %016llx | HITS kd_given %d checks_landed %d presses %d cross_landed %d knocked_down %d%s"), *CartName, *Lv, Seed, static_cast<long long>(S.Frames), S.GoalsFor, S.GoalsAgainst,
+					static_cast<unsigned long long>(S.Hash), S.KdGiven, S.ChecksLanded, S.CheckPresses, S.CrossLanded, S.Knockdowns, *Summary(T->A, 1)));
 				Sum.Add(T->A);
 				delete T;
 			}
@@ -452,7 +452,7 @@ namespace JamHockeyBrain9TestsLocal
 	bool Off9(const FJamHockeySense& H)
 	{
 		return H.ShootExtra9M == 0.0 && !H.bAimCone9 && H.OppPace9 == 0.0 && H.AimError9Deg == 0.0 && H.React9Frames == 0 && !H.bNetFront9 && !H.bChipUp9
-			&& H.DriveNet9M == 0.0 && H.Pressure9S == 0.0 && H.ShotCharge9Frames == 0 && !H.bOneTimer9 && H.Poke9Frames == 0;
+			&& H.DriveNet9M == 0.0 && H.Pressure9S == 0.0 && H.ShotCharge9Frames == 0 && !H.bOneTimer9 && H.Poke9Frames == 0 && !H.bMeetPass9 && !H.bAheadWeak9 && !H.bMarkMan9 && !H.bShotLane9 && !H.bDriveFirst9 && H.Dodge9Share == 0.0;
 	}
 	// 5 v 5 on 90 x 45: the human is skater 0 (team 0, attacks +x); team 1 (attacks -x) skaters 5-9.
 	FJamAIWorld Five()
@@ -491,6 +491,7 @@ bool FJamHockey9Neutral::RunTest(const FString& Parameters)
 		TestTrue(TEXT("rookie's pace and clumsy execution (stick, aim, reach) are rookie's alone; no level reads late by evolution 9"),
 			(bRk ? (A.Opp.Hk.OppPace9 > 0.0 && A.Opp.Hk.Poke9Frames > 0 && A.Opp.Hk.AimError9Deg > 0.0 && A.Opp.Hk.ShootExtra9M > 0.0)
 				 : (A.Opp.Hk.OppPace9 == 0.0 && A.Opp.Hk.Poke9Frames == 0 && A.Opp.Hk.AimError9Deg == 0.0 && A.Opp.Hk.ShootExtra9M == 0.0)) && A.Opp.Hk.React9Frames == 0);
+		TestTrue(TEXT("wave 2: pro and all_star step off the human's hit a share of the time, rookie never; the mates never"), (Lv == EDifficulty::Rookie ? A.Opp.Hk.Dodge9Share == 0.0 : A.Opp.Hk.Dodge9Share > 0.0) && A.Mate.Hk.Dodge9Share == 0.0);
 		for (const char* Tune : { "brain9=0", "brain8=0", "brain2=0", "brain7=0" })
 		{
 			FJamAIParams P = A; char Err[200] = {};

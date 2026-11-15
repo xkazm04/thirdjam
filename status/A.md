@@ -492,3 +492,5 @@
 - link green 23:18: main ffcfd1ce (A check that lands inside its wind-up shows the hit, not the crouch (A210, track F3, the n) pushed.
 - link green 23:46: main 9f8ea747 (The acceptance rows for the pass by power: step 5's held row is pass_power (A207, PASS REA) pushed.
 - link green 23:57: main 2971a99e (Merge dev-b at cc655ed5 (the puck on the blade, the play calls, the look to the puck, the ) pushed.
+- link green 00:27: main 015f1618 (The puck belongs to whoever touches it, and nothing passes through a body (A208, track F0,) pushed.
+- 00:41: acceptance run RED on main 015f1618 (exit 1): no H35. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H35-2.txt

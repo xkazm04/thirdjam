@@ -19,6 +19,7 @@ namespace JamAI
 			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, 0.4};
 			// Lane A112 (CURVE-6.md): the pro's aggression numbers moved in ProOppSkill (JamAICore.h), the brain's default
 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (the same as SpeedScale at pro)
+			P.Opp.Hk.Dodge9Share = 0.3;   // lane A206 (evolution 9, wave 2): pro steps off the human's hit in 0.3 of the windows (60 matches: bots felled 6.70 -> 5.02 a match; 0.6: 4.45)
 			P.LargeRedSkill = 1.165;   // lane A189 (CURVE-12.md, pass 2): 1.18 -> 1.165 with the wind-ups 8 / 12, evolution 8 and pressure 0.6 (the regular player on 120 x 60 42.8 -> 46.2, 600). Pass 1: 1.15 -> 1.18 on main 58af359f (the regular player on 120 x 60 56.5 -> 46.2, 600; 1.21: 41.7). Lane A154 (CURVE-8.md): 1.12 -> 1.15 (main 4cab387, after BRAIN-3 / CONTACT-5 / MOVEMENT-5: the regular player on 120 x 60 54.8 at 1.12, 48.2 at 1.15, 43.3 at 1.17 (600)). Lane A133 (CURVE-7.md): 1.065 -> 1.12 (the regular player on 120 x 60 with the hunt 8 and the carry: 69.8 at 1.065, 55.5 at 1.1, 47.8 at 1.13, 41.2 at 1.16 (600); 44.9 at 1.13 (2,000)). Lane A112 (CURVE-6.md): 1.04 -> 1.065 (the regular player on 120 x 60 with the new aggression: 57.1 at 1.04 (2,000)). Lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
 			return P;
 		}
@@ -122,6 +123,7 @@ namespace JamAI
 			// Lane A154 (CURVE-8.md): speed 1.4 -> 1.45 on main 4cab387 (the good player 30.6 at 1.4, 26.9 at 1.45 (2,000); 1.5: 29.7 (600), A95's non-monotonic top;
 			// red skill 0.85 / 0.95: 32.3 / 31.5, flat; law 3 at 1.45: 84.5 % from 11 m, 100 % from 12 m).
 			FJamDifficultyProfile P{"all_star", 1.45, 0.9, 4.0, 25.0, 0.0, 60, Opp, 0.2};
+			P.Opp.Hk.Dodge9Share = 0.5;   // lane A206 (evolution 9, wave 2): all_star steps off the human's hit in half the windows (rookie never)
 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the opposing side's speed only; the human's mates skate at the human's pace (1.4 before: 15.5 against his 11.3 m/s)
 			P.LargeSpeedScale = 1.47;   // lane A154 (CURVE-8.md): 1.42 -> 1.47 (main 4cab387: the good player on 120 x 60 30.3 at 1.42, 29.0 at 1.45, 27.3 at 1.47 (600)). Lane A133 (CURVE-7.md): 1.34 -> 1.42 (the good player on 120 x 60: 38.3 at 1.34, 33.8 at 1.38, 27.5 at 1.42 (600); all_star harder than pro there, R-0055 point 3). Lane A112 (CURVE-6.md): 1.22 -> 1.34 (the mates no longer share it; the good player on 120 x 60: 45.0 at 1.22, 37.3 at 1.27, 28.3 at 1.32 (600), 29.1 at 1.32 (2,000)). Lane A95 (CURVE-5.md): the good player on 120 x 60 at speed 1.4: 5.7 % (600), 1.25: 19.2 (2,000), 1.2: 32.3 (600)
 			return P;   // lane A46: mates pass to the open human in 0.2 of the chances
@@ -227,6 +229,12 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_chip_up9") == 0) { K.Hk.bChipUp9 = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_drive_net9_m") == 0) { K.Hk.DriveNet9M = V; return true; }
 			if (std::strcmp(Key, "hk_pressure9_s") == 0) { K.Hk.Pressure9S = V; return true; }
+			if (std::strcmp(Key, "hk_dodge9_share") == 0) { K.Hk.Dodge9Share = V; return true; }
+			if (std::strcmp(Key, "hk_drive_first9") == 0) { K.Hk.bDriveFirst9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_shot_lane9") == 0) { K.Hk.bShotLane9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_mark_man9") == 0) { K.Hk.bMarkMan9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_ahead_weak9") == 0) { K.Hk.bAheadWeak9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_meet_pass9") == 0) { K.Hk.bMeetPass9 = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_poke9_frames") == 0) { K.Hk.Poke9Frames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_one_timer9") == 0) { K.Hk.bOneTimer9 = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_shot_charge9_frames") == 0) { K.Hk.ShotCharge9Frames = static_cast<int>(V); return true; }

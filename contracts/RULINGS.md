@@ -846,3 +846,25 @@ across the chest by today's hits lane, over a figure left on a stand-in lean. Th
 human's wind-up becomes 8 frames with a buffered press. (To be confirmed by lane A210 in its first hour.)
 (7) **A correction of the record:** the freeze landing's message and A-to-B-0031 say dev-b was merged at 65d347b8. It was not (the merge stopped on
 a staged file of the Director's and the script went on); H34 carries dev-b as of a5e48823. Merged with the commit that carries this ruling.
+
+## R-0068 (15 Nov, 00:00): the operator's order for the last night; the next stop is 10:00
+
+His words, verbatim: "last night ahead of us, keep loops with perfecting the game similarly to last night with focus to transforming today's found
+weaknesses into strengths. Combine again Fable/Opus subagents with 60-80% RAM used for best efficiency and output in the morning. Next stop will be at
+10:00 to check current state of the game and see whether we will be able to wrap up and achieve quality of publishable product"
+
+The Director's rulings on it:
+(1) **The night's goal is one sentence: the three weaknesses of R-0067 are what the game is good at by 10:00**: skaters who play to score, a pass
+that arrives and a shot that is stopped only by a save, a puck that belongs to whoever touches it, a hit that lands and is seen. Nothing else is
+started. Device B works to `handoff/A-to-B-0032.md` and its successors.
+(2) **Eight lanes on device A**, Opus by default, Fable where the judgement is by looking: A206 the brain, A207 the pass and the shot, A208
+possession, A209 contact, A210 the hits' and the puck's presentation (Fable), A211 the eye (Fable: a critic who plays what he will play and lists
+what a stranger sees: it changes nothing), A212 hardening and the release rows, A213 what the screen tells. The curve lane sets the ladder last,
+from about 04:30, on the game that plays. Memory between 60 and 80 %.
+(3) **The eye's list outranks a lane's own bars.** Yesterday's lesson (R-0067 point 2) has an instrument now: when A211 says a stranger sees a
+fault, the lane that owns it takes it before its own next item.
+(4) **The clock**: the lanes' waves at 01:30 / 02:30, 05:30 / 06:00; packages through the acceptance run about 01:00, 04:30 and **08:30: the one he
+plays at 10:00**; from 08:30 only faults found in that package are fixed; `docs/PLAY-ME.md` is rewritten for it; the page's stills come from it.
+(5) **Standing rules of the night** (learned between 20:30 and midnight): a combined landing is rehearsed with the full gate in a scratch tree
+before the real one; a lane's work is taken at a READY line with its source closed, or file by file by name; nothing runs from the main checkout
+but the Director's landings and releases; a watcher is restarted in the same turn that reads its catch.

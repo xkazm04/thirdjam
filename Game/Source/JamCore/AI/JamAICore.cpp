@@ -39,6 +39,7 @@ namespace JamAI
 	// Lane A83: the five-a-side parts of the support and the back (defined after Decide)
 	bool FiveSupport(const FJamAIWorld& W, int Id, double SlowRadius, FVec2& Out);
 	bool FiveSlot(const FJamAIWorld& W, int Id, const FJamBotSkill& Gk, double SlowRadius, FVec2& Out);
+	bool MarkSlotMan(const FJamAIWorld& W, int Id, const FJamBotSkill& Gk, FVec2& Out);   // lane A206 (evolution 9, wave 2)
 
 	double BoardSdf(const FJamAIWorld& W, const FVec2& P, FVec2& OutNormal)
 	{
@@ -377,6 +378,7 @@ namespace JamAI
 			if (SkillOf(W, i).Hk.DownedLeaveFrames > 0) { Dir = LeaveDowned(W, i, Dir); }   // lane A202 (evolution 8): a bot does not stand at a downed body
 			if (SkillOf(W, i).Hk.bOwnZoneTurn) { Dir = OwnZoneTurn(W, i, Dir); }   // lane A202: a carrier does not skate back into its own zone with open ice ahead
 			if (SkillOf(W, i).Hk.ClumpFrames > 0) { Dir = SplitClump(W, i, Dir); }   // lane A202: two mates do not stand in one spot
+			if (SkillOf(W, i).Hk.Dodge9Share > 0.0) { Dir = DodgeHit(W, i, Dir); }   // lane A206 (wave 2): step off the human's hit
 			// Lane A85 (found by Jam.Core.NetTrap once R-0042's flat tap re-rolled its match): a bot behind a net (between its back and the end boards, inside
 			// the net's width + 1.2 m) whose way leads back to the middle goes round the side of the net, not into its back: FJamPlayerBot's rule (lane A3,
 			// 16:12) for the bots. Before, a back whose guard spot lay through its own net pressed into the hull until the puck moved (47 frames, hockey.regular
@@ -641,6 +643,42 @@ namespace JamAI
 		}
 		return true;
 	}
+	// Lane A206 (track Q2, evolution 9, wave 2; BRAIN-9.md): DodgeHit (Dodge9Share). A bot on its feet without the puck, of the side against the human, reads
+	// his hit coming: he is within 4.5 m and closing on it at 3 m/s or more, or his check winds up with it the nearest man in front of him within 3 m, or his
+	// cross-check winds up with it as the target. In Dodge9Share of the two-second windows (a fixed coin per bot) its move is the step off the line of the
+	// hit: across his line of approach at full stride, on the side it already leans to (towards the middle when it is on the line).
+	FVec2 FJamBrain::DodgeHit(const FJamAIWorld& W, int Id, const FVec2& Dir) const
+	{
+		const int Hi = W.PlayerIndex;
+		const FJamAISkater& S = W.Skaters[Id];
+		// not against the human carrier: a defender does not step out of his way (that emptied all_star's large rink: 59 -> 86.5 for the good player)
+		if (Hi < 0 || Hi >= W.NumSkaters || W.Skaters[Hi].Team == S.Team || W.Skaters[Hi].bDown || S.bDown || W.CarrierOrHolder() == Id || W.CarrierOrHolder() == Hi) { return Dir; }
+		const FJamAISkater& H = W.Skaters[Hi];
+		const FVec2 Rel = S.Pos - H.Pos;
+		const double D = Rel.Length();
+		if (D < 1e-3 || D > 4.5) { return Dir; }
+		const FVec2 U = Rel * (1.0 / D);
+		const double Closing = (H.Vel - S.Vel).Dot(U);
+		bool bCheckAtMe = false;
+		if (H.CheckWindupLeft > 0 && D < 3.0 && H.Facing.Normalized().Dot(U) > 0.5)
+		{
+			bCheckAtMe = true;
+			for (int o = 0; o < W.NumSkaters; ++o)
+			{
+				if (o == Id || W.Skaters[o].Team == H.Team || W.Skaters[o].bDown) { continue; }
+				const FVec2 Ro = W.Skaters[o].Pos - H.Pos;
+				if (Ro.Length() < D && H.Facing.Normalized().Dot(Ro.Normalized()) > 0.5) { bCheckAtMe = false; break; }
+			}
+		}
+		const bool bCrossAtMe = H.CrossWindupLeft > 0 && H.CrossTarget == Id;
+		if (!(Closing >= 3.0 || bCheckAtMe || bCrossAtMe)) { return Dir; }
+		const double Coin = (Hash11(static_cast<uint64_t>(Id) + 719, static_cast<uint64_t>(W.Frame / 120)) + 1.0) * 0.5;
+		if (Coin >= SkillOf(W, Id).Hk.Dodge9Share) { return Dir; }
+		const FVec2 Across = U.Perp();
+		double Side = S.Vel.Dot(Across);
+		if (std::fabs(Side) < 0.5) { Side = Across.Dot(FVec2(0.0, 0.0) - S.Pos); }
+		return Across * (Side >= 0.0 ? 1.0 : -1.0) + U * 0.3;
+	}
 	void FJamBrain::LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const
 	{
 		if (!In.bShoot || W.CarrierOrHolder() != Id) { return; }
@@ -842,6 +880,10 @@ namespace JamAI
 			if (D < 2.5 || bStepUp)
 			{
 				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass);
+			}
+			else if (SkillOf(W, Id).Hk.bMarkMan9 && MarkSlotMan(W, Id, SkillOf(W, Id), Out))
+			{
+				// lane A206 (wave 2): the second back marks the man in front of our net
 			}
 			else if (FiveSlot(W, Id, SkillOf(W, Id), Params.ArriveSlowRadius, Out))
 			{
@@ -1089,6 +1131,35 @@ namespace JamAI
 				if (Along < Tg - 0.5) { Out = Arrive(Me, Pp + Dir * Along - S.Vel * 0.25, 1.0); }   // only a lane it can reach in front of the net
 			}
 		}
+		return true;
+	}
+
+	// Lane A206 (track Q2, evolution 9, wave 2; BRAIN-9.md): MarkSlotMan (bMarkMan9). The second back of a five, the puck within its guard range of our net and
+	// not on its way at the net, marks the standing opponent nearest our net (not the carrier, within 20 m of it): goal-side of him by 1.5 m, moving with him,
+	// instead of standing on the slot spot (FiveSlot). Nobody to mark: false (FiveSlot as before).
+	bool MarkSlotMan(const FJamAIWorld& W, int Id, const FJamBotSkill& Gk, FVec2& Out)
+	{
+		using namespace FiveLocal;
+		const FJamAISkater& S = W.Skaters[Id];
+		if (S.Role != ERole::Back || TeamCount(W, S.Team) < 5 || RoleOrdinal(W, Id) == 0) { return false; }
+		const FVec2 OwnGoal = W.OwnGoal(S.Team);
+		if (W.PuckPos.DistTo(OwnGoal) >= Gk.GuardRangeM) { return false; }
+		const double Pv = W.PuckVel.Length();
+		if (Pv > 6.0 && W.PuckVel.Dot(OwnGoal - W.PuckPos) > 0.0) { return false; }   // a shot on our net: FiveSlot blocks it
+		const int C = W.CarrierOrHolder();
+		int Mark = -1;
+		double Best = 20.0;
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			const FJamAISkater& O = W.Skaters[o];
+			if (O.Team == S.Team || O.bDown || o == C) { continue; }
+			const double D = O.Pos.DistTo(OwnGoal);
+			if (D < Best) { Best = D; Mark = o; }
+		}
+		if (Mark < 0) { return false; }
+		const FJamAISkater& O = W.Skaters[Mark];
+		const FVec2 T = O.Pos + (OwnGoal - O.Pos).Normalized() * 1.5 + O.Vel * 0.3;
+		Out = Arrive(S.Pos, T, 1.0);
 		return true;
 	}
 
@@ -1427,6 +1498,8 @@ namespace JamAI
 		// (bPass: the lead solved for the receiver) when the sim would pick the human (W.CarrierBestPass); else lane A3's aimed tap at the human, from 8 m or more
 		// (17.9 m/s minus puck.drag 0.5 per metre arrives under the 14 m/s cap of the body reception). A shot decided above (one-timer, aimed shot) comes first.
 		const bool bPassIntent = TeamIntent.Kind == ETeamIntent::Pass && TeamIntent.Active(W.Frame);
+		// lane A206 (wave 2): a mate driving at the net with an open lane (DriveNet) gives the puck to the human only when he is set up for the one-timer
+		const bool bDrive9 = K.Hk.bDriveFirst9 && K.Hk.DriveNet9M > 0.0 && !bSharp && !bShoot && DriveNet(W, Id, Aim, Dgoal);
 		const bool bSpaceIntent = TeamIntent.Kind == ETeamIntent::Space && TeamIntent.Active(W.Frame);
 		const double Share = bPassIntent ? 0.9 : K.PassToHuman;
 		if (Share > 0.0 && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && W.Carrier == Id && S.bCanShoot && !bShoot
@@ -1455,7 +1528,7 @@ namespace JamAI
 				}
 				bRoom = Free > (bSetUp ? 2.0 : 3.0);
 			}
-			if (bRoom && (bSetUp || (Coin < Share && bAheadOrLevel && !bDrive)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)   // lane A153: a mate that goes to the net passes only to a human set up for the one-timer
+			if (bRoom && (bSetUp || (Coin < Share && bAheadOrLevel && !bDrive && !bDrive9)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)   // lane A153: a mate that goes to the net passes only to a human set up for the one-timer
 			{
 				bool bClear = true;
 				for (int o = 0; o < W.NumSkaters && bClear; ++o)
@@ -1640,7 +1713,11 @@ namespace JamAI
 		}
 		const double LeadMps = K.Hk.bTrueLead ? FreeSpeed(K.Hk) * Params.SpeedScale : 8.0;   // lane A202 (item 4): off = Godot's 8 m/s
 		double Lead = Clamp(D / LeadMps, 0.0, K.LeadFrames / 60.0);
-		if (K.bIntercept)
+		// Lane A206 (evolution 9, wave 2): a team-mate's pass in flight is met where it will be (the intercept solve, up to 2 s ahead), not chased where it is
+		// (wave 2 on A207's pass: the sim's own pass in flight, Puck.PassFrames / PassBy through the adapter)
+		const bool bMeetPass = K.Hk.bMeetPass9 && W.CarrierOrHolder() < 0 && W.PuckPassFrames > 0 && W.PuckPassBy >= 0 && W.PuckPassBy < W.NumSkaters && W.PuckPassBy != Id
+			&& W.Skaters[W.PuckPassBy].Team == S.Team;
+		if (K.bIntercept || bMeetPass)
 		{
 			// lane A3: earliest t with |Pp + V t - Me| = speed * t (speed = own top speed), capped like the plain lead
 			const FVec2 R = Pp - Me;
@@ -1663,7 +1740,7 @@ namespace JamAI
 					T = Lo > 0.0 ? Lo : Hi;
 				}
 			}
-			Lead = Clamp(T > 0.0 ? T : D / LeadMps, 0.0, K.LeadFrames / 60.0);
+			Lead = Clamp(T > 0.0 ? T : D / LeadMps, 0.0, bMeetPass && !K.bIntercept ? 2.0 : K.LeadFrames / 60.0);   // lane A206: the met pass up to 2 s
 		}
 		const FVec2 Tgt = Pp + W.PuckVel.LimitLength(25.0) * Lead;
 		FVec2 Behind = Tgt - Push * 1.2;
@@ -2142,7 +2219,8 @@ namespace JamAI
 			break;
 		}
 		case EJob::Far:
-			if (JobOrd[Id] > 0) { T = FVec2(Cp.X - Up * 2.0, PuckSide * W.HalfWidth * 0.75); }                 // a second: the puck's side, wide on the boards
+			if (JobOrd[Id] > 0 && SkillOf(W, Id).Hk.bAheadWeak9) { T = FVec2(Cp.X + Up * 7.0, -PuckSide * W.HalfWidth * 0.45); }   // lane A206 (wave 2): a second ahead on the weak side
+			else if (JobOrd[Id] > 0) { T = FVec2(Cp.X - Up * 2.0, PuckSide * W.HalfWidth * 0.75); }                 // a second: the puck's side, wide on the boards
 			else if (Cp.X * Up > (SkillOf(W, Id).Hk.bNetFront9 ? 0.0 : W.HalfLength / 3.0 - 2.0)) { T = FVec2(OppGoal.X - Up * 5.0, -PuckSide * 2.5); }   // in their end: the net front, the far post   // lane A206 (evolution 9): from the attacking half
 			else { T = FVec2(Cp.X + Up * 10.0, -PuckSide * W.HalfWidth * 0.4); }                              // else the far lane, ahead of the puck
 			bLanes = true;
@@ -2213,6 +2291,11 @@ namespace JamAI
 			if (JobOrd[Id] > 0) { T = OwnGoal + FVec2(Up * 12.0, 0.0); T.Y = Clamp(Pp.Y * 0.3, -4.0, 4.0); break; }
 			T = LerpV(OwnGoal, Pp, 0.45);
 			T.Y = -PuckSide * W.HalfWidth * 0.3;
+			if (SkillOf(W, Id).Hk.bShotLane9 && bCarrier && W.Skaters[C].Team != S.Team)   // lane A206 (wave 2): in the shooting lane
+			{
+				const double Lc = Cp.DistTo(OwnGoal);
+				if (Lc < 35.0 && Lc > 12.0) { const double Out9 = Lc * 0.35 > 9.0 ? Lc * 0.35 : 9.0; T = Cp + (OwnGoal - Cp).Normalized() * Out9; }
+			}
 			break;
 		default:
 			return false;
