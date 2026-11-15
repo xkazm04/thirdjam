@@ -13,6 +13,7 @@ import { parseNotes } from './lib/markdown.mjs';
 import { buildModel } from './lib/model.mjs';
 import { renderPage } from './lib/render.mjs';
 import { writeFixtureShots } from './fixtures/make-fixtures.mjs';
+import { PROJECT_FROM_ISO, PROJECT_FROM_MS } from './lib/constants.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(HERE, '..');
@@ -40,6 +41,86 @@ export function loadNotes(files) {
   });
   // One timeline: by hour, then A before B within the hour, then the order written in the file.
   return out.sort((a, b) => a.hour - b.hour || a.file - b.file || a.order - b.order);
+}
+
+/** The repository roots of the --repo paths: a worktree under `<root>/.claude/worktrees/<name>` belongs to `<root>`. */
+export function repoRoots(repos) {
+  const out = new Set();
+  for (const r of repos) {
+    const p = path.resolve(r.dir);
+    const m = p.match(/^(.*?)[\\/]\.claude[\\/]worktrees[\\/]/);
+    out.add(m ? m[1] : p);
+  }
+  return [...out];
+}
+
+/** Every spelling a path takes inside a JSONL transcript: C:\x (JSON-escaped C:\\x), C:/x, /c/x. Lower case. */
+function spellings(root) {
+  const fwd = root.replace(/\\/g, '/');
+  const out = [fwd, fwd.replace(/\//g, '\\\\')];
+  const m = fwd.match(/^([A-Za-z]):\/(.*)$/);
+  if (m) out.push(`/${m[1].toLowerCase()}/${m[2]}`);
+  return out.map((s) => s.toLowerCase());
+}
+
+/** Session ids (8 hex, or a full uuid) to leave out, one per line; `#` starts a comment. */
+export function readExcludeList(file) {
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, 'utf8')
+    .split(/\r?\n/)
+    .map((l) => l.replace(/#.*/, '').trim())
+    .filter(Boolean)
+    .map((l) => l.toLowerCase());
+}
+
+/**
+ * --project-only (lane A233, 15 Nov): this jam's sessions only.
+ * 1. turns and prompts before PROJECT_FROM_MS are dropped (a project folder holds older sessions);
+ * 2. a session is kept only if its transcript, or its parent session's for a subagent, works inside a --repo's repository: a recorded
+ *    cwd there, or a path there that it names (the Director's lanes start in another folder and work in this repository by absolute
+ *    path, so the cwd alone would drop them);
+ * 3. a session listed in devlog/curated/exclude-sessions.txt is dropped, with every subagent file under its folder;
+ * 4. no session title is shown (a title can name the folder another project lives in).
+ */
+export function projectOnly(sessions, repos, excludeFile, warnings = []) {
+  const roots = repoRoots(repos).flatMap(spellings);
+  const excluded = readExcludeList(excludeFile);
+  const isExcluded = (file) => {
+    const parts = file.toLowerCase().split(/[\\/]/);
+    return excluded.some((id) => parts.some((p) => p === id || p === `${id}.jsonl` || (id.length === 8 && p.startsWith(id + '-'))));
+  };
+  const cache = new Map();
+  const touchesOne = (file) => {
+    if (!cache.has(file)) {
+      let t = '';
+      try { t = fs.readFileSync(file, 'utf8').toLowerCase(); } catch { /* missing parent: no */ }
+      cache.set(file, roots.some((r) => t.includes(r)));
+    }
+    return cache.get(file);
+  };
+  // A subagent belongs where its parent session belongs (<id>/subagents/agent-*.jsonl -> <id>.jsonl).
+  const parentOf = (file) => {
+    const m = file.match(/^(.*)[\\/]([^\\/]+)[\\/]subagents[\\/][^\\/]+$/);
+    return m ? path.join(m[1], `${m[2]}.jsonl`) : undefined;
+  };
+  const touches = (file) => touchesOne(file) || (parentOf(file) ? touchesOne(parentOf(file)) : false);
+  const before = sessions.length;
+  let early = 0;
+  let foreign = 0;
+  let listed = 0;
+  const out = [];
+  for (const s of sessions) {
+    if (s.file && isExcluded(s.file)) { listed++; continue; }
+    const turns = s.turns.filter((t) => t.ms >= PROJECT_FROM_MS);
+    const prompts = s.prompts.filter((p) => p.ms >= PROJECT_FROM_MS);
+    if (!turns.length && !prompts.length) { early++; continue; }
+    if (s.file && !touches(s.file)) { foreign++; continue; }
+    // Titles are written by the CLI from the folder the session started in, so they can name another project: none is shown.
+    out.push({ ...s, title: undefined, turns, prompts, firstMs: Math.max(s.firstMs ?? PROJECT_FROM_MS, PROJECT_FROM_MS) });
+  }
+  warnings.push(`project-only: ${out.length} of ${before} sessions kept (${early} before ${PROJECT_FROM_ISO}, ${foreign} outside the repository, ${listed} on the exclude list)`);
+  return out;
 }
 
 /**
@@ -84,6 +165,8 @@ export function buildPage(o) {
       .filter((s) => s.turns.length || s.prompts.length)
       .map((s) => ({ ...s, firstMs: Math.max(s.firstMs ?? sinceMs, sinceMs) }));
   }
+  if (o.projectOnly) sessions = projectOnly(sessions, repos, path.join(root, 'devlog', 'curated', 'exclude-sessions.txt'), warnings);
+  sessions = sessions.map(({ file, ...s }) => s);
   for (const s of sessions) if (s.badLines) warnings.push(`${s.badLines} unreadable line(s) skipped in a transcript (${redact(s.id)})`);
   const commits = loadCommits(repos, redact);
   const shotResult = loadShots(shotsDir, redact);

@@ -73,6 +73,4 @@ docs/experiments/img/a80/a80-board-f1645-strip.png | 20261113-125500 | A | a80-b
 # --- 7. Five a side and the acceptance run (Fri 13 Nov afternoon)
 docs/experiments/img/a83/five-p3-board-battle.png | 20261113-132000 | A | a83-five-board-battle | Five a side: a battle at the boards
 devlog/curated/img/accept-table-a91.png | 20261113-164500 | A | accept-table-a91 | The acceptance run: 18 of 18 verbs through the cursor and the buttons (a rendered table, not a screenshot)
-devlog/shots/20261113-114709-B-lab-skf15-p3_clay-Check_Hit_Back-ba.png | 20261113-114709 | B | lab-skf15-check-hit-back | Hit from behind, before and after
-devlog/shots/20261113-114709-B-lab-skf15-p3_clay-Knockdown_Right-ba.png | 20261113-114709 | B | lab-skf15-knockdown-right | Knockdown to the right, before and after
 docs/experiments/img/a64/hockey.chaos-l2-card.jpg | 20261113-103000 | A | a64-chaos-match-card | The match card of a mode that changes the rules: Chaos

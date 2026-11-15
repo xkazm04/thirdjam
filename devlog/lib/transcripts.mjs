@@ -103,6 +103,7 @@ export function parseTranscript(file, device, redact = (s) => s) {
     prompts,
     badLines,
     droppedTurns: byId.size - turns.length,
+    file: path.resolve(file), // for --project-only (build.mjs); never rendered
   };
 }
 

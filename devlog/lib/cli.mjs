@@ -3,7 +3,7 @@
 // repo infers the device from the branch a commit was reached from (see gitlog.mjs).
 
 const VALUE_FLAGS = new Set(['--out', '--transcripts', '--repo', '--shots', '--status', '--notes', '--gates', '--title', '--since']);
-const BOOL_FLAGS = new Set(['--embed', '--fixtures', '--help', '-h']);
+const BOOL_FLAGS = new Set(['--embed', '--fixtures', '--project-only', '--help', '-h']);
 
 export function labelled(v) {
   const m = String(v).match(/^([AaBb])=(.+)$/);
@@ -24,6 +24,7 @@ export function parseArgs(argv) {
     if (BOOL_FLAGS.has(flag)) {
       if (flag === '--embed') o.embed = true;
       else if (flag === '--fixtures') o.fixtures = true;
+      else if (flag === '--project-only') o.projectOnly = true;
       else o.help = true;
       continue;
     }
@@ -49,6 +50,10 @@ export const HELP = `usage: node devlog/build.mjs --out <file.html> [options]
   --notes <file>           notes with "## H12 title" blocks (default devlog/notes.md)
   --gates <file>           gate list (default docs/GATES.md)
   --since <ISO time>       ignore transcript turns and prompts before this instant (e.g. 2026-11-12T05:00:00Z); a project folder may hold older sessions
+  --project-only           keep only this jam's sessions: turns and prompts from PROJECT_FROM (lib/constants.mjs, Wed 11 Nov 20:40 CET) on,
+                           sessions whose records (or, for a subagent, its parent's) work inside a --repo's repository (a cwd or a
+                           path they name there), and none listed in
+                           devlog/curated/exclude-sessions.txt (with their subagents); session titles are not shown. Off by default.
   --title <text>           page title (default "Third Jam dev log")
   --embed                  put screenshots inside the page as base64 (otherwise relative links)
   --fixtures               build from devlog/fixtures (fake data) for a smoke test

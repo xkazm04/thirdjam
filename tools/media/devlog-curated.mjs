@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Build the submitted dev log from the curated shot list (lane A96).
-//   node tools/media/devlog-curated.mjs [--repo <main checkout>] [--out submission/devlog/index.html] [--no-embed]
+//   node tools/media/devlog-curated.mjs [--repo <main checkout>] [--out submission/devlog/index.html] [--no-embed] [--project-only]
+// --project-only (lane A233) is passed through to devlog/build.mjs: only this jam's sessions (see its --help).
 // Stages the pictures of devlog/curated/shots.txt (copies, outside the repo: %TEMP%/a96/curated-shots) under the names devlog/build.mjs wants
 // (YYYYMMDD-HHMMSS-<A|B>-<label>.<ext> plus a .txt caption), then runs `node devlog/build.mjs ... --embed` on that folder only.
 // devlog/build.mjs itself runs read-only `git log` on --repo; this script runs no git.
@@ -43,6 +44,7 @@ const tr = ['C--Users-kazda-kiro-third-life', 'C--Users-kazda-kiro-thirdjam'].ma
 const a = [path.join(root, 'devlog/build.mjs'), '--out', out, '--shots', stage, '--repo', repo,
   '--title', 'Hokej: the Third Jam dev log (Glass Box)', ...tr.flatMap((d) => ['--transcripts', 'A=' + d])];
 if (!args.includes('--no-embed')) a.push('--embed');
+if (args.includes('--project-only')) a.push('--project-only');
 fs.mkdirSync(path.dirname(out), { recursive: true });
 const r = spawnSync('node', a, { cwd: root, stdio: 'inherit' });
 process.exit(r.status ?? 2);

@@ -1,0 +1,5 @@
+# Sessions left out of the published dev log by `--project-only` (devlog/build.mjs), each with every subagent file under its folder.
+# One session id per line (the full uuid, or its first 8 hex); "#" starts a comment.
+# The Director's word, 15 Nov 17:58 (to lane A233): these are not this game's log and must not be published.
+8c61a565-c271-41a9-88ec-ebdfb75340a5  # "Tiger game": a separate skill run on this repository, Sun 15 Nov 10:45 to 17:39, 9 subagents
+091f0651-12b6-43db-87de-84846659405d  # "Perfect command on codebase": a separate skill run on this repository, Sun 15 Nov 10:46 to 16:13, 2 subagents
