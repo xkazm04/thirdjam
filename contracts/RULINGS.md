@@ -924,3 +924,13 @@ NVIDIA's licence, so he starts it); until it is installed the final package is c
 the event page; A keeps `submission/page.md`, `form.md` and the pictures ready to paste and answers what the page asks. (3) Until 19:00:
 both devices' last touches (A227 on A; device B's last push by 18:30), hardening on the final sim (A228), one landing, the package for the
 judges at 19:00.
+
+## R-0072 (15 Nov 17:16, the operator, three more things in parallel)
+Verbatim: "In parallel dispatch one Opus subagent for one more round of HUD UI/UX improvement, for each mode generate custom illustration with codex image generation rather than screenshots cut out of the context. Check state of Neon/Tron arenas to combine in some of the existing modes"
+
+The Director's reading: three lanes beside the last fix lane and the hardening lane, none of them in the 19:00 package for the judges
+(R-0071): they land after it and make a second package this evening if their gate is green; the 19:00 package stays the one that is safe
+to submit. (1) Lane A229 (Opus): the match HUD in the front end's one look. (2) Lane A231: fourteen illustrations for MODES by Codex
+image generation, in one family, the look in each picture the look its mode plays; this replaces the Director's ask to device B for
+screenshots (A-to-B-0042 point 1). (3) Lane A230: the neon arena looked at at every rink size, and two or three of the eight clay modes
+moved onto it; "Neon/Tron" is a mood, no mark copied (R-0064).
