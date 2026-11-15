@@ -3,7 +3,7 @@
 Five lanes changed the game tonight and each measured its own piece with scripted hands. This lane changes no game source: it plays what the operator
 plays (PLAY NOW from the menu's first screen, ROOKIE first, the regular rink, the game camera), films it off screen, reads the pictures as a stranger
 would, and hands the Director a ranked list a lane can act on within the hour. The lists themselves (`EYE LIST n`, `SEEN FIXED` / `STILL THERE`,
-`EYE READY`) are in `status/A211.md`; this file is the method and the ten stills that travel.
+`EYE READY`) are in `status/A211.md`; this file is the method and the sixteen stills that travel.
 
 ## The tools (`tools/qa/eye/`)
 
@@ -16,6 +16,8 @@ would, and hands the Director a ranked list a lane can act on within the hour. T
 | `facts.py` | The countable facts of a filmed match, one block per run, for the before and after of a list: score and length, faceoffs with a knockdown of the human inside 60 frames, his knockdowns, his hit presses and contacts, what became of his passes, of his side's and of the other side's (to a mate, to an opponent, back on the passer, touched again within 15 frames), every goal with the frames from its shot (53 = from the blue line), the camera's stands / no-horizon share, the stills with the yellow hint over the button pill. `python facts.py out/<run> ...` |
 | `view.py` | What the game camera shows, without an eye: per still the share of ice-coloured pixels. "stands" = under 45 % ice; "top" = the top band of the picture is ice (no horizon). `python view.py <shots> 500 7200 20`. The camera lane's number. |
 | `eye-hash.ps1` | The state hashes of one headless start (`-nullrhi`, the Rink map, `-cut=hockey.regular`, `jam.ScriptHuman=<n>`): the before / after proof of a script value in 25 s. A rendered run with value 0 is not repeatable (the machine's cursor aims his stick); a headless one is. |
+| `seeds.py` | A table of headless seed runs (`eye-hash.ps1`'s `out/<prefix><n>`), one row a run: the hashes at f600 and f3600, the score and whether the match was over, the first goal against, his knockdowns, his aimed taps that arrived, his hit contacts, every goal against by frames from the shot (53 frames is a shot from the blue line). `python seeds.py e-pro- 1 7`. The curve lane's person-path table and every list's before / after. |
+| `passdie.py` | Where his passes die, from a run's `game.log`: for each pass with a man on the aim line, who touches the puck next and when (arrived; an opponent at the release, on the way, after 30 frames; back to the passer). The pass lane's number. |
 | `grid.py`, `shift.py`, `steps.py` | Lane A210's sheet helpers, copied unchanged. |
 
 ## The method
@@ -70,6 +72,42 @@ would, and hands the Director a ranked list a lane can act on within the hour. T
 | `09-rings-f3980.png` | Four kinds of ring and a downed man's bars in one picture. |
 | `10-cross-check-that-reads-f1839-1872.jpg` | His tapped cross-check landing: the burst, the man down, the bars round him. Keep this. |
 
+## The six stills after (`docs/experiments/eye/`), from the package's source (15 November, 08:00)
+
+| Still | What it shows | Against |
+|---|---|---|
+| `11-after-faceoff-dial-f60.jpg` | The faceoff: both centres at the dot, a dial that counts 1 HOLD and says when to press. Nobody floored at 47 drops of 47. | `01`, `02` |
+| `12-after-shot-no-slab-f2064-2094.jpg` | His shot, every second frame: nothing white at his shoulder (builds C and D drew the shot's line there as a slab); the puck leaves with its ring. | LIST 4's new fault |
+| `13-after-pro-goals-from-the-slot.jpg` | PRO: the goals against come from 6 to 29 frames out with a blue man in the crease; the far shot that slid in: 1 goal in 7 matches, from 12 of 18. | `05` |
+| `14-after-check-in-the-crease-f7160.jpg` | His body check: the defender flat in his own crease, the bars round him. | `07`, `08` |
+| `15-after-goal-2-2-f7740.jpg` | GOAL 2:2: his own shot, arms up at the net, the banner, the clean HUD. | `04` |
+| `16-after-end-card-beaten.jpg` | The end card at a loss: BEATEN, the score, four lines of his match that equal the log, the keys under them. | LIST 1's card |
+
+## What the six lists found, in one table
+
+| What the operator would have named | At the start of the night (builds A and B, 00:42 to 02:55) | The package's source (08:00) |
+|---|---|---|
+| Floored at the faceoff | 6 of 7 drops (old script 13 of 16) | 0 of 47 |
+| The first goal against inside six seconds | rookie 7 of 7 matches | 0 of 14 |
+| Goals from the blue line into an unguarded net | pro: 12 of 15 goals against at 43 frames or more from the shot | 2 of 10; a man in the crease |
+| The hint painted over the button pill | every still after the first goal | 0 |
+| Who has the puck | not readable | rings by side, HE JUST GOT IT, the teaching pill |
+| The camera on the stands near the boards | 43 % of stills (old script), 12 % (the hand) | 2 % |
+| His tapped pass reaching a mate | pro 4 of 31, rookie 1 of 26 (build B, aimed) | pro 18 of 27, rookie 14 of 28 |
+| His tapped cross-check | drill: 10 of 20; a tap looked like a brace | drill: 12 of 20 (the bar was 16); in matches 31 of 50 and 43 of 72; a tap is a tap |
+| The end card | the word and the score | four lines of his match (his own winning goal not counted: found 08:03) |
+| Left for the play sheet | - | floored at pro once every 40 s; the cross-check under its bar; the pass at rookie at one in two |
+
+The counts are the hand's (`jam.ScriptHuman 2`), fourteen headless matches and two films a build; a person is the judge, at 10:00.
+
+**The levels landed last, and seven seeds are not a measure of a level.** The table is build F (package H38: the levels as built). The curve
+lane's LADDER SET 3 (package H39) was filmed as build G with the same hand and seeds: rookie went from won 2, open 5 with 15 goals for his side to
+won 0, open 7 with 7; his pass at pro from 18 of 27 to 11 of 26. I read that as "rookie got harder, the pass at pro worse". The curve lane then
+ran both sets over the same 300 seeds a cell: rookie 93.7 % wins against 91.7, the median match 184 s against 188 s, 67 % still open at 150 s in
+both; pro's passes to a mate 36 % in both, knockdowns 1.48 against 1.45 a match. A changed level gives a different match for the same seed (0 of
+300 rookie seeds the same), so seven seeds before and after compare fourteen different matches. Use the films for what a match looks like and a
+fault's picture; take a level's numbers from hundreds of matches, not from the eye's seven.
+
 ## Facts for the next agent on this track
 
 - A start costs about 30 s to the first match frame; a rookie match 120 to 200 s of wall time at a still every 20 frames; no first-match GPU death in
@@ -77,3 +115,14 @@ would, and hands the Director a ranked list a lane can act on within the hour. T
 - The build tool's three slots were all taken for nine minutes at 00:25: build before you need it. No game process of the tree may run while it links.
 - `Game/Saved/Screenshots/WindowsEditor` of the tree is the game's still folder; the drivers move the stills out as they are written.
 - Bulk output is under `tools/qa/eye/out/` and never lands.
+- **A Shipping package cannot be filmed off screen.** It has no remote console, takes no `-dpcvars` (no `jam.ScriptHuman`, no still command) and
+  writes no log (`PARITY.md`, `ACCEPT.md`); with `-RenderOffScreen` it has no window to post keys to or to read. The package's own first screen and
+  first minute are in the release rows' stills (`tools/qa/out/release/<package>-ship`, `-menu`: the Shipping exe in a real window, posted keys,
+  `PrintWindow`): read those as a stranger; film the match itself on the editor binary of the package's commit.
+- **Every Shipping exe on the account keeps `Saved` in `%LOCALAPPDATA%\ThirdJam\Saved`**, wherever the package is unzipped: the level lit on HOME
+  (`[Jam.Settings]` in `Config\Windows\GameUserSettings.ini`; `DifficultyChosen=False` reads as a first start, ROOKIE lit), the Shipping shader
+  cache and the crash records. A Shipping run of any lane writes the profile the operator's next start reads: never run one for a look.
+- `eye-match.ps1 -Level allstar` does not reach ALL-STAR: the game's name is `all_star` (`SettingsWidget.cpp:163`), the menu command ignores the
+  other spelling and the run plays ROOKIE; check the `JAMMATCH level=` line of every run. The ValidateSet wants `all_star` when the file is next opened.
+- A headless run and a rendered run of one build, level and hand seed give the same hashes with `jam.ScriptHuman 2` (checked at f600 on every
+  build of the night), so a seed table's row can be filmed afterwards: `-ExtraCVars jam.ScriptHumanSeed=<n>` and `-Windows` from the row's log.
