@@ -1,0 +1,1 @@
+Lane LK1, the three other tiers at the faceoff before (top, 12:45 to 12:50) and after the day rig was written (bottom, 13:04): clay regular, Fog of War (night), Glow Ice (neon). Pixels differing by more than 8 of 255: clay 364, night 256, neon 1993 of 2,073,600 (crowd motion and render noise); the rig files LR_P3_Clay, LR_L2_Night, LR_L3_Neon are byte-identical (sha1 unchanged).
