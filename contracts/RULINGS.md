@@ -947,3 +947,12 @@ The Director's reading (this replaces the 19:00 package of R-0071 as the judges'
   (R-0069). A fix lands only if it cures a fault seen in the candidate and is proven on the same reproduction; nothing is improved.
 - **22:30: the final package** from the last green landing; **device B's last merge is 22:00**, features from B until 19:30, fixes after.
 - **About midnight: he submits** at the event page; the jam's own deadline is Monday 02:59 CET.
+
+## R-0074 (15 Nov 17:35, the operator, the web build and the modifier categories)
+Verbatim: "Dispatch one Opus subagent whether any feasibility to try Package for Web with https://forums.unrealengine.com/t/unreal-engine-5-9-megajam-preview/2852840, our modifier categories would be from https://itch.io/jam/2026-epic-ai-megajam - Solo Driver, Render Royalty: OpenAI Award (image generation), Glass Box"
+
+The Director's reading: (1) lane A232 (Opus, research only: nothing built, installed or downloaded) answers by 18:30 whether a web
+package can be cut and seen running tonight without risk to the Windows package: GO, TRY-ONCE or NO-GO; an attempt, if any, runs after
+19:20 in its own worktree. (2) Slot O4 of the submission is answered by him: the modifier categories are **Solo Driver**, **Render
+Royalty: OpenAI Award (image generation)** and **Glass Box**; the same lane reads the jam's page for what each asks of the submission and
+checks the page, the form, the credits and the dev log against it.
