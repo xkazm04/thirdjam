@@ -516,3 +516,6 @@
 - package 13:11: `Hokej_Hokej_H40.zip` from main b4b89f13, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.
 - link green 13:32: main 990b0538 (R-0070: a held cross-check keeps its pose through braking; the hold is called as the tap e) pushed.
 - link green 13:55: main 52843998 (Merge dev-b at 82193f86; the controls panel that stays on screen all match (A222)) pushed.
+- link green 14:07: main cf828cad (LADDER SET 4: pro pressed back toward its target after the ring (A221)) pushed.
+- package 14:14: `Hokej_Hokej_H41.zip` from main cf828cad, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.
+- 14:17: FAULT OF THE GATE found: landing cf828cad was reported green on 214 of 373 tests: the disk fell under the gate's 40 GB floor (C: 37 GB free), the watcher stopped the test run and premerge.ps1 printed PASS. The gate now FAILS a stopped or incomplete run. The full filter is being re-run on cf828cad outside the watcher; H41 was cut from that commit.

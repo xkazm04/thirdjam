@@ -119,7 +119,15 @@ try {
             # B-to-A-0027: a material without the skeletal-mesh usage flag is silent in the editor and total in a package (grey figures)
             $flag = @(Select-String -Path $src -Pattern 'missing usage flag' -ErrorAction SilentlyContinue)
             $extra['usage_flag_lines'] = $flag.Count
-            if ($w.timedOut) { Write-Step 'FAIL' 'automation' "timeout after $($w.seconds)s (log $src)" }
+            # 15 Nov 14:20: a run stopped by the disk floor (or ended before every found test completed) was reported PASS with the tests it had
+            # reached (landing cf828cad: 214 of 373). A stopped or incomplete run is never a pass.
+            $found = 0
+            $fm = Select-String -Path $src -Pattern 'Found (\d+) automation tests' -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($fm) { $found = [int]$fm.Matches[0].Groups[1].Value }
+            $extra['automation_found'] = $found
+            if ($w.diskStop) { Write-Step 'FAIL' 'automation' "stopped by the free-disk floor after $ok of $found tests (free the disk; log $src)" }
+            elseif ($found -gt 0 -and ($ok + $bad.Count) -lt $found -and -not $w.timedOut) { Write-Step 'FAIL' 'automation' "incomplete: $ok passed and $($bad.Count) failed of $found found (the editor ended early; log $src)" }
+            elseif ($w.timedOut) { Write-Step 'FAIL' 'automation' "timeout after $($w.seconds)s (log $src)" }
             elseif ($bad.Count -gt 0) { foreach ($b in ($bad | Select-Object -First 10)) { Write-Host "  | $($b.Line.Trim())" }; Write-Step 'FAIL' 'automation' "$ok passed, $($bad.Count) failed (log $src)" }
             elseif ($flag.Count -gt 0) { foreach ($f in ($flag | Select-Object -First 3)) { Write-Host "  | $($f.Line.Trim())" }; Write-Step 'FAIL' 'automation' "$ok passed, but $($flag.Count) 'missing usage flag' line(s): a material on a skeletal mesh lacks the flag (log $src)" }
             elseif ($ok -eq 0) { foreach ($l in (Get-ErrorLines $src 6)) { Write-Host "  | $l" }; Write-Step 'FAIL' 'automation' "no test result lines for filter '$Filter' (exit $($w.exit), log $src)" }
