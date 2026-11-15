@@ -219,6 +219,27 @@ bool FJamHudEndStats::RunTest(const FString& Parameters)
 	TestTrue(TEXT("hits landed"), Lines.Num() > 2 && Lines[2] == TEXT("HITS LANDED 3"));
 	TestTrue(TEXT("time with the puck as m:ss"), Lines.Num() > 3 && Lines[3] == TEXT("WITH THE PUCK 0:42"));
 	for (const FString& L : Lines) TestTrue(TEXT("each line short enough for the card (30 characters)"), L.Len() <= 30);
+	// 4e (FAULT): the winning goal on the frame the phase turns to Win is counted, and nothing after it.
+	{
+		W::FEndStats Card;
+		int32 GoalsSeen = 0;
+		bool bFinal = false;
+		const int32 GoalsBySimFrame[] = { 0, 1, 1, 2, 3, 3, 3 };   // his goals as the sim counts them; the third lands on frame 4
+		const bool bEndByFrame[] = { false, false, false, false, true, true, true };   // the phase turns to Win on that same frame
+		for (int32 Fr = 0; Fr < 7; ++Fr)
+		{
+			if (!bEndByFrame[Fr]) bFinal = false;
+			if (W::EndStatsCountsFrame(bEndByFrame[Fr], bFinal))
+			{
+				if (bEndByFrame[Fr]) bFinal = true;
+				W::EndStatsAdd(Card.Goals, GoalsSeen, GoalsBySimFrame[Fr]);
+			}
+		}
+		TestEqual(TEXT("the match-winning goal on the frame the phase turns is on the card"), Card.Goals, 3);
+		TestTrue(TEXT("a frame in play counts"), W::EndStatsCountsFrame(false, false));
+		TestTrue(TEXT("the first end frame counts"), W::EndStatsCountsFrame(true, false));
+		TestFalse(TEXT("after it the card is frozen"), W::EndStatsCountsFrame(true, true));
+	}
 	// The own-net label's rule: his own third only (attack sign +1: his own net at -x).
 	TestTrue(TEXT("deep in his own end: the own label shows"), W::InOwnThird(-40.f, 1.f, 100.f));
 	TestFalse(TEXT("at centre ice: no own label"), W::InOwnThird(0.f, 1.f, 100.f));

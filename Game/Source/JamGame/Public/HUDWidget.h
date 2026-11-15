@@ -450,6 +450,13 @@ public:
 	int64 EndStatsLastFrame = -1;
 	int32 EndStatsPassesSeen = 0, EndStatsShotsSeen = 0, EndStatsGoalsSeen = 0, EndStatsReceivedSeen = 0;
 	int64 EndStatsPassPending = -1;
+	// 4e (FAULT, the critic on the package: WON 3:2 with all three goals his, the card said GOALS 2): the phase turns to Win / Lose on the frame of
+	// the last goal, and the step skipped every end frame, so that frame's ++Goals (and a shot on it) was never added. The counters are read once
+	// more on the FIRST end frame, then frozen. Pure: does this frame count?
+	static bool EndStatsCountsFrame(bool bEnd, bool bEndCounted) { return !bEnd || !bEndCounted; }
+	// Pure: what one step adds to a total from a sim counter that only grows within a match.
+	static void EndStatsAdd(int32& Total, int32& Seen, int32 Now) { if (Now > Seen) Total += Now - Seen; Seen = Now; }
+	bool bEndStatsFinal = false;
 	// The bark bubbles (UJamBarkWidget) yield to the HUD's one line: true while a HUD line of words stands this tick (the rule on). Wave 2.
 	static bool OneLineUpNow();
 	static uint64 OneLineTick;

@@ -568,7 +568,7 @@ namespace JamAI
 	inline FJamBotSkill ProOppSkill()
 	{
 		FJamBotSkill K;
-		K.ShootExtraM = 30.0;  // lane A95 (CURVE-5.md): 13 -> 30, the pro bot shoots from reach + 30 m (A94's carry-or-pass halved its shots; the single biggest lever, regular 82 -> 67). 16:30 sweep: 13
+		K.ShootExtraM = 25.0;  // lane A217 (CURVE-13.md, LADDER SET 3): 30 -> 25, a pro does not shoot from beyond the blue line (far goals 21 % -> 2.7 % of goals against through a person's hand). Before: lane A95 (CURVE-5.md): 13 -> 30, the pro bot shoots from reach + 30 m (A94's carry-or-pass halved its shots; the single biggest lever, regular 82 -> 67). 16:30 sweep: 13
 		K.LeadFrames = 60;
 		K.DrawJumpPct = 100;   // 16:18: the pro centre never wins the draw outright (the sim's own bot timing still can); with it the human touches the puck inside 600 frames after every faceoff
 		K.PokeFrames = 2;      // lane A112 (CURVE-6.md): 6 -> 2 (the regular player on the kept puck 71.2 -> 60.8 alone). R-0017: pokes after the puck has sat 6 frames inside blade reach

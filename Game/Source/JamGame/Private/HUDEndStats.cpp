@@ -39,13 +39,14 @@ void UJamHudWidget::UpdateEndStats(const FJamPresentationFrame& F)
 		EndStatsLastFrame = F.SimFrame;
 	}
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
-	if (F.SimFrame != EndStatsLastFrame && !bEnd)
+	if (!bEnd) bEndStatsFinal = false;
+	if (F.SimFrame != EndStatsLastFrame && EndStatsCountsFrame(bEnd, bEndStatsFinal))
 	{
+		if (bEnd) bEndStatsFinal = true;   // 4e: the first end frame counts (the winning goal's frame), then the card is frozen
 		// One step of the match (the HUD sees most sim frames; a skipped frame loses at most its own events, never a count of the fields).
 		EndStatsLastFrame = F.SimFrame;
-		if (Hu.Shots > EndStatsShotsSeen) EndStatsNow.Shots += Hu.Shots - EndStatsShotsSeen;
-		if (Hu.Goals > EndStatsGoalsSeen) EndStatsNow.Goals += Hu.Goals - EndStatsGoalsSeen;
-		EndStatsShotsSeen = Hu.Shots; EndStatsGoalsSeen = Hu.Goals;
+		EndStatsAdd(EndStatsNow.Shots, EndStatsShotsSeen, Hu.Shots);
+		EndStatsAdd(EndStatsNow.Goals, EndStatsGoalsSeen, Hu.Goals);
 		// FAULT 4d (the critic's sixth list: "4 OF 6 at a loss where the log has 2 of 6"): it counted any mate's reception inside 3 s of his pass,
 		// so a pass an opponent took and a later mate's catch counted. Now his pass arrives only when the FIRST skater other than him to touch the
 		// puck after it (the sim's Puck.LastTouch) is a mate; an opponent first = it did not arrive; nobody inside EndPassArriveFrames = it did not.

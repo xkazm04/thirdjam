@@ -509,8 +509,10 @@ bool FJamHockey2Neutral::RunTest(const FString& Parameters)
 	using namespace JamHockeyBrain2TestsLocal;
 	struct FPin { const TCHAR* Cart; uint64 Seed; const TCHAR* Hash; };
 	const FPin Pins[] = {
-		{ TEXT("hockey.regular"), 1, TEXT("a31f6bc64fef07f3") }, { TEXT("hockey.regular"), 2, TEXT("1e3bb78feb1e30ad") },
-		{ TEXT("hockey.arena.large"), 1, TEXT("6cbdb935ec9cd348") }, { TEXT("hockey.arena.large"), 2, TEXT("c23153964bdb9614") } };
+		// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did
+		{ TEXT("hockey.regular"), 1, TEXT("91796e904a3fb739") }, { TEXT("hockey.regular"), 2, TEXT("ecb9d7ad4e24eef7") },
+		// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did
+		{ TEXT("hockey.arena.large"), 1, TEXT("99062c5d29d5071d") }, { TEXT("hockey.arena.large"), 2, TEXT("d976fb612d1665e1") } };
 	// Lane A138 (R-0053 point 5): the pins are evolution 1's matches on the tree lane A115 began from (the vision's commit: none of the evening's sim rules).
 	// The neutral arm is the shared baseline (JamBaseline.h: every rule since at its neutral value) with every A115 field off; evolution 2 plays the tree as it stands.
 	for (const FPin& P : Pins)

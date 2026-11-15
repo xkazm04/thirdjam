@@ -1,0 +1,6 @@
+rookie/hockey.regular 3147b87c17fb0081
+rookie/hockey.arena.large f721ee008768a227
+pro/hockey.regular 09024fab829ef1bd
+pro/hockey.arena.large 612e65df885408ab
+all_star/hockey.regular d32dc7baed934cc8
+all_star/hockey.arena.large 0206ffae1f9a5aa0

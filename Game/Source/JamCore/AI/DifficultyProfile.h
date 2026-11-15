@@ -54,7 +54,7 @@ namespace JamAI
 	// reaction_frames aim_error_deg shoot_extra_m aim_tolerance_deg lead_frames intercept(0|1) use_aim_cone(0|1) clear_lane(0|1) pass_to_human(0..1 share) block_shots(0|1) block_min_dist_m poke_frames(-1 never)
 	// lift(0|1) pass_out(0|1) read_lanes(0|1) seek_pickups(0|1) one_timer(0|1) deke(0|1) check_min_closing(m/s, -1 never) check_from_behind(0|1).
 	// Returns false and writes the first bad pair into Err.
-	bool ApplyDifficultyTune(const char* Text, FJamAIParams& P, char* Err, int ErrLen);
+	JAMCORE_API bool ApplyDifficultyTune(const char* Text, FJamAIParams& P, char* Err, int ErrLen);   // lane A217: exported for -run=JamHandCells (JamGame)
 
 	// Lane A95: every profile number lane A95 changed, as a tune text with main bb18439's values for that level (before A95's sprint shares, lift cooldowns
 	// and curve levers). The neutral-proof tests (Jam.Core.MovementNeutral, Jam.Core.ContactNeutral) apply it with the vision's neutral blocks to replay that

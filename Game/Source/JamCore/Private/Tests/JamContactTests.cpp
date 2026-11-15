@@ -842,7 +842,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactReachMatch, "Jam.Core.ContactReachMa
 bool FJamContactReachMatch::RunTest(const FString& Parameters)
 {
 	// The neutral value: three pro matches at check_reach_m 0 hash as the track's baseline did on its defaults (evolution 2, R-0051: release grace 120).
-	const uint64 Baseline[3] = { 0x7fb31c1f16b3f8c4ull, 0xa2be45743aebf331ull, 0x4f3c95b28136e412ull };
+	// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did
+	const uint64 Baseline[3] = { 0x882e3cc9250346aeull, 0xd0edbf996003c94cull, 0x8ffbad9a6cce3f50ull };
 	// The measurement: three-minute pro matches, five a side, the Regular playtester as the human, by reach and by how the playtester presses (lane A132:
 	// on its own speed along the line, as before, or on the closing speed). 0.5 and 1.5 were measured too (docs/experiments/CONTACT-4.md section 6).
 	struct FArm { double Reach; bool bClosing; };
@@ -1337,7 +1338,8 @@ bool FJamContactHitStopPick::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactGraceMatch, "Jam.Core.ContactGraceMatch", JamContactTests::Flags)
 bool FJamContactGraceMatch::RunTest(const FString& Parameters)
 {
-	const uint64 Baseline[3] = { 0xb59b988423ca43cfull, 0x2333d70ef430d6f3ull, 0x4f3c95b28136e412ull };
+	// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did
+	const uint64 Baseline[3] = { 0x882e3cc9250346aeull, 0xd0edbf996003c94cull, 0x7010c1a5c690f9b7ull };
 	for (uint64 Seed = 1; Seed <= 3; ++Seed)
 	{
 		FContactCount Cn;
@@ -1434,7 +1436,8 @@ bool FJamContactHitStop::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactBoardMatch, "Jam.Core.ContactBoardMatch", JamContactTests::Flags)
 bool FJamContactBoardMatch::RunTest(const FString& Parameters)
 {
-	const uint64 Main[3] = { 0x6ed8f16ab724086bull, 0xdc1a21fe22e0bc6full, 0x7d34793757849ca9ull };
+	// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did
+	const uint64 Main[3] = { 0x882e3cc9250346aeull, 0xf91450e41956b406ull, 0x7010c1a5c690f9b7ull };
 	for (uint64 Seed = 1; Seed <= 3; ++Seed)
 	{
 		FContactCount C;

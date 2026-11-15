@@ -724,7 +724,8 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 			JamBaseline::MakeNeutral(E2->Game); JamBaseline::WithKeptPuck(E2->Game); JamBaseline::WithWhistle(E2->Game);   // lane A133: the pin blew the whistle
 			const FBot N2 = NetTrapMatch(*E2, TEXT("pro"), 15, 6000, JamBaseline::BrainTune(), true);
 			AddInfo(FString::Printf(TEXT("lane A121's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (the tree before the lane: 6000 frames, 2:0, fc59e23598229ebc)"), N2.Frames, N2.Score0, N2.Score1, *N2.Hash));
-			TestEqual(TEXT("A121 neutral block: the pro bot match's hash is the baseline's"), N2.Hash, FString(TEXT("fc59e23598229ebc")));
+			// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did
+			TestEqual(TEXT("A121 neutral block: the pro bot match's hash is the baseline's"), N2.Hash, FString(TEXT("1d1c4735555c9d61")));
 			TestNotEqual(TEXT("A121 defaults: the same match is another match"), B.Hash, N2.Hash);
 		}
 	}

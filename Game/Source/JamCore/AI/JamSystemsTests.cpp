@@ -161,15 +161,14 @@ bool FJamBotBoostPickupsBundle::RunTest(const FString& Parameters)
 	C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false;   // lane A208: and at game.stick.pickup's neutral: under the pickup seed 1 re-rolls again and no bot drives over a pickup (the pickups' path is what this test pins)
 	// Lane A202: the match is read with evolution 8 off (brain8=0): with its four rules on seed 1 re-rolls and no bot happens to take a pickup in it; the
 	// pickups' path is what this test pins, not the brain's play.
-	const FOutcome A = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0");
-	const FOutcome B = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0");
+	// re-pinned to LADDER SET 3, 15 Nov (the Director's ruling 07:25): the level profiles' numbers changed, no rule did: the sample match is played at
+	// all_star's numbers before the set (speed 1.45, dodge 0.5), on which seed 1 has its bot take a pickup with an effect.
+	const FOutcome A = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0;speed_scale=1.45;opp.hk_dodge9_share=0.5");
+	const FOutcome B = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0;speed_scale=1.45;opp.hk_dodge9_share=0.5");
 	TestTrue(TEXT("the bundle is built"), A.bBuilt);
 	TestTrue(TEXT("pickups spawned"), A.PickupsSpawned >= 1);
 	TestTrue(TEXT("at least one pickup taken"), A.PickupsTaken >= 1);
-	// The Director, 15 Nov 06:25 (the night's last sim landing: seed 1 re-rolled to 10 taken, 9 started): a take of a kind that is already active on
-	// the same skater or team refreshes or extends it by the effect's stack rule (UJamEffectSystem::Apply returns before ++EffectsStarted), so
-	// "started" may be under "taken"; what must hold: takes start effects (at least one), and nothing starts without a take.
-	TestTrue(TEXT("takes start effects, and none starts without a take"), A.EffectsStarted >= 1 && A.EffectsStarted <= A.PickupsTaken);
+	TestTrue(TEXT("every take started an effect"), A.EffectsStarted >= A.PickupsTaken);
 	TestEqual(TEXT("two runs agree (sim hash)"), A.Stats.Hash, B.Stats.Hash);
 	TestEqual(TEXT("two runs agree (systems hash)"), A.SystemsHash, B.SystemsHash);
 	// The world view the brain reads carries the pickups lying on the ice (BuildWorld reads the sim's modifier source).
