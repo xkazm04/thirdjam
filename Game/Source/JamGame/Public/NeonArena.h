@@ -37,6 +37,10 @@ public:
 	// Tier switch without a rebuild (ULookTierSwitcher::SetTier through ARinkActor::SetZoneRingsForTier).
 	static void OnTierChanged(ARinkActor* Rink, const FString& Tier);
 
+	// Lane A230: the mode's accent on the grid arena: the cut's look.trim_colour_hex when it is not the schema's default (#38BDF8), else the white of before
+	// (`jam.neon.accent` 0: white always). Drawn on the centre line, the centre circle and dot, and the rims of light on the obstacles.
+	static FLinearColor AccentFor(const FJamLookConfig& Look);
+
 	// Trail length in sim frames (0.5 s at 60 Hz) and the puck's.
 	static constexpr int32 TrailFrames = 30;
 	static constexpr int32 PuckTrailFrames = 20;
@@ -64,6 +68,8 @@ public:
 	int32 GetFiguresLit() const { return FiguresLit; }
 	// Lane A223: material slots of the penalty boxes that took the dark sheet's material at the last Draw (`jam.look.NeonBoxes`); 0 off the grid arena.
 	int32 GetBoxSlotsDarkened() const { return BoxSlotsDarkened; }
+	// Lane A230: pillars and boxes of the rink that took the dark sheet's material and their rims of light at the last Draw (`jam.neon.obstacles`).
+	int32 GetObstaclesDarkened() const { return ObstaclesDarkened; }
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -83,6 +89,7 @@ private:
 	void ApplyFigure(AActor* Skater, int32 Team);
 	void RestoreFigures();
 	void DarkenBoxes(ARinkActor* Rink, bool bSheet);   // lane A223
+	void DarkenObstacles(ARinkActor* Rink, bool bSheet);   // lane A230
 	void RestoreBoxes();
 	UFUNCTION() void OnJamEvent(FName Event, const FJamEventPayload& Payload);
 
@@ -92,6 +99,7 @@ private:
 	struct FBoxSave { TWeakObjectPtr<UStaticMeshComponent> Mesh; int32 Slot = -1; TWeakObjectPtr<UMaterialInterface> Original; };
 	TArray<FBoxSave> SavedBoxes;      // lane A223: the boxes' daylight materials before Draw darkened them
 	int32 BoxSlotsDarkened = 0;
+	int32 ObstaclesDarkened = 0;      // lane A230
 	struct FTrail { TWeakObjectPtr<AActor> Who; int32 Team = 0; bool bPuck = false; TArray<FVector> Points; };
 
 	FJamGameConfig Config;
@@ -107,6 +115,7 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> TrailMids;
 	UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> TileMids;
 	UPROPERTY(Transient) TObjectPtr<UMaterialInterface> SavedBoards;
+	UPROPERTY(Transient) TObjectPtr<UMaterialInterface> SavedObstacles;   // lane A230: the obstacles' daylight material before Draw darkened it
 	UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> DarkBoards;
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 	TArray<FTile> GridTiles;

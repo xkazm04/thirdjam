@@ -209,6 +209,7 @@ void UJamBarkWidget::ShowBark(const FJamBarkPick& P, AActor* Anchor, int32 Team)
 	}
 	if (B.Tail) B.Tail->SetBrush(S::Rounded(S::Paper(), 2.f, Edge, 2.f));
 	if (B.Text) B.Text->SetColorAndOpacity(FSlateColor(Team == 0 ? FLinearColor::FromSRGBColor(FColor(0x12, 0x2E, 0x7A)) : FLinearColor::FromSRGBColor(FColor(0x7A, 0x33, 0x0C))));
+	if (!BubbleArt(Art)) OneLookBubble(B, Edge);   // lane A229 (HUDOneLook.cpp)
 	// Lane A42: the bark shows in its bubble only; the commentator's line is the HUD's strip (UJamHudWidget, always on screen), so this
 	// widget's strip stays dark (StripFrame never set).
 	Now = FMath::Max(Now, P.Frame);

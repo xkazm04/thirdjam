@@ -125,6 +125,10 @@ struct JAMGAME_API FJamMenuLook
 	static bool KitElementOn(const FString& Name);
 	static UTexture2D* KitFound(const FString& Name);
 	static UTexture2D* KitFound(const FString& Name, bool bPlain);
+	// Lane A231 (track U6): the picture MODES shows for a row named as device B's (Modes/T_UI_Mode_<slug>): the mode's own illustration
+	// (ModeArtPath: /Game/UI/Modes/T_UI_ModeArt_<slug>) when that asset exists and jam.menu.ModeArt is 1, device B's picture otherwise.
+	static UTexture2D* ModePicture(const FString& Name);
+	static FString ModeArtPath(const FString& Name);
 	static bool HasKitFont();
 	// The names the front end looks for (status/A187.md lists them for device B).
 	static TArray<FString> KitNames();

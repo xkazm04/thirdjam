@@ -175,6 +175,37 @@ UTexture2D* FJamMenuLook::KitFound(const FString& Name, bool)
 	return T;
 }
 
+// Lane A231 (track U6): a row of MODES shows its own illustration, A's /Game/UI/Modes/T_UI_ModeArt_<slug> (tools/images/import-modes.py from
+// tools/images/modes/<slug>.png), when that asset is there; device B's picture of the same row (Modes/T_UI_Mode_<slug>) is the fallback.
+static TAutoConsoleVariable<int32> CVarJamMenuModeArt(TEXT("jam.menu.ModeArt"), 1,
+	TEXT("1 (default): MODES shows a mode's illustration (/Game/UI/Modes/T_UI_ModeArt_<slug>) when it exists, device B's picture otherwise. 0: device B's pictures only, as before lane A231."), ECVF_Default);
+
+FString FJamMenuLook::ModeArtPath(const FString& Name)
+{
+	static const FString Prefix(TEXT("Modes/T_UI_Mode_"));
+	if (!Name.StartsWith(Prefix)) return FString();
+	const FString Leaf = TEXT("T_UI_ModeArt_") + Name.Mid(Prefix.Len()).Replace(TEXT("-"), TEXT("_"));
+	return FString::Printf(TEXT("/Game/UI/Modes/%s.%s"), *Leaf, *Leaf);
+}
+
+UTexture2D* FJamMenuLook::ModePicture(const FString& Name)
+{
+	if (!KitElementOn(Name)) return nullptr;
+	const FString Path = ModeArtPath(Name);
+	if (!Path.IsEmpty() && CVarJamMenuModeArt.GetValueOnGameThread() != 0)
+	{
+		static TMap<FString, TWeakObjectPtr<UTexture2D>> Found;   // game thread only
+		static TSet<FString> Absent;
+		if (const TWeakObjectPtr<UTexture2D>* F = Found.Find(Path)) if (F->IsValid()) return F->Get();
+		if (!Absent.Contains(Path))
+		{
+			if (UTexture2D* T = LoadObject<UTexture2D>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet)) { Found.Add(Path, T); return T; }
+			Absent.Add(Path);
+		}
+	}
+	return KitFound(Name);
+}
+
 TArray<FString> FJamMenuLook::KitNames()
 {
 	TArray<FString> Out = { TEXT("T_UI_MenuBackdrop"), TEXT("T_UI_Logo_Hokej"), TEXT("T_UI_Panel"), TEXT("T_UI_Button_Normal"), TEXT("T_UI_Button_Focused"),
@@ -1172,7 +1203,8 @@ UWidget* UJamMenuWidget::BuildCredits()
 		TEXT("Built with Unreal Engine.\n\n")
 		TEXT("One human directed two machines of agents; the agents wrote the game, its modes and this menu. ")
 		TEXT("The Designer (MAKE YOUR OWN) turns your sentence into a game through the Claude API with a key you type yourself; without a key it answers from games it made earlier.\n\n")
-		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Codex image generation for the menu and HUD art, ElevenLabs for the voices, the sound effects and the music, Hyper3D Rodin and Meshy for generated figures and motion, Node.js, Git with LFS, PowerShell.\n\n")
+		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Codex image generation for the menu and HUD art, ElevenLabs for the voices, the sound effects and the music, Hyper3D Rodin for the generated figure and Meshy for its rig, Node.js, Git with LFS, PowerShell.\n\n")
+		TEXT("Uses NVIDIA DLSS technology, (c) NVIDIA Corporation.\n\n")
 		TEXT("No goalies harmed. Skaters flattened. No logos."),
 		L::Font(L::Body, FName("Regular")), L::Text());
 	Wrapped(Body, BodyTextW);
@@ -1658,7 +1690,7 @@ void UJamMenuWidget::ShowModePreview(int32 Index)
 	if (E.Kind == EJamMenuRowKind::Cut) P.Level = UJamMenuFlow::ModeLevelFromHome() ? FString::Printf(TEXT("PLAYS AT %s, THE LEVEL LIT ON HOME"), *Level) : FString(TEXT("PLAYS AT ITS OWN LEVEL"));
 	else if (E.Payload == TEXT("cuts")) P.Level = FString::Printf(TEXT("OPENS THE RINKS: THEY PLAY AT %s"), *Level);
 	else P.Level = TEXT("OPENS THE DESIGNER: ONE SENTENCE MAKES THE GAME");
-	UTexture2D* Tex = L::Kit(E.Picture);
+	UTexture2D* Tex = L::ModePicture(E.Picture);   // lane A231: the mode's own illustration, device B's picture as the fallback
 	if (Tex) P.Source = PictureSourceSize(Tex);
 	P.bPicture = Tex && P.Source.X >= 1.0 && P.Source.Y >= 1.0;
 	if (P.bPicture) P.Drawn = FitWhole(P.Source, FVector2D(L::ModePictureW, L::ModePictureH));

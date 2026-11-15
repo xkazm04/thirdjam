@@ -35,6 +35,12 @@ static TAutoConsoleVariable<int32> CVarJamNeonFigures(TEXT("jam.neon.figures"), 
 static TAutoConsoleVariable<int32> CVarLookNeonBoxes(TEXT("jam.look.NeonBoxes"), 1,
 	TEXT("Lane A223: 1 (default) = on the grid arena the penalty boxes' board, bench and kick plate take the dark sheet's material (the team's seats and the boxed figure stay as they are); 0 = the cream boxes of before the lane."), ECVF_Default);
 
+// Lane A230 (track L2: more modes on the grid arena): each mode its own accent, and the Cage's pillars as part of the dark sheet.
+static TAutoConsoleVariable<int32> CVarJamNeonAccent(TEXT("jam.neon.accent"), 1,
+	TEXT("Lane A230: 1 (default) = on the grid arena the centre line, the centre circle and the rims of light on the obstacles take the cut's look.trim_colour_hex when it is not the schema's default #38BDF8 (Glow Ice keeps its white); 0 = white in every mode, as before the lane."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamNeonObstacles(TEXT("jam.neon.obstacles"), 1,
+	TEXT("Lane A230: 1 (default) = on the grid arena the rink's pillars and boxes take the dark sheet's material and a rim of light at the foot and the top; 0 = the daylight board material and no rim, as before the lane."), ECVF_Default);
+
 namespace
 {
 	constexpr double UU = 100.0;
@@ -133,6 +139,17 @@ bool UJamNeonArena::IsNeonTier(const FString& Tier)
 	return Tier.Equals(TEXT("l3_neon"), ESearchCase::CaseSensitive) || Tier.StartsWith(TEXT("n1_"), ESearchCase::CaseSensitive);
 }
 
+FLinearColor UJamNeonArena::AccentFor(const FJamLookConfig& Look)
+{
+	// The schema's default trim colour (JamCartridge.cpp: #38BDF8) is "no accent asked": the white of before the lane, so Glow Ice is the picture it was.
+	FLinearColor Default;
+	UJamCartridge::HexToLinear(TEXT("#38BDF8"), Default);
+	const FLinearColor& T = Look.TrimColour;
+	const bool bDefault = FMath::Abs(T.R - Default.R) + FMath::Abs(T.G - Default.G) + FMath::Abs(T.B - Default.B) < 0.01f;
+	if (bDefault || CVarJamNeonAccent.GetValueOnGameThread() == 0) return White;
+	return FLinearColor(T.R, T.G, T.B, 1.f);
+}
+
 float UJamNeonArena::GridEmissiveAt(double DistanceM)
 {
 	const double T = FMath::Clamp(1.0 - DistanceM / GridGlowRadiusM, 0.0, 1.0);
@@ -160,6 +177,7 @@ UJamNeonArena* UJamNeonArena::ApplyFor(ARinkActor* Rink, const FJamGameConfig& G
 	A->bHasConfig = true;
 	A->bIceSaved = false;    // Build made a fresh ice instance and set the boards' material again
 	A->SavedBoards = nullptr;
+	A->SavedObstacles = nullptr;   // lane A230: and the obstacles' material
 	A->SavedBoxes.Reset();   // lane A223: and bound the boxes' materials again
 	if (Game.Teams.Num() == 2) { A->TeamColour[0] = Game.Teams[0].Colour; A->TeamColour[1] = Game.Teams[1].Colour; }
 	if (IsNeonTier(Game.Look.Tier) && CVarJamNeon.GetValueOnGameThread() != 0) A->Draw(Rink); else A->Clear(Rink);
@@ -215,9 +233,12 @@ void UJamNeonArena::Clear(ARinkActor* Rink)
 		for (const TPair<FName, float>& P : SavedIceScalars) Rink->IceMid->SetScalarParameterValue(P.Key, P.Value);
 	}
 	if (Rink->Boards && SavedBoards) Rink->Boards->SetMaterial(0, SavedBoards);
+	if (Rink->Obstacles && SavedObstacles) Rink->Obstacles->SetMaterial(0, SavedObstacles);   // lane A230
 	RestoreBoxes();
 	bIceSaved = false;
 	SavedBoards = nullptr;
+	SavedObstacles = nullptr;
+	ObstaclesDarkened = 0;
 }
 
 void UJamNeonArena::Draw(ARinkActor* Rink)
@@ -268,6 +289,7 @@ void UJamNeonArena::Draw(ARinkActor* Rink)
 		if (DarkBoards) Rink->Boards->SetMaterial(0, DarkBoards);
 	}
 	DarkenBoxes(Rink, bSheet);   // lane A223
+	DarkenObstacles(Rink, bSheet);   // lane A230
 	if (bSheet && Rink->Markings) Rink->Markings->SetVisibility(false);
 	if (bSheet && Rink->KickPlate) Rink->KickPlate->SetVisibility(false);
 
@@ -308,6 +330,28 @@ void UJamNeonArena::DarkenBoxes(ARinkActor* Rink, bool bSheet)
 	}
 	BoxSlotsDarkened = SavedBoxes.Num();
 	UE_LOG(LogJamLook, Log, TEXT("JAMNEON penalty boxes on the dark sheet: %d material slots (board, bench, kick plate)"), BoxSlotsDarkened);
+}
+
+// Lane A230: the rink's pillars and boxes (ARinkActor::Obstacles, section 0) are built with the boards' daylight material and stood on the dark sheet as pale
+// grey drums, the brightest big things in the frame (the Cage on l3_neon). They take the dark sheet's material; BuildLines gives them their rims of light.
+void UJamNeonArena::DarkenObstacles(ARinkActor* Rink, bool bSheet)
+{
+	ObstaclesDarkened = 0;
+	if (!Rink || !Rink->Obstacles) return;
+	if (SavedObstacles) { Rink->Obstacles->SetMaterial(0, SavedObstacles); SavedObstacles = nullptr; }
+	if (!bSheet || CVarJamNeonObstacles.GetValueOnGameThread() == 0 || Rink->Obstacles->GetNumSections() < 1 || !Rink->Obstacles->GetMaterial(0)) return;
+	int32 Count = 0;
+	for (const FJamObstacle& O : Config.Rink.Obstacles)
+	{
+		if (O.Kind != FName(TEXT("bumper")) && O.Kind != FName(TEXT("goal_shield"))) ++Count;   // section 0: pillars and boxes
+	}
+	if (Count == 0) return;
+	if (!DarkBoards) DarkBoards = MakeLight(DarkBoard, 0.f);
+	if (!DarkBoards) return;
+	SavedObstacles = Rink->Obstacles->GetMaterial(0);
+	Rink->Obstacles->SetMaterial(0, DarkBoards);
+	ObstaclesDarkened = Count;
+	UE_LOG(LogJamLook, Log, TEXT("JAMNEON obstacles on the dark sheet: %d pillars and boxes, rims of light in the mode's accent"), ObstaclesDarkened);
 }
 
 void UJamNeonArena::RestoreBoxes()
@@ -370,7 +414,7 @@ void UJamNeonArena::BuildLines(ARinkActor* Rink, const FJamRinkConfig& R)
 	LineMids.Reset();
 	LineMids.Add(MakeLight(TeamColour[0], LineEmissive));
 	LineMids.Add(MakeLight(TeamColour[1], OrangeLineEmissive));   // orange past ~5 blooms to yellow (first stills)
-	LineMids.Add(MakeLight(White, CentreEmissive));
+	LineMids.Add(MakeLight(AccentFor(Config.Look), CentreEmissive));   // lane A230: the mode's accent (white unless the cut names a trim colour of its own)
 	LineMids.Add(MakeLight(TeamColour[0], FrameEmissive));
 	LineMids.Add(MakeLight(TeamColour[1], FrameEmissive * 0.5f));
 	const double Hw = R.WidthM * 0.5 * UU, GL = R.GoalLineX();
@@ -430,6 +474,31 @@ void UJamNeonArena::BuildLines(ARinkActor* Rink, const FJamRinkConfig& R)
 	Centre.Strip(FVector2D(0, -(HalfWidthAt(R, 0) - 0.05) * UU), FVector2D(0, (HalfWidthAt(R, 0) - 0.05) * UU), 8.0, LineZ);
 	Centre.Ring(FVector2D::ZeroVector, 450.0, 5.0, LineZ, 64, false);
 	Centre.Ring(FVector2D::ZeroVector, 15.0, 15.0, LineZ, 12, false);
+	// Lane A230: the rims of light on the darkened pillars and boxes, in the centre's colour (the mode's accent): a ring on the ice round the foot, a band
+	// round the top edge and the lid's edge, so a drum that is as dark as the sheet is found by its outline from any side.
+	if (ObstaclesDarkened > 0)
+	{
+		const double Top = 120.0, Band = 6.0;   // the obstacles stand 1.2 m tall like the boards (RinkActor.cpp)
+		for (const FJamObstacle& O : R.Obstacles)
+		{
+			if (O.Kind == FName(TEXT("bumper")) || O.Kind == FName(TEXT("goal_shield"))) continue;
+			const double Hs = O.Size * 0.5 * UU;
+			const FVector2D C(O.X * UU, O.Z * UU);
+			const bool bRound = O.Kind == FName(TEXT("pillar"));
+			const int32 Seg = bRound ? 24 : 4;
+			const double Rr = bRound ? Hs : Hs * UE_DOUBLE_SQRT_2, A00 = bRound ? 0.0 : UE_DOUBLE_PI * 0.25;
+			for (int32 i = 0; i < Seg; ++i)
+			{
+				const double A0 = A00 + 2.0 * UE_DOUBLE_PI * i / Seg, A1 = A00 + 2.0 * UE_DOUBLE_PI * (i + 1) / Seg;
+				const FVector2D D0(FMath::Cos(A0), FMath::Sin(A0)), D1(FMath::Cos(A1), FMath::Sin(A1));
+				const FVector2D P0 = C + D0 * (Rr + 1.0), P1 = C + D1 * (Rr + 1.0);
+				const FVector Out(FVector2D(D0 + D1).GetSafeNormal(), 0);
+				Centre.Quad(FVector(P0, Top - Band), FVector(P1, Top - Band), FVector(P1, Top), FVector(P0, Top), Out, true);   // the band round the top edge
+				Centre.Quad(FVector(C + D0 * (Rr - 5.0), Top + 0.5), FVector(C + D0 * (Rr + 1.0), Top + 0.5), FVector(C + D1 * (Rr + 1.0), Top + 0.5), FVector(C + D1 * (Rr - 5.0), Top + 0.5), FVector::UpVector);   // the lid's edge
+				Centre.Quad(FVector(C + D0 * (Rr + 2.0), LineZ), FVector(C + D0 * (Rr + 10.0), LineZ), FVector(C + D1 * (Rr + 10.0), LineZ), FVector(C + D1 * (Rr + 2.0), LineZ), FVector::UpVector);   // the ring on the ice
+			}
+		}
+	}
 	// The goal frames: two posts, the crossbar and the top of the cage, 4 cm bars, in the colour of the half they stand in.
 	FBuf Frame[2];
 	const double NetH = R.GoalHeightM * UU, Hg = R.GoalWidthM * 0.5 * UU, Dp = UJamSim::NetDepth * UU;

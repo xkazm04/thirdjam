@@ -1,0 +1,283 @@
+{
+  "tool": "thirdjam.modeart-import/1",
+  "destination": "/Game/UI/Modes",
+  "reference": "/Game/UI/T_UI_MatchCard",
+  "settings": {
+    "lod_group": "<TextureGroup.TEXTUREGROUP_UI: 16>",
+    "compression_settings": "<TextureCompressionSettings.TC_BC7: 11>",
+    "srgb": "True",
+    "never_stream": "True",
+    "mip_gen_settings": "<TextureMipGenSettings.TMGS_NO_MIPMAPS: 13>"
+  },
+  "pictures": [
+    {
+      "id": "arsenal",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_arsenal",
+      "source": "tools/images/modes/arsenal.png",
+      "sha256": "37f2fa6808f8e127b435478dfaeb2db7a7c16ff2d6fce247efaa5a9b8fdaf064",
+      "status": "imported",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 2077998,
+      "size_mb": 1.98
+    },
+    {
+      "id": "bruisers",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_bruisers",
+      "source": "tools/images/modes/bruisers.png",
+      "sha256": "8b28de5e3a6d0ccbee387c9995915bb2206e71b1dea8c5ce94d2b1fa37c8dfa6",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1901531,
+      "size_mb": 1.81
+    },
+    {
+      "id": "cage",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_cage",
+      "source": "tools/images/modes/cage.png",
+      "sha256": "8f33b45dab3ac7610c2dd803ca16bca54c9bc00f751bd28b6e68e6c722f60184",
+      "status": "imported",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 2099782,
+      "size_mb": 2.0
+    },
+    {
+      "id": "fog_of_war",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_fog_of_war",
+      "source": "tools/images/modes/fog_of_war.png",
+      "sha256": "58b5684151514cecd7f673c71cd33d269c84616e8594d57512bbb44df9198cb7",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1699932,
+      "size_mb": 1.62
+    },
+    {
+      "id": "glass_house",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_glass_house",
+      "source": "tools/images/modes/glass_house.png",
+      "sha256": "582db9fafc2664f075e397281b7451358431ab3135fecb831f3da6c8b752a4d0",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1484440,
+      "size_mb": 1.42
+    },
+    {
+      "id": "marathon",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_marathon",
+      "source": "tools/images/modes/marathon.png",
+      "sha256": "702e9e8e4071e27dd5de583c4a12a3ff8b49c857d61bde8b2b92755a7bd983f7",
+      "status": "imported",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1292942,
+      "size_mb": 1.23
+    },
+    {
+      "id": "outnumbered",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_outnumbered",
+      "source": "tools/images/modes/outnumbered.png",
+      "sha256": "f1fda766a8fa44aa58a3c6ccd87f66d4bd4f4aeb30fc7a042fb7e8403ae91c42",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1965524,
+      "size_mb": 1.87
+    },
+    {
+      "id": "pond",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_pond",
+      "source": "tools/images/modes/pond.png",
+      "sha256": "f0da5da795b65b603f13c6857d989e874b4b22a67f0f0d9b940b64c66298967a",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1803743,
+      "size_mb": 1.72
+    },
+    {
+      "id": "power_play",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_power_play",
+      "source": "tools/images/modes/power_play.png",
+      "sha256": "d688dd49ee273fdf523892222d33b4a1a4d7f45746c93d7d0a85acaf5b65793c",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1986652,
+      "size_mb": 1.89
+    },
+    {
+      "id": "shotgun",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_shotgun",
+      "source": "tools/images/modes/shotgun.png",
+      "sha256": "4fd47995263bc03e8054cd5b49930d68e3f124f9c7fef2a64e08b2efd19c24b6",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 2202842,
+      "size_mb": 2.1
+    },
+    {
+      "id": "sniper",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_sniper",
+      "source": "tools/images/modes/sniper.png",
+      "sha256": "8a2801fc4fa8bd86a5b66987d2fbf680493b22ce45b5890fec004b30bf2c18d6",
+      "status": "imported",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 2046751,
+      "size_mb": 1.95
+    },
+    {
+      "id": "sudden_death",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_sudden_death",
+      "source": "tools/images/modes/sudden_death.png",
+      "sha256": "668accefb26e6c96e42dd1cb912c7b9be26a017874cfd79e98ba3212eb0ba65a",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1764937,
+      "size_mb": 1.68
+    },
+    {
+      "id": "rinks",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_rinks",
+      "source": "tools/images/modes/rinks.png",
+      "sha256": "204ca07fc1fc6f9df7118d5a496c5bbf4a6c13fabbc362dcb8fb0790c2c31b23",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 2092729,
+      "size_mb": 2.0
+    },
+    {
+      "id": "make_your_own",
+      "asset": "/Game/UI/Modes/T_UI_ModeArt_make_your_own",
+      "source": "tools/images/modes/make_your_own.png",
+      "sha256": "218cf97f77c828c2d158a457182347bef88f688ba62f17a67ec7c7b3560830ce",
+      "status": "kept",
+      "width": 1280,
+      "height": 720,
+      "checks": {
+        "size": true,
+        "lod_group": true,
+        "compression_settings": true,
+        "srgb": true,
+        "never_stream": true,
+        "mip_gen_settings": true
+      },
+      "bytes": 1985725,
+      "size_mb": 1.89
+    }
+  ],
+  "count": 14,
+  "total_mb": 25.18,
+  "verdict": "pass"
+}

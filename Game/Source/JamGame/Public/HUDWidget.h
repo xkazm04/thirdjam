@@ -19,6 +19,7 @@ class USceneComponent;
 class UVerticalBox;   // lane A222
 class USizeBox;
 class UJamDirectorsCallWidget;
+class UJamDirectorsCallHudWidget;   // lane A229
 enum class EJamVerb : uint8;
 struct FJamBindings;
 
@@ -1136,4 +1137,39 @@ private:
 	int32 GoalBannerTeam = -1;       // 0 the human's side scored, 1 the other side
 	float GoalBannerY = 0.30f;
 	float GoalBannerOpacity = 0.f;
+
+	// ---- Lane A229 (track U5, the HUD round of 15 Nov; HUDOneLook.cpp): one look for the match HUD, the controls panel's (the front end's FJamMenuLook):
+	// every plate, strip and label on the menu's panel fill with its 4-unit corner and hairline edge, in the menu's type; two label sizes (HudLabelPt,
+	// HudLinePt) and one value size (HudValuePt); team colours only on what belongs to a team. The end card's stats as a table. jam.hud.OneLook 0 = before.
+public:
+	static bool OneLookOn();
+	static constexpr int32 HudLabelPt = 14;    // small capitals: PERIOD 2, a table's label
+	static constexpr int32 HudLinePt = 18;     // a line: the commentary, a hint, a prompt, a distance, FIRST TO 3
+	static constexpr int32 HudValuePt = 40;    // a value: the score, the clock
+	// The end card's table: { label, value } per row (SHOTS 4, GOALS 1, PASSES THAT ARRIVED 6 OF 9, HITS LANDED 3, WITH THE PUCK 0:42).
+	static TArray<TPair<FString, FString>> EndStatsRows(const FEndStats& S);
+	// The YOU tag's plate in the team's colour: the menu's 4-unit corner (8 before), the ink edge kept so it reads on white ice.
+	static FSlateBrush YouTagBrush(const FLinearColor& Team);
+	// The text of the end card's table as drawn, "LABEL value" per line (tests, QA); empty while the table is hidden.
+	FString GetEndStatsTableText() const;
+	// The type sizes of the HUD's standing text (score, period, rule, clock, commentary, hints, prompts, distance labels, ability), name=size (tests).
+	TArray<TPair<FString, int32>> GetHudTypeSizesForTest() const;
+	// Wave 2: the effect slot's word in the one look (SetEffectSlots calls it on each label it makes).
+	static void OneLookSlotLabel(UTextBlock* Label);
+	// Wave 2: the far-net, own-net and puck markers (diamonds, arrows, distance labels) stand down while a card is up: the MATCH card, the GOAL
+	// banner, the pause card (or a paused world), the end card (or the end phase). Under jam.hud.OneLook 1 only.
+	static bool LabelsStandDown(bool bOn, bool bMatchCard, bool bBanner, bool bPause, bool bEnd) { return bOn && (bMatchCard || bBanner || bPause || bEnd); }
+	bool AreMarkerLabelsHiddenForTest() const { return bMarkersStoodDown; }
+private:
+	void HideLabelsUnderCards(const FJamPresentationFrame& Frame);   // wave 2: one call in RefreshFromFrame, before UpdateLabelPlates
+	TWeakObjectPtr<UJamDirectorsCallHudWidget> OneLookOverlay;
+	int32 OneLookOverlaySearch = 0;
+	bool bMarkersStoodDown = false;
+	void ApplyOneLook();             // one call at the end of BuildTree
+	void ApplyOneLookGoalBanner();   // one call where UpdateGoalBanner builds the banner
+	void BuildEndStatsTable(UVerticalBox* Holder);
+	void ShowEndStatsTable(bool bShow);
+	UPROPERTY(Transient) TObjectPtr<UVerticalBox> EndStatsTable;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> EndStatsLabels;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> EndStatsValues;
 };

@@ -797,6 +797,7 @@ void UJamHudWidget::BuildTree()
 	S::AddV(CardBody, HintText, FMargin(0), HAlign_Center);
 	CardPlate->SetContent(FJamMenuLook::MakePanel(T, CardBody, EndCardW, FMargin(FJamMenuLook::CardPad, FJamMenuLook::Unit * 3.f)));
 	Place(Root, CardPlate, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, 0));
+	ApplyOneLook();   // lane A229: the HUD in the controls panel's look (HUDOneLook.cpp; jam.hud.OneLook 0 = before)
 }
 
 void UJamHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -868,6 +869,7 @@ void UJamHudWidget::SetEffectSlots(const TArray<TPair<FString, FString>>& Slots)
 			S::AddH(Cell, Icon, FMargin(0, 0, 6, 0));
 			UTextBlock* Label = S::Text(WidgetTree, Slots[i].Value, EffectWordsOn() ? S::Font(S::Label, FName("Bold")) : S::CaptionFont(), S::Paper(), false);   // lane A227: the front end's label type
 			Label->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (EffectWordsOn()) OneLookSlotLabel(Label);   // lane A229 wave 2: the one look's line size (HUDOneLook.cpp)
 			S::AddH(Cell, Label, EffectWordsOn() ? FMargin(4.f, 0, 14.f, 0) : FMargin(0));   // lane A227: the label face measured short of its ink (filmed: the 8 cut by the plate)
 			S::AddH(EffectsRow, Cell, FMargin(i ? 14.f : 0.f, 0, 0, 0));
 		}
@@ -1063,7 +1065,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Radar); Radar->SetFrame(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_NetMarkers); UpdateMarker(F); UpdateOwnMarker(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Yours); UpdateYours(F); }
-	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); YieldToDowned(); UpdateLabelPlates(); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); YieldToDowned(); HideLabelsUnderCards(F); UpdateLabelPlates(); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
 	UpdatePrompts(F, Frames > 0, bSimAdvanced);
 	UpdateMarks(F);   // lane A166 (track F2): the contested puck and the stop's distance, on the ice (HUDMarks.cpp)
@@ -1671,7 +1673,7 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	// Lane A123 (2): with the middle kept clear the tag shows while a faceoff counts down and not after the drop; never on the puck.
 	if ((bTagAtRing || bHead) && ShowYouTagLive(bMarker && ClearMiddleOn(), bCountingThisFrame, F.SimFrame, LastDropFrame) && !(bMarker && bTagOnPuck))
 	{
-		YouTag->SetBrush(S::Rounded(Team, 8.f, FLinearColor(0, 0, 0, 0.9f), 2.f));
+		YouTag->SetBrush(YouTagBrush(Team));   // lane A229: the menu's corner under jam.hud.OneLook 1 (HUDOneLook.cpp)
 		YouTag->SetVisibility(ESlateVisibility::HitTestInvisible);
 		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouTag->Slot))
 		{

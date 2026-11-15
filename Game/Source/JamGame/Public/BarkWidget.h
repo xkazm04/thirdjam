@@ -73,6 +73,10 @@ public:
 	int32 GetVisibleBubbleCount() const;
 	FString GetStripText() const;
 
+	// Lane A229 (HUDOneLook.cpp): a bubble in the HUD's one look (the menu's dark panel and type, the speaker's team colour on its edge), not the white
+	// paper of before; jam.hud.OneLook 0 = before. Called from ShowBark after the bubble's own colours are set.
+	static void OneLookBubble(FJamBarkBubble& B, const FLinearColor& Edge);
+
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

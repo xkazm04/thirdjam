@@ -256,8 +256,8 @@
       "intensity": "normal"
     },
     "look": {
-      "tier": "p3_clay",
-      "trim_colour_hex": "#38BDF8",
+      "tier": "l3_neon",
+      "trim_colour_hex": "#FF2D6F",
       "fog_density": 0,
       "wet_ice": false
     },

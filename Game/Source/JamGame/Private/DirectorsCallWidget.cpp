@@ -621,6 +621,7 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	// Lane A213 (EYE 4b, A211's list): it stood on the buttons' pill (the HUD's badge, bottom left at EdgePx) from the first goal to the end of every
 	// match ("LMB SHOOT  RMB PASS" read "CK"). With jam.hud.ReadyHintBrief 1 it stands one row above the pill, and only for ReadyHintBriefFrames.
 	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, CVarJamHudReadyHintBrief.GetValueOnGameThread() != 0 ? -S::EdgePx - ReadyHintRowPx : -S::EdgePx));
+	ApplyOneLook();   // lane A229 (HUDOneLook.cpp)
 }
 
 // Lane A144 (the level wire): "rookie" -> "ROOKIE", "all_star" -> "ALL-STAR" (the settings button's own labels); empty for no level.
@@ -713,7 +714,7 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 	if (F.RinkLengthM != CardRinkLen || Mode != CardMode)
 	{
 		CardRinkLen = F.RinkLengthM; CardMode = Mode;
-		TakeCard->SetFont(S::Font(Mode == -2 ? MatchCardFontPt : MatchCardPtFor(F.RinkLengthM), FName("Black"), S::TrackTitle, true));
+		TakeCard->SetFont(MatchCardFont(Mode == -2 ? MatchCardFontPt : MatchCardPtFor(F.RinkLengthM)));   // lane A229: the type of before under jam.hud.OneLook 0
 		if (TakeArt) if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(TakeArt->Slot)) CS->SetPosition(FVector2D(0, MatchCardCentreYFor(F.RinkLengthM, Mode > 0)));
 	}
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;

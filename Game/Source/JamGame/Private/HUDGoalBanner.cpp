@@ -168,6 +168,7 @@ void UJamHudWidget::UpdateGoalBanner(const FJamPresentationFrame& F)
 		}
 		GoalBannerPlate->SetVisibility(ESlateVisibility::Collapsed);
 		GoalBannerPlate->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+		ApplyOneLookGoalBanner();   // lane A229 (HUDOneLook.cpp)
 	}
 	// Lane A213 (wave 4b, the Director's ruling of 05:15; A211's "no GOAL banner on the match's last goal"): the sim goes straight from Play to the end
 	// phase on the match-ending goal (no goal pause), so the banner never played. It now plays during the end card's wait (HUDEndWait.cpp), from the

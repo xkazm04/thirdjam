@@ -1,0 +1,16 @@
+{
+  "arsenal": { "file": "arsenal.png", "try": 1, "name": "ARSENAL", "look": "l3_neon" },
+  "bruisers": { "file": "bruisers.png", "try": 1, "name": "BRUISERS", "look": "p3_clay" },
+  "cage": { "file": "cage.png", "try": 1, "name": "CAGE", "look": "l3_neon" },
+  "fog_of_war": { "file": "fog_of_war.png", "try": 1, "name": "FOG OF WAR", "look": "l2_night" },
+  "glass_house": { "file": "glass_house.png", "try": 1, "name": "GLOW ICE", "look": "l3_neon" },
+  "marathon": { "file": "marathon-v2.png", "try": 2, "name": "MARATHON", "look": "l3_neon", "soften": [[478, 808, 676, 900, 5]] },
+  "outnumbered": { "file": "outnumbered.png", "try": 1, "name": "OUTNUMBERED", "look": "l1_day" },
+  "pond": { "file": "pond.png", "try": 1, "name": "POND", "look": "l1_day" },
+  "power_play": { "file": "power_play.png", "try": 1, "name": "POWER PLAY", "look": "p3_clay" },
+  "shotgun": { "file": "shotgun.png", "try": 1, "name": "SHOTGUN", "look": "p3_clay" },
+  "sniper": { "file": "sniper.png", "try": 1, "name": "SNIPER", "look": "p3_clay" },
+  "sudden_death": { "file": "sudden_death.png", "try": 1, "name": "SUDDEN DEATH", "look": "p3_clay" },
+  "rinks": { "file": "rinks.png", "try": 1, "name": "ALL RINKS", "look": "five rinks" },
+  "make_your_own": { "file": "make_your_own.png", "try": 1, "name": "MAKE YOUR OWN", "look": "the Designer" }
+}

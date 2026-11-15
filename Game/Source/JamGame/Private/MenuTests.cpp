@@ -691,7 +691,7 @@ bool FJamMenuModesList::RunTest(const FString&)
 				TestTrue(*FString::Printf(TEXT("%s: it plays the level lit on HOME (%s)"), *Names[i], *P.Level), P.Level.Contains(Level));
 		}
 		else TestTrue(*FString::Printf(TEXT("%s opens a screen"), *Names[i]), P.Payload == TEXT("cuts") || P.Payload == TEXT("direct"));
-		UTexture2D* Tex = FJamMenuLook::Kit(P.Picture);
+		UTexture2D* Tex = FJamMenuLook::ModePicture(P.Picture);   // lane A231: the picture the row shows (its illustration, else device B's)
 		if (Tex)
 		{
 			const FVector2D Src = UJamMenuWidget::PictureSourceSize(Tex);
@@ -1577,6 +1577,75 @@ bool FJamMenuEveryScreenOneLook::RunTest(const FString&)
 	return true;
 }
 
+
+// Lane A231 (track U6): MODES shows a mode's own illustration (/Game/UI/Modes/T_UI_ModeArt_<slug>) when it is in the tree and device B's picture
+// of the same row otherwise; jam.menu.ModeArt 0 gives back device B's pictures. An illustration is 1280 x 720 and is drawn whole within 1 %
+// of its own proportions. On a tree without the illustrations every row falls back and the test says so.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuModeArt, "Jam.Menu.ModeArt", JamMenuTests::MenuTestFlags)
+bool FJamMenuModeArt::RunTest(const FString&)
+{
+	const FJamSettings Fresh = FJamSettings();
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
+	IConsoleVariable* Art = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.menu.ModeArt"));
+	if (!TestNotNull(TEXT("jam.menu.ModeArt exists"), Art)) return false;
+	const int32 ArtWas = Art->GetInt();
+	ON_SCOPE_EXIT { Art->Set(ArtWas, ECVF_SetByCode); };
+	Art->Set(1, ECVF_SetByCode);
+
+	TestEqual(TEXT("a mode's illustration is A's asset by the row's slug"), FJamMenuLook::ModeArtPath(TEXT("Modes/T_UI_Mode_power_play")),
+		FString(TEXT("/Game/UI/Modes/T_UI_ModeArt_power_play.T_UI_ModeArt_power_play")));
+	TestEqual(TEXT("a dashed slug asks the same asset"), FJamMenuLook::ModeArtPath(TEXT("Modes/T_UI_Mode_fog-of-war")),
+		FString(TEXT("/Game/UI/Modes/T_UI_ModeArt_fog_of_war.T_UI_ModeArt_fog_of_war")));
+	TestTrue(TEXT("a name that is no mode picture has no illustration"), FJamMenuLook::ModeArtPath(TEXT("T_UI_Panel")).IsEmpty());
+	TestTrue(TEXT("a name that is no mode picture is device B's own"), FJamMenuLook::ModePicture(TEXT("T_UI_Panel")) == FJamMenuLook::Kit(TEXT("T_UI_Panel")));
+
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+	F.Menu->ShowScreen(EJamMenuScreen::Modes);
+	const TArray<FString> Names = F.Menu->GetModeCardNames();
+	const FVector2D Box(FJamMenuLook::ModePictureW, FJamMenuLook::ModePictureH);
+	int32 Own = 0, Fallback = 0, None = 0;
+	for (int32 i = 0; i < Names.Num(); ++i)
+	{
+		Art->Set(1, ECVF_SetByCode);
+		F.Menu->SelectModeRow(i == 0 ? 1 : 0, false);
+		F.Menu->SelectModeRow(i, false);
+		const UJamMenuWidget::FModePreview P = F.Menu->GetModePreview();
+		UTexture2D* Shown = FJamMenuLook::ModePicture(P.Picture);
+		UTexture2D* Theirs = FJamMenuLook::Kit(P.Picture);
+		const FString ArtPath = FJamMenuLook::ModeArtPath(P.Picture);
+		const bool bOwn = Shown && Shown->GetPathName() == ArtPath;
+		if (bOwn)
+		{
+			++Own;
+			const FVector2D Src = UJamMenuWidget::PictureSourceSize(Shown);
+			TestTrue(*FString::Printf(TEXT("%s: the illustration is 1280 x 720 (%.0f x %.0f)"), *Names[i], Src.X, Src.Y), Src.Equals(FVector2D(1280.0, 720.0), 0.01));
+			TestTrue(*FString::Printf(TEXT("%s: the preview shows the illustration's own pixels"), *Names[i]), P.bPicture && P.Source.Equals(Src, 0.01));
+			const double SrcR = Src.X / FMath::Max(Src.Y, 1.0), DrawnR = P.Drawn.X / FMath::Max(P.Drawn.Y, 1e-6);
+			const double Off = 100.0 * FMath::Abs(DrawnR / SrcR - 1.0);
+			TestTrue(*FString::Printf(TEXT("%s: drawn %.1f x %.1f against 1280 x 720: off %.3f %% (at most 1 %%)"), *Names[i], P.Drawn.X, P.Drawn.Y, Off),
+				Off <= 1.0 && P.Drawn.X <= Box.X + 0.5 && P.Drawn.Y <= Box.Y + 0.5);
+		}
+		else
+		{
+			if (Shown) ++Fallback; else ++None;
+			TestTrue(*FString::Printf(TEXT("%s has no illustration: device B's picture of the same row, or the plain panel"), *Names[i]), Shown == Theirs);
+		}
+		// The neutral value: device B's pictures only, on the next preview.
+		Art->Set(0, ECVF_SetByCode);
+		TestTrue(*FString::Printf(TEXT("%s at jam.menu.ModeArt 0: device B's picture"), *Names[i]), FJamMenuLook::ModePicture(P.Picture) == Theirs);
+		F.Menu->SelectModeRow(i == 0 ? 1 : 0, false);   // a row already selected keeps its preview: leave it and come back
+		F.Menu->SelectModeRow(i, false);
+		const UJamMenuWidget::FModePreview Q = F.Menu->GetModePreview();
+		if (Theirs) TestTrue(*FString::Printf(TEXT("%s at jam.menu.ModeArt 0: the preview is device B's size"), *Names[i]), Q.bPicture && Q.Source.Equals(UJamMenuWidget::PictureSourceSize(Theirs), 0.01));
+		else TestFalse(*FString::Printf(TEXT("%s at jam.menu.ModeArt 0: the plain panel"), *Names[i]), Q.bPicture);
+	}
+	AddInfo(FString::Printf(TEXT("JAMMENU modeart rows=%d own=%d fallback=%d none=%d"), Names.Num(), Own, Fallback, None));
+	if (Own == 0) AddInfo(TEXT("JAMMENU modeart: no illustration in this tree (/Game/UI/Modes is empty): every row falls back"));
+	else if (Own < Names.Num()) AddInfo(FString::Printf(TEXT("JAMMENU modeart: %d of %d rows have an illustration; the others show device B's picture"), Own, Names.Num()));
+	return true;
+}
 
 // Lane A195 (KIT READY): every name of A-to-B-0028 is found in the plugin (the mode pictures under B's dashed names too), the display font loads with
 // its three faces, and each element has its switch. Skipped (with a line) on a tree without device B's UI kit.

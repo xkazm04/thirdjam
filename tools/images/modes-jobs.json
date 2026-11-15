@@ -1,0 +1,102 @@
+{
+  "batch": "modes",
+  "style": "Style, the same for the whole family of fourteen pictures: a painted illustration for the mode-select screen of an arcade ice-hockey video game. The players are round clay-toy hockey skaters, like chunky stop-motion figures: big round helmets, short thick limbs, mitten gloves, toy proportions, faces hidden behind the helmet cage or reduced to two dots (toys, never realistic people). One team wears royal blue jerseys with navy pants, the other warm orange jerseys with black pants; the jerseys are plain: no numbers, no crests, no stripes that read as a real team. Bold simple shapes, visible paint strokes over soft clay volumes, strong silhouettes and high contrast, so the picture still reads when shown only 400 pixels wide. Palette: deep navy darks, electric blue (#1D4ED8), warm orange (#E8651A), chalk-white ice highlights. Widescreen landscape, composed for a 16:9 crop: the subject fills the frame, everything important stays away from the top and bottom edges, no border, no frame, no empty band left for text. Absolutely no lettering of any kind: no letters, no numbers, no words, no signs, no scoreboard, no advertising boards, no watermark, no signature, no logo. No real brand, team, league or person. Teen-appropriate.",
+  "looks": {
+    "clay": "p3_clay, the regular hall: a warm wooden hockey barn (timber stands and rafters in amber light), pale lilac-white ice with red lines and circles, white boards with a yellow kick plate",
+    "day": "l1_day: an outdoor rink on a bright winter day, snow, pale blue sky",
+    "night": "l2_night: a night rink, deep blue ice, pools of lamp light, fog",
+    "neon": "l3_neon, the grid arena (Glow Ice; Arsenal, Marathon and Cage by lane A230's NEON MODES line of 15 Nov 17:36): a black sheet, a lilac diamond grid, the lines, the boards and the skaters drawn in light"
+  },
+  "jobs": [
+    {
+      "name": "glass_house",
+      "mode": "Glow Ice (l3_neon)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: dark ice drawn in light. A hockey rink in total darkness where everything is drawn in glowing lines. A pitch-black ice sheet seen from a low three-quarter angle; the lines of the rink, the face-off circles and a faint perspective grid glow as thin neon lines in cyan-white, electric blue and orange, with one long magenta-and-orange light line running along the boards. Two clay-toy skaters race for the puck: one a dark figure wrapped in a bright electric-blue outline glow, the other in a bright orange outline glow, both leaving curved light trails on the black ice behind their skates. The puck is a small white-hot glowing disc with a short streak of light. In the background a hockey net drawn only as an orange wire outline of light. No hall, no stands, no crowd, no lamps: only black and lines of light."
+    },
+    {
+      "name": "fog_of_war",
+      "mode": "Fog of War (l2_night, 3 v 3)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: skaters coming out of the fog. A hockey rink at night under an open dark sky: deep blue ice with a few round pools of pale lamp light on it, and thick banks of blue-grey fog rolling low across the ice. In the foreground one blue clay-toy skater carries the puck on his stick, crouched, slipping to the side. Ahead of him exactly three orange clay-toy skaters come out of the fog toward him: the nearest one clear, the second half-veiled, the third only a soft orange silhouette in the mist, their sticks reaching. The fog swallows the far boards and the far net; a dim lamp glows through it. Cold blue mood, the orange jerseys the only warm colour."
+    },
+    {
+      "name": "pond",
+      "mode": "Pond (l1_day, 5 v 5, no hits)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: pond hockey, pass and skate, nobody gets hit. A frozen pond rink outdoors on a bright winter day: a wide pale-blue open sky taking the upper third, a row of dark green pine trees dusted with snow, snowbanks and low wooden boards around pale blue-white ice. Blue and orange clay-toy skaters glide far apart from each other in a relaxed friendly game, nobody touching anybody; in the foreground a blue skater has just passed, and the puck slides along a long clean line scratched in the ice toward a second blue skater who waits with his stick down; an orange skater skates alongside, only watching. A wide, low hockey net stands at the far end. Sunlight, long soft blue shadows, calm and happy."
+    },
+    {
+      "name": "outnumbered",
+      "mode": "Outnumbered (l1_day, 3 v 5)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: three against five, keep the puck, take the heat. An outdoor hockey rink on a bright winter day (snow beyond the white boards, pale blue sky), seen from a raised three-quarter angle. In the centre exactly three blue clay-toy skaters stand close together in a tight triangle, backs to each other, the front one shielding the puck with his stick. Around them a loose ring of exactly five orange clay-toy skaters closes in from every side, leaning forward, sticks out. Three blue figures, five orange figures, eight skaters in all, no others anywhere. The count must read at a glance: a small blue knot inside a wide orange circle."
+    },
+    {
+      "name": "power_play",
+      "mode": "Power Play (p3_clay, 5 v 3)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: five on three, the puck moved round. Inside a warm wooden hockey barn (timber stands and rafters in amber light, pale lilac-white ice with red lines, white boards with a yellow kick plate), seen from high behind the attackers. Exactly five blue clay-toy skaters are spread in a wide horseshoe around the net of the orange team. In front of that net exactly three orange clay-toy skaters crouch in a tight small triangle, turning their heads, too few to cover everyone. The puck travels from blue stick to blue stick around the outside of the horseshoe: its path is painted as one bright curved white-orange streak sweeping round the three defenders. Five blue, three orange, one net, no goalkeeper, no other figures on the ice."
+    },
+    {
+      "name": "shotgun",
+      "mode": "Shotgun (p3_clay, 5 v 5, tight ice)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: a blast clears a lane through a crowd of ten bodies. Inside a warm wooden hockey barn on a small, tight rink (amber light on timber stands, pale lilac-white ice, white boards with a yellow kick plate), seen from just behind a blue clay-toy skater in the foreground who has fired a huge slap shot. From his stick a cone-shaped shock wave of ice spray and white-orange light bursts forward and opens a straight empty lane down the middle of a packed crowd of blue and orange clay-toy skaters, who tumble and are flung aside to the left and to the right like bowling pins, skates in the air. Down the cleared lane the puck streaks toward the net at the far end. Comic and bouncy, toys knocked over, nobody hurt."
+    },
+    {
+      "name": "sudden_death",
+      "mode": "Sudden Death (p3_clay, first goal wins)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: one puck, one goal ends it. Inside a big warm wooden hockey barn whose stands have gone dim, a single hard beam of white light falls from above on one lone black puck resting on pale ice, close to the camera, low angle, the puck large in the frame. Beyond it, small and sharp in the edge of the light, one empty red-framed hockey net waits. From the left a blue clay-toy skater and from the right an orange clay-toy skater lunge toward the puck at the same instant, sticks stretched out, bodies low, mirror images of each other, ice chips flying from their skates. Everything else falls away into deep navy shadow. Tense and still, the moment before it is decided."
+    },
+    {
+      "name": "bruisers",
+      "mode": "Bruisers (p3_clay, heavy bodies)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: heavy bodies, a hit. Inside a warm wooden hockey barn (amber light on timber stands, pale lilac-white ice, white boards with a yellow kick plate), two very big, very wide, heavy clay-toy skaters fill the frame, built like barrels with huge round shoulders and small helmets. The blue one drives his shoulder into the chest of the orange one at full speed: the orange one is lifted off his skates and tips backward, arms wide, stick flying out of his mittens. A burst of ice spray and a star of white impact lines at the point of the hit; the ice under them cracks a little. Comic toy slapstick, weighty and loud, nobody hurt. The puck slides away forgotten in the corner of the frame."
+    },
+    {
+      "name": "rinks",
+      "mode": "ALL RINKS (opens the rink list)",
+      "aspect": "landscape",
+      "prompt": "The picture for a menu entry whose idea is: several rinks at once. Five different miniature toy hockey rinks, each a small rounded-rectangle diorama, laid out side by side and overlapping slightly like cards fanned on a deep navy table, seen from above at a three-quarter angle. Each is clearly a different place: one regular rink with pale ice and warm wooden stands; one very long, wide rink; one small tight rink with four pillars on the ice; one snowy outdoor pond rink with tiny pine trees around it; one black rink whose lines glow in neon blue and orange. On each rink a few tiny blue and orange clay-toy skaters and a net at each end. Soft light from above, a blue glow and an orange glow on the table between them."
+    },
+    {
+      "name": "make_your_own",
+      "mode": "MAKE YOUR OWN (opens the Designer)",
+      "aspect": "landscape",
+      "prompt": "The picture for a menu entry whose idea is: a rink being drawn by a hand of light. On a dark navy surface a hockey rink is coming into being, seen from above at a three-quarter angle. Its left half is finished and solid like a clay model: white boards, pale ice with a red line and a circle, a small net, one blue and one orange clay-toy skater standing on it. Its right half is still only a glowing sketch: the boards, a circle and a net drawn as bright blue-white lines of light on the dark. At the end of the unfinished line floats a large stylised hand made purely of light, a simple glowing mitten shape in orange-white with no skin and no detail, its fingertip drawing the line and scattering small sparks. The join between the solid half and the drawn half is the centre of the picture."
+    },
+    {
+      "name": "arsenal",
+      "mode": "Arsenal (l3_neon by lane A230's line of 17:36; boosts give tricks)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: a boost grabbed, a trick fired. On the neon grid arena: a pitch-black ice sheet in darkness, covered edge to edge by a thin lilac diamond grid; the lines of the rink are drawn in light, solid electric blue on the near half and dashed orange on the far half; the boards are only glowing rails (a warm orange-white line with a thin magenta line above it); the clay-toy skaters glow as if lit from inside, bright blue for one team and bright orange for the other, each with a thin lilac outline and a short light trail behind the skates; the puck is white with a white trail; no hall, no stands, no lamps, no crowd: only black and light. The centre line and the centre circle glow lime green. Standing on the sheet down the middle are the boosts, toys made of light: a cyan lightning-bolt shape floating on top of a thin cyan beam with a dashed cyan ring on the ice around it, and a pink round target disc on a thin pink beam with a dashed pink ring around it; two or three of each, spaced apart. In the foreground a glowing blue clay-toy skater has just skated through a cyan bolt: it bursts into a spiral of cyan sparks around his body, and in the same motion he fires his trick: three white pucks fan out from his stick in three bright streaks toward a startled glowing orange clay-toy skater who throws up his mittens. Fast, bright, playful."
+    },
+    {
+      "name": "marathon",
+      "mode": "Marathon (l3_neon by lane A230's line of 17:36; 3 v 3 on 140 x 70 m)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: three a side, lost on endless ice. On the neon grid arena: a pitch-black ice sheet in darkness, covered edge to edge by a thin lilac diamond grid; the lines of the rink are drawn in light, solid electric blue on the near half and dashed orange on the far half; the boards are only glowing rails (a warm orange-white line with a thin magenta line above it); the clay-toy skaters glow as if lit from inside, bright blue for one team and bright orange for the other, each with a thin lilac outline and a short light trail behind the skates; the puck is white with a white trail; no hall, no stands, no lamps, no crowd: only black and light. The rink is enormous: seen from high above and far back, the black sheet and its big grid cells run away to a far horizon where a tiny net glows, the board rails only thin lines of light at the edges; the centre line and the centre circle glow ice cyan. On all that dark ice only six tiny clay-toy skaters, exactly three glowing blue and exactly three glowing orange, scattered very far apart from one another, each dragging a very long curved light trail behind him; one blue skater far ahead with the white puck, the others strung out chasing over long distances. Most of the picture is empty dark grid. Vast, quiet, a long way to skate."
+    },
+    {
+      "name": "cage",
+      "mode": "Cage (l3_neon by lane A230's line of 17:36; 4 v 4, tight box, four pillars)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: a tight box, bodies close, the boards hit back. On the neon grid arena: a pitch-black ice sheet in darkness, covered edge to edge by a thin lilac diamond grid; the lines of the rink are drawn in light, solid electric blue on the near half and dashed orange on the far half; the boards are only glowing rails (a warm orange-white line with a thin magenta line above it); the clay-toy skaters glow as if lit from inside, bright blue for one team and bright orange for the other, each with a thin lilac outline and a short light trail behind the skates; the puck is white with a white trail; no hall, no stands, no lamps, no crowd: only black and light. The rink is tiny and narrow, a cramped box closed in by the glowing rails on every side, the grid dense and small, seen from above at a steep three-quarter angle so the whole box fits the frame; the centre line and the centre circle glow hot red-pink. Four round pillars stand on the ice as dark drums, each with a rim of hot red-pink light around its top edge and a red-pink ring on the ice at its foot. Packed into the box, shoulder to shoulder around one white puck, are eight clay-toy skaters, four glowing blue and four glowing orange, pushing and leaning on each other with no room to move; one orange skater bounces back off the side rail like off a spring, with a flash of white impact lines where he hit. Crowded, tight, bouncy, comic, nobody hurt."
+    },
+    {
+      "name": "sniper",
+      "mode": "Sniper (p3_clay; big net, low guard)",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: a big net and a lifted puck. Inside a warm wooden hockey barn (amber light on timber stands and rafters, pale lilac-white ice with red lines, white boards with a yellow kick plate). On the right a hockey net far too big, tall and wide like a barn door, towers over the ice. In front of it an orange clay-toy goalkeeper lies flat and low on the ice, covering only the bottom. On the left, close to the camera, a blue clay-toy skater has just flicked his stick upward: the puck flies in a high clean arc, drawn as one bright curved streak, over the low goalkeeper toward the open top corner of the big net. One shooter, one goalkeeper, one puck in the air, one huge net. Sharp, precise, a held breath."
+    },
+    {
+      "name": "marathon-v2",
+      "mode": "Marathon, second try: one skater large in the foreground so the family's clay figure reads at 400 px",
+      "aspect": "landscape",
+      "prompt": "The picture for the mode whose idea is: three a side, lost on endless ice. On the neon grid arena: a pitch-black ice sheet in darkness, covered edge to edge by a thin lilac diamond grid; the lines of the rink are drawn in light, solid electric blue on the near half and dashed orange on the far half; the boards are only glowing rails (a warm orange-white line with a thin magenta line above it); the clay-toy skaters glow as if lit from inside, bright blue for one team and bright orange for the other, each with a thin lilac outline and a short light trail behind the skates; the puck is white with a white trail; no hall, no stands, no lamps, no crowd: only black and light. The rink is enormous: seen from a low height just behind one glowing blue clay-toy skater who stands large in the left foreground, leaning on his stick, catching his breath, looking out over the ice; the black sheet and its big grid cells run away from him to a far horizon where a tiny net glows, the board rails only thin lines of light at the edges; the centre line and the centre circle glow ice cyan. Out on all that dark ice only five more clay-toy skaters, tiny with distance, two glowing blue and three glowing orange, scattered very far apart from one another, each dragging a very long curved light trail; the farthest blue one carries the white puck. Exactly three blue and three orange in all. Most of the picture is empty dark grid. Vast, quiet, a long way to skate."
+    }
+  ]
+}

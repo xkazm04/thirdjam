@@ -1,0 +1,1 @@
+SM1: the new goal dust from the same game-height camera in PIE with jam.Cut hockey.mode.fog-of-war (top) and hockey.mode.pond (bottom, 60 m, net at 2600). Caution: both rendered the clay barn, not the night or day rig (the tier did not switch in this editor run), so this sheet shows the dust on clay at two rink sizes, not on night or day.

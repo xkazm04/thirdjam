@@ -87,6 +87,9 @@ void UJamHudWidget::UpdateEndStats(const FJamPresentationFrame& F)
 				Body->RemoveChildAt(After);
 			}
 			if (UVerticalBoxSlot* VS = Body->AddChildToVerticalBox(T)) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetPadding(FMargin(0, 0, 0, FJamMenuLook::Unit * 2.f)); }
+			BuildEndStatsTable(Body);   // lane A229: the same lines as a table (HUDOneLook.cpp), shown in their place under jam.hud.OneLook 1
+			if (UWidget* TableBox = EndStatsTable ? EndStatsTable->GetParent() : nullptr)
+				if (UVerticalBoxSlot* TS = Cast<UVerticalBoxSlot>(TableBox->Slot)) TS->SetPadding(FMargin(0, 0, 0, FJamMenuLook::Unit * 3.f));
 			for (const FKept& K : Kept) if (K.W) if (UVerticalBoxSlot* KS = Body->AddChildToVerticalBox(K.W)) { KS->SetPadding(K.Pad); KS->SetHorizontalAlignment(K.HA); }
 			EndStatsBlock = T;
 		}
@@ -98,5 +101,7 @@ void UJamHudWidget::UpdateEndStats(const FJamPresentationFrame& F)
 		const FString Text = EndStatsText(EndStatsNow);
 		if (EndStatsBlock->GetText().ToString() != Text) EndStatsBlock->SetText(FText::FromString(Text));
 	}
-	EndStatsBlock->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	const bool bTable = bShow && EndStatsTable && OneLookOn();   // lane A229: the table instead of the four centred lines
+	EndStatsBlock->SetVisibility(bShow && !bTable ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	ShowEndStatsTable(bTable);
 }

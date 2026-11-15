@@ -234,6 +234,10 @@ protected:
 
 private:
 	void BuildTree();
+	// Lane A229 (HUDOneLook.cpp): the MATCH card, the scoreboard line and the ready hint in the controls panel's look (jam.hud.OneLook 0 = before);
+	// the card's type at Pt in that look (the menu's face, 8 smaller) or the type of before.
+	void ApplyOneLook();
+	static FSlateFontInfo MatchCardFont(int32 Pt);
 
 	int64 TakeUntil = -1;
 	int64 AnnouncementUntil = -1;
