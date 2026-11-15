@@ -344,7 +344,7 @@ namespace JamNetSoak
 			Sim->Step(Inputs);
 			Zones->Update(Sim->GetFrame(), Sim->GetSkaters(), Sim->GetPuck());
 			Fx->Step();
-			if (InjectKind > 0 && InjectFrame >= 0 && InjectedAt < 0 && Sim->GetFrame() >= InjectFrame && Sim->GetPuck().PassFrames > 0)
+			if (InjectKind > 0 && InjectFrame >= 0 && InjectedAt < 0 && Sim->GetFrame() >= InjectFrame && Sim->GetPuck().PassFrames > 0 && (Sim->GetFrame() % JamNet::HashInterval) == 0)   // lane A212 (05:00): on a checkpoint frame, so the driver compares the difference that same frame and nothing can heal first
 			{
 				FJamPuckState& P = const_cast<FJamPuckState&>(Sim->GetPuck());   // lane A212, test only: one field of the puck on the guest's machine
 				if (InjectKind == 1) P.PassFrames += 1; else P.PassBy = (P.PassBy + 1) % FMath::Max(1, Sim->GetSkaters().Num());
@@ -1042,7 +1042,7 @@ bool FJamNetSoakPassState::RunTest(const FString& Parameters)
 	{
 		const FString Want = FCString::Strstr(Kind, TEXT("passframes")) ? TEXT("puck.PassFrames") : TEXT("puck.PassBy");
 		bool bRan = false;
-		for (uint64 Seed = 1; Seed <= 8 && !bRan; ++Seed)
+		for (uint64 Seed = 1; Seed <= 24 && !bRan; ++Seed)
 		{
 			const FMatch M = RunMatch(*this, O, *C, Seed, Profile(Kind), Tm);
 			if (M.InjectedAt < 0) continue;
@@ -1054,15 +1054,12 @@ bool FJamNetSoakPassState::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("%s: found at its exact frame"), Kind), M.FirstDiffFrame, M.InjectedAt);
 			TestTrue(*FString::Printf(TEXT("%s: named %s (got '%s')"), Kind, *Want, *M.FirstDiffField), M.FirstDiffField.StartsWith(Want));
 			TestEqual(*FString::Printf(TEXT("%s: the lockstep hash differs from the same frame"), Kind), M.FirstLockHashDiff, M.InjectedAt);
-			// The Director, 15 Nov 05:00 (the sixth landing of the night: the faceoff at the dot): a pass may now be caught before the next checkpoint, and both
-			// sides then clear the pass state: the injected difference heals (final_equal) and the driver rightly sees equal hashes there. What must hold: a
-			// difference that still stands is called at the next checkpoint; one that healed was seen by the lockstep hash on its own frame (asserted above).
-			const bool bHealed = !M.bDesyncDriver && M.bFinalEqual;
-			if (bHealed) AddInfo(FString::Printf(TEXT("JAMHARD passstate %s: the difference healed before checkpoint %lld (the pass ended); no DESYNC is owed"), Kind, Checkpoint));
-			TestTrue(*FString::Printf(TEXT("%s: the driver raised DESYNC at the next checkpoint (%lld, got %lld), or the difference healed before it"), Kind, Checkpoint, M.DriverDesyncFrame),
-				bHealed || (M.bDesyncDriver && M.DriverDesyncFrame == Checkpoint));
+			// The Director, 15 Nov 05:00: with the faceoff at the dot a pass could be caught before the next checkpoint and the injected difference heal. Lane A212
+			// (05:00): the injection now happens only on a checkpoint frame, so the driver compares the differing hash on that very frame: the DESYNC is always owed.
+			TestEqual(*FString::Printf(TEXT("%s: injected on a checkpoint frame"), Kind), M.InjectedAt % JamNet::HashInterval, static_cast<int64>(0));
+			TestTrue(*FString::Printf(TEXT("%s: the driver raised DESYNC at that checkpoint (%lld, got %lld)"), Kind, Checkpoint, M.DriverDesyncFrame), M.bDesyncDriver && M.DriverDesyncFrame == Checkpoint);
 		}
-		TestTrue(*FString::Printf(TEXT("%s: a pass flew in one of seeds 1 to 8 (1,800 frames each)"), Kind), bRan);
+		TestTrue(*FString::Printf(TEXT("%s: a pass was in flight on a checkpoint frame in one of seeds 1 to 24 (1,800 frames each)"), Kind), bRan);
 	}
 	return true;
 }

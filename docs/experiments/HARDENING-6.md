@@ -70,3 +70,36 @@ pause's wall-clock gap of step 10. The cut is the release's: `tools/qa/accept/ac
 2. **A goal through the side netting.** glass-house at pro, seed 9, frame 3478: a teammate's reception moves the puck 0.47 m from outside the net's side
    (y 2.12) into the box (y 1.89), and the goal test counts it. The pickup's arc has a `NetBetween` guard (`JamSim.cpp:3433`); the seat that moved this
    puck has none.
+
+## After SUITE READY (02:00 to 07:00)
+
+### New and changed instruments
+- `Bar.Hard.EscapeList` (`Game/Source/JamGame/Private/HardEscapeTests.cpp`, new): the brain alone over the 48 cases; one `JAMHARD owngoal` line per goal
+  whose last touch (the frame before) was by the side that conceded (carried in, with a pass of theirs in flight, or a deflected shot), one `JAMHARD body`
+  line per puck inside a standing non-carrier for 3 frames (with mate / opponent, deke, settle, height), and the totals.
+- `JAM_HARD_TRACE="<case>@<frame>"` (HardTests.cpp): the puck and every skater within 1.5 m of it, frame by frame, 8 frames each side.
+- `Bar.Hard.AcceptRows`: steps 7 and 8 replay the drill's own sequence in one match (the Gap, the stand-up wait, the 40-frame Settle, the 45-frame Hand,
+  held keys released by time across rows) and mirror lane A215's fixed step-8 stage (the human sends nothing from the Settle to the verdict; step 8
+  waits for the man on his feet). `checked_w40` (W held 40 frames into step 8, the H35 window's case) stays as a guard on that stage: green since build 10.
+- `Jam.Net.SoakPassState`: the injection lands only on a checkpoint frame with a pass in flight, so the driver compares the differing hash on that very
+  frame and the DESYNC is always owed (the faceoff at the dot let an injected difference heal before the next checkpoint).
+- `tools/fuzz/frame-run.sh` takes `PORT` (default 4812, not another lane's 4797) and `TAG`; `tools/fuzz/frame-bot.ps1` reads the CSVs from
+  `<package>/Windows/ThirdJam/Saved`; `tools/fuzz/menu-fuzz.mjs` takes `--exe <package game binary>` and does not judge a click the game reports as failed.
+- `tools/fuzz/gpu-ship.mjs` must be given the Shipping binary itself (`.../Binaries/Win64/ThirdJam-Win64-Shipping.exe`): given the launcher
+  (`Windows/ThirdJam.exe`) it stops the launcher by pid and the game child keeps running (03:07: up to 15 games at once; one hang record at 03:25).
+- A Shipping exe keeps its profile in `%LOCALAPPDATA%\ThirdJam\Saved` (the operator's) wherever it is unpacked; a Development package keeps its own
+  `Saved` inside the package; the editor binary this worktree's `Game/Saved`.
+
+### Faults of the night (all reduced to a repeat; owners in `status/A212.md`)
+| fault | found | repeat | state at 07:00 |
+|---|---|---|---|
+| 1 step 8 `checked` red in the window (the driver's blocking `lmb_hold` kept W down into step 8) | 01:04 | `Bar.Hard.AcceptRows` row `checked_w40` | fixed (A215: driver + stage) |
+| 2 a goal through the side netting (a reception seated the puck inside the net's box) | 01:17 | `JAM_HARD_TRACE` glass-house pro 9 @3478 | fixed (A216: mouth-only goal test): 0 of 480 since |
+| 3 a carried puck inside another body (the carrier's blade inside the man; after a steal, inside the old carrier) | 02:04, 05:57 | traces in status | A216 `CarriedOutOfBodies` |
+| 4 a mate's lifted puck through a body | 02:08 | `JAM_HARD_TRACE` power-play rookie 3 @4570 | A216 |
+
+### Own-net goals (480 brain matches, seeds 1 to 10)
+| game | goals | own-net | carried in by the defenders | walked in (< 6 m/s) | their pass in flight | deflected shots |
+|---|---|---|---|---|---|---|
+| 8cb7e104 (before the wall) | 3,106 | 181 (5.8 %) | 83 | 9 | 50 | 47 |
+| b3284ba0 + A216's wall | 2,509 | 64 (2.6 %) | 9 | 2 | 3 | 29 |

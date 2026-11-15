@@ -172,6 +172,9 @@ if (-not $p.HasExited) {
 } else { Note "game exited, code $($p.ExitCode)" }
 # Collect the CSV and memreports written during this run (Saved of the packaged project).
 $saved = Join-Path (Split-Path (Split-Path (Split-Path $Exe -Parent) -Parent) -Parent) 'Saved'
+# Lane A212: a staged package (<out>/Windows/ThirdJam.exe) writes to <out>/Windows/ThirdJam/Saved: look there first.
+$pkgSaved = Join-Path (Join-Path (Split-Path $Exe -Parent) 'ThirdJam') 'Saved'
+if (Test-Path (Join-Path $pkgSaved 'Profiling')) { $saved = $pkgSaved }
 foreach ($kind in @(@('Profiling\CSV', '*.csv', 'csv'), @('Profiling\MemReports', '*.memreport', 'memreport'))) {
     $src = Join-Path $saved $kind[0]
     if (Test-Path $src) {

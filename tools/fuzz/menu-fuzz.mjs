@@ -30,7 +30,9 @@ const STEPS = +arg('steps', '5000');
 const PORT = +arg('port', '4798');
 const OUT = resolve(arg('out', join(HERE, 'out', 'a198-menu')));
 const UPROJECT = resolve(arg('uproject', join(REPO, 'Game', 'ThirdJam.uproject')));
-const EXE = join(process.env.UE_ROOT || 'C:\\Program Files\\Epic Games\\UE_5.9', 'Engine', 'Binaries', 'Win64', 'UnrealEditor.exe');
+// lane A212: --exe <a package's game binary> (<pkg>/Windows/ThirdJam/Binaries/Win64/ThirdJam.exe, never the launcher one folder up: its child would outlive the stop by pid)
+const PKG_EXE = arg('exe', '');
+const EXE = PKG_EXE ? resolve(PKG_EXE) : join(process.env.UE_ROOT || 'C:\\Program Files\\Epic Games\\UE_5.9', 'Engine', 'Binaries', 'Win64', 'UnrealEditor.exe');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // deterministic random (mulberry32)
@@ -143,6 +145,7 @@ async function fuzz() {
     const was = f ? f.screen : '?';
     recent.push(act); if (recent.length > 40) recent.shift();
     const cmd = SCREENS.includes(act) ? `jam.menuscreen ${act}` : `jam.menuscreen ${act}`;
+    const logLen0 = act.startsWith("click") ? readLog().length : 0;   // lane A212: a click the game reports as failed ("JAMMENU click <x> failed") pressed nothing
     const ok = await rc(cmd);
     await sleep(120);
     f = await focus();
@@ -164,7 +167,9 @@ async function fuzz() {
     }
     if (isBack && was !== 'landing' && was !== 'main' && was !== '?' && was !== 'none') {
       state.backs++;
-      if (f.screen === was) fault('back', step, `'${act}' on ${was} stayed on ${was}`);
+      const clickFailed = act.startsWith('click') && /JAMMENU click \S+ failed/.test(readLog().slice(logLen0));
+      if (clickFailed) { state.backs--; state.clickMiss = (state.clickMiss || 0) + 1; }
+      else if (f.screen === was) fault('back', step, `'${act}' on ${was} stayed on ${was}`);
     }
     if (!f.inMenu || f.focused === 'none') {
       // a press that starts a match hands the focus to the viewport while the rink loads: judge only a screen that is still the menu 1.5 s later
@@ -211,9 +216,9 @@ async function modes() {
   return seen;
 }
 
-const args = [UPROJECT, '/Game/Maps/Menu', '-game', '-RenderOffScreen', '-Multiprocess', '-ResX=1280', '-ResY=720', '-ForceRes', '-unattended', '-nosplash', '-nosound', '-log',
+const args = [...(PKG_EXE ? [] : [UPROJECT]), '/Game/Maps/Menu', ...(PKG_EXE ? [] : ['-game']), '-RenderOffScreen', ...(PKG_EXE ? [] : ['-Multiprocess']), '-ResX=1280', '-ResY=720', '-ForceRes', '-unattended', '-nosplash', '-nosound', '-log',
   `-abslog=${LOG}`, '-ForceLogFlush', '-dpcvars=jam.screen.FadeSeconds=0,jam.ScriptHuman=1,r.RDG.AsyncCompute=0', '-RemoteConsoleIP=127.0.0.1', `-RemoteConsolePort=${PORT}`];
-if (!existsSync(EXE) || !existsSync(UPROJECT)) { console.log(`FAIL menu-fuzz: missing ${EXE} or ${UPROJECT}`); console.log(JSON.stringify({ tool: 'thirdjam.menufuzz/1', verdict: 'could_not_run', exit: 2 })); process.exit(2); }
+if (!existsSync(EXE) || (!PKG_EXE && !existsSync(UPROJECT))) { console.log(`FAIL menu-fuzz: missing ${EXE} or ${UPROJECT}`); console.log(JSON.stringify({ tool: 'thirdjam.menufuzz/1', verdict: 'could_not_run', exit: 2 })); process.exit(2); }
 // lane A198: QUIT on HOME is a real button: a press on it ends the process (counted, not a fault); the game is started again and the fuzz goes on.
 let child = null; const pids = [];
 async function launch() {

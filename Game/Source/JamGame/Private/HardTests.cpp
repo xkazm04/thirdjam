@@ -652,6 +652,7 @@ namespace JamHardRows
 		FVector2D CursorRel = FVector2D::ZeroVector;   // the cursor's ice point relative to the skater (zero: not aiming)
 		bool bAiming = false;
 		bool bWheel = false;
+		bool bStill = false;   // lane A215's step-8 stage (HokejAcceptDrill.cpp:130-142): from the Settle to the verdict the human sends nothing
 		bool bSpinTap = false;   // the spin key's edge (UJamPlayerInput::ConsumeSpinPressed in the game)
 		FJamButtonVerbs LastV;
 		TArray<TPair<FKey, int32>> Timers;   // the driver's held keys: released after their frames, across rows as the driver does (a hold outlives its row)
@@ -717,6 +718,7 @@ namespace JamHardRows
 			FVector2D St = FVector2D::ZeroVector;
 			if (!CursorRel.IsZero()) AHokejGameMode::CursorAimFromHit(H().Pos + CursorRel, H().Pos, bAiming, St);
 			M.Stick = JamAI::FVec2(St.X, St.Y);
+			if (bStill) { M.Move = JamAI::FVec2(0.0, 0.0); M.bSprint = false; M.bCheck = false; M.bLift = false; M.bPoke = false; M.bBrake = false; M.bCrossHold = false; }
 			Adapter->Step(In);
 		}
 		void Step() { Step([](JamAI::FJamAIInput&) {}); }
@@ -917,13 +919,14 @@ namespace JamHardRows
 	// WSettle: W held from the stage for this many frames (the window of H35 shows the human 4 m forward of his stage spot 40 frames in).
 	FRow Checked(FStage& S, bool bSeq, int32 WSettle = 0)
 	{
-		if (bSeq) Gap(S, false);   // the drill stages step 8 without waiting for the man step 7 k=3 felled
+		if (bSeq) Gap(S, true);   // lane A215: the drill waits for the man step 7 k=3 felled before it stages step 8 (HokejAcceptDrill.cpp:317)
 		const FJamGameConfig& Cfg = S.Sim->GetConfig();
 		S.bOppLive = true;
 		S.Sim->SetSkater(S.Opp, FVector2D(S.Dir * 7.0, 0.0), FVector2D::ZeroVector, S.FaceYaw + UE_DOUBLE_PI);
 		Stage(S, FVector2D(0.0, 0.0), FVector2D::ZeroVector);
 		const int32 OppDownAtStage = S.O().KnockFrames;
 		if (WSettle > 0) S.HoldFor(EKeys::W, WSettle);
+		S.bStill = true;
 		auto Idle = [](JamAI::FJamAIInput&) {};
 		FString Path = FString::Printf(TEXT(" stage: me=(%.2f,%.2f) opp=(%.2f,%.2f) carrier=%d keys=%d"), S.H().Pos.X, S.H().Pos.Y, S.O().Pos.X, S.O().Pos.Y, S.Sim->CarrierIndex(), S.Down.Num());
 		for (int32 f = 0; f < 40; ++f) { S.Step(Idle); if (f == 0 || f == 20) Path += FString::Printf(TEXT(" s%d: me=(%.2f,%.2f) v=%.2f carrier=%d puck=(%.2f,%.2f)"), f, S.H().Pos.X, S.H().Pos.Y, S.H().Vel.Size(), S.Sim->CarrierIndex(), S.Sim->GetPuck().Pos.X, S.Sim->GetPuck().Pos.Y); }
