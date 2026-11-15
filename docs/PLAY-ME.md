@@ -1,11 +1,12 @@
-# Play me: Sunday night, package H46: the walked and cured candidate (R-0069 to R-0073)
+# Play me: package H47, the one that is submitted (R-0069 to R-0075)
 
 **Start it:** double-click `Game/Packaged/PLAY-LATEST.cmd` (every release rewrites it to the newest package), or unzip
-`Game/Packaged/Hokej_Hokej_H46/Hokej_Hokej_H46.zip` into a fresh folder and run the exe. HOME shows the package's name in the bottom-right
-corner (`H46`): if it says anything else, or nothing, you are in another build. If Windows asks about the firewall, that is the joined
-match's socket: Cancel is fine for solo play. The Development twin with the drills and the console (tilde key) is `Game/Packaged/Accept_H46`.
+`Game/Packaged/Hokej_Hokej_H47/Hokej_Hokej.zip` (the name the jam asks for; 296,484,014 bytes; SHA-256
+`4e1ed5ddfe51a97fa13922eb435113c2b96eb40f6728996b2a80700906d9f0eb`; the same file as `Hokej_Hokej_H47.zip` beside it) into a fresh folder and run the exe. HOME shows the package's name in the bottom-right
+corner (`H47`): if it says anything else, or nothing, you are in another build. If Windows asks about the firewall, that is the joined
+match's socket: Cancel is fine for solo play. The Development twin with the drills and the console (tilde key) is `Game/Packaged/Accept_H47`.
 
-**DLSS is back** (the plugin was fetched again at 17:14 after the Director's cleanup had emptied its folders): H44, H45 and H46 have it;
+**DLSS is back** (the plugin was fetched again at 17:14 after the Director's cleanup had emptied its folders): H44 to H47 have it;
 H42 and H43 do not.
 
 **From here only faults are fixed** (R-0073): the final package is cut at 22:30 from the last green landing; you submit about midnight.
@@ -14,7 +15,9 @@ H42 and H43 do not.
 record says so, and H35 to H39 were never started from the desktop. The grey / blue bar at a cross-check was H34's. Nothing on screen told
 you which build it was. Now it does.
 
-**The fallbacks:** `Hokej_Hokej_H45` (18:49, main c7057ed0): H46 before the walk's cures (coloured balls at the opening faceoff, a
+**The fallbacks:** `Hokej_Hokej_H46` (21:04, main b6853a8e): H47 without device B's last two materials (pale goal dust on the day and
+night looks; orange's goal on Glow Ice as bright as blue's) and one word of the CREDITS; it had the full cursor acceptance.
+`Hokej_Hokej_H45` (18:49, main c7057ed0): H46 before the walk's cures (coloured balls at the opening faceoff, a
 streak behind a sliding man, a triangle in the picture, the hint under the MATCH card). `Hokej_Hokej_H44` (18:14, main bd655dc0, with DLSS): H45 without the evening's three (the HUD in one look, the
 modes' illustrations, the neon arena in three more modes) and without device B's goal dust and whiff. `Hokej_Hokej_H43` (16:08): the last
 package with the full acceptance run through the cursor (no DLSS). `Hokej_Hokej_H41` (14:14, with DLSS): before the new cross-check take.
@@ -94,7 +97,7 @@ press again.
 
 | Try | You should see |
 |---|---|
-| Look at HOME's bottom-right corner, then open MODES | `H46`; a list of names on the left, each mode's own illustration whole on the right |
+| Look at HOME's bottom-right corner, then open MODES | `H47`; a list of names on the left, each mode's own illustration whole on the right |
 | Aim the stick anywhere and skate over a loose puck; then stand with one beside or behind you inside your ring | it is yours on that frame, both times |
 | Tap RMB with nobody on the line, then skate after your own slow puck | you pick it up as you reach it (before: you ran through it) |
 | Without the puck, tap LMB into a carrier; then hold LMB and skate, brake, stand | the figure's stick comes up; held, it stays level across the shoulders through the brake; nothing drawn on the ice |
@@ -123,14 +126,13 @@ times a minute (1.45 this morning: you carry the puck more, so you are hit more)
 - Your passes under pressure still arrive about one time in three to one in two.
 - A bot can press against a net's frame for a second or two before it goes round.
 - At the side boards the camera goes steep and close (seen on film; not cured: not a small change).
-- When orange scores on the neon arena the goal's burst reads nearer smoke than light (device B's; asked).
 - A carried puck can sit inside another body for about three frames after a steal (the one class hardening still finds: 50 events in
   2,400 matches).
 - The large rink and the twelve modes were measured, not looked at as closely as PLAY NOW on the regular rink.
 
 ## How it was proven
 
-- **Tests:** the full automation filter green on every commit: 398 of 398 on the commit H46 is cut from. (That landing's own gate ran only
+- **Tests:** the full automation filter green on every commit: 398 of 398 on the commit H47 is cut from. (That landing's own gate ran only
   214 of them: the disk had fallen under the gate's floor and the run was cut short and wrongly called green. Found at 14:15, the gate
   fixed to fail in that case, the filter re-run in full: 373 green.) Test bars moved today, with
   the reason in each commit: tests that pinned the marks at a hit, the 8-second strip and the pill now pin their absence and the panel; the
@@ -142,11 +144,12 @@ times a minute (1.45 this morning: you carry the puck more, so you are hit more)
   The acceptance run through the cursor and the buttons was not made on H40, H41 and H42 (you were at the machine and it takes the mouse);
   **H43 had it in full** at 16:02 while the machine was idle: ten steps and 18 verbs green, then the menu walked and the Shipping zip
   started and played, both green. H44 and H45 had the off-screen match only. **H46 had it in full** at 21:00: ten steps green, the menu walked, the Shipping zip
-  started and played.
+  started and played. **H47** (two materials and one word later) had the off-screen match; its cursor run is made the first time the
+  machine stands idle for ten minutes and its result is written to `status/A.md`.
 - **The walk (19:50):** the cooked H45 through every screen, all fourteen MODES rows, all twelve modes at rookie and PLAY NOW at
   rookie and pro, off screen with the scripted hand: no crash, every screen can be left, every mode plays to its end card in the look of
   its picture; six faults a judge would see, five cured in H46 and shown on film before and after.
 - **Hardening on this sim (18:14):** 2,400 escape-scan matches (no puck outside the rink, none stuck in a net, no goal through a net's
   side), 600 fuzz matches twice (all end, hashes equal), 44 lockstep matches with loss and jitter and both seats human (0 desync),
   10,700 soak matches (0 faults), 46 of 46 cells identical on a second run.
-- **Still said plainly:** all of it was measured and filmed by scripted hands. Nobody has played H40 to H46 with a mouse. You are the first.
+- **Still said plainly:** all of it was measured and filmed by scripted hands. Nobody has played H40 to H47 with a mouse. You are the first.

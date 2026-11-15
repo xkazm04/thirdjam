@@ -15,10 +15,10 @@ The jam's deadline: Mon 16 Nov 02:59 CET (A232: "Nov 15 5:59 PM PST"). He submit
 
 ## 1. The game file (zip, named TeamName_GameName, under 1 GB)
 
-> `Hokej_Hokej.zip` [the final package: about 283 MiB]
+> `Hokej_Hokej.zip` (H47: 296,484,014 bytes, about 283 MiB)
 
 - Made by `tools/run/package.ps1 -Submission` from the final package: top folder `Windows/`, start `ThirdJam.exe`, `README.txt` beside it (`submission/package/README.txt`).
-- Size with DLSS: about 283 MiB zipped, 432 MB unpacked (the candidate H45: 296,480,940 bytes; P6-FM01). Well under 1 GB. The Director writes the real byte count at 22:30.
+- Size with DLSS: about 283 MiB zipped, 432 MB unpacked (the submitted package H47: 296,484,014 bytes; H45 was 296,480,940: P6-FM01). Well under 1 GB. The Director writes the real byte count at 22:30.
 - Windows 10 or 11 (DirectX 12) only. No web build.
 - Not yet done on any package: the clean-machine test on the second machine (`[O7]`; the page says "not tested").
 
