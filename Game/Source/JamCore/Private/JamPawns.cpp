@@ -361,6 +361,8 @@ bool AJamSkater::ResetVisual(const FLinearColor& Colour, int32 Number, UClass* V
 }
 
 // Lane A125 (track F1): the by-name figure calls (JamPawns.h).
+float JamCarryReachM();   // lane A210: jam.puck.CarryReach (defined with the cvar below)
+
 bool AJamSkater::CallFigure(UObject* Figure, FName Function, TConstArrayView<double> Args)
 {
 	UFunction* F = Figure ? Figure->FindFunction(Function) : nullptr;
@@ -612,7 +614,10 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		float AimForFigure = CarryAimDeg(AimDeg, SentAimDeg, S.bHuman && bHadPuck, CarryAimFloorDeg(), CarryAimForeFloorDeg(), CarryPuckSide);
 		if (AimRecoverLeft > 0) { --AimRecoverLeft; if (!bHadPuck) AimForFigure = 0.f; }   // wave 4: after a whiff the stick comes back to the front
 		SentAimDeg = SmoothAimDeg(AimForFigure, SentAimDeg, AimSide, bAimInit);
-		SentReachM = FMath::IsNearlyZero(SentReachM) ? Reach : SentReachM + (Reach - SentReachM) * 0.35f;
+		// Lane A210 (the last wave): the reach sent while the human carries (jam.puck.CarryReach; 0 = the reach of the sim): the drawn puck in a gap of the HUD ring, not on a band.
+		const float CarryReach = (S.bHuman && bHadPuck) ? JamCarryReachM() : 0.f;
+		const float ReachForFigure = CarryReach > 0.f ? CarryReach : Reach;
+		SentReachM = FMath::IsNearlyZero(SentReachM) ? ReachForFigure : SentReachM + (ReachForFigure - SentReachM) * 0.35f;
 		if (bLogAim)
 		{
 			int64 Frame = -1;
@@ -644,6 +649,9 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	if (S.bFoulThisFrame) IJamSkaterVisual::Execute_PlayFoulReaction(V);
 }
 
+static TAutoConsoleVariable<float> CVarJamPuckCarryReach(TEXT("jam.puck.CarryReach"), 1.6f,
+	TEXT("The reach sent to the figure of the human while he carries, metres (lane A210, the last wave): 1.6 (default): the blade socket stands 1.62 to 1.64 m from his centre, outside the double ring of the HUD (1.1 m and 1.375 m): the carried puck clear of the ring in 12 of 12 straight-carrying stills of drill 21 (2 of 12 at the reach of the sim, where the socket is 1.22 to 1.26 m out and under the outer band; half under it in 6 of 12 at 1.45; the figure cannot bring it nearer than 1.05 m). The price: the drawn puck 85 to 98 cm from the puck of the sim on his carry frames (70 to 92 before). 0 = the reach of the sim (PUCK READY 2). Presentation only: the blade and the puck of the sim are not touched."), ECVF_Default);
+float JamCarryReachM() { return FMath::Clamp(CVarJamPuckCarryReach.GetValueOnGameThread(), 0.f, 2.f); }
 static TAutoConsoleVariable<float> CVarJamPuckCarryAimFore(TEXT("jam.puck.CarryAimFore"), 45.f,
 	TEXT("The human's carried stick on the figure: the floor on the forehand (his left), in degrees (lane A210: 30 put the figure's puck socket only 48 cm out, 45 put it 70). 0 = no floor on that side."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamPuckCarryAim(TEXT("jam.puck.CarryAim"), 30.f,

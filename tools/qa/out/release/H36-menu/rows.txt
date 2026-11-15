@@ -1,0 +1,4 @@
+return.foreign = MACHINE other ThirdJam processes share the cursor: 42488:C:\Users\kazda\kiro\thirdjam\.claude\worktrees\s3b\Game\Packaged\A212-dev\Windows\ThirdJam\Binaries\Win64\ThirdJam.exe
+return = PASS last=[JAMMATCH level=rookie source=settings cut=hockey.regular id=hockey-regular] builds=1/1 looks=1 lit=0.9624 mean=134.1
+click.foreign = MACHINE other ThirdJam processes share the cursor: 42488:C:\Users\kazda\kiro\thirdjam\.claude\worktrees\s3b\Game\Packaged\A212-dev\Windows\ThirdJam\Binaries\Win64\ThirdJam.exe
+click = PASS last=[JAMMATCH level=rookie source=settings cut=hockey.regular id=hockey-regular] builds=1/1 looks=1 lit=0.9646 mean=141.3

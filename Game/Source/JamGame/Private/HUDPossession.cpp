@@ -22,6 +22,9 @@
 #include "JamSim.h"
 #include "InputMapping.h"
 #include "JamCartridge.h"
+#include "JamEventBus.h"
+#include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 #include "UnrealClient.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudPossess(TEXT("jam.hud.Possess"), 1,
@@ -30,7 +33,18 @@ static TAutoConsoleVariable<int32> CVarJamHudPossess(TEXT("jam.hud.Possess"), 1,
 // the blue rings there are drawn a step lighter (NightTintShare toward white). 0 = the team colour as it is.
 static TAutoConsoleVariable<int32> CVarJamHudNightTint(TEXT("jam.hud.NightTint"), 1,
 	TEXT("Lane A213 (wave 4): 1 (default) on the night look the rings in a blue team colour are drawn lighter (they read only by their ink edge on the blue ice); 0 = the team colour."), ECVF_Default);
-static constexpr float NightTintShare = 0.45f;
+static constexpr float NightTintShare = 0.25f;   // 0.45 read near-white on the night stills (the team's blue lost)
+// Wave 4b: the pickup's pulse keyed on the sim's `possess` event (lane A208: a loose puck becomes a skater's) for the carrier who took it; a carrier
+// change by a press (no possess) still pulses as before. And the release: the double ring leaves him on the frame his pass or shot leaves the stick
+// (his Passes or Shots grew while the sim still names him the carrier for a few frames). jam.hud.PulseOnPossess 0 = the carrier change alone.
+static TAutoConsoleVariable<int32> CVarJamHudPulseOnPossess(TEXT("jam.hud.PulseOnPossess"), 1,
+	TEXT("Lane A213 (wave 4b): 1 (default) the pickup pulse restarts on the sim's possess event and the double ring leaves him on his release frame; 0 = the carrier change only."), ECVF_Default);
+namespace { int32 GReleasePasses = -1, GReleaseShots = -1, GReleaseCarrier = -2; bool GReleased = false; }
+
+static TAutoConsoleVariable<int32> CVarJamHudRingNearCam(TEXT("jam.hud.RingNearCam"), 1,
+	TEXT("Lane A213 (wave 4c): 1 (default) his own rings fade to 30 % while the camera's eye is within 2.5 m of his feet (behind his own net, back to the glass); 0 = as before."), ECVF_Default);
+static constexpr float NearCamRingAlpha = 0.3f;
+static constexpr double NearCamFadeM = 2.5, NearCamFullM = 3.5;
 
 static TAutoConsoleVariable<int32> CVarJamHudPossessStills(TEXT("jam.hud.PossessStills"), 0,
 	TEXT("Proof: N > 0 takes a still (with the HUD) N sim frames into each possession (you / mate / opponent / loose), at most 24: a213-possess-<state>-f<frame>.png. 0 off."), ECVF_Default);
@@ -101,7 +115,18 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 		PossessSince = F.SimFrame;
 		GPossessStillTaken = false;
 	}
-	PossessShownState = static_cast<uint8>(P);
+	if (CVarJamHudPulseOnPossess.GetValueOnGameThread() != 0)
+	{
+		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Possess && E.Who == Ci && Ci >= 0) PossessSince = F.SimFrame;
+	}
+	// The release (wave 4b): his pass or shot left the stick while the sim still names him the carrier.
+	{
+		const FJamSkaterState& HuR = Sk[Hi];
+		if (Ci != GReleaseCarrier || HuR.Passes < GReleasePasses || HuR.Shots < GReleaseShots) { GReleaseCarrier = Ci; GReleasePasses = HuR.Passes; GReleaseShots = HuR.Shots; GReleased = false; }
+		if (Ci == Hi && (HuR.Passes > GReleasePasses || HuR.Shots > GReleaseShots)) GReleased = true;
+	}
+	const bool bReleased = CVarJamHudPulseOnPossess.GetValueOnGameThread() != 0 && GReleased && Ci == Hi;
+	PossessShownState = static_cast<uint8>(bReleased ? EPossess::Loose : P);
 	const int64 Age = F.SimFrame - PossessSince;
 	const bool bGrace = Ci >= 0 && Sim->InTakeGrace(Sk[Ci]);
 	// UpdateCarrierCues already sized the ring for the grace (1.5 x closing): that is the pulse while the grace runs.
@@ -115,11 +140,24 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 		return bNight && C.B > C.R && C.B > C.G ? FMath::Lerp(C, FLinearColor::White, NightTintShare) : C;
 	};
 	if (bNight && YouRing && Shown(YouRing)) Recolour(YouRing, RingColour(Sk[Hi].Team), YouRing->GetColorAndOpacity().A);
+	// Wave 4c (the camera lane, 06:15: behind his own net, back to the glass, the camera's eye 2 m up almost over him: "the screen is a blue ring and
+	// the net's mesh"): his own rings fade to NearCamRingAlpha while the eye is within NearCamFadeM of his feet, back by NearCamFullM.
+	float NearCam = 1.f;
+	if (CVarJamHudRingNearCam.GetValueOnGameThread() != 0)
+	{
+		const APlayerController* PCc = GetOwningPlayer();
+		if (PCc && PCc->PlayerCameraManager)
+		{
+			const double D = FVector::Dist(PCc->PlayerCameraManager->GetCameraLocation(), UJamSim::ToWorld(Sk[Hi].Pos, 0.0)) / 100.0;
+			NearCam = FMath::Lerp(NearCamRingAlpha, 1.f, FMath::Clamp(static_cast<float>((D - NearCamFadeM) / (NearCamFullM - NearCamFadeM)), 0.f, 1.f));
+		}
+		if (NearCam < 1.f && YouRing && Shown(YouRing)) { const FLinearColor C = YouRing->GetColorAndOpacity(); YouRing->SetColorAndOpacity(FLinearColor(C.R, C.G, C.B, C.A * NearCam)); }
+	}
 	auto Grow = [](UImage* Ring, float K) { if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot); CS && K != 1.f) CS->SetSize(CS->GetSize() * K); };
 
 	// YOU: the ring under him doubled, in his team's colour (the grace's yellow taken back).
 	bool bYouHave = false;
-	if (P == EPossess::You && YouRing && Shown(YouRing))
+	if (P == EPossess::You && !bReleased && YouRing && Shown(YouRing))
 	{
 		const FLinearColor Team = RingColour(Sk[Hi].Team);
 		const float A = YouRing->GetColorAndOpacity().A;
@@ -154,7 +192,11 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 			// Far off (the attack's end, 30 m and more) the ring is a few pixels: never under LooseRingMinPx across (the first stills: unreadable at 30 m).
 			if (Size.X > 0.0 && Size.X < LooseRingMinPx) Size *= LooseRingMinPx / Size.X;
 			const FVector2D Min = C - Size * 0.5f, Max = C + Size * 0.5f;
-			if (!(ClearDownOn() && BoxMeetsAny(Min, Max, DownBoxesNow)))
+			// Wave 4b (the eye-hand's stills, f220): a pass in flight is going to a mate (its ring is under him: HUDChargeLook.cpp), not loose; and the
+			// ring is never drawn over his own figure (the puck just past his stick projected onto his torso, a ring floating at his chest).
+			const bool bPassFlying = Sim->GetPuck().PassFrames > 0;
+			const bool bOnHim = bHasHumanBox && BoxesMeet(Min, Max, HumanBoxNow.Min, HumanBoxNow.Max);
+			if (!bPassFlying && !bOnHim && !(ClearDownOn() && BoxMeetsAny(Min, Max, DownBoxesNow)))
 			{
 				Recolour(LooseRing, DistM > LooseRingFarM ? FJamUiStyle::Yellow() : FJamUiStyle::Paper(), 0.9f);
 				LooseRing->SetVisibility(ESlateVisibility::HitTestInvisible);

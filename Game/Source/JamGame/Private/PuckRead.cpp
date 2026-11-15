@@ -6,6 +6,9 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UnrealClient.h"
+#include "JamEventBus.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamPuckShow, Log, All);
 
@@ -17,6 +20,8 @@ static TAutoConsoleVariable<int32> CVarJamPuckSettle(TEXT("jam.puck.Settle"), 0,
 	TEXT("With jam.puck.Show 1 (lane A210): a change of hands from one stick straight to another is shown once the sim has named the new man this many frames running; a shorter hold is never shown (measured 02:55 on drill 6 at rookie: 23 of 117 possessions lasted 4 frames or less, 15 of the 29 of 6 or less went A-B-A, each one the drawn puck thrown 1.2 to 1.9 m to another blade and back). Shown at once when the man before is down or hit, when he released it, or when the new man holds or releases a shot or a pass. 0 (default) = at once (PUCK READY 1); tried at 4 (03:35): alone it took 5 of 119 shown changes off the screen, and for those frames the disc is on one blade while the HUD has its ring under the other man: kept as a switch. Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamPuckSettleLoose(TEXT("jam.puck.SettleLoose"), 2,
 	TEXT("With jam.puck.Show 1 (lane A210): a loose puck is shown on a stick once the sim has named the man this many frames running: a touch of one or two frames (a deflection, a puck knocked on) no longer throws the drawn puck to his blade and back. At once for the human while he holds a shot or a pass. 2 (default); 0 = at once (PUCK READY 1). Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamPuckBlendBody(TEXT("jam.puck.BlendBody"), 4,
+	TEXT("With jam.puck.Show 1 (lane A210): the sim frames the drawn puck takes to the blade when the possess event of lane A208 says the skates or the body took it (Variant 1): it is seen to go from his skates to the stick. 4 (default); 2 = the same as a stick take (PUCK READY 2). A take by the stick and a puck taken off a carrier stay at 2. Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamPuckCalls(TEXT("jam.puck.Calls"), 1,
 	TEXT("Device B's play calls by name (lane A210): 1 (default) PlayReceive, SetPassCharge, PlayCallForPass, SetLookAtPuck(false) on the human, the trail's User.Carried; 0 = none (package H34)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamPuckCarrySide(TEXT("jam.puck.CarrySide"), 0,
@@ -85,6 +90,16 @@ void FJamPuckShow::StepSim(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkate
 	if (ShowOn())
 	{
 		if (LastReleaseFrame.Num() != Sk.Num()) LastReleaseFrame.Init(-100000, Sk.Num());
+		if (PossessFrame.Num() != Sk.Num()) { PossessFrame.Init(-100000, Sk.Num()); PossessBody.Init(0, Sk.Num()); }
+		{
+			static const FName NameBody(TEXT("body"));
+			for (const FJamSimEvent& E : Sim->GetFrameEvents())
+			{
+				if (E.Name != JamEvents::Possess || !PossessFrame.IsValidIndex(E.Who)) continue;
+				PossessFrame[E.Who] = F; PossessBody[E.Who] = E.Kind == NameBody ? 1 : 0;
+				if (CVarJamPuckProbe.GetValueOnGameThread() > 0) UE_LOG(LogJamPuckShow, Log, TEXT("JAMPUCK possess frame=%lld who=%d human=%d body=%d"), F, E.Who, E.Who == Sim->GetHumanIndex() ? 1 : 0, PossessBody[E.Who]);
+			}
+		}
 		for (int32 i = 0; i < Sk.Num(); ++i) if (Sk[i].bShotThisFrame || Sk[i].bPassThisFrame) LastReleaseFrame[i] = F;
 		bool bCan = false, bReleased = false;
 		double Dist = 0.0, Reach = 0.0;
@@ -104,6 +119,12 @@ void FJamPuckShow::StepSim(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkate
 		const bool bNewPlays = Sk.IsValidIndex(Wanted) && (Sk[Wanted].bShotThisFrame || Sk[Wanted].bPassThisFrame || (Wanted == Sim->GetHumanIndex() && (Sk[Wanted].ChargeFrames > 0 || Sk[Wanted].PassChargeFrames > 0)));
 		Shown = Settled(Before, Wanted, bCan && !bReleased, bNewPlays, FMath::Max(0, CVarJamPuckSettle.GetValueOnGameThread()), FMath::Max(0, CVarJamPuckSettleLoose.GetValueOnGameThread()), Pending, PendingFrames);
 		if (Shown != Wanted) ++SettleN;
+		// Play stopped (a goal, the end card): the sim's carrier of record is not a possession then (it named the scorer for 2 to 7 frames with the
+		// puck in the net, and the human for the whole end card): nobody is shown, the puck lies where the sim has it.
+		if (const bool bPlayStopped = Sim->GetPhase() == EJamSimPhase::GoalPause || Sim->GetPhase() == EJamSimPhase::Over; bPlayStopped && Shown >= 0)
+		{
+			Shown = ShownWhile(Shown, bPlayStopped); Kept = 0; Pending = -1; PendingFrames = 0;
+		}
 		if (CVarJamPuckProbe.GetValueOnGameThread() > 0 && Wanted >= 0 && Wanted != Before && Shown == Wanted)
 			UE_LOG(LogJamPuckShow, Log, TEXT("JAMPUCK settle frame=%lld from=%d to=%d why=%s"), F, Before, Wanted,
 				bNewPlays ? TEXT("new_man_plays") : Before < 0 ? TEXT("lasted_loose") : !bCan ? TEXT("man_before_cannot_act") : bReleased ? TEXT("man_before_released") : TEXT("lasted"));
@@ -290,7 +311,8 @@ void FJamPuckShow::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater
 					(DrawnCarrier == Sim->GetHumanIndex() || Now == Sim->GetHumanIndex()) ? 1 : 0, Now >= 0 ? TEXT("pickup") : TEXT("release"), FVector2D(OffsetAtChange.X, OffsetAtChange.Y).Size(), Now >= 0 ? BlendInFrames : BlendOutFrames);
 			if (OffsetAtChange.SizeSquared() > 300.0 * 300.0) OffsetAtChange = FVector::ZeroVector;
 			ChangeFrameF = FrameF;
-			ChangeBlend = Now >= 0 ? BlendInFrames : BlendOutFrames;
+			const bool bBodyTake = PossessFrame.IsValidIndex(Now) && Sim->GetFrame() - PossessFrame[Now] <= PossessFreshFrames && PossessBody[Now] != 0;
+			ChangeBlend = Now >= 0 ? PickupBlendFrames(bBodyTake, CVarJamPuckBlendBody.GetValueOnGameThread()) : BlendOutFrames;
 			DrawnCarrier = Now;
 		}
 		LastDrawn = Drawn(Target, OffsetAtChange, static_cast<float>(FrameF - ChangeFrameF), ChangeBlend);
@@ -320,6 +342,15 @@ void FJamPuckShow::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater
 	}
 	if (Every <= 0 || Sim->GetFrame() == ProbedFrame) return;
 	ProbedFrame = Sim->GetFrame();
+	// Where the drawn puck is on the screen (viewport pixels), once a sim frame: the proof stills are cropped and counted from these lines.
+	if (UWorld* World = Puck->GetWorld())
+		if (APlayerController* PC = World->GetFirstPlayerController())
+		{
+			FVector2D Sp(0.0, 0.0);
+			const bool bOn = PC->ProjectWorldLocationToScreen(LastDrawn, Sp, false);
+			UE_LOG(LogJamPuckShow, Log, TEXT("JAMPUCK screen frame=%lld on=%d x=%.0f y=%.0f shown=%d sim_carrier=%d phase=%d above_cm=%.0f"), Sim->GetFrame(), bOn ? 1 : 0, Sp.X, Sp.Y,
+				ShowOn() ? DrawnCarrier : Sim->CarrierIndex(), Sim->CarrierIndex(), static_cast<int32>(Sim->GetPhase()), LastDrawn.Z - Puck->GetHalfHeightCm());
+		}
 	const int32 Carrier = Sim->CarrierIndex();
 	const int32 Human = Sim->GetHumanIndex();
 	if (Skaters.IsValidIndex(Carrier) && Skaters[Carrier] && Skaters[Carrier]->GetPuckSocketWorld(SocketCm))
@@ -427,6 +458,12 @@ bool FJamPuckShowTest::RunTest(const FString&)
 	TestTrue(TEXT("a frame later: most of the way"), FVector::Dist(FJamPuckShow::Drawn(Blade, Off, 1.f, FJamPuckShow::BlendInFrames), Blade) < 0.5 * Off.Size());
 	TestTrue(TEXT("after the blend: on the blade"), FJamPuckShow::Drawn(Blade, Off, static_cast<float>(FJamPuckShow::BlendInFrames), FJamPuckShow::BlendInFrames).Equals(Blade, 1e-3));
 	TestTrue(TEXT("no blend frames: on the blade at once"), FJamPuckShow::Drawn(Blade, Off, 0.f, 0).Equals(Blade, 1e-3));
+	TestEqual(TEXT("ships: a take by the skates or the body runs to the blade over 4 frames"), CVarJamPuckBlendBody.GetValueOnGameThread(), 4);
+	TestEqual(TEXT("possess says the stick took it (or no possess: taken off a carrier): two frames"), FJamPuckShow::PickupBlendFrames(false, 4), FJamPuckShow::BlendInFrames);
+	TestEqual(TEXT("possess says the skates or the body took it: four"), FJamPuckShow::PickupBlendFrames(true, 4), 4);
+	TestEqual(TEXT("never shorter than a stick take"), FJamPuckShow::PickupBlendFrames(true, 0), FJamPuckShow::BlendInFrames);
+	TestEqual(TEXT("play stopped (the goal pause, the end card): nobody is shown as carrier"), FJamPuckShow::ShownWhile(3, true), -1);
+	TestEqual(TEXT("play on: the shown carrier stands"), FJamPuckShow::ShownWhile(3, false), 3);
 	TestEqual(TEXT("a goal: the drawn puck starts at the height it crossed the line at"), FJamPuckShow::GoalDropCm(90.0, 0.0), 90.0, 1e-9);
 	TestTrue(TEXT("half way through the drop: most of the height still (it falls)"), FJamPuckShow::GoalDropCm(90.0, 0.5 * FJamPuckShow::GoalDropSeconds) > 60.0);
 	TestEqual(TEXT("after the drop: on the ice, inside its ring"), FJamPuckShow::GoalDropCm(90.0, FJamPuckShow::GoalDropSeconds), 0.0, 1e-9);
@@ -435,6 +472,9 @@ bool FJamPuckShowTest::RunTest(const FString&)
 	TestTrue(TEXT("a released puck: at the sim's place on the frame of the release"), FJamPuckShow::Drawn(Blade, Off, 0.f, FJamPuckShow::BlendOutFrames).Equals(Blade, 1e-3));
 	// The human's carried stick out of the zone his hips hide (AJamSkater::CarryAimDeg; floor 30 degrees).
 	TestEqual(TEXT("ships: the carry floor is 30 degrees"), AJamSkater::CarryAimFloorDeg(), 30.f, 1e-4f);
+	if (const IConsoleVariable* Reach = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.puck.CarryReach")))
+		TestEqual(TEXT("ships: the carried stick reaches 1.6 m (the puck outside the HUD ring)"), Reach->GetFloat(), 1.6f, 1e-4f);
+	else AddError(TEXT("jam.puck.CarryReach is not registered"));
 	TestEqual(TEXT("not carrying: the aim as it is"), AJamSkater::CarryAimDeg(5.f, 0.f, false, 30.f, 45.f), 5.f, 1e-4f);
 	TestEqual(TEXT("carrying a hair to the forehand: the forehand floor"), AJamSkater::CarryAimDeg(1.f, 0.f, true, 30.f, 45.f), 45.f, 1e-4f);
 	TestEqual(TEXT("carrying a hair to the backhand: the backhand floor"), AJamSkater::CarryAimDeg(-1.f, 0.f, true, 30.f, 45.f), -30.f, 1e-4f);

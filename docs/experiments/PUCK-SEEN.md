@@ -29,7 +29,11 @@ carried last frame's pose, so every stride and every stick move left the drawn p
 2. **The drawn place** (`FJamPuckShow::Render`): on the shown carrier's socket, else exactly where the sim has it; a pickup runs the offset out over
    2 frames instead of jumping; a release, a loss and a goal cut to the sim's puck on their frame (PUCK READY 2: the offset is for a carried puck only).
    A man who shot or passed is not bridged for 30 frames. After a goal the sim's puck keeps the height it crossed the line at; the drawn one falls to
-   the ice in 0.17 s (`FJamPuckShow::GoalDropCm`): `img/a210/net-after-goal-before-after.jpg`.
+   the ice in 0.17 s (`FJamPuckShow::GoalDropCm`): `img/a210/net-after-goal-before-after.jpg`. While the sim is in its goal pause or over, nobody
+   is shown as carrier (`FJamPuckShow::ShownWhile`; PUCK READY 3): the sim named the scorer the carrier for 2 to 7 frames with the puck 2 to 4.7 m
+   from him, and the human for the whole end card, and the drawn puck jumped to the blade and back.
+   A pickup the sim's `possess` event (lane A208) says the skates or the body took runs out over 4 frames (`jam.puck.BlendBody 4`); a take by the
+   stick, and a puck taken off a carrier, over 2.
 3. **Through the frame's animation** (`jam.puck.Follow 1`, `AJamPuck::SetFollow` / `Tick` in `TG_PostUpdateWork`): once on the blade the puck takes the
    socket's place again after the figures' poses of the frame are evaluated: 0 cm from the blade when the frame is drawn.
 4. **The human's carried puck is not behind his hips** (`jam.puck.CarryAim 30`, `AJamSkater::CarryAimDeg`): section 3.
@@ -93,6 +97,25 @@ at every change of hands on the screen; build 26):
    a poke that looks short can take it. The three times it was poked loose in drill 6 the two pucks were 42 to 50 cm apart.
 3. His shot and pass leave from the sim's puck: the drawn puck cuts to it on the frame of the release (up to 90 cm from the blade).
 
+### 3.0 The carried puck and the HUD's ring (`jam.puck.CarryReach 1.6`; PUCK READY 3)
+
+Lane A213's ring under the man who has the puck is two bands (centre lines 1.1 m and 1.375 m from him), drawn over the scene. The figure's blade
+stands 1.22 to 1.26 m from his centre at every aim the floor sends, so the carried puck lay under the outer band wherever the stick pointed: the
+angle cannot clear a ring that is all round him; the reach can. Drill 21's three straight carries (frames + 12, + 18, + 24, + 30 of each, every still
+cropped round the place the probe says the drawn puck is on the screen):
+
+| the reach sent to his figure while he carries | the blade's socket from his centre | the puck clear of the ring |
+|---|---|---|
+| the sim's, about 1.2 m (PUCK READY 2) | 1.25 m | 2 of 12 |
+| 0.85 m | 1.05 m (the figure brings it no nearer) | on the inner band |
+| 1.45 m | 1.47 to 1.49 m | 6 of 12, 6 half under the band |
+| **1.6 m (ships)** | 1.62 to 1.64 m | **12 of 12** |
+
+`img/a210/carry-clear-of-ring-before-after.jpg`. In a match by the playtester's hand on the camera lane's camera (20 stills spread over his carry
+frames, `img/a210/carry-match-20-stills.jpg`): clear in 15 of 20; in the other five the puck is straight ahead of him under the band at a faceoff
+(2), the camera has come close by the boards and the ring fills the picture (2), or his legs cover it (1). The price: the drawn puck 85 to 98 cm
+from the sim's on his carry frames in the drill (70 to 92 before). `jam.puck.CarryReach 0` = the sim's reach.
+
 ### 3.2 The puck thrown about in a scrum (`jam.puck.SettleLoose 2` ships; `jam.puck.Settle` is a switch at 0)
 
 In drill 6 at rookie the sim's carrier of record changed 156 times in 6450 frames, 79 of them straight from one stick to another; of 117
@@ -153,6 +176,14 @@ two frames a loose puck waits, the disc is at the sim's puck (inside the HUD's r
   (`jam.hit.Whiff 0.8`), the stick is sent to the front of the body for 30 frames after a missed cross-check (`AJamSkater::SetAimRecover`), and the
   figure is told `PlayWhiff(Kind)` by name for the take device B is asked for. `img/a210/whiff-before-after.jpg` (a miss in open ice: the stick
   leaves the left side 13 frames after the miss; the dip is small: the take is what will make it a whiff).
+
+## 4b. A loose puck and its ring (the count of 20 stills; PUCK READY 3)
+
+Twenty stills of a loose puck on the ice, in play, spread over one match (`img/a210/loose-puck-20-stills.jpg`, each cropped round the drawn puck):
+the disc inside the HUD's ring in 15; hidden by a body or a HUD label in 4; **in 1 (frame 2670) the ring stands a ring's radius ahead of the disc:
+a fast puck**. The ring is drawn at the sim's place of the frame (`HUDPossession.cpp`, `F.PuckM`), the disc where every figure is drawn: between the
+last two sim frames. The probe's "0.0 cm" is against that drawn place of the sim's puck, so it does not see this. A ring at the puck ACTOR's place
+is round the disc at any speed (asked of lane A213).
 
 ## 5a. Device B's hit takes of H56.0 / H56.5 from the game camera (a match by the playtester's hand, the same sim frames with and without my figure bridges)
 

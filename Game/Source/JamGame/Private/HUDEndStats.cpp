@@ -64,7 +64,8 @@ void UJamHudWidget::UpdateEndStats(const FJamPresentationFrame& F)
 			T->SetColorAndOpacity(FSlateColor(FJamMenuLook::TextDim()));
 			T->SetJustification(ETextJustify::Center);
 			T->SetVisibility(ESlateVisibility::Collapsed);
-			const int32 At = Body->GetChildIndex(CardScoreText) + 1;
+			// Above the keys row (the lines under the keys read as part of them: the stills of wave 4).
+			const int32 At = CardHints ? Body->GetChildIndex(CardHints) : Body->GetChildIndex(CardScoreText) + 1;
 			if (UVerticalBoxSlot* VS = Cast<UVerticalBoxSlot>(Body->InsertChildAt(At, T))) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetPadding(FMargin(0, 0, 0, FJamMenuLook::Unit * 2.f)); }
 			EndStatsBlock = T;
 		}

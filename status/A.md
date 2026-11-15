@@ -502,3 +502,5 @@
 - link green 04:01: main b3284ba0 (Near the boards he sees ice and the play: the camera slides in and comes down instead of r) pushed.
 - link green 05:24: main ecbd48f1 (The faceoff is a faceoff: both centres at the dot, the winner keeps his feet; nobody score) pushed.
 - link green 05:46: main bf20d00e (The slab at his shoulder is gone; a loose puck is drawn where it is; device B's takes stan) pushed.
+- link green 06:37: main ade7aa64 (The net is never left empty; a cross-check lands when the stick is on the man (A206 track ) pushed.
+- package 06:54: `Hokej_Hokej_H36.zip` from main ade7aa64, acceptance run green (18 verbs through the cursor and the buttons).

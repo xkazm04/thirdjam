@@ -53,6 +53,12 @@ struct JAMGAME_API FJamPuckShow
 	// The drawn place: Target (the blade's socket when carried, the sim's place otherwise) plus what is left of the offset it had at the change of
 	// hands, SinceChange sim frames ago, eased out over BlendFrames. Pure.
 	static FVector Drawn(const FVector& TargetCm, const FVector& OffsetAtChangeCm, float SinceChange, int32 BlendFrames);
+	// The shown carrier while play is stopped (the sim's goal pause, or the match over): nobody. Pure.
+	static int32 ShownWhile(int32 Shown, bool bPlayStopped) { return bPlayStopped ? -1 : Shown; }
+	// The frames the run-out of a pickup takes: BlendInFrames when the stick took the puck (possess Variant 0, or no possess event: a puck taken off a
+	// carrier by a press), BodyFrames when the skates or the body took it (possess Variant 1: the puck is seen to go from his skates to the blade). Pure.
+	static int32 PickupBlendFrames(bool bPossessBody, int32 BodyFrames) { return bPossessBody ? FMath::Max(BodyFrames, BlendInFrames) : BlendInFrames; }
+	static constexpr int32 PossessFreshFrames = 6;   // a possess event this recent belongs to the pickup now shown (the wait for a loose puck is 2)
 	// The drawn height over the ice during the goal pause: AboveCm when it began, 0 after GoalDropSeconds, a fall (slow, then fast). Pure.
 	static double GoalDropCm(double AboveCm, double SinceS) { const double U = FMath::Clamp(SinceS / GoalDropSeconds, 0.0, 1.0); return FMath::Max(0.0, AboveCm) * (1.0 - U * U); }
 	// SetPassCharge's value for a hold of ChargeFrames with the cartridge's full_frames. Pure.
@@ -87,6 +93,8 @@ private:
 	// the play calls
 	TArray<int32> PrevReceived;
 	TArray<int64> LastReceiveFrame;
+	TArray<int64> PossessFrame;       // per skater: the sim frame of his last possess event (lane A208), and whether the skates or the body took it
+	TArray<uint8> PossessBody;
 	TArray<int64> LastReleaseFrame;   // per skater: the last sim frame his shot or pass flag was up
 	TArray<bool> ChargeSent;
 	TWeakObjectPtr<UObject> LookFigure;

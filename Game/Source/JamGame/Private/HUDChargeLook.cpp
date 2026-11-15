@@ -28,6 +28,12 @@ static TAutoConsoleVariable<int32> CVarJamHudShotLine(TEXT("jam.hud.ShotLine"), 
 static TAutoConsoleVariable<int32> CVarJamHudShotLookDemo(TEXT("jam.hud.ShotLookDemo"), 0,
 	TEXT("Proof: N > 0 draws the shot's line whenever the human carries, as if the shot were held N frames (stills from a scripted human). 0 off."), ECVF_Default);
 
+// Wave 4b (A211's fourth list: "the pill says A MATE IS OPEN, the puck rolls a metre and dies; no ring under the mate and no pass line"): a pass
+// reads as one gesture: the line while held, the ring under the mate it goes to, the release, and the ring stays under that mate while the pass is in
+// flight (Puck.PassFrames, Puck.PassBy = him), at most PassFlightRingFrames. A tap (no hold) gets the ring from its release frame.
+static constexpr int32 PassFlightRingFrames = 45;
+namespace { int32 GFlightTarget = -1; int64 GFlightUntil = -1; int32 GFlightPasses = -1; int32 GLastHeldFrames = 0; int32 GLastHeldTarget = -1; }
+
 void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 {
 	if (!Root || !WidgetTree) return;
@@ -62,11 +68,37 @@ void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 		const FJamSkaterState& Hu = Sk[Sim->GetHumanIndex()];
 		const bool bCarry = Sim->CarrierIndex() == Hu.Index;
 		const FVector2D Stick = Hu.BladePos - Hu.Pos;
+		// The pass's flight (wave 4b): his pass count grew: the ring goes under the mate it was aimed at (the held target, else the tap's own).
+		if (GFlightPasses < 0 || Hu.Passes < GFlightPasses) GFlightPasses = Hu.Passes;
+		if (Hu.Passes > GFlightPasses)
+		{
+			FVector2D AimR;
+			GFlightTarget = GLastHeldTarget >= 0 ? GLastHeldTarget : Sim->HumanPassTarget(Hu.Index, Stick, FMath::Max(1, GLastHeldFrames), AimR);
+			GFlightUntil = F.SimFrame + PassFlightRingFrames;
+			GFlightPasses = Hu.Passes;
+		}
+		if (Hu.PassChargeFrames <= 0 && !bCarry) { GLastHeldFrames = 0; GLastHeldTarget = -1; }
+		const FJamPuckState& PuckS = Sim->GetPuck();
+		const bool bInFlight = GFlightTarget >= 0 && F.SimFrame < GFlightUntil && PuckS.PassFrames > 0 && PuckS.PassBy == Hu.Index && Sk.IsValidIndex(GFlightTarget);
+		if (bInFlight)
+		{
+			FVector2D C, Size;
+			float DistM = 0.f;
+			if (ProjectGroundRing(Sk[GFlightTarget].Pos, CarrierRingRadiusM * 1.15f, C, Size, DistM))
+			{
+				const FLinearColor Team = F.GetTeamColour(Hu.Team);
+				Ring->SetColorAndOpacity(FLinearColor(Team.R, Team.G, Team.B, 1.f));
+				Ring->SetVisibility(ESlateVisibility::HitTestInvisible);
+				if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot)) { CS->SetPosition(C); CS->SetSize(Size); }
+				bRing = true;
+			}
+		}
 		// The held pass's mate.
-		if (bCarry && Sim->PassPowerOn() && Hu.PassChargeFrames > 0)
+		if (!bInFlight && bCarry && Sim->PassPowerOn() && Hu.PassChargeFrames > 0)
 		{
 			FVector2D Aim;
 			const int32 T = Sim->HumanPassTarget(Hu.Index, Stick, Hu.PassChargeFrames, Aim);
+			GLastHeldFrames = Hu.PassChargeFrames; GLastHeldTarget = T;
 			FVector2D C, Size;
 			float DistM = 0.f;
 			if (Sk.IsValidIndex(T) && ProjectGroundRing(Sk[T].Pos, CarrierRingRadiusM * 1.15f, C, Size, DistM))

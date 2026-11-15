@@ -23,6 +23,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
+#include "HAL/PlatformTime.h"
 #include "UnrealClient.h"
 #include "Misc/AutomationTest.h"
 #include "Engine/Texture2D.h"
@@ -168,7 +169,13 @@ void UJamHudWidget::UpdateGoalBanner(const FJamPresentationFrame& F)
 		GoalBannerPlate->SetVisibility(ESlateVisibility::Collapsed);
 		GoalBannerPlate->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 	}
-	const bool bPause = F.Phase == EJamPhase::GoalPause;
+	// Lane A213 (wave 4b, the Director's ruling of 05:15; A211's "no GOAL banner on the match's last goal"): the sim goes straight from Play to the end
+	// phase on the match-ending goal (no goal pause), so the banner never played. It now plays during the end card's wait (HUDEndWait.cpp), from the
+	// end phase's first frame; nothing else in this file changes. jam.hud.EndWait 0 = the banner of before (goal pauses only).
+	const bool bEndNow = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
+	const IConsoleVariable* EndWaitCv = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.EndWait"));
+	const bool bEndBanner = bEndNow && EndWaitCv && EndWaitCv->GetInt() != 0 && (EndSeenAt < 0.0 || EndCardWaits(true, true, FPlatformTime::Seconds() - EndSeenAt));
+	const bool bPause = F.Phase == EJamPhase::GoalPause || bEndBanner;
 	if (GoalBannerLastHome < 0 || F.SimFrame < LastSimFrame) { GoalBannerLastHome = F.ScoreHome; GoalBannerLastAway = F.ScoreAway; }
 	if (!bPause || !bOn)
 	{

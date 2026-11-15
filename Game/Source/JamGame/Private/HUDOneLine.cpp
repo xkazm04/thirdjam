@@ -11,6 +11,7 @@
 #include "HokejGameMode.h"
 #include "JamSim.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "GameFramework/PlayerController.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudOneLine(TEXT("jam.hud.OneLine"), 1,
 	TEXT("Lane A213: 1 (default) at most one line of the HUD's words over the play at a time (contact line, prompt, controls strip, faceoff hint, caption, in that order) and the kept-puck prompt only while the human carries; 0 = the screen of before."), ECVF_Default);
@@ -21,8 +22,28 @@ static TAutoConsoleVariable<int32> CVarJamHudKeptPrompt(TEXT("jam.hud.KeptPrompt
 static TAutoConsoleVariable<int32> CVarJamHudOwnThird(TEXT("jam.hud.OwnThird"), 1,
 	TEXT("Lane A213 (wave 3): 1 (default) the own-net label (own NN m, its diamond and arrow) shows only while the human is in his own third and never on the radar's frame; 0 = always (as before)."), ECVF_Default);
 
+// Wave 4c (A211's fourth list, "a small grey box with marks at the bottom centre", pro f280): it was the off-screen puck's marker ("3 m" and its
+// corner chevron) fading out while the puck itself was in the frame a few metres away. The marker is for a puck the player cannot see: not drawn on a
+// frame the puck's own point projects inside the frame (with a margin). jam.hud.PuckLabelOnScreen 1 = as before.
+static TAutoConsoleVariable<int32> CVarJamHudPuckLabelOnScreen(TEXT("jam.hud.PuckLabelOnScreen"), 0,
+	TEXT("Lane A213 (wave 4c): 0 (default) the off-screen puck's marker (distance and chevron) is not drawn while the puck is inside the frame; 1 = as before (it faded out over the visible puck: the grey box)."), ECVF_Default);
+
 void UJamHudWidget::ApplyOwnLabelRule(const FJamPresentationFrame& F)
 {
+	if (CVarJamHudPuckLabelOnScreen.GetValueOnGameThread() == 0)
+	{
+		FVector2D Px;
+		const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this) / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+		if (APlayerController* PC = GetOwningPlayer())
+		{
+			if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(F.PuckM, 0.05), Px, false)
+				&& Px.X > 24.f && Px.Y > 24.f && Px.X < VS.X - 24.f && Px.Y < VS.Y - 24.f)
+			{
+				UWidget* const Puck[] = { PuckArrow.Get(), PuckText.Get(), PuckPlate.Get() };
+				for (UWidget* W : Puck) if (W) W->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
+	}
 	if (CVarJamHudOwnThird.GetValueOnGameThread() == 0 || !F.Skaters.IsValidIndex(F.HumanIndex)) return;
 	bool bHide = !InOwnThird(F.Skaters[F.HumanIndex].PosM.X, F.AttackSign, F.RinkLengthM);
 	if (!bHide && OwnText && Radar)
