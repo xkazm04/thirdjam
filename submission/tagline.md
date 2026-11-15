@@ -1,4 +1,4 @@
-# Title treatments and taglines (lane A89's words; truth marks re-read by lane A180, Sat 14 Nov 2026 08:00, and by lane A225, Sun 15 Nov 16:40, against package H43)
+# Title treatments and taglines (lane A89's words; truth marks re-read by lane A180, Sat 14 Nov 2026 08:00, and by lane A225, Sun 15 Nov 16:40, against package H43, and 21:00 against the candidate H45)
 
 Device B owns the logo and the banner; these are the words only. Voice: `docs/experiments/VOICE.md`. Teen rating holds: no gore, clay figures, no real names, no brands.
 
@@ -6,7 +6,7 @@ Device B owns the logo and the banner; these are the words only. Voice: `docs/ex
 
 **Hockey with the whistle taken out.**
 
-True of package H43 (TRUTH N05, TG01, P5-TG01): no fouls and no box in the regular game, the season and eleven of twelve modes; one mode, Glow Ice, keeps the whistle on purpose. The game prints this line on its own first screen. Friday's fallback line is no longer needed as a fallback.
+True of the candidate H45 (TRUTH N05, TG01, P5-TG01, P6-TG01): no fouls and no box in the regular game, the season and eleven of twelve modes; one mode, Glow Ice, keeps the whistle on purpose. The game prints this line on its own first screen. Friday's fallback line is no longer needed as a fallback.
 
 ## Three title treatments
 
@@ -16,7 +16,7 @@ True of package H43 (TRUTH N05, TG01, P5-TG01): no fouls and no box in the regul
 
 The banner picture that exists: `devlog/shots/20261113-205819-B-br4-banner-1920.png` (device B: HOKEJ gouged in the ice, 1920 x 1080).
 
-## Six taglines, each true of package H43
+## Six taglines, each true of the candidate H45
 
 | # | Line | Where it goes | Truth row |
 |---|---|---|---|

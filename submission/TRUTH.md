@@ -1,3 +1,80 @@
+# The truth table, pass 6: the evening's changes against the game as it will be submitted (lane A225, track D1, Sun 15 Nov 2026 20:48 to 21:25)
+
+**What this is.** Only the claims that the evening made false, or that can now be checked. The game read: the candidate **H45** (main `c7057ed0`, with DLSS: `docs/PLAY-ME.md` of H45,
+"New in H45" and "Known limits") plus lane A235's fixes on main `bcbd1287` (`status/A235.md`: no effect at any contact, no slide streak, no man-down arrow, the prompt waits for the card, no
+faceoff cue while boxed, a cooked game never takes the CLI route). The best evidence: lane A234's walk of the cooked candidate (`status/A234.md`, its table; `submission/shots/H45-PICKS.md`).
+No game, no build, no git, no web. Pass 5 (below) stays as written; a pass-5 row named here takes the pass-6 verdict.
+Verdicts as in pass 5. `walk` = `status/A234.md` (main checkout), its row or SEEN line.
+
+## 6.1 `submission/page.md`
+
+| ID | Claim | Verdict | Source | Now |
+|---|---|---|---|---|
+| P6-PG01 | Arsenal, Cage and Marathon play on the neon arena (four neon modes): the page's mode lines are the cards (they name no look); "Glow Ice: neon ice"; the rink: "Later takes and some modes change the scene: neon, night, fog" | TRUE | walk: MODES and the Arsenal, Cage, Marathon rows ("neon, lime centre", "red-pink centre, four rimmed drums", "cyan centre"); Pond and Outnumbered in daylight | kept |
+| P6-PG02 | how it was made: "concept and menu images from an image-generation model" | FALSE NOW | the fourteen MODES illustrations (generated, not screenshots): ledger rows `T_UI_ModeArt_*`, walk MODES row | "concept, menu and mode pictures from an image-generation model" |
+| P6-PG03 | "A panel at the bottom left lists the keys all match"; "Nothing else is drawn on the ice: no line ahead of you, no mark at a hit" | TRUE (of the final source) | walk (H45): the panel; no bar under his ring (the SPRINT row); nothing at a landed hit on clay and night; its W10 (slide streak), W13 (balls at a contact), W15 (man-down arrow) are cured on bcbd1287 (A235 jobs 1 to 3, each with a before / after film) | kept |
+| P6-PG04 | Glow Ice: the only whistle, foul and sit ten seconds | TRUE | walk: "whistle, box, IN THE BOX n"; A235 W7 (no faceoff cue while boxed) | kept |
+| P6-PG05 | limit: "On Glow Ice the camera can jump to the ice beside a boost beacon after your cross-check lands" | FALSE NOW | not in H45's known limits; the camera limit of H45 is the side boards (PLAY-ME; walk W8: seven of fourteen runs) | "At the side boards the camera goes steep and close, and you can lose the rink." |
+| P6-PG06 | (added) a carried puck inside another skater for a few frames after a steal | TRUE | PLAY-ME H45 known limits (hardening: 50 events in 2,400 matches) | one limit line added |
+| P6-PG07 | (added) orange's goal burst on the neon ice reads as smoke | TRUE | PLAY-ME H45 known limits | one limit line added |
+| P6-PG08 | limits header: "true of package H43" | FALSE NOW | the candidate is H45 | "true of the candidate H45" |
+| P6-PG09 | How to run: "about 271 MiB" | FALSE NOW | `Hokej_Hokej_H45.zip`: 296,480,940 bytes (283 MiB), 432 MB unpacked | "about 283 MiB" (the Director writes the final count) |
+| P6-PG10 | MAKE YOUR OWN: "or you pick one of the sentences on the screen" (P5-PG49) | TRUE | walk: "list of saved sentences"; A235 W3 (four shown, none cut) | kept |
+| P6-PG11 | "Score, and a red lamp lights over the net" (P5-PG57) | TRUE | walk: "GOAL banner with the lamp lit"; `h45-04-goal-banner-lamp.png`. "the net shakes", "the boards rock": still CANNOT | kept |
+| P6-PG12 | "The two games stay identical frame by frame"; "a thousand soak matches never drifted" (P5-PG54) | TRUE | PLAY-ME H45 "Hardening": 44 lockstep matches with loss and jitter, both seats human, 0 desync; 10,700 soak matches, 0 faults. "the bots on your side plan with you": still CANNOT | kept |
+| P6-PG13 | the twelve mode lines against each mode's walked match | 11 TRUE, 1 CANNOT | walk table: Pond no knockdown in a whole match; Sudden Death ends at the first goal; Power Play five against three; Outnumbered three against five, the shield; Sniper five against four, the tall net; Marathon 140 x 70 m, 6:00; Cage four a side, four drums; Bruisers first to 2; Fog of War night and haze; Arsenal boosts, F tricks; Glow Ice the whistle. Shotgun's blast: the hand never pressed F (still CANNOT, P5-PG44) | kept |
+| P6-PG14 | the booth: a line for most things, shown as captions | TRUE | walk: booth lines on every picked frame ("In! Blue scores!", "Gravity wins again.") | kept; heard: `[O16]` |
+| P6-PG15 | MAKE YOUR OWN: "With your own key (typed under SETTINGS, never bundled with the game)" | TRUE | A235 job 6: a cooked game never takes the CLI route; the key is the typed one, or the environment variable `ANTHROPIC_API_KEY` (JamDesignerSubsystem.cpp:359), else the saved games; walk: "No API key: the Designer answers from the games it already made" | kept (the page does not claim the key is only typed) |
+| P6-PG16 | Windows 10 or 11 (DirectX 12) only, no web build | TRUE | A232 NO-GO (R-0074) | kept |
+| P6-PG17 | first launch compiles shaders a few seconds; Cancel on the firewall | CANNOT | the walk ran a Development copy off screen; HOST not pressed; no clean-machine test | unchanged |
+
+## 6.2 `submission/form.md`
+
+| ID | Claim | Verdict | Source | Now |
+|---|---|---|---|---|
+| P6-FM01 | zip "about 271 MiB zipped, 421 MB unpacked (H41)" | FALSE NOW | H45: 296,480,940 bytes, 432 MB | "about 283 MiB, 432 MB (H45)" |
+| P6-FM02 | OpenAI Awards: "IF LANDED" fourteen MODES illustrations; "62 ... 50 of them ship" | FALSE NOW | landed on main c7057ed0; `ASSETS.md` at bcbd1287: 76 rows by Codex image generation or a Codex concept sheet, 64 shipped, 14 of them `T_UI_ModeArt_*` (all shipped); walk: each illustration whole, three on the neon arena that those modes play | the mark removed, a bullet "The MODES screen (14)", counts 76 / 64, the proof paragraph rewritten |
+| P6-FM03 | tools: Codex "menu and HUD art, in-game textures, the concept sheets" | FALSE NOW (incomplete) | as P6-FM02 | "... the fourteen MODES illustrations ..."; proof "Codex rows 76 (64 shipped)" |
+| P6-FM04 | NVIDIA: "the CREDITS screen does not name DLSS"; "Open: ... has none" | FALSE NOW | `MenuWidget.cpp:1207` "Uses NVIDIA DLSS technology, (c) NVIDIA Corporation."; walk CREDITS row: "the DLSS line" | "names NVIDIA DLSS as text since H45"; "Closed" |
+| P6-FM05 | Windows 10 or 11 (DirectX 12) only; no web build; sourced: four fonts and the DLSS library | TRUE | H45 carries DLSS (PLAY-ME) | kept |
+| P6-FM06 | the operator's fields: names and e-mails, the video link, the dev log link, the OpenAI model name, the Solo Driver tick | ASK | `status/A225.md` top | |
+
+## 6.3 `submission/package/README.txt` (ships inside the final package)
+
+| ID | Line | Verdict | Source | Now |
+|---|---|---|---|---|
+| P6-RT01 | "Windows 10 or 11, 64 bit. A graphics card that does DirectX 12." | FALSE NOW (asked: "only") | R-0074, A232 | "Windows 10 or 11 (DirectX 12) only, 64 bit, ..." |
+| P6-RT02 | "Under 450 MB of disk when unpacked" | TRUE | H45: 432 MB | kept |
+| P6-RT03 | "The same keys show in a panel at the bottom left all match" | FALSE NOW | the panel shows the keys for now: with the puck SHOOT, PASS, DEKE, SPIN; without CROSS-CHECK, CHECK, POKE; always SKATE, SPRINT, BRAKE (PLAY-ME) | "A panel at the bottom left shows the keys you need now, with or without the puck, all match." |
+| P6-RT04 | Shift: sprint | FALSE NOW (incomplete) | the sprint bar left the ice: the panel's SPRINT row dims when the legs are spent (PLAY-ME New in H45) | "sprint, while the legs last (the panel's SPRINT row dims when they are spent)" |
+| P6-RT05 | the credits paragraph names Unreal Engine and no DLSS | FALSE NOW | DLSS ships in H45; its licence asks for a text credit (DLSS.md 1.4) | "On RTX graphics cards it uses NVIDIA DLSS technology (upscaling, on by default)." (text, no logo) |
+| P6-RT06 | the controls rows and the pad line | TRUE | PLAY-ME H45 controls table (generated from the live bindings): every key and pad button matches | kept |
+| P6-RT07 | keys for MAKE YOUR OWN | TRUE (silent) | the README does not talk about keys, so it carries no key line | nothing added |
+| P6-RT08 | "Solo play does not need network access" | CANNOT | the clean-machine test has not run (`[O7]`) | kept |
+
+## 6.4 `tagline.md`, the video
+
+| ID | Claim | Verdict | Source | Now |
+|---|---|---|---|---|
+| P6-TG01 | "Six taglines, each true of package H43"; the banner "true of package H43" | FALSE NOW (stale package) | the six lines read again against H45: true (P5 rows; walk) | "the candidate H45" |
+| P6-VS01 | SHOTLIST row 1: "No still of HOME of H43" | FALSE NOW | `submission/shots/h45-01-home-rookie-lit.png` | CHANGED (pass 6) |
+| P6-VS02 | row 2: "the chosen mode's picture"; stills `modes/01..09` | FALSE NOW | the pictures are generated illustrations (walk); `modes/*` show the screenshots of before | CHANGED: "illustration (generated art, not a screenshot)" |
+| P6-VS03 | row 4: faceoff stills | FALSE NOW | `h45-02-faceoff-stands.png` | CHANGED |
+| P6-VS04 | row 6: the hit's stills | FALSE NOW | `h45-03-hit-man-in-the-air.png`, `h45-12-cross-check-sends-him-flying.png` | CHANGED |
+| P6-VS05 | row 12: the goal's still | FALSE NOW | `h45-04-goal-banner-lamp.png`, `h45-05-glow-ice-goal.png` | CHANGED |
+| P6-VS06 | the header: no effect at any contact, the page's pictures named | added | A235; `H45-PICKS.md` | a pass-6 note |
+| P6-VS07 | `script-v2.md`'s pass-5 pointer ("gone from package H43") | TRUE | gone from H45 too | kept |
+
+## 6.5 What the walk did not settle (still CANNOT)
+Hit sizes by closing speed (P5-PG04, TG02, RT20), the get-up grace (PG19), the poke's one in ten (PG23, PG65, RT14), the season's step (PG38, PG73), the bots' five behaviours (PG39),
+Shotgun's blast (PG44), the carry's length (PG64), mashing (PG66), when he is knocked down (PG67), big rinks (PG70), Bruisers and Cage (PG74), the net's shake and the boards' rock,
+the bots planning with a joined human, the shader time (PG81, RT02), Cancel on the firewall (RT07, P6-RT08). The walk was the scripted hand off screen; nothing was heard.
+
+## 6.6 Counts (pass 6)
+Rows read: 39 (50 claims: P6-PG13 counted as its 12 mode lines). TRUE: 27 (P6-PG13 eleven of them; P6-PG06 and P6-PG07 are true limits added from PLAY-ME). FALSE NOW and rewritten: 18. CANNOT: 3 (P6-PG13 Shotgun, P6-PG17, P6-RT08). ASK: 1 (P6-FM06). A note added: 1 (P6-VS06). Pass-5 rows moved by the walk: P5-PG49, P5-PG54, P5-PG57 to TRUE (in part, as said).
+
+---
+
 # The truth table, pass 5: every claim of the submission against package H43 (lane A225, track D1, Sun 15 Nov 2026 16:10 to 17:30, main a12ead1b)
 
 **What this is.** Pass 4 (below, headed "pass 2": Saturday 08:00, package H30) is a day and a half and thirteen packages old. Since then the operator played H34 and H39 (R-0067, R-0069, R-0070) and the game moved under the page:

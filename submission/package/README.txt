@@ -8,7 +8,7 @@ HOW TO START
    ROOKIE is the newcomer's level, PRO is for anyone who has played a hockey game, ALL-STAR is the wall.
 
 WHAT YOU NEED
-- Windows 10 or 11, 64 bit.  A graphics card that does DirectX 12.  Under 450 MB of disk when unpacked.
+- Windows 10 or 11 (DirectX 12) only, 64 bit, with a graphics card that does DirectX 12.  Under 450 MB of disk when unpacked.
 - The Microsoft Visual C++ runtime (x64).  Most PCs have it.  If ThirdJam.exe closes at once or complains about
   a missing VCRUNTIME / MSVCP dll, run this once, accept, and start the game again:
       Engine\Extras\Redist\en-us\vc_redist.x64.exe
@@ -31,14 +31,15 @@ CONTROLS (keyboard and mouse)
   E                  spin off a check
   Mouse wheel        deke
   Space              poke: jab for the puck (about one jab in ten takes it)
-  Shift              sprint
+  Shift              sprint, while the legs last (the panel's SPRINT row dims when they are spent)
   Ctrl               brake
   Esc                pause: resume, change a rule, controls
   R                  restart the match
 Gamepad: left stick skate, right stick aim, RT shoot (without the puck: cross-check), RB pass (without: check),
 LB cross-check, X pass, R3 ability, B spin, Y deke, A poke, LT sprint, Start pause.
 The pad is mapped; no person has play-tested it yet.
-The same keys show in a panel at the bottom left all match.  To remove it for good: SETTINGS, CONTROLS PANEL, OFF.
+A panel at the bottom left shows the keys you need now, with or without the puck, all match.
+To remove it for good: SETTINGS, CONTROLS PANEL, OFF.
 Any key can be rebound under CONTROLS (in the menu, or Esc in a match).
 
 THE SHORT VERSION OF THE RULES
@@ -48,7 +49,8 @@ If you carry the puck you cannot check.  Stop five stick lengths short of a defe
 Five a side, and your mates pass.  Once per period CHANGE A RULE (Esc) moves one slider.
 
 CREDITS AND TOOLS
-This game was made for the Third Jam with Unreal Engine 5.9.  The code, the tests and the dev log were written and run
+This game was made for the Third Jam with Unreal Engine 5.9.  On RTX graphics cards it uses NVIDIA DLSS
+technology (upscaling, on by default).  The code, the tests and the dev log were written and run
 by AI coding agents directed by the team.  AI-generated content (images, 3D skater meshes, voice and sound effects) is
 declared as such and is not claimed as sourced.  The tools are named on the game's CREDITS screen.
 
