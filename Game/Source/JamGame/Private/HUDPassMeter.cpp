@@ -66,13 +66,19 @@ void UJamHudWidget::UpdatePassMeter(const FJamPresentationFrame& F)
 			const double LenM = FMath::Max(1.0, Target >= 0 ? FMath::Min(ReachM, FVector2D::Distance(Aim, From)) : ReachM);
 			const FVector2D End = From + Way * LenM, Mid = From + Way * (LenM * 0.5), Across(-Way.Y, Way.X);
 			const double ThickM = 0.22;
+			if (GroundLinesOn())
+			{
+				// Lane A213 (wave 4, the SCREEN FAULT): the line in the ice's plane, from past the puck's far side (it stood up seen end-on as one bar).
+				const FLinearColor Col = Target >= 0 ? F.GetTeamColour(Hu.Team) : FJamUiStyle::Paper();
+				bShown = DrawGroundStrip(PassStripPool, From, End, ThickM, 0.15, Col, 0.9f) > 0;
+			}
 			const FVector2D Pts[4] = { From, End, Mid - Across * (ThickM * 0.5), Mid + Across * (ThickM * 0.5) };
 			FVector2D Px[4];
 			bool bAll = !Way.IsNearlyZero();
 			for (int32 i = 0; i < 4 && bAll; ++i) bAll = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Pts[i], 0.03), Px[i], false);
 			FVector2D C, Sz, BoxMin, BoxMax;
 			float AngleDeg = 0.f;
-			if (bAll && StopBarLayout(Px[0], Px[1], Px[2], Px[3], 3.f, C, Sz, AngleDeg, BoxMin, BoxMax))
+			if (!GroundLinesOn() && bAll && StopBarLayout(Px[0], Px[1], Px[2], Px[3], 3.f, C, Sz, AngleDeg, BoxMin, BoxMax))
 			{
 				const FLinearColor Col = Target >= 0 ? F.GetTeamColour(Hu.Team) : FJamUiStyle::Paper();
 				Bar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, HoldLineAlpha(BoxMin, BoxMax, 0.9f)));   // lane A213 (the look): fainter over his own body
@@ -83,7 +89,8 @@ void UJamHudWidget::UpdatePassMeter(const FJamPresentationFrame& F)
 			}
 		}
 	}
-	if (!bShown) Bar->SetVisibility(ESlateVisibility::Collapsed);
+	if (!bShown || GroundLinesOn()) Bar->SetVisibility(ESlateVisibility::Collapsed);
+	if (!bShown) HideGroundStrip(PassStripPool);   // lane A213 (wave 4)
 	{
 		// The proof's stills: one per showing, After sim frames into it.
 		const int32 After = CVarJamHudPassMeterStills.GetValueOnGameThread();

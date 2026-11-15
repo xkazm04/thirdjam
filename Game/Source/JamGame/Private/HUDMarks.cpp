@@ -114,7 +114,7 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	const bool bOn = CVarJamHudMarks.GetValueOnGameThread() != 0 && F.Phase == EJamPhase::Play && Sim && PC;
 	if (!bOn)
 	{
-		Hide(ContestRing); Hide(StopBar); Hide(ContestRingInner); Hide(ContestOppRing);
+		Hide(ContestRing); Hide(StopBar); HideGroundStrip(StopStripPool); Hide(ContestRingInner); Hide(ContestOppRing);
 		MarkContestOpp = -1; MarkStopState = 0;
 		GContestShow = JamCarrierMarks::FMarkShow(); GContestShownSince = -1;
 		return;
@@ -203,11 +203,13 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 			StopBar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, Stop.bLit ? 1.f : StopMarkArmedAlpha));
 			StopBar->SetRenderTransformAngle(AngleDeg);
 			StopBar->SetVisibility(ESlateVisibility::HitTestInvisible);
+			// Lane A213 (wave 4, A211's fourth list: "a white stop bar still hangs in the air"): in the ice's plane from end to end of the line.
+			if (GroundLinesOn() && DrawGroundStrip(StopStripPool, Ends[0], Ends[1], ThickM, 0.0, Col, Stop.bLit ? 1.f : StopMarkArmedAlpha) > 0) StopBar->SetVisibility(ESlateVisibility::Collapsed);
 			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(StopBar->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }
 			bStopShown = true;
 		}
 	}
-	if (!bStopShown) Hide(StopBar);
+	if (!bStopShown) { Hide(StopBar); HideGroundStrip(StopStripPool); }   // lane A213 (wave 4): the strip with it
 	const int32 StopNow = !Stop.bShow ? 0 : (Stop.bLit ? 2 : 1);
 	if (StopNow != MarkStopState)
 	{

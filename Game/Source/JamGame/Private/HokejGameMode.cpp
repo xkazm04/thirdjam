@@ -1116,6 +1116,78 @@ void AHokejGameMode::StickDrillObserve()
 	}
 }
 
+// Lane A210 (track F3, wave 4): drill 24, the play drill: the human plays the puck as a hand would hold the buttons, for the strips of the pass and the
+// shot (docs/experiments/PUCK-SEEN.md). Without the puck he skates to it. With it he carries to a spot on the attacked blue line (PlaySpotM from the
+// goal line), turns to the net, and makes the next play of five: a tap pass (2 frames), a full-hold pass (pass.power.full_frames + 3), a tap shot,
+// a half-charged shot, a full-charged shot; the pass goes to the sim's best mate (the stick towards him). One JAMDRILL play line a play; after
+// PlayDrillPlays plays the summary line and the drill switches itself off. Proofs only: nothing here runs in a shipped game.
+namespace
+{
+	constexpr double PlaySpotM = 24.0;
+	constexpr int32 PlayDrillPlays = 10;
+	int32 GPlayN = 0, GPlayHeld = 0, GPlayHoldFor = 0;
+	int64 GPlayWaitUntil = 0;
+	FJamInput PlayDrillInput(UJamSim* Sim)
+	{
+		FJamInput In;
+		const int32 Me = Sim->GetHumanIndex();
+		if (!Sim->GetSkaters().IsValidIndex(Me) || Sim->GetPhase() != EJamSimPhase::Playing) { GPlayHeld = 0; return In; }
+		const FJamSkaterState& S = Sim->GetSkaters()[Me];
+		const int64 F = Sim->GetFrame();
+		if (F < 5) { GPlayN = 0; GPlayHeld = 0; GPlayWaitUntil = 0; }   // a new match
+		const double Gx = Sim->AttackGoalX(S.Team);
+		const double Dir = Gx > 0 ? 1.0 : -1.0;
+		if (Sim->CarrierIndex() != Me || !S.CanAct())
+		{
+			GPlayHeld = 0;
+			const FVector2D ToPuck = Sim->GetPuck().Pos - S.Pos;
+			In.Move = ToPuck.Size() > 0.5 ? ToPuck.GetSafeNormal() : FVector2D::ZeroVector;
+			In.Stick = In.Move;
+			return In;
+		}
+		const FVector2D Spot(Gx - Dir * PlaySpotM, 0.0), Goal(Gx, 0.0);
+		const FVector2D ToSpot = Spot - S.Pos, ToGoal = (Goal - S.Pos).GetSafeNormal();
+		const int32 Kind = GPlayN % 5;   // 0 tap pass, 1 full pass, 2 tap shot, 3 half shot, 4 full shot
+		const bool bPassPlay = Kind <= 1;
+		const bool bThere = ToSpot.Size() < 2.5 || (S.Pos.X - Spot.X) * Dir > 0.0;
+		const bool bFacing = FVector2D::DotProduct(S.Forward(), ToGoal) > FMath::Cos(FMath::DegreesToRadians(10.0));
+		In.Stick = ToGoal;
+		if (GPlayHeld == 0 && (!bThere || !bFacing || F < GPlayWaitUntil || F < S.ShotReadyFrame))
+		{
+			In.Move = bThere ? ToGoal * 0.35 : ToSpot.GetSafeNormal() * 0.8;   // to the spot, then a creep at the net so the body turns to it
+			return In;
+		}
+		FVector2D Aim;
+		const int32 Mate = bPassPlay ? Sim->BestPass(Me, Aim) : -1;
+		if (bPassPlay && Mate < 0 && GPlayHeld == 0) { ++GPlayN; return In; }   // nobody to pass to: the next play
+		if (Sim->GetSkaters().IsValidIndex(Mate)) In.Stick = (Sim->GetSkaters()[Mate].Pos - S.Pos).GetSafeNormal();
+		if (GPlayHeld == 0)
+		{
+			const int32 Full = FMath::Max(Sim->GetConfig().Pass.PowerFullFrames, Sim->GetConfig().Pass.SaucerHalfFrames), Max = FMath::Max(Sim->GetConfig().Shot.ChargeFramesMax, 2);
+			GPlayHoldFor = Kind == 0 ? 2 : Kind == 1 ? Full + 3 : Kind == 2 ? 2 : Kind == 3 ? Max / 2 : Max + 2;
+		}
+		In.Move = ToGoal * 0.3;
+		if (GPlayHeld < GPlayHoldFor)
+		{
+			++GPlayHeld;
+			if (bPassPlay) In.bPassHeld = true; else In.bShootHeld = true;
+			return In;
+		}
+		// The release: nothing held on this frame; the sim fires the pass or the shot.
+		static const TCHAR* const Names[5] = { TEXT("tap_pass"), TEXT("full_pass"), TEXT("tap_shot"), TEXT("half_shot"), TEXT("full_shot") };
+		UE_LOG(LogHokej, Log, TEXT("JAMDRILL play n=%d kind=%s release_frame=%lld held=%d mate=%d dist_goal_m=%.1f"), GPlayN + 1, Names[Kind], F, GPlayHeld, Mate, FMath::Abs(Gx - S.Pos.X));
+		GPlayHeld = 0;
+		GPlayWaitUntil = F + 90;
+		if (++GPlayN >= PlayDrillPlays)
+		{
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL summary mode=24 plays=%d"), GPlayN);
+			GPlayN = 0;
+			if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.Drill"))) V->Set(0, ECVF_SetByCode);
+		}
+		return In;
+	}
+}
+
 FJamInput AHokejGameMode::DrillInput()
 {
 	// Mirrors what the bindings produce: WASD as a unit Move toward the carrier, one frame of bCheck (right mouse) or bLift (middle mouse) when in range.
@@ -1123,6 +1195,7 @@ FJamInput AHokejGameMode::DrillInput()
 	if (Mode == 3 || Mode == 4) return StickDrillInput();   // lane A51 (R-0034): the 1v1 stick-handling drill keeps the real cursor and keys
 	if (Mode >= 7 && Mode <= 11) return MechDrillInput();   // lane A77 (R-0036): the mechanics drills
 	if (Mode == 22) return FJamInput();   // lane A132: the law-1 drill scripts its four in LawDrillGather
+	if (Mode == 24) return PlayDrillInput(Sim);   // lane A210: the pass and the shot, held and released (the strips of PUCK-SEEN.md)
 	if (Mode == 21) return CVarJamCtrlCarryScript.GetValueOnGameThread() == 2 ? ReadHumanInput() : FJamInput();   // lane A102: the carry drill scripts the human in CarryDrillGather (2 = by hand)
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
@@ -1331,6 +1404,9 @@ void AHokejGameMode::GatherInputs()
 			I.bLift = Out[i].bLift;
 			I.bDeke = Out[i].bDeke;   // lane A39: the bots' deke
 			I.bSprint = Out[i].bSprint;   // lane A72 (ask A2): game.ai.sprint
+			I.bSpin = Out[i].bSpin;   // lane A217 (FAULT latent, 04:10 on 15 Nov; the Director, 04:12): the three verbs FJamSimAdapter::Step copies and this loop did not; no brain sets them for a bot today
+			I.bAbility = Out[i].bAbility;
+			I.bCrossHold = Out[i].bCrossHold;
 			// Lane A31 (B-to-A-0024 point 3, C-0001 v3): the brain's owner calls SetGoalieStance for the skater covering the crease, on a change only.
 			// R-0033 point 2 (lane A50): any crease skater, not only the back (JamAI::CreaseStance after Decide); the human below through the same send.
 			SendGoalieStance(i, Out[i].bGoalie, Out[i].GoalieSide, RoleName(W.Skaters[i].Role));

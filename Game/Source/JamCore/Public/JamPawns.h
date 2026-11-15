@@ -98,9 +98,12 @@ public:
 	// degrees put the socket only 48 cm out, 45 put it 70: measured, JAMPUCK socket lines). An aim inside the floor goes to the floor on the side it leans
 	// to; it changes side only once the raw aim is past 0.4 of the floor on the other. The sim's blade and puck are not touched: only where the figure
 	// holds the stick, and so where the carried puck is drawn. jam.puck.CarryAim: FloorDeg (30; 0 = off). Pure.
-	static constexpr float CarryForehandK = 1.5f;
-	static float CarryAimDeg(float RawRelDeg, float PrevSentDeg, bool bCarrying, float FloorDeg);
+	// Since the ruling of 02:10 the two floors are their own numbers (jam.puck.CarryAim the backhand's, jam.puck.CarryAimFore the forehand's) and the
+	// side inside them is the side the sim's puck is on (PuckSide), so the blade goes to the puck and not away from it; PuckSide 0: as before (the
+	// side the stick is on, with the hysteresis).
+	static float CarryAimDeg(float RawRelDeg, float PrevSentDeg, bool bCarrying, float FloorBackDeg, float FloorForeDeg, int32 PuckSide = 0);
 	static float CarryAimFloorDeg();
+	static float CarryAimForeFloorDeg();
 	// Wave 4 (the eye's EYE 7: a whiff must look like a whiff): for Frames sim frames the figure's stick is sent to the front of the body (aim 0), whatever
 	// the cursor says: after a cross-check that met nobody the stick comes back instead of staying out on the side it shoved to. Presentation only.
 	void SetAimRecover(int32 Frames) { AimRecoverLeft = FMath::Max(AimRecoverLeft, Frames); }
@@ -115,7 +118,9 @@ public:
 	// Lane A210 (wave 4, R-0067 point 2): the carrier the screen shows. The game mode's FJamPuckShow decides it once per sim step from the sim's carrier of
 	// record AFTER the step and tells every pawn before ApplySimFrame: 1 this skater, 0 not; -1 = not told (ApplySimFrame then reads the state's bHasPuck,
 	// as before: the lobby, tests, jam.puck.Show 0). IsToldHasPuck: what the figure was last told (the probe).
-	void SetShownCarrier(int32 State) { ShownCarrier = State; }
+	// PuckSide (the Director's ruling of 02:10: the drawn puck no more than 45 cm from the sim's): the side of his line the SIM's puck is on, in his own
+	// frame: -1 his right (the backhand: a negative aim), +1 his left (the forehand), 0 not known: the carry floor sends the stick to THAT side.
+	void SetShownCarrier(int32 State, int32 PuckSide = 0) { ShownCarrier = State; CarryPuckSide = PuckSide; }
 	// The component GetPuckSocketWorld reads: a mesh that has the puck_socket socket (bOutIsSocket true: device B's figures) or a scene component named
 	// puck_socket (the toy figure); null when the visual has neither.
 	USceneComponent* FindPuckSocket(bool& bOutIsSocket) const;
@@ -181,6 +186,7 @@ private:
 	bool bWasDown = false;
 	bool bHadPuck = false;
 	int32 ShownCarrier = -1;   // lane A210: see SetShownCarrier
+	int32 CarryPuckSide = 0;
 	int32 AimRecoverLeft = 0;  // lane A210: see SetAimRecover
 	bool bWasAtFaceoff = false;
 	bool bWasPinned = false;   // lane A45 (C-0001 v4): SetBoardPin level, sent on the change
@@ -223,7 +229,9 @@ public:
 	// the frame are evaluated (the socket it reads carries last frame's pose), so a moving stick left the drawn puck a frame behind the blade. With a
 	// follow set the puck ticks after the animation (TG_PostUpdateWork) and takes the socket's place again (x and y; its own height on the ice).
 	// Comp null = no follow. bCorrect false = measure only (GetLastLagCm: how far the socket had moved from where the puck was placed; -1 = no follow).
-	void SetFollow(USceneComponent* Comp, bool bIsSocket, bool bCorrect);
+	// AnchorCm / MaxOffCm (the ruling of 02:10): with MaxOffCm > 0 the puck is put no further than that from AnchorCm (where the sim has it this
+	// frame) on the way to the socket: the drawn puck never strays more than that from the puck a stick can take.
+	void SetFollow(USceneComponent* Comp, bool bIsSocket, bool bCorrect, const FVector& AnchorCm = FVector::ZeroVector, double MaxOffCm = 0.0);
 	double GetLastLagCm() const { return LastLagCm; }
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -251,6 +259,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UNiagaraComponent> Trail;
 	TWeakObjectPtr<USceneComponent> FollowComp;   // lane A210: see SetFollow
 	bool bFollowIsSocket = false, bFollowCorrect = true;
+	FVector FollowAnchor = FVector::ZeroVector;
+	double FollowMaxOffCm = 0.0;
 	double LastLagCm = -1.0;
 	double HalfHeightM = 0.04;
 };

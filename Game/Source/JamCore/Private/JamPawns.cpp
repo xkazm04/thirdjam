@@ -609,7 +609,7 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		LastAimReach = Reach;
 		const float Prev = SentAimDeg;
 		// Lane A210 (wave 4): the human's carried stick stays out of the zone his own hips hide (CarryAimDeg); the raw aim is logged and kept as it was.
-		float AimForFigure = CarryAimDeg(AimDeg, SentAimDeg, S.bHuman && bHadPuck, CarryAimFloorDeg());
+		float AimForFigure = CarryAimDeg(AimDeg, SentAimDeg, S.bHuman && bHadPuck, CarryAimFloorDeg(), CarryAimForeFloorDeg(), CarryPuckSide);
 		if (AimRecoverLeft > 0) { --AimRecoverLeft; if (!bHadPuck) AimForFigure = 0.f; }   // wave 4: after a whiff the stick comes back to the front
 		SentAimDeg = SmoothAimDeg(AimForFigure, SentAimDeg, AimSide, bAimInit);
 		SentReachM = FMath::IsNearlyZero(SentReachM) ? Reach : SentReachM + (Reach - SentReachM) * 0.35f;
@@ -644,19 +644,22 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	if (S.bFoulThisFrame) IJamSkaterVisual::Execute_PlayFoulReaction(V);
 }
 
+static TAutoConsoleVariable<float> CVarJamPuckCarryAimFore(TEXT("jam.puck.CarryAimFore"), 45.f,
+	TEXT("The human's carried stick on the figure: the floor on the forehand (his left), in degrees (lane A210: 30 put the figure's puck socket only 48 cm out, 45 put it 70). 0 = no floor on that side."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamPuckCarryAim(TEXT("jam.puck.CarryAim"), 30.f,
 	TEXT("The human's carried stick on the figure (lane A210): never closer than this many degrees to his line, so the stick and the puck show past his hips at his camera (a puck carried dead ahead is hidden behind him). The sim's blade and puck are untouched. 30 (default); 0 = off (package H34)."), ECVF_Default);
 
 float AJamSkater::CarryAimFloorDeg() { return FMath::Clamp(CVarJamPuckCarryAim.GetValueOnGameThread(), 0.f, 60.f); }
+float AJamSkater::CarryAimForeFloorDeg() { return FMath::Clamp(CVarJamPuckCarryAimFore.GetValueOnGameThread(), 0.f, 70.f); }
 
-float AJamSkater::CarryAimDeg(float RawRelDeg, float PrevSentDeg, bool bCarrying, float FloorDeg)
+float AJamSkater::CarryAimDeg(float RawRelDeg, float PrevSentDeg, bool bCarrying, float FloorBackDeg, float FloorForeDeg, int32 PuckSide)
 {
 	const float Raw = FMath::UnwindDegrees(RawRelDeg);
-	if (!bCarrying || FloorDeg <= 0.f) return RawRelDeg;
-	const float Fore = FloorDeg * CarryForehandK, Back = FloorDeg;
+	const float Fore = FMath::Max(FloorForeDeg, 0.f), Back = FMath::Max(FloorBackDeg, 0.f);
+	if (!bCarrying || (Fore <= 0.f && Back <= 0.f)) return RawRelDeg;
 	if (Raw >= Fore || Raw <= -Back || FMath::Abs(Raw) > 90.f) return RawRelDeg;
-	// Inside the floors: the side the stick is on is kept until the raw aim is past 0.4 of the floor on the other; from the middle: the side it leans to.
-	const bool bBackhand = PrevSentDeg < -1.f ? Raw < 0.4f * Fore : PrevSentDeg > 1.f ? Raw < -0.4f * Back : Raw < 0.f;
+	// Inside the floors: the side the sim's puck is on; not known: the side the stick is on, until the raw aim is past 0.4 of the other floor.
+	const bool bBackhand = PuckSide < 0 ? true : PuckSide > 0 ? false : PrevSentDeg < -1.f ? Raw < 0.4f * Fore : PrevSentDeg > 1.f ? Raw < -0.4f * Back : Raw < 0.f;
 	return bBackhand ? -Back : Fore;
 }
 
@@ -839,11 +842,13 @@ void AJamPuck::ApplyRenderBlend(const FVector& WorldCm, float Alpha)
 	Place(WorldCm, Alpha);
 }
 
-void AJamPuck::SetFollow(USceneComponent* Comp, bool bIsSocket, bool bCorrect)
+void AJamPuck::SetFollow(USceneComponent* Comp, bool bIsSocket, bool bCorrect, const FVector& AnchorCm, double MaxOffCm)
 {
 	FollowComp = Comp;
 	bFollowIsSocket = bIsSocket;
 	bFollowCorrect = bCorrect;
+	FollowAnchor = AnchorCm;
+	FollowMaxOffCm = MaxOffCm;
 	if (!Comp) LastLagCm = -1.0;
 }
 
@@ -855,7 +860,13 @@ void AJamPuck::Tick(float DeltaSeconds)
 	const FVector Socket = bFollowIsSocket ? C->GetSocketLocation(JamSkaterSockets::Puck) : C->GetComponentLocation();
 	LastLagCm = FVector::Dist2D(Socket, GetActorLocation());
 	if (!bFollowCorrect) return;
-	const FVector Loc(Socket.X, Socket.Y, HalfHeightM * 100.0);
+	FVector Loc(Socket.X, Socket.Y, HalfHeightM * 100.0);
+	if (FollowMaxOffCm > 0.0)   // no further than MaxOffCm from where the sim has it
+	{
+		const FVector2D Off(Socket.X - FollowAnchor.X, Socket.Y - FollowAnchor.Y);
+		const FVector2D Capped = Off.GetClampedToMaxSize(FollowMaxOffCm);
+		Loc.X = FollowAnchor.X + Capped.X; Loc.Y = FollowAnchor.Y + Capped.Y;
+	}
 	LastPlaced = Loc;
 	SetActorLocation(Loc);
 	PlaceDiscOnIce(Loc);

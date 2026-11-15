@@ -131,3 +131,30 @@ A button held while the puck changes hands does nothing until you let go and pre
 | own-net label | "own NN m", its diamond and arrow only while he is in his own third, and never on the radar's frame (on Glow Ice it slid under the radar: "own 8 m" inside the radar) | `jam.hud.OwnThird` | `r3-02` |
 | owed stills | the pass prompt firing (`r3-08`, a staged carry: ScriptHuman 0, drill 10, HandPuck); the pill dimmed while he is down: still owed (no knockdown of the human in the staged runs) | - | |
 | neon and night | every element read on Glow Ice and on the night look: rings, lines, the pill, the teach plate, the loose and contested rings: all read (blue rings on the night look's blue ice read by their ink edge); fixed: the own-net label under the radar | - | `r3-01`..`r3-07`, `r3-10`; runs `tools/qa/screen/out/a213-{neon1,neon2,night1,night2}/` |
+
+## 8. Wave 4: nothing on any screen lies about tonight's game (main 9e6815a0; the rules due by 08:30 in the last column)
+
+Read against: A206 (bots), A207 (pass and shot), A208 (touch possession), A209 (contact), A210 (hits), and the Director's list of what lands by
+08:30 (the faceoff: both centres at the dot, nobody felled for 90 frames after a drop; a pressed cross-check into a carrier's back shoves him; a held
+brace on a carrier's back slows him and strips the puck; nobody scores on himself; a pass goes to the mate the stick points at).
+
+| String | Where | Verdict | Note |
+|---|---|---|---|
+| "New to hockey games? Start here: rookies rarely hit." | HOME, under the level switch (`UJamMenuFlow::LevelMeaning`) | **fixed**: "... rookies are a step slower." | rookie bots check him about 8 times a match, a third land (A209); a level is easier by execution, not by not caring (NIGHT-COMMON) |
+| "Played one before? Pros hit as a habit." / "The wall. All-stars hunt the puck. Beat pro first." | HOME | true | |
+| "Five-a-side hockey. WASD skates, the mouse is your stick." / "The speed you bring is the hit you get." | HOME | true | the closing speed still makes the hit (A209 law 1) |
+| Sniper card: "shot 26 m/s" | mode card facts (`modes/hockey.mode.sniper.cartridge.json` game.meta.facts) | **fixed**: "shot 52 m/s" | shot.speed_scale 2 (A207) doubles every shot: a tap leaves at 52 |
+| the other eleven mode cards' pitches and facts | MODES | true | none names a shot speed, a saucer or a lift |
+| the controls strip (SKATE WASD ... SPRINT SHIFT) | first match, 8 s | true | verbs and keys only |
+| the pill (LMB SHOOT / RMB PASS, CROSS-CHECK / CHECK, BRACED; the teaching pills) | in play | true (READY 1, 2) | SAUCER gone under the pass's power |
+| CONTROLS rows, the pause card, the binding table | menu, pause | true (READY 1) | "hold to brace" stays true with the 08:30 brace (it slows and strips on a carrier's back) |
+| "press shoot at the drop, not before" | faceoff hint, first 3 faceoffs | true | the faceoff landing (centres at the dot, 90 frames without a felling) keeps the early-press rule; re-read at the landing |
+| "THE PUCK IS YOURS UNTIL SOMEONE PRESSES FOR IT" | the kept-puck prompt | true | a carried puck is taken only by a press (A208); shown only while he carries (READY 1) |
+| "S AGAINST YOUR MOTION, OR HOLD CTRL: STOP, THEN GO" | the brake prompt | true | |
+| the contact line (TOO SOFT, MISSED, JUST GOT UP, BOUNCED OFF, NOT WITH THE PUCK, TOO SOON, STICK LOCKED, HE JUST GOT IT, BRACED HIT, RUN THROUGH) | in play | true | "JUST WON IT" fixed in READY 2 |
+| YOU WIN / BEATEN, YOU n : n THEM, the keys | end card | true; **added** the match's lines (section 9) | |
+| captions: lift.clean / lift.miss ("Reached for the lift, nothing there") | commentary | **cut** at runtime (READY 2, `jam.comm.LiftIsCross`) | the cross-check is the sim's lift; check.cross plays on a clean one |
+| captions: pass.* ("Tape to tape.") | commentary | **fixed** (READY 2, `jam.comm.PassOnCatch`) | said only when a mate receives it |
+| captions: faceoff.*, poke.*, check.*, goal.*, the rest | commentary | true | no own-goal line exists (nobody scores on himself by 08:30: nothing to cut) |
+| barks (Game/Content/Barks/barks.json) | bubbles | true | no saucer, lift or own-goal word in any bark |
+| "In a match Esc shows this list again. The pad is mapped; no person has play-tested it yet." | CONTROLS | true | |

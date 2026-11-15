@@ -422,6 +422,34 @@ public:
 	void ApplyOwnLabelRule(const FJamPresentationFrame& Frame);
 	void UpdateOneLine(const FJamPresentationFrame& Frame);
 	int32 OneLineShown = -1;
+	// ---- Lane A213, wave 4 (the SCREEN FAULT of 04:30): a mark on the ice drawn IN the ice's plane (HUDGroundStrip.cpp): pieces of GroundStripPieceM,
+	// each laid out from its own projected corners, so the strip tapers with the ice and never stands up as a slab. Used by the hold lines (the pass's,
+	// the shot's) and the stop's line under jam.hud.GroundLines 1; 0 = the single screen-space bar of before.
+	static constexpr double GroundStripPieceM = 0.6;
+	static constexpr int32 GroundStripMaxPieces = 40;
+	static bool GroundLinesOn();
+	int32 DrawGroundStrip(TArray<TObjectPtr<UBorder>>& Pool, const FVector2D& FromM, const FVector2D& ToM, double WidthM, double StartM, const FLinearColor& Colour, float Alpha);
+	void HideGroundStrip(TArray<TObjectPtr<UBorder>>& Pool);
+	UPROPERTY(Transient) TArray<TObjectPtr<UBorder>> PassStripPool;
+	UPROPERTY(Transient) TArray<TObjectPtr<UBorder>> ShotStripPool;
+	UPROPERTY(Transient) TArray<TObjectPtr<UBorder>> StopStripPool;
+	// ---- Lane A213, wave 4: the end card says what happened (HUDEndStats.cpp, UpdateEndStats; called after UpdateEndWait). Under YOU WIN / BEATEN, in
+	// the card's own panel, four short lines from what the match counted for the human: shots (and goals), his passes that arrived (a mate's
+	// PassesReceived grew within EndPassArriveFrames of his pass), the hits he landed (the sim's check events of his), the time he carried the puck.
+	// Counted here, frame by frame, from the sim's existing fields and events: no sim state. jam.hud.EndStats 0 = the card of before.
+	struct FEndStats { int32 Shots = 0, Goals = 0, Passes = 0, Arrived = 0, Hits = 0; int64 CarryFrames = 0; };
+	static constexpr int32 EndPassArriveFrames = 180;
+	static FString EndStatsText(const FEndStats& S)
+	{
+		const int64 Sec = S.CarryFrames / 60;
+		return FString::Printf(TEXT("SHOTS %d   GOALS %d\nPASSES THAT ARRIVED %d OF %d\nHITS LANDED %d\nWITH THE PUCK %lld:%02lld"), S.Shots, S.Goals, S.Arrived, S.Passes, S.Hits, Sec / 60, Sec % 60);
+	}
+	void UpdateEndStats(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> EndStatsBlock;
+	FEndStats EndStatsNow;
+	int64 EndStatsLastFrame = -1;
+	int32 EndStatsPassesSeen = 0, EndStatsShotsSeen = 0, EndStatsGoalsSeen = 0, EndStatsReceivedSeen = 0;
+	int64 EndStatsPassPending = -1;
 	// The bark bubbles (UJamBarkWidget) yield to the HUD's one line: true while a HUD line of words stands this tick (the rule on). Wave 2.
 	static bool OneLineUpNow();
 	static uint64 OneLineTick;

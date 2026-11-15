@@ -16,6 +16,8 @@ static TAutoConsoleVariable<int32> CVarJamHudOneLine(TEXT("jam.hud.OneLine"), 1,
 	TEXT("Lane A213: 1 (default) at most one line of the HUD's words over the play at a time (contact line, prompt, controls strip, faceoff hint, caption, in that order) and the kept-puck prompt only while the human carries; 0 = the screen of before."), ECVF_Default);
 
 bool UJamHudWidget::OneLineOn() { return CVarJamHudOneLine.GetValueOnGameThread() != 0; }
+static TAutoConsoleVariable<int32> CVarJamHudKeptPrompt(TEXT("jam.hud.KeptPrompt"), 0,
+	TEXT("Lane A213 (wave 4): 0 (default) the kept-puck prompt (THE PUCK IS YOURS UNTIL SOMEONE PRESSES FOR IT) is not drawn: the double ring says it; 1 = drawn (while he carries)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudOwnThird(TEXT("jam.hud.OwnThird"), 1,
 	TEXT("Lane A213 (wave 3): 1 (default) the own-net label (own NN m, its diamond and arrow) shows only while the human is in his own third and never on the radar's frame; 0 = always (as before)."), ECVF_Default);
 
@@ -49,6 +51,15 @@ void UJamHudWidget::UpdateOneLine(const FJamPresentationFrame& F)
 		const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 		const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
 		if (Sim && PossessFromSim(*Sim) != EPossess::You) PromptPlate->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	// Wave 4 (A211's fourth list): "THE PUCK IS YOURS UNTIL SOMEONE PRESSES FOR IT" said what the double ring already shows: cut (jam.hud.KeptPrompt 0).
+	if (CVarJamHudKeptPrompt.GetValueOnGameThread() == 0 && Up(PromptPlate.Get()) && PromptTextBlock && PromptTextBlock->GetText().ToString() == LivePromptText(EPrompt::Kept))
+		PromptPlate->SetVisibility(ESlateVisibility::Collapsed);
+	// Wave 4 (pro f200): HE JUST GOT IT names the other man's take; once the human carries the puck himself it stood under HIS ring: not drawn then.
+	if (Up(ContactPlate.Get()) && ContactText && ContactText->GetText().ToString() == CarrierCueLine(false, true))
+	{
+		const AHokejGameMode* GM2 = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+		if (GM2 && GM2->GetSim() && PossessFromSim(*GM2->GetSim()) == EPossess::You) ContactPlate->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	UWidget* const Lines[5] = { ContactPlate.Get(), PromptPlate.Get(), ControlsStrip.Get(), FaceoffHintPlate.Get(), CommentaryStrip.Get() };
 	int32 Win = OneLineWinner(Up(Lines[0]), Up(Lines[1]), Up(Lines[2]), Up(Lines[3]), Up(Lines[4]));

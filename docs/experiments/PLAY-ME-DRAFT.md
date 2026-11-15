@@ -1,5 +1,7 @@
 # Play me: Sunday 10:00 (draft by lane A213 for the Director; PLAY-ME.md is the Director's)
 
+*Describes main 9e6815a0 (A206 BRAIN READY 3, A207 PASS READY 1, A208 STICK READY 1b, A209 CONTACT READY 3, A210 HITS READY 3 with the carried puck seen, A213 SCREEN READY 1-3) plus A213 SCREEN READY 4. Not yet in it: the faceoff landing and `possess` (about 04:30).*
+
 **The game in three lines.** Five against five on a toy rink, first to three. The mouse aims your stick; the two mouse buttons change meaning
 with the puck: with it they pass and shoot, without it they check and cross-check. Your mates and theirs play for the puck and the net; a pass
 reaches the man your stick points at; whoever touches a loose puck has it, and the screen says who.
@@ -33,10 +35,10 @@ puck; **hold to brace**). A button held while the puck changes hands does nothin
 
 ## What changed since last night (your three points)
 
-1. **Bots that play.** Their passes arrive (65 to 76 % completed, was about 40), a mate skates onto the pass in flight, the second forward goes
-   ahead on the weak side, and against a carrier inside 35 m one defender stands in the shooting lane, for both sides.
-2. **The puck is yours on touch, and is seen.** A loose puck that reaches your stick or your body is yours. Your ring doubles the instant you
-   have it, a mate's ring is your colour, an opponent's is orange, a loose puck has a ring of its own; the pill at the bottom left flips to
+1. **Bots that play.** They stop ping-ponging the puck (no pass to a man under 5 m, none straight back), a mate skates onto a pass in flight,
+   the second forward goes ahead on the weak side, one defender stands in the shooting lane, and at rookie your mates shoot about twice a minute.
+2. **The puck is yours on touch, and is seen.** A loose puck that reaches your stick or your body is yours, and the puck you carry is drawn
+   where you can see it (not behind your hips). Your ring doubles the instant you have it, a mate's ring is your colour, an opponent's is orange, a loose puck has a ring of its own; the pill at the bottom left flips to
    SHOOT / PASS.
 3. **Hits that land and are seen.** A body check pulls you up to a metre onto a man in front within about 2.5 m (it lands about nine times in
    ten at rookie); the cross-check shoves any man in front and the carrier loses the puck; the hit shows on the man who took it (the crouch
@@ -46,7 +48,7 @@ puck; **hold to brace**). A button held while the puck changes hands does nothin
 
 | Try | You should see |
 |---|---|
-| Win the drop (LMB at DROP, not before), then tap RMB with your stick on a mate 8 m away | the pass arrives on his blade; his ring turns your colour and pulses |
+| Win the drop (LMB at DROP, not before; for a second and a half after it nobody is hit), then tap RMB with your stick on a mate 8 m away | the pass arrives on his blade; his ring turns your colour and pulses |
 | With the puck, hold RMB half a second, stick toward a mate far up the ice | a line on the ice grows from the puck and ends on a ring under him; let go: a hard pass a third of the rink long |
 | With the puck, hold LMB | a line grows past the puck and turns yellow when full; let go: a lifted shot, twice as fast as last night |
 | Without the puck, skate at their carrier and press RMB inside a couple of metres | you lunge onto him, he stumbles or goes down, the puck comes loose with its own ring; the first times the pill says "RMB  CHECK HIM" |
@@ -54,9 +56,10 @@ puck; **hold to brace**). A button held while the puck changes hands does nothin
 
 ## Known limits, plainly
 
-- Your mates still shoot less than they should (about one shot a minute) and seldom carry inside 22 m; the open man ahead is found about a third
-  of the time.
+- Your mates still find the open man ahead only about a third of the time; at pro your side is outplayed more than it should be.
 - The bots' own checks at you land about one time in three; they do not dodge at rookie.
 - A missed cross-check has no commentator line yet (the voice comes from device B); a pass is praised only when it is received.
 - The lines of a held pass or shot are drawn fainter where they cross your own figure (the camera looks over your shoulder).
 - Glow Ice (and every Director's mode) now plays the level lit on HOME, like PLAY NOW.
+- For a second and a half after a goal ends the match the card waits, so you see the goal; then it says your shots, your passes that arrived,
+  your hits and your time with the puck.

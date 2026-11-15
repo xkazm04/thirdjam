@@ -43,16 +43,16 @@ static TAutoConsoleVariable<float> CVarJamHitCaptureBotsM(TEXT("jam.hit.CaptureB
 	TEXT("With jam.hit.CaptureBots 1: a bot's press is filmed when it is between jam.hit.CaptureBotsMinM and this many metres from the human (14: near; 40 with a minimum of 18: the hits at 20 and 35 m). Lane A210."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitCaptureBotsMinM(TEXT("jam.hit.CaptureBotsMinM"), 0.f,
 	TEXT("With jam.hit.CaptureBots 1: the nearest a filmed bot press may be to the human, in metres (0). Lane A210."), ECVF_Default);
-static TAutoConsoleVariable<float> CVarJamHitBraceSet(TEXT("jam.hit.BraceSet"), 1.f,
-	TEXT("The braced figure sets itself (lane A210: a bridge on the FIGURE while device B's hold cannot be seen from behind; set it to 0 when B's pose reads): the drawn figure (never the sim) sinks and widens over 6 frames while the cross-check is held and rises again over 6: height x (1 - 0.10 x this), width x (1 + 0.06 x this). 1 (default); 0 = off (package H34)."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitBraceSet(TEXT("jam.hit.BraceSet"), 0.f,
+	TEXT("The braced figure sets itself (lane A210: a bridge on the FIGURE while device B's hold cannot be seen from behind; set it to 0 when B's pose reads): the drawn figure (never the sim) sinks and widens over 6 frames while the cross-check is held and rises again over 6: height x (1 - 0.10 x this), width x (1 + 0.06 x this). 0 (default since device B's H56.5 hold: the stick past both gloves and the elbows out read from the game camera on their own, and the set at 1.5 squashed the figure beside it); 1.5 = PUCK READY 1."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitBraceLean(TEXT("jam.hit.BraceLean"), 12.f,
 	TEXT("With the braced figure's set: degrees the drawn figure pitches forward into the hold, on top of device B's take (12 by default; 0 = none)."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitWhiff(TEXT("jam.hit.Whiff"), 0.8f,
 	TEXT("A miss looks like a miss (lane A210, the eye's EYE 7): with jam.hit.Pop, after a check or a cross-check that met nobody the drawn figure tips into a dip (this share of the coil's depth) 4 frames after the miss and is back at its own size 14 frames after it; the figure is also told PlayWhiff(Kind) by name (device B's take, when it exists). 0.8 (default); 0 = the plain settle (READY 3)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitRetimeTest(TEXT("jam.hit.RetimeTest"), 0,
 	TEXT("Proof only (lane A210): N > 0 sends PlayCheckWindup(1) to the human's figure N frames after each of his check presses, as jam.hit.Retime would on a contact inside the wind-up (to see what device B's running take does with it before lane A209's sim is here). 0 = off."), ECVF_Default);
-static TAutoConsoleVariable<float> CVarJamHitPop(TEXT("jam.hit.Pop"), 1.f,
-	TEXT("The hit's coil and drive on the drawn figure (lane A210; never the sim): through a check's or a cross-check's wind-up the figure sinks and widens (height down to x (1 - 0.10 x this)), on the frame before the window opens it springs tall and narrow (x (1 + 0.07 x this)) through the contact, then settles over 8 frames: device B's take, made larger (the helmet's travel from coil to spring at the game camera: 33 px without, 55 px with, at 960 x 540). 1 (default); 0 = off (package H34)."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitPop(TEXT("jam.hit.Pop"), 0.f,
+	TEXT("The hit's coil and drive on the drawn figure (lane A210; never the sim): through a check's or a cross-check's wind-up the figure sinks and widens (height down to x (1 - 0.10 x this)), on the frame before the window opens it springs tall and narrow (x (1 + 0.07 x this)) through the contact, then settles over 8 frames: device B's take, made larger (the helmet's travel from coil to spring at the game camera: 33 px without, 55 px with, at 960 x 540). 0 (default since device B's H56.0 takes: the sink 1.45 times deeper and the stick over the helmet read from behind on their own; the coil on top lowered the raised arms of B's cross-check); 1 = PUCK READY 1. The dip after a miss (jam.hit.Whiff) rides on this and is off with it: the miss is device B's PlayCheckWhiff()."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitRetime(TEXT("jam.hit.Retime"), 1,
 	TEXT("A body check that lands before its wind-up is over (lane A209's rule: a meeting inside the wind-up is the hit): 1 (default) the checker's figure is run forward for one sim frame (its time dilation = the frames its take is short of the contact pose), so device B's take stands on its contact pose when the man falls instead of in its coil; 2 = by the call PlayCheckWindup(1) instead (device B's figure ignores it on a running take today); 0 = the take plays on from where it was."), ECVF_Default);
 static constexpr float BurstFramesF = static_cast<float>(FJamHitReadModel::BurstFrames);
@@ -138,7 +138,7 @@ float FJamHitReadModel::CheckLeanDeg(int32 Since, int32 Windup, int32 Window, in
 
 void FJamHitReadModel::Reset()
 {
-	Presses.Reset(); Bursts.Reset(); Downs.Reset(); Flashes.Reset(); FrameLogs.Reset();
+	Presses.Reset(); Bursts.Reset(); Downs.Reset(); Flashes.Reset(); FrameLogs.Reset(); LastCrossPress.Reset();
 	LastFrame = -1;
 	Hits = Misses = Strips = 0;
 }
@@ -151,6 +151,8 @@ void FJamHitReadModel::Step(int64 Frame, const TArray<FJamSkaterState>& Skaters,
 	if (TeamColours) { Colours[0] = TeamColours[0]; Colours[1] = TeamColours[1]; }
 	const int32 N = Skaters.Num();
 	Braced.SetNum(N); BracedSpeed.SetNum(N); Teams.SetNum(N); Down.SetNum(N); PosM.SetNum(N); FallM.SetNum(N); VelM.SetNum(N);
+	if (LastCrossPress.Num() != N) LastCrossPress.Init(-100000, N);
+	for (int32 i = 0; i < N; ++i) if (Skaters[i].bLiftThisFrame) LastCrossPress[i] = Frame;
 	for (int32 i = 0; i < N; ++i)
 	{
 		const FJamSkaterState& S = Skaters[i];
@@ -451,6 +453,7 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 		for (int32 i = 0; i < Braced.Num(); ++i)
 		{
 			if (!Braced[i] || !At.IsValidIndex(i) || !Yaw.IsValidIndex(i) || Down[i]) continue;
+			if (Sw.bThinTell && LastCrossPress.IsValidIndex(i) && FrameF - static_cast<double>(LastCrossPress[i]) < ArcAfterTapFrames) continue;   // never after a tap
 			const FVector2D F = YawDir(Yaw[i]);
 			const float K = static_cast<float>(FMath::Clamp(BracedSpeed[i] / 8.0, 0.0, 1.0));
 			const FLinearColor Team = Colours[Teams[i]];
@@ -778,18 +781,21 @@ void AJamHitRead::RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSk
 		for (const FJamHitReadModel::FPress& P : Model.GetPresses())
 			if (P.bHuman && !P.bCross && Sim->GetFrame() - P.PressFrame == TestAt && P.Windup > TestAt) Send(P.Skater, P.Windup - TestAt, TEXT("test"), P.Windup, TestAt);
 	}
-	// Wave 4: a miss is told to the figure by name (device B's PlayWhiff(Kind): 0 a body check, 1 a cross-check; a figure without it gets nothing).
+	// Wave 4: a miss is told to the figure by name: a body check device B's PlayCheckWhiff() (H56.5), else PlayWhiff(0); a cross-check PlayWhiff(1)
+	// (B is asked in handoff 0037 whether a cross-check's whiff has its own call). A figure without the call gets nothing.
 	if (CVarJamHitWhiff.GetValueOnGameThread() > 0.f)
 	{
-		static const FName NameWhiff(TEXT("PlayWhiff"));
+		static const FName NameWhiff(TEXT("PlayWhiff")), NameCheckWhiff(TEXT("PlayCheckWhiff"));
 		for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
 		{
 			if (L.Result != EJamHitResult::Miss) continue;
 			for (AJamSkater* Sk : Skaters) if (Sk && Sk->GetSimIndex() == L.Checker)
 			{
-				const bool bSent = AJamSkater::CallFigure(Sk->GetVisualObject(), NameWhiff, { L.Kind == TEXT("cross") ? 1.0 : 0.0 });
+				const bool bCross = L.Kind == TEXT("cross");
+				const bool bSentCheck = !bCross && AJamSkater::CallFigure(Sk->GetVisualObject(), NameCheckWhiff, {});
+				const bool bSent = bSentCheck || AJamSkater::CallFigure(Sk->GetVisualObject(), NameWhiff, { bCross ? 1.0 : 0.0 });
 				if (L.Kind == TEXT("cross")) Sk->SetAimRecover(WhiffAimFrames);   // the stick back to the front while the take runs out
-				if (L.bHuman) UE_LOG(LogJamHit, Log, TEXT("JAMHIT whiff frame=%lld checker=%d kind=%s call=%s"), Sim->GetFrame(), L.Checker, *L.Kind, bSent ? TEXT("PlayWhiff") : TEXT("none"));
+				if (L.bHuman) UE_LOG(LogJamHit, Log, TEXT("JAMHIT whiff frame=%lld checker=%d kind=%s call=%s"), Sim->GetFrame(), L.Checker, *L.Kind, bSentCheck ? TEXT("PlayCheckWhiff") : bSent ? TEXT("PlayWhiff") : TEXT("none"));
 			}
 		}
 	}
@@ -1430,8 +1436,8 @@ bool FJamHitQuiet::RunTest(const FString&)
 	TestEqual(TEXT("ships: the quiet marks"), CVarJamHitQuiet.GetValueOnGameThread(), 1);
 	TestEqual(TEXT("ships: device B's takes on every figure, the human's too"), CVarJamHitBTakes.GetValueOnGameThread(), 2);
 	// The bridge for the brace: the figure itself sets (nothing drawn on it).
-	TestEqual(TEXT("ships: the braced figure sets"), CVarJamHitBraceSet.GetValueOnGameThread(), 1.f, 1e-6f);
-	TestEqual(TEXT("ships: the coil and the drive on the figure"), CVarJamHitPop.GetValueOnGameThread(), 1.f, 1e-6f);
+	TestEqual(TEXT("ships: no set on the braced figure (device B's H56.5 hold reads from behind)"), CVarJamHitBraceSet.GetValueOnGameThread(), 0.f, 1e-6f);
+	TestEqual(TEXT("ships: no coil of mine on the figure (device B's H56.0 takes read from behind)"), CVarJamHitPop.GetValueOnGameThread(), 0.f, 1e-6f);
 	TestTrue(TEXT("not set: the figure's own size"), AJamHitRead::BraceSetScale(0.f, 1.f).Equals(FVector::OneVector, 1e-6));
 	TestTrue(TEXT("set: a tenth lower, 6 % wider"), AJamHitRead::BraceSetScale(1.f, 1.f).Equals(FVector(1.06, 1.06, 0.90), 1e-5));
 	TestTrue(TEXT("half way in: between the two"), AJamHitRead::BraceSetScale(0.5f, 1.f).Z < 1.f && AJamHitRead::BraceSetScale(0.5f, 1.f).Z > 0.90f);
@@ -1498,6 +1504,22 @@ bool FJamHitQuiet::RunTest(const FString&)
 		TestEqual(TEXT("package H34: the bar is over the figure"), Above(Bars, 50.0), 1);
 		DrawWith(M, 100.5, S, Now, Bars);
 		TestEqual(TEXT("now: the arc alone"), Count(Bars, EJamHitLayer::Brace), 7);
+		// The eye's third list: a tap that ran on into a brace shows no dashes for ArcAfterTapFrames after the press; a hold that began without a tap does.
+		{
+			FJamHitReadModel T;
+			TArray<FJamSkaterState> S2 = Two();
+			S2[0].bLiftThisFrame = true; S2[0].WindupFrames = 8;
+			T.Step(100, S2, None, 8.0, Cols);
+			ClearFrame(S2);
+			S2[0].bCrossBraced = true; S2[0].Vel = FVector2D(7, 0);
+			T.Step(114, S2, None, 8.0, Cols);
+			TArray<FJamHitBar> B2;
+			DrawWith(T, 114.5, S2, Now, B2);
+			TestEqual(TEXT("14 frames after a tap, braced by the sim: no dashes"), Count(B2, EJamHitLayer::Brace), 0);
+			T.Step(100 + FJamHitReadModel::ArcAfterTapFrames, S2, None, 8.0, Cols);
+			DrawWith(T, 100.5 + FJamHitReadModel::ArcAfterTapFrames, S2, Now, B2);
+			TestEqual(TEXT("still held 40 frames after the tap: the dashes"), Count(B2, EJamHitLayer::Brace), 7);
+		}
 		TestEqual(TEXT("now: nothing over the figure while he holds"), Above(Bars, 50.0), 0);
 		for (const FJamHitBar& B : Bars)
 		{

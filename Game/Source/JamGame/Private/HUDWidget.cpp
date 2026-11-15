@@ -1030,6 +1030,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateOneLine(F);   // lane A213 (track U3): one line of words at a time (HUDOneLine.cpp)
 	UpdateTeach(F);   // lane A213 (track U3): the pill teaches pass and check, three times at most (HUDTeach.cpp)
 	UpdateEndWait(F);   // lane A213 (track U3): the end card waits for the last goal to be seen (HUDEndWait.cpp)
+	UpdateEndStats(F);   // lane A213 (track U3): the end card says what happened (HUDEndStats.cpp)
 }
 
 // Lane A123 (1): where the human figure's head is. The visual's head_socket (a mesh socket on any of its components: device B's figures; or a scene component of

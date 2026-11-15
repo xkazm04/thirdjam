@@ -21,10 +21,17 @@
 #include "HokejGameMode.h"
 #include "JamSim.h"
 #include "InputMapping.h"
+#include "JamCartridge.h"
 #include "UnrealClient.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudPossess(TEXT("jam.hud.Possess"), 1,
 	TEXT("Lane A213: possession at a glance (1, default): your ring doubled while you carry, the carrier's ring in his team's colour, a chalk ring round a loose puck, a pulse at each pickup. 0 = the screen of before."), ECVF_Default);
+// Wave 4: on the night look (look.tier l2_night: blue ice) the home team's blue rings read only by their ink edge (the night stills of READY 3):
+// the blue rings there are drawn a step lighter (NightTintShare toward white). 0 = the team colour as it is.
+static TAutoConsoleVariable<int32> CVarJamHudNightTint(TEXT("jam.hud.NightTint"), 1,
+	TEXT("Lane A213 (wave 4): 1 (default) on the night look the rings in a blue team colour are drawn lighter (they read only by their ink edge on the blue ice); 0 = the team colour."), ECVF_Default);
+static constexpr float NightTintShare = 0.45f;
+
 static TAutoConsoleVariable<int32> CVarJamHudPossessStills(TEXT("jam.hud.PossessStills"), 0,
 	TEXT("Proof: N > 0 takes a still (with the HUD) N sim frames into each possession (you / mate / opponent / loose), at most 24: a213-possess-<state>-f<frame>.png. 0 off."), ECVF_Default);
 
@@ -100,13 +107,21 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 	// UpdateCarrierCues already sized the ring for the grace (1.5 x closing): that is the pulse while the grace runs.
 	const float Pulse = bGrace ? 1.f : PossessPulseScale(Age);
 	auto Recolour = [](UImage* Ring, const FLinearColor& C, float Alpha) { Ring->SetColorAndOpacity(FLinearColor(C.R, C.G, C.B, Alpha)); };
+	// Wave 4: the ring colour of a team on this look (the night look's blue lightened).
+	const bool bNight = CVarJamHudNightTint.GetValueOnGameThread() != 0 && GM && GM->GetCartridge() && GM->GetCartridge()->Game.Look.Tier == TEXT("l2_night");
+	auto RingColour = [&](int32 TeamId)
+	{
+		const FLinearColor C = F.GetTeamColour(TeamId);
+		return bNight && C.B > C.R && C.B > C.G ? FMath::Lerp(C, FLinearColor::White, NightTintShare) : C;
+	};
+	if (bNight && YouRing && Shown(YouRing)) Recolour(YouRing, RingColour(Sk[Hi].Team), YouRing->GetColorAndOpacity().A);
 	auto Grow = [](UImage* Ring, float K) { if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot); CS && K != 1.f) CS->SetSize(CS->GetSize() * K); };
 
 	// YOU: the ring under him doubled, in his team's colour (the grace's yellow taken back).
 	bool bYouHave = false;
 	if (P == EPossess::You && YouRing && Shown(YouRing))
 	{
-		const FLinearColor Team = F.GetTeamColour(Sk[Hi].Team);
+		const FLinearColor Team = RingColour(Sk[Hi].Team);
 		const float A = YouRing->GetColorAndOpacity().A;
 		Recolour(YouRing, Team, A);
 		Grow(YouRing, Pulse);
@@ -123,7 +138,7 @@ void UJamHudWidget::UpdatePossession(const FJamPresentationFrame& F)
 	// A MATE or an OPPONENT: the carrier's ring in his team's colour.
 	if ((P == EPossess::Mate || P == EPossess::Opponent) && CarrierRing && Shown(CarrierRing))
 	{
-		Recolour(CarrierRing, F.GetTeamColour(Sk[Ci].Team), 0.95f);
+		Recolour(CarrierRing, RingColour(Sk[Ci].Team), 0.95f);
 		Grow(CarrierRing, Pulse);
 	}
 

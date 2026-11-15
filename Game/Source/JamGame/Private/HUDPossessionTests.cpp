@@ -203,4 +203,28 @@ bool FJamHudTeach::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudEndStats, "Jam.Hud.EndStats", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudEndStats::RunTest(const FString& Parameters)
+{
+	using W = UJamHudWidget;
+	W::FEndStats S;
+	S.Shots = 4; S.Goals = 1; S.Passes = 9; S.Arrived = 6; S.Hits = 3; S.CarryFrames = 60 * 42;
+	const FString T = W::EndStatsText(S);
+	AddInfo(FString::Printf(TEXT("A213 end card lines: %s"), *T.Replace(TEXT("\n"), TEXT(" / "))));
+	TArray<FString> Lines;
+	T.ParseIntoArrayLines(Lines);
+	TestEqual(TEXT("four lines"), Lines.Num(), 4);
+	TestTrue(TEXT("shots and goals"), Lines.Num() > 0 && Lines[0] == TEXT("SHOTS 4   GOALS 1"));
+	TestTrue(TEXT("passes that arrived of thrown"), Lines.Num() > 1 && Lines[1] == TEXT("PASSES THAT ARRIVED 6 OF 9"));
+	TestTrue(TEXT("hits landed"), Lines.Num() > 2 && Lines[2] == TEXT("HITS LANDED 3"));
+	TestTrue(TEXT("time with the puck as m:ss"), Lines.Num() > 3 && Lines[3] == TEXT("WITH THE PUCK 0:42"));
+	for (const FString& L : Lines) TestTrue(TEXT("each line short enough for the card (30 characters)"), L.Len() <= 30);
+	// The own-net label's rule: his own third only (attack sign +1: his own net at -x).
+	TestTrue(TEXT("deep in his own end: the own label shows"), W::InOwnThird(-40.f, 1.f, 100.f));
+	TestFalse(TEXT("at centre ice: no own label"), W::InOwnThird(0.f, 1.f, 100.f));
+	TestFalse(TEXT("in the attacking end: no own label"), W::InOwnThird(35.f, 1.f, 100.f));
+	TestTrue(TEXT("the other side's attack mirrors it"), W::InOwnThird(40.f, -1.f, 100.f));
+	return true;
+}
+
 #endif

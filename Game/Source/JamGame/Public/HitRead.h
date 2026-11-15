@@ -73,6 +73,9 @@ public:
 	static constexpr double TellNearM = 1.4;    // the chevron's tip: from here at the press (outside the HUD's YOU and carrier rings, ~1 m) ...
 	static constexpr double TellFarM = 2.4;     // ... to here when the wind-up is done
 	static constexpr double BraceRadiusM = 1.35;
+	// Lane A210 (the eye's third list: "after a tapped cross-check that misses the brace's white dashes show 18+ frames"): a tap held past the sim's 13
+	// frames IS a brace to the sim; the dashes are the HOLD's mark: they wait this many frames after a pressed cross-check of the same skater.
+	static constexpr int32 ArcAfterTapFrames = 40;
 	static constexpr double RingNearM = 10.0;       // lane A210: the small ring within 10 m of the eye ...
 	static constexpr double RingFarM = 30.0;        // ... the full one from 30 m
 	static constexpr double RingMinM = 0.95;         // lane A210: the small contact ring never closer than this to the contact point (it clears the two bodies)
@@ -206,6 +209,7 @@ private:
 	TArray<FVector2D> PosM;     // per skater, the sim's place this frame (the tip's meeting is judged on it)
 	TArray<FVector2D> FallM;    // per skater, the fall while down (zero standing)
 	TArray<FVector2D> VelM;     // per skater, the sim's velocity this frame (the tip's closing speed)
+	TArray<int64> LastCrossPress;   // per skater: the frame of his last PRESSED cross-check (lane A210: the brace's arc keeps away for ArcAfterTapFrames after it)
 	TArray<int32> PrevMissed;   // per skater, the sim's ChecksMissed at the last frame (evolution 10: the miss is the sim's own)
 	int64 LastFrame = -1;
 	FLinearColor Colours[2] = { FLinearColor(1.f, 0.4f, 0.05f), FLinearColor(0.05f, 0.3f, 1.f) };

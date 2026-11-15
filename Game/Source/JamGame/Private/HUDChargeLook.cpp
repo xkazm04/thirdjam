@@ -20,6 +20,11 @@
 
 static TAutoConsoleVariable<int32> CVarJamHudChargeLook(TEXT("jam.hud.ChargeLook"), 1,
 	TEXT("Lane A213: 1 (default) while the pass is held its target mate has a ring in the team's colour; while the shot is held a line on the ice grows from the puck along the stick (yellow when full); 0 = neither."), ECVF_Default);
+// SCREEN FAULT (A211's fourth list, 04:30): seen from behind him, the held shot's line stood up as a white slab at his shoulder for 10 to 12 frames
+// (a screen-space bar between two projected points: a line running away from the camera collapses to a tall sliver near his body). OFF by default
+// until a mark drawn in the ice's own plane replaces it. 1 = the line as READY 2 drew it.
+static TAutoConsoleVariable<int32> CVarJamHudShotLine(TEXT("jam.hud.ShotLine"), 0,
+	TEXT("Lane A213: the held shot's line on the ice. 0 (default since the fault of 04:30: it stood up as a slab seen end-on); 1 = drawn (READY 2's screen-space bar)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudShotLookDemo(TEXT("jam.hud.ShotLookDemo"), 0,
 	TEXT("Proof: N > 0 draws the shot's line whenever the human carries, as if the shot were held N frames (stills from a scripted human). 0 off."), ECVF_Default);
 
@@ -76,20 +81,26 @@ void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 		// The held shot's line.
 		const int32 Demo = CVarJamHudShotLookDemo.GetValueOnGameThread();
 		const int32 Charge = Hu.ChargeFrames > 0 ? Hu.ChargeFrames : (Demo > 0 && bCarry ? Demo : 0);
-		if (bCarry && Charge > 0 && !Stick.IsNearlyZero())
+		if (bCarry && Charge > 0 && !Stick.IsNearlyZero() && CVarJamHudShotLine.GetValueOnGameThread() != 0)
 		{
 			const int32 Max = Sim->GetConfig().Shot.ChargeFramesMax;
 			const double LenM = ShotLineM(Charge, Max);
 			// The line starts ShotLineGapM past the puck: from the puck itself it ran up through his own body at the match camera (the w2b stills).
 			const FVector2D Way = Stick.GetSafeNormal(), From = Sim->GetPuck().Pos + Way * ShotLineGapM, End = From + Way * LenM, Mid = From + Way * (LenM * 0.5), Across(-Way.Y, Way.X);
 			const double ThickM = 0.22;   // the pass line's own thickness (HUDPassMeter.cpp): one make for both holds
+			if (GroundLinesOn())
+			{
+				// Wave 4: in the ice's plane (the SCREEN FAULT's cure), never the single bar.
+				const bool bFullG = Max > 0 && Charge >= Max;
+				bBar = DrawGroundStrip(ShotStripPool, From, End, ThickM, 0.0, bFullG ? FJamUiStyle::Yellow() : FJamUiStyle::Paper(), 0.92f) > 0;
+			}
 			const FVector2D Pts[4] = { From, End, Mid - Across * (ThickM * 0.5), Mid + Across * (ThickM * 0.5) };
 			FVector2D Px[4];
 			bool bAll = true;
 			for (int32 i = 0; i < 4 && bAll; ++i) bAll = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Pts[i], 0.03), Px[i], false);
 			FVector2D C, Sz, BoxMin, BoxMax;
 			float AngleDeg = 0.f;
-			if (bAll && StopBarLayout(Px[0], Px[1], Px[2], Px[3], 4.f, C, Sz, AngleDeg, BoxMin, BoxMax))
+			if (!GroundLinesOn() && bAll && StopBarLayout(Px[0], Px[1], Px[2], Px[3], 4.f, C, Sz, AngleDeg, BoxMin, BoxMax))
 			{
 				const bool bFull = Max > 0 && Charge >= Max;
 				const FLinearColor Col = bFull ? FJamUiStyle::Yellow() : FJamUiStyle::Paper();
@@ -102,5 +113,6 @@ void UJamHudWidget::UpdateChargeLook(const FJamPresentationFrame& F)
 		}
 	}
 	if (!bRing) Ring->SetVisibility(ESlateVisibility::Collapsed);
-	if (!bBar) Bar->SetVisibility(ESlateVisibility::Collapsed);
+	if (!bBar || GroundLinesOn()) Bar->SetVisibility(ESlateVisibility::Collapsed);
+	if (!bBar) HideGroundStrip(ShotStripPool);
 }

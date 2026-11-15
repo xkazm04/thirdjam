@@ -416,7 +416,9 @@ FString UJamMenuFlow::LevelMeaning(const FString& Level)
 {
 	// Lane A176: who each level is for, in one line (the design review: a regular player cleans up rookie, a newcomer is buried at pro, and the first
 	// PLAY NOW is rookie with nothing saying it is the newcomer's level). No number that the curve could make stale.
-	if (Level == TEXT("rookie")) return TEXT("New to hockey games? Start here: rookies rarely hit.");
+	// Lane A213 (wave 4, nothing lies): rookie bots do hit (lane A209: about eight checks at him a match, one in three lands); what is easier is their
+	// speed of play (NIGHT-COMMON: a level is easier by the bots' execution, never by their not caring).
+	if (Level == TEXT("rookie")) return TEXT("New to hockey games? Start here: rookies are a step slower.");
 	if (Level == TEXT("all_star")) return TEXT("The wall. All-stars hunt the puck. Beat pro first.");
 	return TEXT("Played one before? Pros hit as a habit.");
 }
