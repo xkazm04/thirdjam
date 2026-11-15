@@ -363,3 +363,57 @@ Stills `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261114-234500-B-e3-*.png` and
 | Game/Plugins/JamAssets/Content/Skaters/BS_SkaterTB1_P3_SkateReady.uasset | anim | 0.03 | original | UE 5.9 editor via MCP/Python | | | 2026-11-15 | B | y | copy of BS_SkaterTB1_P3_Skate with its six Glide samples swapped for AS_SkaterTB1_P3_Ready_Glide (Stride, leans, crossovers unchanged); played in the Skate state when the ABP's bReady is set (not carrying) (lane E3) (27943 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/BS_SkaterTB1v2_SkateReady.uasset | anim | 0.03 | original | UE 5.9 editor via MCP/Python | | | 2026-11-15 | B | n | copy of BS_SkaterTB1v2_Skate with its six Glide samples swapped for AS_SkaterTB1v2_Ready_Glide (Stride, leans, crossovers unchanged); played in the Skate state when the ABP's bReady is set (not carrying) (lane E3) (27950 bytes) |
 
+
+---
+
+# Fourth hand-back (01:08, for the 06:45 merge; early): SK3Fix gated during the hold, the whiff gated on speed, export47, Hold_Out / Release / the night figure filmed
+
+GPU held 00:32-00:44, 00:52-00:57, 00:59-01:01, 01:03-01:04 (each left through ExitEditor; `GPU-FREE.txt` written back each time, last "free from E3 at 01:04"). Headless editor 00:46-00:51. No editor of mine is running. export48 (HX, the hold's left side) has no READY yet; with the SK3Fix gate below the left side already shows (it may no longer be needed).
+
+## 1. SK3Fix stands down during the hold and the pass charge (HX's finding), both figures: **merge**
+- `SK3Fix`'s decay condition now also requires `HoldE < 0.01` and `PassChg < 0.01` (both occurrences: the binding used for yaw/reach and the stick-pitch line), and the written `StickRot` / `StickOff` are multiplied by `(1 - HoldE)(1 - PassChg)`.
+- **GPU proof** (rendered, so SK3Fix runs): before the hold StickRot (0.22, 2.51, -2.39), StickOff (-3.1, 0.3, 1.8) on the clay figure; **during the hold 0.0 / 0.0 on every read**, clay and night; after the hold the correction resumes (2.83 / -11.08 yaw). At full pass charge also 0.0 / 0.0, back after release.
+- **What a person sees** (`20261115-004000-B-e3-hold-sk3fix.png`, row 1 now, row 2 before): from the human's camera the held stick now shows past **both** gloves, left and right, through the loop, on both figures. Carrying with HoldW = 0: the correction as before (`-carry-after-sk3.png`).
+- Seeded clay match after this change: sim lines 479 = 479 identical (JAMSIM 7200 `fe5125ba7d1147e6`), 0 Blueprint errors, get-ups 9 of 9 on their frame.
+
+## 2. The whiff's backward slide when standing: **fixed in the figure, merge**
+- `PlayCheckWhiff` rebuilt: under 4 m/s pawn speed (`SpeedNow`, stored by `UpdateMotion`) it plays the existing miss (`PlayCheckMiss`: `Stumble_Back`) instead of the lunge; at 4 m/s and over, the whiff as before (play moved into a helper event `WhiffGo`).
+- **A fault of my own found and fixed on the way:** the first `PlayCheckWhiff` played the whiff even while the skater was down (the DSL had placed the play after the down-check branch). Now down → logs and skips. Nothing called it in a match, so nothing shipped did this in play.
+- Headless (`logs\t_W2.json`, both figures): at 0 and 3 m/s → `Stumble_Back`, the chest at most 59 cm (clay) / 89 cm (cel) ahead of the root (no 112 cm lunge and slide back); at 6 m/s → `Check_Whiff_Right` (112 / 115 cm lunge, the pawn's travel covers the return); knocked down on tick 38 → no whiff (the fall and lie play on).
+
+## 3. export47 (HB, 00:50): imported, both styles
+`Fall_Heavy`, `Knockdown_Back_Heavy`, `Knockdown_Left_Heavy`, `Knockdown_Right_Heavy` (35 → 35 keys), `Knockdown_Left`, `Knockdown_Right` (27 → 27). Seeded match after: identical (above), get-ups unchanged (9 of 9).
+- **Does the heavy read heavier?** From the human's camera, **no difference to speak of**: the victim is mostly hidden behind the checker (`20261115-010500-B-e3-heavy-gamecam.png`). From 27 m elevated (`-heavy-27m.png`, the 35 m attempt put the camera in the roof; HEAVY left, middle right): the heavy victim is flat a little earlier and its stick flung wider; **small**. Not verified at 35 m.
+
+## 4. Filmed (GPU): `Hold_Out`, `Release`, the night figure: **merge**
+- `20261115-004000-B-e3-holdout-release.png`: `Hold_Out` frame 1 lifts the stick level above the helmet with both ends clear (the up beat reads from behind), stance by 6; `Release` punches two-handed at the chest on 3, held to 8.
+- `-night.png`: the night figure's hold, wind and body check read as the clay figure's (stick over the helmet, both stick ends in the hold and the wind).
+
+## 5. The upper-body slot: left as is (not wired; reason in the third hand-back).
+
+## Not verified
+- 35 m view of the heavy fall; the heavy fall at the game camera from a side angle.
+- `PlayCheckWhiff` in a match (nothing calls it).
+- export48 (not ready).
+
+## For device A
+- `PlayCheckWhiff()` unchanged in name; under 4 m/s it now plays the short stumble (same as the existing miss), so it is safe to call at any speed.
+- A's blue dashed marker arcs show in several stills (left in the scene by A's hit marks); not the figures.
+
+## Ledger rows (fourth hand-back; they replace these files' earlier rows)
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 11.90 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | as the third-hand-back E3 row, and: SK3Fix stands down while the hold or the pass charge is in (decay unless HoldE < 0.01 and PassChg < 0.01; StickRot/StickOff times (1-HoldE)(1-PassChg)) (HX's finding); PlayCheckWhiff rebuilt with WhiffGo, skips while down, and under 4 m/s (SpeedNow from UpdateMotion) plays PlayCheckMiss instead of the lunge (lane E3) (12476339 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 12.10 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-15 | B | y | as the third-hand-back E3 row, and: the SK3Fix gate, PlayCheckWhiff/WhiffGo and the speed gate as BP_SkaterVisual_TB1 (lane E3) (12685806 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Fall_Heavy.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export47/p3_clay (takes/<Take>.fbx; gate passed) take Fall_Heavy by name on SKEL_SkaterTB1_P3, 35 keys, last frame as before; the calls unchanged (lane E3 import) (165011 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Knockdown_Back_Heavy.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export47/p3_clay (takes/<Take>.fbx; gate passed) take Knockdown_Back_Heavy by name on SKEL_SkaterTB1_P3, 35 keys, last frame as before; the calls unchanged (lane E3 import) (167718 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Knockdown_Left_Heavy.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export47/p3_clay (takes/<Take>.fbx; gate passed) take Knockdown_Left_Heavy by name on SKEL_SkaterTB1_P3, 35 keys, last frame as before; the calls unchanged (lane E3 import) (173927 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Knockdown_Right_Heavy.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export47/p3_clay (takes/<Take>.fbx; gate passed) take Knockdown_Right_Heavy by name on SKEL_SkaterTB1_P3, 35 keys, last frame as before; the calls unchanged (lane E3 import) (178370 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Knockdown_Left.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export47/p3_clay (takes/<Take>.fbx; gate passed) take Knockdown_Left by name on SKEL_SkaterTB1_P3, 27 keys, last frame as before; the calls unchanged (lane E3 import) (177139 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Knockdown_Right.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export47/p3_clay (takes/<Take>.fbx; gate passed) take Knockdown_Right by name on SKEL_SkaterTB1_P3, 27 keys, last frame as before; the calls unchanged (lane E3 import) (176581 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Fall_Heavy.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export47/p2_cel (takes/<Take>.fbx; gate passed) take Fall_Heavy by name on SKEL_SkaterTB1v2, 35 keys, last frame as before; the calls unchanged (lane E3 import) (161961 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Knockdown_Back_Heavy.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export47/p2_cel (takes/<Take>.fbx; gate passed) take Knockdown_Back_Heavy by name on SKEL_SkaterTB1v2, 35 keys, last frame as before; the calls unchanged (lane E3 import) (164446 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Knockdown_Left_Heavy.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export47/p2_cel (takes/<Take>.fbx; gate passed) take Knockdown_Left_Heavy by name on SKEL_SkaterTB1v2, 35 keys, last frame as before; the calls unchanged (lane E3 import) (171956 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Knockdown_Right_Heavy.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export47/p2_cel (takes/<Take>.fbx; gate passed) take Knockdown_Right_Heavy by name on SKEL_SkaterTB1v2, 35 keys, last frame as before; the calls unchanged (lane E3 import) (178589 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Knockdown_Left.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export47/p2_cel (takes/<Take>.fbx; gate passed) take Knockdown_Left by name on SKEL_SkaterTB1v2, 27 keys, last frame as before; the calls unchanged (lane E3 import) (167764 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Knockdown_Right.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane HB) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export47/p2_cel (takes/<Take>.fbx; gate passed) take Knockdown_Right by name on SKEL_SkaterTB1v2, 27 keys, last frame as before; the calls unchanged (lane E3 import) (167303 bytes) |

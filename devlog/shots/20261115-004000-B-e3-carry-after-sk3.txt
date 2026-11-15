@@ -1,0 +1,1 @@
+E3 GPU, a clay carrier (aim 20 deg, 1.3 m) at the game camera after the SK3Fix change: the correction is active as before (StickRot yaw at its usual clamp).
