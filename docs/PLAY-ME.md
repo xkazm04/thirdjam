@@ -82,6 +82,14 @@ weaker on the large rink; rookie's opponents skate a touch faster (rookie had be
 dodge less. Not met: at PRO you are knocked down about one and a half times a minute (the one lever that cured it made pro too easy); rookie on the
 regular rink is 7 points easy and all-star on the large rink 8; about three rookie matches in ten run past four minutes.
 
+**Two readings of this ladder, both given.** The critic lane filmed it against the levels as built (package H38) with the same hand on seven
+seeds and read rookie as harder and slower to score in, and your pass at pro as worse. The curve lane measured both over 300 matches a cell on the
+same seeds: rookie 93.7 % wins as built against 91.7 % with the set, the median match 184 s against 188 s, his shots 3.8 a match in both; pro 49.7 %
+against 54.0 %, your passes reaching a mate 36 % in both, knockdowns 1.48 against 1.45 a minute. So over many matches the two play alike at rookie
+and pro on the regular rink, and only the set cures pro's far goal (21 % of goals against, 2.7 % with it) and makes all-star and the large rink
+playable (one film of the large rink at pro was still a 0:4 rout: one seed against the measure's 52 %). If rookie feels like a grind to you, H38 has
+the kinder numbers: say so and the two can be blended (rookie as built, the rest as set).
+
 ## What the night's critic says (a lane that only looks, with a scripted hand that presses the buttons as a person does)
 
 At 00:42 on the game you played: "a stranger would not start a second match". At 06:50 on this game: "a stranger wins a close match at rookie, twice

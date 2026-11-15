@@ -508,3 +508,5 @@
 - package 07:20: `Hokej_Hokej_H37.zip` from main c26e9152, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 08:01: main 2c34cab4 (No goal through the side of a net; the end card counts his passes truly (A216 F0, A213 U3;) pushed.
 - package 08:08: `Hokej_Hokej_H38.zip` from main 2c34cab4, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 08:31: main d1779d38 (LADDER SET 3: the levels set through a person's button path (A217, track C0; the critic's ) pushed.
+- package 08:40: `Hokej_Hokej_H39.zip` from main d1779d38, acceptance run green (18 verbs through the cursor and the buttons).
