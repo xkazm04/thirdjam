@@ -3598,6 +3598,7 @@ bool UJamSim::OwnPuckClears(const FJamSkaterState& S) const
 	// never takes his own puck back, by body, stick arc (A208's TryLoosePickup reads this) or catch, while it is his pass in flight, nor for OwnReleaseLockFrames
 	// after his release (a pass's 12-frame cooldown + 8 = 20 frames, a shot's 24 + 8), unless another skater has touched it (then LastTouch is not his).
 	if (!Config.Pass.bClearOwnBody || Puck.LastTouch != S.Index) return false;
+	if (HumanRingOn(S) && FVector2D::Distance(Puck.Pos, S.Pos) <= Config.Stick.PickupRingM + Eff(EJamStat::PuckRadius, -1)) return HumanReleaseLeaving(S);   // lane A218 (R-0069 point 2): inside the human's ring his release is kept from him only while it leaves him (outside it, as before: the carry never pulls back his pass)
 	if (Puck.PassFrames > 0 && Puck.PassBy == S.Index) return true;
 	// The time lock holds only a puck leaving him (a puck moving with him is his carried puck: a refused shot, a scene's first frames with ShotReadyFrame 0).
 	return Frame < S.ShotReadyFrame + OwnReleaseLockFrames && (Puck.Vel - S.Vel).Size() > 4.0;
@@ -3916,6 +3917,70 @@ void UJamSim::CarriedOutOfBodies()
 	}
 }
 
+// ---- Lane A218 (track F0, R-0069 point 2: "puck is not controlled by player if in his circle area, then player runs right through the pack and still does
+// not have control"): for the human the ring drawn under him is the reach. Its own functions; StepPuck calls TryHumanRing once a substep before the stick arc.
+// Nothing here runs with pickup.ring_m 0. Jam.Core.Possession.HumanRing stages every case with a person's stick aimed away from the puck. ----
+
+bool UJamSim::HumanReleaseLeaving(const FJamSkaterState& S) const
+{
+	// His own pass or shot is kept from him only so the release gets off his stick: while it moves away from him faster than HumanReleaseFreeMps, and for at
+	// most HumanReleaseLockFrames after it left (ShotReadyFrame is the release + its cooldown: a pass in flight's 12, else the shot's).
+	if (Puck.LastTouch != S.Index) return false;
+	const FVector2D Rel = Puck.Vel - S.Vel;
+	const int64 Cool = (Puck.PassFrames > 0 && Puck.PassBy == S.Index) ? PassCooldownFrames : Config.Shot.CooldownFrames;
+	const int64 Since = Frame - (S.ShotReadyFrame - Cool);
+	return Since < HumanReleaseLockFrames && Dot(Rel, Puck.Pos - S.Pos) > 0.0 && (Since < HumanReleaseGetOffFrames || Rel.Size() >= HumanReleaseFreeMps);
+}
+
+int32 UJamSim::TryHumanRing(const FVector2D& From, double R)
+{
+	if (Config.Stick.PickupRingM <= 0.0 || Phase != EJamSimPhase::Playing || bDrawOpen || Puck.ShotgunFrames > 0 || Puck.Z >= BladeClearM) return -1;
+	if (RidingCarrier() >= 0) return -1;   // R-0048: a puck riding with a carrier (his own or another's) is taken by a press, not by touch
+	const FVector2D Path = Puck.Pos - From;
+	const double Len2 = Path.SizeSquared();
+	int32 Best = -1;
+	double BestD = 1e9;
+	FVector2D BestAt = Puck.Pos;
+	for (const FJamSkaterState& S : Skaters)
+	{
+		if (!HumanRingOn(S) || S.InBox() || !S.CanAct()) continue;
+		if (Puck.Z >= Config.Skater.GoalieBlockHeightM && InCreaseStance(S)) continue;   // R-0035, as the arc
+		// The point of this substep's path nearest his centre: the ring meets the path, not only where the puck ends.
+		const double T = Len2 > 1e-12 ? FMath::Clamp(Dot(S.Pos - From, Path) / Len2, 0.0, 1.0) : 1.0;
+		const FVector2D At = From + Path * T;
+		const double D = FVector2D::Distance(At, S.Pos);
+		if (D > Config.Stick.PickupRingM + R) continue;
+		if (NetBetween(S.Pos, At)) continue;   // never through a net's wall
+		const FVector2D Rel = Puck.Vel - S.Vel;
+		const bool bOwn = Puck.LastTouch == S.Index;
+		const bool bOpp = Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team != S.Team;
+		if (bOwn) { if (HumanReleaseLeaving(S)) continue; }   // his own release only once it no longer leaves him
+		else
+		{
+			const FJamSkaterState* L = Skaters.IsValidIndex(Puck.LastTouch) ? &Skaters[Puck.LastTouch] : nullptr;
+			if (L && L->IsStumbling() && !L->IsDown() && FVector2D::Distance(L->Pos, Puck.Pos) <= CarrierReachM(L->Index)) continue;   // R-0048: the stumble loosens nothing a stick did not take
+			if (Puck.PassFrames > 0 && L && Puck.PassBy == L->Index && Rel.Size() > DeflectMinSpeed) continue;   // another's pass in flight: lane A207's catch (a mate's) and the pass arc (an opponent's)
+			if (S.DeflectCooldown > 0 && L && L->Team != S.Team && L->CanAct() && FVector2D::Distance(L->Pos, Puck.Pos) <= CarrierReachM(L->Index) + HumanPressNearM) continue;   // a press just took it from him (PickupLostFrames): while the presser is still near enough to play it (a lift from behind sends it 2-3 m back to him), it is the presser's
+		}
+		if (Rel.Size() > Config.Stick.PickupStingMps * (bOpp ? 1.0 : PickupMateStingMult)) continue;   // a hard shot rings off (the sting: the blade and the body do it)
+		if (D < BestD) { BestD = D; Best = S.Index; BestAt = At; }
+	}
+	if (Best < 0) return -1;
+	FJamSkaterState& S = Skaters[Best];
+	const bool bMate = Skaters.IsValidIndex(Puck.LastTouch) && Puck.LastTouch != S.Index && Skaters[Puck.LastTouch].Team == S.Team;
+	const bool bOpp = Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team != S.Team;
+	const FVector2D Rel = Puck.Vel - S.Vel;
+	if (bOpp && Rel.Size() > DeflectMinSpeed) { CheckSave(S); EmitShotBlocked(S, Puck.Vel.Size()); }   // as the arc: a shot on goal stopped
+	Puck.Pos = BestAt;
+	PossessSpeedAtTake = Rel.Size(); PossessVariant = (BestD <= SkaterRadius + R + 0.15 || Dot(BestAt - S.Pos, S.BladePos - S.Pos) < 0.0) ? 1 : 0;   // the possess event: the skates (at his body or behind his blade's half) or the stick took it
+	Puck.Vel = S.Vel;   // his: the puck moves with him and the carry draws it onto the blade
+	S.SettleFrames = FMath::Max(S.SettleFrames, ReceptionSettleFrames);
+	if (bMate && Rel.Size() > DeflectMinSpeed) { ++S.PassesReceived; if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame; }
+	Puck.LastTouch = S.Index;
+	S.DeflectCooldown = 10;
+	return Best;
+}
+
 bool UJamSim::BodyMeetsPuck(FJamSkaterState& S, const FVector2D& From, double R)
 {
 	if (RidingCarrier() == S.Index) return false;   // his own carried puck: the carry owns it (a push-out from behind against the carry's pull held it inside him)
@@ -4005,6 +4070,7 @@ void UJamSim::StepPuck()
 			const int32 Saver = TryGoalieSave(R, MaxSpeed);
 			if (Saver >= 0) Touched[Saver] = true;
 		}
+		{ const int32 Ringer = TryHumanRing(Prev, R); if (Ringer >= 0) Touched[Ringer] = true; }   // lane A218 (game.stick.pickup.ring_m): the human's ring takes a loose puck
 		if (LoosePickupOn()) { const int32 Taker = TryLoosePickup(Prev, R); if (Taker >= 0) Touched[Taker] = true; }   // lane A208 (game.stick.pickup): the stick arc takes a loose puck
 
 		// Skater bodies push the puck (dribbling, as in the Godot pack); the carrier's blade pulls it (C-0005 carry assist, R-0013 stick).

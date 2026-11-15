@@ -1134,6 +1134,7 @@ namespace
 			ReadBool(Pu, TEXT("body"), C.Stick.bPickupBody);
 			ReadNumber(Pu, TEXT("sting_mps"), C.Stick.PickupStingMps);
 			ReadNumber(Pu, TEXT("body_catch_mps"), C.Stick.PickupBodyCatchMps);
+			ReadNumber(Pu, TEXT("ring_m"), C.Stick.PickupRingM);   // lane A218 (R-0069 point 2): the human's ring
 			ReadBool(Pu, TEXT("block_carried"), C.Stick.bPickupBlockCarried);
 		}
 		// Lane A208 (the eye's list 1): game.stick.faceoff { centre_gap_m, winner_shield_frames, no_hit_frames, no_hit_m }

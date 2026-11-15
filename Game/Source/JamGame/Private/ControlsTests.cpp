@@ -547,6 +547,7 @@ bool FJamControlsHeldCrossCheck::RunTest(const FString&)
 #if JAM_INPUT_HAS_CROSS_HOLD
 	FJamGameConfig Cfg;
 	if (!LoadRegular(*this, Cfg)) return false;
+	Cfg.Stick.PickupRingM = 0.0;   // lane A218: the staged 'carrier' never touched the puck (a loose puck behind him): the human's ring would take it and end the brace, as R-0069 says; read at the ring's neutral
 	UJamSim* Sim = NewObject<UJamSim>();
 	Sim->Init(Cfg, 1);
 	Sim->SkipFaceoff();

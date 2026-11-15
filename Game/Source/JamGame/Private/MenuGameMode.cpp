@@ -4,13 +4,14 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "HAL/IConsoleManager.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Engine/World.h"
 
 // QA: jam.menuscreen <landing|main|season|modes|cuts|rinks|direct|make|settings|credits|controls> shows a screen (lane A187); start = the landing's
 // press; back = Esc / B; jam.menuscreen choose <cut name> picks a cut;
 // jam.menuscreen say <sentence...> directs one; jam.menuscreen play presses PLAY NOW (lane A144). (R-0003 4: names grepped across Game/Source first.)
 static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen"),
-	TEXT("Menu QA: jam.menuscreen landing|main|season|modes|cuts|rinks|direct|make|settings|credits|controls | start | back | play | continue | walk | where | click <rookie|pro|all_star|play|start|modes|season|continue|make|rinks|back|settingslevel|quit|no|yes|friend> | level <rookie|pro|all_star|left|right> | key <left|right|up|down|arrowleft|arrowright|enter|a|b|esc> | choose <cut> | say <sentence>"),
+	TEXT("Menu QA: jam.menuscreen landing|main|season|modes|cuts|rinks|direct|make|settings|credits|controls | start | back | play | continue | walk | where | click <rookie|pro|all_star|play|start|modes|season|continue|make|rinks|back|settingslevel|quit|no|yes|friend> | level <rookie|pro|all_star|left|right> | key <left|right|up|down|arrowleft|arrowright|arrowup|arrowdown|w|s|stickup|stickdown|enter|a|b|esc> | preview | wheel <n> | choose <cut> | say <sentence>"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		AJamMenuGameMode* GM = World ? Cast<AJamMenuGameMode>(World->GetAuthGameMode()) : nullptr;
@@ -26,6 +27,8 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen
 		else if (A == TEXT("continue")) Menu->PlaySeason();   // lane A195: SEASON's CONTINUE from any screen (the between-takes card's stills)
 		else if (A == TEXT("walk")) Menu->StartPadWalk();   // lane A144: the pad walk (JAMMENU walk lines)
 		else if (A == TEXT("where")) Menu->PrintPlacesForQa();
+		else if (A == TEXT("preview")) Menu->PrintModePreviewForQa();   // lane A220: MODES' preview (JAMMENU preview line)
+		else if (A == TEXT("wheel")) Menu->WheelForQa(Args.Num() > 1 ? FCString::Atoi(*Args[1]) : 1);   // lane A220: n notches up (negative: down)
 		else if (A == TEXT("click") && Args.Num() > 1) Menu->ClickPlaceForQa(Args[1].ToLower());   // lane A164: a Slate-routed click, no cursor   // lane A164: the shown screen's places from the widgets' own geometry (JAMMENU place lines)
 		else if (A == TEXT("key") && Args.Num() > 1)
 		{
@@ -33,8 +36,19 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen
 			static const TMap<FString, FKey> Keys = {
 				{ TEXT("left"), EKeys::Gamepad_DPad_Left }, { TEXT("right"), EKeys::Gamepad_DPad_Right }, { TEXT("up"), EKeys::Gamepad_DPad_Up }, { TEXT("down"), EKeys::Gamepad_DPad_Down },
 				{ TEXT("arrowleft"), EKeys::Left }, { TEXT("arrowright"), EKeys::Right }, { TEXT("enter"), EKeys::Enter }, { TEXT("a"), EKeys::Gamepad_FaceButton_Bottom },
-				{ TEXT("b"), EKeys::Gamepad_FaceButton_Right }, { TEXT("esc"), EKeys::Escape } };
-			if (const FKey* K = Keys.Find(Args[1].ToLower())) Menu->PressKeyForQa(*K);
+				{ TEXT("b"), EKeys::Gamepad_FaceButton_Right }, { TEXT("esc"), EKeys::Escape },
+				// Lane A220: the keyboard's up and down arrows, W and S (MODES' list).
+				{ TEXT("arrowup"), EKeys::Up }, { TEXT("arrowdown"), EKeys::Down }, { TEXT("w"), EKeys::W }, { TEXT("s"), EKeys::S } };
+			const FString Name = Args[1].ToLower();
+			if (Name == TEXT("stickup") || Name == TEXT("stickdown"))
+			{
+				// Lane A220: the left stick pushed and let go, as an analog event through Slate (the path a real stick's navigation takes).
+				FSlateApplication& App = FSlateApplication::Get();
+				App.ProcessAnalogInputEvent(FAnalogInputEvent(EKeys::Gamepad_LeftY, FModifierKeysState(), 0, false, 0, 0, Name == TEXT("stickup") ? 1.f : -1.f));
+				App.ProcessAnalogInputEvent(FAnalogInputEvent(EKeys::Gamepad_LeftY, FModifierKeysState(), 0, false, 0, 0, 0.f));
+				UE_LOG(LogTemp, Log, TEXT("JAMMENU stick %s"), *Name);
+			}
+			else if (const FKey* K = Keys.Find(Name)) Menu->PressKeyForQa(*K);
 			else UE_LOG(LogTemp, Warning, TEXT("JAMMENU unknown key %s"), *Args[1]);
 		}
 		else if (A == TEXT("level") && Args.Num() > 1)

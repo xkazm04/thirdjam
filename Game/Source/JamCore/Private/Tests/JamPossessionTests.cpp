@@ -35,7 +35,7 @@ namespace JamPossessionTests
 		return true;
 	}
 
-	void Neutral(FJamGameConfig& G) { G.Stick.PickupArcM = 0.0; G.Stick.bPickupBody = false; }
+	void Neutral(FJamGameConfig& G) { G.Stick.PickupArcM = 0.0; G.Stick.bPickupBody = false; G.Stick.PickupRingM = 0.0; }   // lane A218: and the human's ring (the track's neutral)
 
 	TArray<FJamInput> NoInput(const UJamSim* Sim) { TArray<FJamInput> In; In.SetNum(Sim->GetSkaters().Num()); return In; }
 

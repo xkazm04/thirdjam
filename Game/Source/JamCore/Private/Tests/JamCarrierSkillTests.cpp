@@ -330,7 +330,7 @@ bool FJamMovementBodyShield::RunTest(const FString& Parameters)
 {
 	using namespace JamCarrierSkillTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
-	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the shield against a poke and a lift; the loose puck's pickup has its own (Jam.Core.Possession.*)
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; C->Game.Stick.PickupRingM = 0.0; }   // lane A218: and the human's ring (the track's neutral)   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the shield against a poke and a lift; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	FJamGameConfig On = C->Game, Off = C->Game;
 	On.Stick.bBodyShield = true;
@@ -779,7 +779,7 @@ bool FJamMovementSpinPrice::RunTest(const FString& Parameters)
 {
 	using namespace JamCarrierSkillTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
-	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the lift in the spin's exposed end; the loose puck's pickup has its own (Jam.Core.Possession.*)
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; C->Game.Stick.PickupRingM = 0.0; }   // lane A218: and the human's ring (the track's neutral)   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the lift in the spin's exposed end; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	TestEqual(TEXT("game.skater.spin.exposed_frames is 5 when the key is absent"), C->Game.Skater.SpinExposedTail, 5);
 	TestEqual(TEXT("the recovery after the spin is off (code only)"), C->Game.Skater.SpinRecoveryFrames, 0);
@@ -1462,6 +1462,7 @@ bool FJamCurveLaw3::RunTest(const FString& Parameters)
 			else if (K == TEXT("breakaway.speed_bonus")) Sk.BreakawaySpeedBonus = V;
 			else if (K == TEXT("pickup.arc_m")) C->Game.Stick.PickupArcM = V;   // lane A208 (game.stick.pickup): the neutral arm is pickup.arc_m=0;pickup.body=0
 			else if (K == TEXT("pickup.body")) C->Game.Stick.bPickupBody = V > 0.5;
+			else if (K == TEXT("pickup.ring_m")) C->Game.Stick.PickupRingM = V;   // lane A218 (game.stick.pickup.ring_m): the neutral arm is pickup.ring_m=0
 			else AddError(FString::Printf(TEXT("JAM_LAW3_SET: unknown key %s"), *K));
 		}
 		AddInfo(FString::Printf(TEXT("LAW3T set %s"), *SetEnv));
