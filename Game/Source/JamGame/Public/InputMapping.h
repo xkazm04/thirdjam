@@ -259,6 +259,8 @@ public:
 	// and the badge name that scheme's buttons.
 	static void NoteInputDevice(bool bPad);
 	static bool IsPadLast();
+	// Lane A213: jam.hud.Words (1 default): the pause card, the CONTROLS rows, the binding table and the badge say tonight's rules (hold = the pass's power, hold = brace).
+	static bool WordsTonight();
 	// The pause card's five lines (UJamDirectorsCallWidget::PauseControlsText).
 	static FString PauseCardText();
 	// The CONTROLS screen's rows (UJamMenuFlow::ControlRows): the two-role buttons as two rows each.

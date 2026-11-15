@@ -63,6 +63,7 @@ public:
 	// live bindings and the sim's possession (JamControls::HasPuckForButtons); a pill bottom left, at most ButtonsBadgeMaxW wide. Defined in InputMapping.cpp.
 	static FString ButtonsBadgeLine(bool bWithPuck);
 	static constexpr float ButtonsBadgeMaxW = 480.f;
+	static constexpr float BadgeDownOpacity = 0.3f;   // lane A213 (EYE 12): the pill while the human is down (jam.hud.Words 1)
 	FString GetButtonsBadgeShown() const;
 	static bool IsControlsHintSpent() { return bControlsHintSpent; }
 	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
@@ -354,6 +355,62 @@ public:
 	void UpdatePassMeter(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UBorder> PassMeterBar;
 	int32 PassMeterState = 0;
+	// ---- Lane A213 (track U3, the night of 14 to 15 Nov; docs/experiments/SCREEN-TELLS.md): possession at a glance. One function (UpdatePossession,
+	// HUDPossession.cpp; called after UpdatePassMeter, last in RefreshFromFrame). Presentation only: it reads the SIM's carrier (never a figure's flag) and
+	// writes nothing back. Four states, told apart without reading:
+	//   YOU      the human's ring doubled: an outer ring (YouHaveRingScale x his ring) in his team's colour while he carries;
+	//   MATE     the carrier's ring in the human's team colour;
+	//   OPPONENT the carrier's ring in the opponent's colour;
+	//   LOOSE    nobody carries: a chalk ring round the puck on the ice (LooseRingRadiusM; not while the contested mark stands round it, not in a countdown).
+	// The pickup's moment: the new carrier's ring pulses, the take grace's closing ring (TakeGraceRingScale) where the grace runs, else PossessPulseScale;
+	// the grace's ring keeps the carrier's colour (it was the HUD's yellow, which said "grace", not who). jam.hud.Possess 0 = the screen of before.
+	enum class EPossess : uint8 { Loose, You, Mate, Opponent };
+	static EPossess PossessOf(int32 Carrier, int32 Human, int32 CarrierTeam, int32 HumanTeam)
+	{
+		if (Carrier < 0) return EPossess::Loose;
+		if (Carrier == Human) return EPossess::You;
+		return CarrierTeam == HumanTeam ? EPossess::Mate : EPossess::Opponent;
+	}
+	static EPossess PossessFromSim(const class UJamSim& Sim);
+	static const TCHAR* PossessName(EPossess P) { return P == EPossess::You ? TEXT("you") : P == EPossess::Mate ? TEXT("mate") : P == EPossess::Opponent ? TEXT("opponent") : TEXT("loose"); }
+	static constexpr float YouHaveRingScale = 1.35f;
+	static constexpr float LooseRingRadiusM = 0.42f;
+	static constexpr float LooseRingMinPx = 40.f;   // the loose ring's least width on the screen (Slate units)
+	static constexpr int32 PossessPulseFrames = 14;
+	static constexpr float PossessPulseGrow = 0.6f;
+	// The pulse's size factor Age sim frames after the pickup: 1 + Grow at the pickup, easing to 1 at PossessPulseFrames; 1 before and after. Pure.
+	static float PossessPulseScale(int64 Age)
+	{
+		if (Age < 0 || Age >= PossessPulseFrames) return 1.f;
+		const float T = 1.f - static_cast<float>(Age) / static_cast<float>(PossessPulseFrames);
+		return 1.f + PossessPulseGrow * T * T;
+	}
+	static bool PossessOn();
+	EPossess GetPossessShown() const { return static_cast<EPossess>(PossessShownState); }
+	bool IsLooseRingShown() const;
+	bool IsYouHaveRingShown() const;
+	void UpdatePossession(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UImage> YouHaveRing;
+	UPROPERTY(Transient) TObjectPtr<UImage> LooseRing;
+	uint8 PossessShownState = 0;
+	int32 PossessCarrier = -2;
+	int64 PossessSince = -1;
+	// ---- Lane A213: one line of words at a time (brief item 1's rule: outside the scoreboard and the buttons' badge, at most one line of words over the
+	// play). One function (UpdateOneLine, HUDOneLine.cpp; called after UpdatePossession, last in RefreshFromFrame): of the HUD's own lines that are due
+	// this frame the first in this order stands and the others are not drawn this frame (each comes back by its own rule when it is still due):
+	//   0 the contact line (what just happened to his press), 1 the one-time prompt, 2 the first-match controls strip, 3 the faceoff hint,
+	//   4 the commentator's caption.
+	// And the kept-puck prompt ("THE PUCK IS YOURS ...") is not drawn on a frame the human does not carry (it stood 5 s after he lost the puck).
+	// jam.hud.OneLine 0 = the screen of before (all of them at once).
+	static int32 OneLineWinner(bool bContact, bool bPrompt, bool bStrip, bool bFaceoffHint, bool bCaption)
+	{
+		const bool Due[5] = { bContact, bPrompt, bStrip, bFaceoffHint, bCaption };
+		for (int32 i = 0; i < 5; ++i) if (Due[i]) return i;
+		return -1;
+	}
+	static bool OneLineOn();
+	void UpdateOneLine(const FJamPresentationFrame& Frame);
+	int32 OneLineShown = -1;
 	int32 BraceSeenGiven = 0, BraceSeenTaken = 0;
 	bool bCueStickLocked = false, bCuePressIntoGrace = false;
 	int32 CueGraceCarrier = -1;

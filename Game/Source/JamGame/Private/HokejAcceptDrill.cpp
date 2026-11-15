@@ -20,6 +20,7 @@
 #include "HAL/PlatformTime.h"
 
 static TAutoConsoleVariable<int32> CVarJamAcceptFrom(TEXT("jam.accept.From"), 1, TEXT("Lane A87: the first step of the acceptance run (jam.ctrl.Drill 20)."));
+static TAutoConsoleVariable<int32> CVarJamAcceptTrace(TEXT("jam.accept.Trace"), 1, TEXT("Lane A215: 1 = a JAMTRACE line every frame of step 7 k=1 and step 8 (both skaters' positions, velocities, inputs, wind-ups, contact): the frame trace of a red row."));
 static TAutoConsoleVariable<int32> CVarJamAcceptTo(TEXT("jam.accept.To"), 10, TEXT("Lane A87: the last step of the acceptance run (jam.ctrl.Drill 20)."));
 
 #define ACC_LOG(Fmt, ...) UE_LOG(LogHokej, Log, TEXT("JAMACCEPT ") Fmt, ##__VA_ARGS__)
@@ -68,6 +69,10 @@ namespace JamAccept
 		FString AimFacts;
 		int32 AimOk = 0, OtOk = 0;
 		FString OtFacts;
+		// Lane A215: where the step staged the human and the opponent (step 7 k=1 holds the scene there until the hand's W arrives), and the frames of
+		// step 8 on which the hand still sent something (a move, a sprint, a button) that the row took away (he stands).
+		FVector2D StagePos = FVector2D::ZeroVector, OppStagePos = FVector2D::ZeroVector;
+		int32 StrayIn = 0;
 	};
 	static FState G;
 
@@ -122,6 +127,35 @@ void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
 	}
 	G.MoveIn = All[Me].Move.Size();
 	G.MoveVec = All[Me].Move;
+	// Lane A215 (H35's red step 8): "checked while STANDING": from the settle to the verdict the human sends nothing. The driver's lmb_hold of step 7 k=3 slept its
+	// 2200 ms, so that row's W (1500 ms) and the held LMB were still down about 30 frames into this stage: the staged human skated 3.7 m into the man standing
+	// at 7 m, they touched before the act frame, and the row measured a touch at closing 0 (a stumble, ratio 0.55) instead of a sprinting man's hit. Whatever
+	// the hand still holds is taken away here and counted (stray_in in the verdict).
+	if (G.Step == 8 && (G.Ph == EPh::Settle || G.Ph == EPh::Hand || G.Ph == EPh::Measure))
+	{
+		FJamInput& HI = All[Me];
+		bool bStray = !HI.Move.IsNearlyZero() || HI.bSprint || HI.bCheck || HI.bLift || HI.bPoke || HI.bBrake;
+#if JAM_INPUT_HAS_CROSS_HOLD
+		bStray = bStray || HI.bCrossHold;
+		HI.bCrossHold = false;
+#endif
+		if (bStray) ++G.StrayIn;
+		HI.Move = FVector2D::ZeroVector; HI.bSprint = false; HI.bCheck = false; HI.bLift = false; HI.bPoke = false; HI.bBrake = false;
+	}
+	// Lane A215 (H35-2's red step 7 check: the driver's W came 218 ms late, the creeping carrier closed the gap while the human coasted, he pressed at 3.9 m/s):
+	// the scene holds where it was staged (the human gliding at 4 m/s, the carrier still) until the hand's W reaches the sim (60 frames at most), so the
+	// driver's lag does not change what is measured.
+	if (G.Step == 7 && G.K == 1 && G.Ph == EPh::Measure && G.MoveFrame < 0 && Sk.IsValidIndex(G.Opp))
+	{
+		const int64 F0 = Sim->GetFrame();
+		if (G.MoveIn > 0.3 || F0 - G.ActFrame > 60) { G.MoveFrame = F0; ACC_LOG(TEXT("held step=7 k=1 w_after=%lld frame=%lld"), F0 - G.ActFrame, F0); }
+		else
+		{
+			const double Yaw = G.Dir > 0 ? 0.0 : PI;
+			Sim->SetSkater(Me, G.StagePos, FVector2D(G.Dir * 4.0, 0.0), Yaw);
+			Sim->SetSkater(G.Opp, G.OppStagePos, FVector2D::ZeroVector, Yaw + PI);
+		}
+	}
 	// Everyone but the human: still, unless the step scripts the mate or the opponent below. Parked skaters sit in the human's own corner.
 	for (int32 i = 0; i < All.Num(); ++i) if (i != Me) All[i] = FJamInput();
 	int32 Slot = 0;
@@ -195,6 +229,14 @@ void AHokejGameMode::AcceptDrillObserve()
 	const FJamSkaterState& H = Sk[Me];
 	const FJamPuckState& P = Sim->GetPuck();
 	const FJamGameConfig& Cfg = Sim->GetConfig();
+	// Lane A215: the frame trace of the hit rows (jam.accept.Trace).
+	if (CVarJamAcceptTrace.GetValueOnGameThread() != 0 && Sk.IsValidIndex(G.Opp) && ((G.Step == 8 && (G.Ph == EPh::Settle || G.Ph == EPh::Hand || G.Ph == EPh::Measure)) || (G.Step == 7 && G.K == 1 && G.Ph == EPh::Measure)))
+	{
+		const FJamSkaterState& O = Sk[G.Opp];
+		UE_LOG(LogHokej, Log, TEXT("JAMTRACE step=%d k=%d ph=%d f=%lld h=(%.2f,%.2f) hv=(%.2f,%.2f) o=(%.2f,%.2f) ov=(%.2f,%.2f) gap=%.2f carrier=%d puck=(%.2f,%.2f) in=%.2f stray=%d h_wu=%d h_win=%d o_wu=%d o_win=%d braced=%d h_out=%d h_ratio=%.2f h_knock=%d o_out=%d o_knock=%d"),
+			G.Step, G.K, (int32)G.Ph, Sim->GetFrame(), H.Pos.X, H.Pos.Y, H.Vel.X, H.Vel.Y, O.Pos.X, O.Pos.Y, O.Vel.X, O.Vel.Y, FVector2D::Distance(H.Pos, O.Pos) - UJamSim::SkaterRadius * 2.0,
+			Sim->CarrierIndex(), P.Pos.X, P.Pos.Y, G.MoveIn, G.StrayIn, H.CheckWindupLeft, H.CheckWindow, O.CheckWindupLeft, O.CheckWindow, H.bCrossBraced ? 1 : 0, H.ContactOutcome, H.ContactRatio, H.KnockFrames, O.ContactOutcome, O.KnockFrames);
+	}
 	const double Now = FPlatformTime::Seconds();
 	const double WallGap = Now - G.LastWall;
 	G.LastWall = Now;
@@ -272,7 +314,7 @@ void AHokejGameMode::AcceptDrillObserve()
 		// lands 4 frames later, so its man was still down when k=3 was staged: the stage's ClearReleaseGrace came before his get-up, the get-up then gave
 		// him his two seconds of grace, and the held cross-check at 14.7 m/s was a bump (JAMVIS grace grace_left=75). The stage waits for a man on his feet
 		// (bounded: 300 frames), so the grace it clears is the one he would have carried.
-		if (G.Step == 7 && G.K > 1 && G.Opp >= 0 && Sim->GetSkaters().IsValidIndex(G.Opp) && Sim->GetSkaters()[G.Opp].IsDown() && InPh <= 300) return;
+		if ((G.Step == 7 && G.K > 1 || G.Step == 8) && G.Opp >= 0 && Sim->GetSkaters().IsValidIndex(G.Opp) && Sim->GetSkaters()[G.Opp].IsDown() && InPh <= 300) return;   // lane A215: step 8 too (step 7 k=3 fells him for ~120 frames: he sprints from 7 m on his feet)
 		// Reset the scratch, stage the step's scene.
 		const FState Keep = G;
 		G = FState();
@@ -323,6 +365,8 @@ void AHokejGameMode::AcceptDrillObserve()
 		if (G.Step == 7 && G.K == 3) HPos = FVector2D(-Dir * 9.0, 0.0);
 		Sim->SetSkater(Me, HPos, G.Step == 7 ? Fwd * (G.K == 3 ? 5.0 : 4.0) : FVector2D::ZeroVector, FaceYaw);
 		ACC_LOG(TEXT("stage step=%d k=%d frame=%lld human=(%.1f,%.1f)"), G.Step, G.K, F, HPos.X, HPos.Y);
+		G.StagePos = HPos;   // lane A215
+		if (Sk.IsValidIndex(G.Opp)) G.OppStagePos = Sk[G.Opp].Pos;
 		if (G.Step == 7 && G.K == 3 && !JAM_INPUT_HAS_CROSS_HOLD)
 		{
 			// Lane A191: the row waits for A184's FJamInput::bCrossHold (InputMapping.h, JAM_INPUT_HAS_CROSS_HOLD): not run, not a fail.
@@ -686,8 +730,8 @@ void AHokejGameMode::AcceptDrillObserve()
 		// Lane A92 (R-0045 law 1): the opponent sprints 7 m at the standing human and checks at contact: a full-speed hit beats the standing brace, so the human
 		// goes down, for the frames the sim gave it by the ratio (+-15; skater.knockdown_frames under the neutral block).
 		Verdict(TEXT("checked"), G.DownFrame >= 0 && !G.bCamOff && G.CamMaxM < 25.0 && Down >= 0 && FMath::Abs(Down - G.KnockAt) <= 15,
-			FString::Printf(TEXT("down=%d view_target_human=%d cam_max_m=%.1f down_frames=%lld knock_frames=%d outcome=%d ratio=%.2f opp_cue=%lld closing=%.2f"), G.DownFrame >= 0 ? 1 : 0, G.bCamOff ? 0 : 1, G.CamMaxM, Down, G.KnockAt,
-				G.HitOutcome, G.HitRatio, G.CueFrame >= 0 ? G.CueFrame - G.ActFrame : -1, G.Closing));
+			FString::Printf(TEXT("down=%d view_target_human=%d cam_max_m=%.1f down_frames=%lld knock_frames=%d outcome=%d ratio=%.2f opp_cue=%lld closing=%.2f stray_in=%d"), G.DownFrame >= 0 ? 1 : 0, G.bCamOff ? 0 : 1, G.CamMaxM, Down, G.KnockAt,
+				G.HitOutcome, G.HitRatio, G.CueFrame >= 0 ? G.CueFrame - G.ActFrame : -1, G.Closing, G.StrayIn));
 		Next();
 		return;
 	}

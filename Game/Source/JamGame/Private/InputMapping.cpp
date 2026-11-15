@@ -717,6 +717,12 @@ FString UJamInputMap::HintStripTextFor(bool bPad)
 	return Out.Left(HintStripMaxChars);
 }
 
+// Lane A213 (track U3, the night of 14 to 15 Nov): the words say tonight's game. A hold is the pass's power (game.pass.power, lane A207: no saucer to
+// learn), the held cross-check is the brace (13 frames, lane A199), the body check takes him onto a man in front (lane A209). jam.hud.Words 0 = yesterday's words.
+static TAutoConsoleVariable<int32> CVarJamHudWords(TEXT("jam.hud.Words"), 1,
+	TEXT("Lane A213: 1 (default) the pause card, the CONTROLS screen, the binding table and the badge say tonight's rules (RMB: pass, hold for power; LMB: shoot, hold to lift / cross-check, hold to brace); 0 = the words of before (hold = saucer, hold to hit)."), ECVF_Default);
+bool UJamInputMap::WordsTonight() { return CVarJamHudWords.GetValueOnAnyThread() != 0; }
+
 FString UJamInputMap::PauseCardText()
 {
 	// Lane A144's five lines (the card's inner width, about 80 characters), from the bindings: first keys only (the CONTROLS screen lists the second ones).
@@ -728,8 +734,16 @@ FString UJamInputMap::PauseCardText()
 	};
 	TArray<FString> L;
 	L.Add(FString::Printf(TEXT("SKATE  %s / L-STICK      AIM  MOUSE / R-STICK      SPRINT  %s"), *SkateKeys(), *Short(EJamVerb::Sprint)));
-	L.Add(PairLine(EJamVerb::Shoot, EJamVerb::CrossCheck, TEXT("(WITH / WITHOUT THE PUCK: HOLD TO HIT)"), TEXT(""), TEXT("(HOLD TO HIT)")));
-	L.Add(PairLine(EJamVerb::Pass, EJamVerb::Check, TEXT("(WITH / WITHOUT THE PUCK)"), TEXT("(HOLD = SAUCER)"), TEXT("")) + TEXT("      PAUSE  ESC / MENU"));
+	if (WordsTonight())
+	{
+		L.Add(PairLine(EJamVerb::Shoot, EJamVerb::CrossCheck, TEXT("(HOLD: LIFT THE SHOT / BRACE)"), TEXT("(HOLD TO LIFT)"), TEXT("(HOLD TO BRACE)")));
+		L.Add(PairLine(EJamVerb::Pass, EJamVerb::Check, TEXT("(HOLD FOR POWER)"), TEXT("(HOLD FOR POWER)"), TEXT("")) + TEXT("      PAUSE  ESC / MENU"));
+	}
+	else
+	{
+		L.Add(PairLine(EJamVerb::Shoot, EJamVerb::CrossCheck, TEXT("(WITH / WITHOUT THE PUCK: HOLD TO HIT)"), TEXT(""), TEXT("(HOLD TO HIT)")));
+		L.Add(PairLine(EJamVerb::Pass, EJamVerb::Check, TEXT("(WITH / WITHOUT THE PUCK)"), TEXT("(HOLD = SAUCER)"), TEXT("")) + TEXT("      PAUSE  ESC / MENU"));
+	}
 	L.Add(FString::Printf(TEXT("POKE  %s      DEKE  %s      SPIN  %s      ABILITY  %s"), *Short(EJamVerb::Poke), *Short(EJamVerb::Deke), *Short(EJamVerb::Spin), *Short(EJamVerb::Ability)));
 	L.Add(FString::Printf(TEXT("BRAKE  %s BACK OR %s    SIGNALS  1-4 / D-PAD    RESTART  %s"), *FirstKey(EJamVerb::SkateBack), *Short(EJamVerb::Brake), *Short(EJamVerb::Restart)));
 	for (FString& Line : L) Line.TrimEndInline();
@@ -776,10 +790,11 @@ TArray<FJamControlRow> UJamInputMap::ControlRowsFromBindings()
 		Rows.Add({ TEXT("SKATE"), FString::Join(First, TEXT(" ")) + (bArrows ? TEXT(" or arrows") : TEXT("")), TEXT("left stick"), TEXT("you glide: speed is built, not given"), Bound });
 	}
 	Rows.Add({ TEXT("AIM THE STICK"), TEXT("the mouse"), TEXT("right stick"), TEXT("the blade follows the cursor"), { EKeys::Mouse2D, EKeys::Gamepad_Right2D } });
-	Rows.Add(Row(TEXT("SHOOT (WITH THE PUCK)"), EJamVerb::Shoot, TEXT("a tap is a flat shot; hold to load it, let go to fire")));
-	Rows.Add(Row(TEXT("CROSS-CHECK (WITHOUT)"), EJamVerb::CrossCheck, TEXT("hold it and skate into a man: your speed is the hit")));
-	Rows.Add(Row(TEXT("PASS (WITH THE PUCK)"), EJamVerb::Pass, TEXT("a tap is a flat pass; held, it is a saucer over the sticks")));
-	Rows.Add(Row(TEXT("CHECK (WITHOUT)"), EJamVerb::Check, TEXT("the body check: come in fast or it is a bump")));
+	const bool bTonight = WordsTonight();   // lane A213
+	Rows.Add(Row(TEXT("SHOOT (WITH THE PUCK)"), EJamVerb::Shoot, bTonight ? TEXT("a tap is a flat shot; hold to lift it, let go to fire") : TEXT("a tap is a flat shot; hold to load it, let go to fire")));
+	Rows.Add(Row(TEXT("CROSS-CHECK (WITHOUT)"), EJamVerb::CrossCheck, bTonight ? TEXT("shoves the man in front off the puck; hold it to brace") : TEXT("hold it and skate into a man: your speed is the hit")));
+	Rows.Add(Row(TEXT("PASS (WITH THE PUCK)"), EJamVerb::Pass, bTonight ? TEXT("to the mate your stick points at; hold for power") : TEXT("a tap is a flat pass; held, it is a saucer over the sticks")));
+	Rows.Add(Row(TEXT("CHECK (WITHOUT)"), EJamVerb::Check, bTonight ? TEXT("the body check: it takes you onto a man in front") : TEXT("the body check: come in fast or it is a bump")));
 	Rows.Add(Row(TEXT("ABILITY"), EJamVerb::Ability, TEXT("the mode's trick or a pickup's, when the slot is lit")));
 	Rows.Add(Row(TEXT("SPIN"), EJamVerb::Spin, TEXT("spin off a man who is on you")));
 	Rows.Add(Row(TEXT("DEKE"), EJamVerb::Deke, TEXT("the carrier's fake")));
@@ -805,8 +820,8 @@ FString UJamInputMap::BindingTableText(bool bOneLine)
 	Rows.Add({ TEXT("SKATE"), SkateKeys() + TEXT(" / L-STICK") });
 	Rows.Add({ TEXT("AIM"), TEXT("MOUSE / R-STICK") });
 	Rows.Add({ TEXT("SHOOT"), KP(EJamVerb::Shoot) + TEXT(" (WITH THE PUCK; HOLD TO LIFT)") });
-	Rows.Add({ TEXT("CROSS-CHECK"), KP(EJamVerb::CrossCheck) + TEXT(" (WITHOUT THE PUCK; HOLD IT INTO A MAN)") });
-	Rows.Add({ TEXT("PASS"), KP(EJamVerb::Pass) + TEXT(" (WITH THE PUCK; HOLD = SAUCER)") });
+	Rows.Add({ TEXT("CROSS-CHECK"), KP(EJamVerb::CrossCheck) + (WordsTonight() ? TEXT(" (WITHOUT THE PUCK; HOLD TO BRACE)") : TEXT(" (WITHOUT THE PUCK; HOLD IT INTO A MAN)")) });
+	Rows.Add({ TEXT("PASS"), KP(EJamVerb::Pass) + (WordsTonight() ? TEXT(" (WITH THE PUCK; HOLD FOR POWER)") : TEXT(" (WITH THE PUCK; HOLD = SAUCER)")) });
 	Rows.Add({ TEXT("CHECK"), KP(EJamVerb::Check) + TEXT(" (WITHOUT THE PUCK)") });
 	Rows.Add({ TEXT("DEKE"), KP(EJamVerb::Deke) });
 	Rows.Add({ TEXT("SPIN"), KP(EJamVerb::Spin) });
@@ -1172,10 +1187,14 @@ void UJamHudWidget::UpdateButtonsBadge(const FJamPresentationFrame& F)
 	}
 	// The same possession the buttons read at the sim step (FJamButtonResolver), on the frame this HUD shows.
 	// Lane A199 (item 2): the hold shown: SAUCER / BRACED from the frame the hold counts.
+	// Lane A213: under the pass's power (game.pass.power.full_frames > 0) a held pass is a harder pass, not a saucer: the badge never says SAUCER then.
+	const int32 SaucerWord = UJamInputMap::WordsTonight() && Sim->PassPowerOn() ? 0 : JamControls::SaucerHoldFrames(Sim->GetConfig().Pass.SaucerHalfFrames);
 	const FString Line = JamControls::BadgeLineHeld(JamControls::HasPuckForButtons(*Sim, F.HumanIndex), JamControls::LastHumanButtons(),
-		JamControls::SaucerHoldFrames(Sim->GetConfig().Pass.SaucerHalfFrames), JamControls::BraceHoldFrames());
+		SaucerWord, JamControls::BraceHoldFrames());
 	if (ButtonsBadgeText->GetText().ToString() != Line) ButtonsBadgeText->SetText(FText::FromString(Line));
 	ButtonsBadge->SetVisibility(Line.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	// Lane A213 (EYE 12, A211's list): while he lies on the ice the buttons do nothing: the pill dims (it read SHOOT / PASS with the puck loose beside him).
+	ButtonsBadge->SetRenderOpacity(UJamInputMap::WordsTonight() && bHumanDownNow ? BadgeDownOpacity : 1.f);
 }
 
 // ---------------------------------------------------------------- lane A199 (item 4): the profile written whole or not at all

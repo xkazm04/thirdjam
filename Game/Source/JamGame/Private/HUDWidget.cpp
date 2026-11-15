@@ -1025,6 +1025,8 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateCarrierCues(F);   // lane A163 (track F2): the take grace on the rings, the stick lock on the contact line (after UpdateYours placed the rings)
 	UpdateBraceLine(F);   // lane A192 (track F1): a braced hit given or taken says so on the contact line (HUDBrace.cpp)
 	UpdatePassMeter(F);   // lane A207 (track P1): the pass's power line on the ice while the pass is held (HUDPassMeter.cpp)
+	UpdatePossession(F);   // lane A213 (track U3): who has the puck, at a glance (HUDPossession.cpp)
+	UpdateOneLine(F);   // lane A213 (track U3): one line of words at a time (HUDOneLine.cpp)
 }
 
 // Lane A123 (1): where the human figure's head is. The visual's head_socket (a mesh socket on any of its components: device B's figures; or a scene component of

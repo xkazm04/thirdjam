@@ -243,6 +243,9 @@ $t0 = $sw.Elapsed.TotalSeconds
 $lastHome = $t0
 $done = $false
 function Home { [A87W]::Cursor($h, $script:hx, $script:hy) }
+# Lane A215: the key-ups that are due (a held key's time is up). The main loop calls it each pass; a long button hold (lmb_hold) calls it while it holds, so the
+# W of step 7 k=3 (1500 ms) is let go on time and not after the 2200 ms hold, 30 frames into step 8's stage (H35's red step 8).
+function ReleaseDue { $nowMs = $sw.Elapsed.TotalMilliseconds; for ($i = $pending.Count - 1; $i -ge 0; $i--) { if ($nowMs -ge $pending[$i].at) { [A87W]::KeyUp($h, $pending[$i].vk); if ($pending[$i].vk -eq 0x10) { [void][A87W]::ShiftState($h, $false) }; $pending.RemoveAt($i) } } }
 function Hold([string]$keys, [int]$ms) {
     foreach ($k in $keys.Split('+')) {
         if ($k -eq 'SHIFT') { $okS = [A87W]::ShiftState($h, $true); Note "shift key state held via the game's input thread: $okS" }
@@ -334,7 +337,7 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
                         $held = [int]$sp.Elapsed.TotalMilliseconds; Note "act pass key $pk held $held ms (wanted $want) [$rest]"; Note "HOLD step=$stepN k=$kN want_ms=$want held_ms=$held" }
                     'rmb' { $b = $btnOf[$hand.check]; [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act rmb (the check: $($hand.check)) [$rest]" }
                     'mmb' { $b = $btnOf[$hand.crosscheck]; [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act mmb (the cross-check: $($hand.crosscheck)) [$rest]" }
-                    'lmb_hold' { $ms = Num $rest 'ms' 2000; $b = $btnOf[$hand.crosscheck]; $sp = [Diagnostics.Stopwatch]::StartNew(); [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds $ms; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act lmb_hold (the held cross-check: $($hand.crosscheck)) held $([int]$sp.Elapsed.TotalMilliseconds) ms (wanted $ms) [$rest]" }   # lane A191
+                    'lmb_hold' { $ms = Num $rest 'ms' 2000; $b = $btnOf[$hand.crosscheck]; $sp = [Diagnostics.Stopwatch]::StartNew(); [A87W]::Button($h, $b, $script:hx, $script:hy, $true); while ($sp.Elapsed.TotalMilliseconds -lt $ms) { Start-Sleep -Milliseconds 5; ReleaseDue }; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act lmb_hold (the held cross-check: $($hand.crosscheck)) held $([int]$sp.Elapsed.TotalMilliseconds) ms (wanted $ms) [$rest]" }   # lane A191
                     'wheel' { [A87W]::Wheel($h, $script:hx, $script:hy, 120); Note "act wheel +120 [$rest]" }
                     'key' { $k = 'E'; if ($rest -match 'key=(\w+)') { $k = $Matches[1] }; [A87W]::Key($h, $vk[$k], $ch[$k], 40); Note "act key $k [$rest]" }
                     'sweep' { $n = Num $rest 'n' 1; Sweep (Num $rest 'lx') (Num $rest 'ly') (Num $rest 'rx') (Num $rest 'ry') $n; $script:hx = Num $rest 'lx'; $script:hy = Num $rest 'ly'; Note "act sweep x$n [$rest]" }

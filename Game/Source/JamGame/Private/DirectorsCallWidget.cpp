@@ -558,6 +558,17 @@ namespace
 }
 
 // Lane A123 (track U1, evolution 2): the ready pill waits for the first goal, as the HUD's own CALL READY line does.
+// Lane A213 (EYE 4b): the rule-change hint brief and off the buttons' pill.
+static TAutoConsoleVariable<int32> CVarJamHudReadyHintBrief(TEXT("jam.hud.ReadyHintBrief"), 1,
+	TEXT("Lane A213: 1 (default) the ESC / START RULE CHANGE READY hint stands one row above the buttons' pill and shows for 4 s each time it becomes due; 0 = on the pill's place for as long as it is due (the screen of before; read at the HUD's build)."), ECVF_Default);
+static constexpr float ReadyHintRowPx = 52.f;
+static constexpr int64 ReadyHintBriefFrames = 240;
+namespace { int64 GReadyHintSince = -1; bool GReadyHintWas = false; int64 GCardUntilSeen = -2; bool GCardCountSeen = false; }
+static TAutoConsoleVariable<int32> CVarJamHudCardAtDrop(TEXT("jam.hud.CardAtDrop"), 1,
+	TEXT("Lane A213 (EYE 10): 1 (default) the MATCH / FACEOFF card goes at the drop (the end of the faceoff countdown it was shown over); 0 = its own time (it stood two seconds into play)."), ECVF_Default);
+// Pure: shown this frame? Age = sim frames since it became due.
+static bool ReadyHintBriefShows(bool bDue, bool bBrief, int64 Age) { return bDue && (!bBrief || (Age >= 0 && Age < ReadyHintBriefFrames)); }
+
 static TAutoConsoleVariable<int32> CVarJamHudCallPillAfterGoal(TEXT("jam.hud.CallPillAfterGoal"), 1,
 	TEXT("The ESC / START  CALL READY pill: 1 only once a goal has been scored (default, the HUD's own rule), 0 from the first faceoff."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamUiCardMode(TEXT("jam.ui.CardMode"), 0,
@@ -607,7 +618,9 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	ReadyHint = S::IceText(T, TEXT("ESC / START   RULE CHANGE READY"), S::CaptionFont(), S::Yellow());   // lane A195 (evolution 7): the item's own words
 	ReadyHint->SetVisibility(ESlateVisibility::Collapsed);
 	HintPill->SetContent(ReadyHint);
-	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, -S::EdgePx));
+	// Lane A213 (EYE 4b, A211's list): it stood on the buttons' pill (the HUD's badge, bottom left at EdgePx) from the first goal to the end of every
+	// match ("LMB SHOOT  RMB PASS" read "CK"). With jam.hud.ReadyHintBrief 1 it stands one row above the pill, and only for ReadyHintBriefFrames.
+	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, CVarJamHudReadyHintBrief.GetValueOnGameThread() != 0 ? -S::EdgePx - ReadyHintRowPx : -S::EdgePx));
 }
 
 // Lane A144 (the level wire): "rookie" -> "ROOKIE", "all_star" -> "ALL-STAR" (the settings button's own labels); empty for no level.
@@ -704,13 +717,22 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 		if (TakeArt) if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(TakeArt->Slot)) CS->SetPosition(FVector2D(0, MatchCardCentreYFor(F.RinkLengthM, Mode > 0)));
 	}
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
+	// Lane A213 (EYE 10, A211's list): the card says FACEOFF; it stood two seconds into play. With jam.hud.CardAtDrop 1 it goes at the drop: the
+	// first frame the faceoff countdown, once seen under this card, is over.
+	if (TakeUntil != GCardUntilSeen) { GCardUntilSeen = TakeUntil; GCardCountSeen = false; }
+	if (F.FaceoffCountdownFrames > 0) GCardCountSeen = true;
+	else if (GCardCountSeen && CVarJamHudCardAtDrop.GetValueOnGameThread() != 0 && TakeUntil > F.SimFrame) { TakeUntil = F.SimFrame; GCardUntilSeen = TakeUntil; }
 	const bool bTake = !bEnd && TakeUntil >= 0 && F.SimFrame < TakeUntil;
 	TakeCard->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	TakeSub->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (TakeArt) TakeArt->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	const bool bLine = AnnouncementUntil >= 0 && F.SimFrame < AnnouncementUntil;
 	SetLine(Announcement, bLine);
-	SetLine(ReadyHint, ShowReadyPill(bCallReady, F.ScoreHome + F.ScoreAway, bEnd, bLine, CVarJamHudCallPillAfterGoal.GetValueOnGameThread() != 0));
+	// Lane A213 (EYE 4b): the hint shows for ReadyHintBriefFrames from the frame it becomes due (again each time it becomes due anew), then goes.
+	const bool bReadyDue = ShowReadyPill(bCallReady, F.ScoreHome + F.ScoreAway, bEnd, bLine, CVarJamHudCallPillAfterGoal.GetValueOnGameThread() != 0);
+	if (bReadyDue && (!GReadyHintWas || F.SimFrame < GReadyHintSince)) GReadyHintSince = F.SimFrame;
+	GReadyHintWas = bReadyDue;
+	SetLine(ReadyHint, ReadyHintBriefShows(bReadyDue, CVarJamHudReadyHintBrief.GetValueOnGameThread() != 0, F.SimFrame - GReadyHintSince));
 }
 
 FString UJamDirectorsCallHudWidget::GetTakeCardText() const

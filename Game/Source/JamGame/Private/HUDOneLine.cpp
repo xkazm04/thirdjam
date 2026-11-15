@@ -1,0 +1,63 @@
+// Lane A213 (track U3, the night of 14 to 15 Nov; docs/experiments/SCREEN-TELLS.md section 2): one line of words at a time. The inventory's stills of
+// the screen of before showed four lines of words at the first faceoff (the MATCH card, the faceoff hint, the commentator's caption, the controls strip)
+// and two in play (the kept-puck prompt with a caption under it; the prompt still up five seconds after the human lost the puck). Presentation only:
+// UpdateOneLine runs last in RefreshFromFrame, after every element's own update decided whether it is due this frame; it only hides (Collapsed) the
+// lines that lose, for this frame. Each line's own rule shows it again on the next frame it is still due. jam.hud.OneLine 0 = the screen of before.
+#include "HUDWidget.h"
+#include "Components/Border.h"
+#include "Components/TextBlock.h"
+#include "Engine/World.h"
+#include "HAL/IConsoleManager.h"
+#include "HokejGameMode.h"
+#include "JamSim.h"
+
+static TAutoConsoleVariable<int32> CVarJamHudOneLine(TEXT("jam.hud.OneLine"), 1,
+	TEXT("Lane A213: 1 (default) at most one line of the HUD's words over the play at a time (contact line, prompt, controls strip, faceoff hint, caption, in that order) and the kept-puck prompt only while the human carries; 0 = the screen of before."), ECVF_Default);
+
+bool UJamHudWidget::OneLineOn() { return CVarJamHudOneLine.GetValueOnGameThread() != 0; }
+
+void UJamHudWidget::UpdateOneLine(const FJamPresentationFrame& F)
+{
+	if (!OneLineOn()) { OneLineShown = -1; return; }
+	auto Up = [](const UWidget* W) { return W && W->GetVisibility() != ESlateVisibility::Collapsed && W->GetRenderOpacity() > 0.f; };
+	// The kept-puck prompt says "the puck is yours": not on a frame it is not (the sim's carrier, never the figure's flag).
+	if (Up(PromptPlate.Get()) && PromptTextBlock && PromptTextBlock->GetText().ToString() == LivePromptText(EPrompt::Kept))
+	{
+		const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+		const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+		if (Sim && PossessFromSim(*Sim) != EPossess::You) PromptPlate->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	UWidget* const Lines[5] = { ContactPlate.Get(), PromptPlate.Get(), ControlsStrip.Get(), FaceoffHintPlate.Get(), CommentaryStrip.Get() };
+	int32 Win = OneLineWinner(Up(Lines[0]), Up(Lines[1]), Up(Lines[2]), Up(Lines[3]), Up(Lines[4]));
+	for (int32 i = 0; i < 5; ++i)
+	{
+		if (i == Win || !Lines[i] || !Up(Lines[i])) continue;
+		Lines[i]->SetVisibility(ESlateVisibility::Collapsed);
+		if (i == 2 && ControlsText) ControlsText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	// The caption never sits on another label (A211's list 2: in its slot under the scoreboard it lay on the far net's distance label, f180 to 300).
+	if (Win == 4 && CommentaryStrip)
+	{
+		FBox2D Cap(ForceInit);
+		if (WidgetBoxOnScreen(CommentaryStrip.Get(), Cap))
+		{
+			const UWidget* const Labels[] = { NetDiamond.Get(), NetText.Get(), NetPlate.Get(), NetArrow.Get(), OwnDiamond.Get(), OwnText.Get(), OwnArrow.Get(), PuckArrow.Get(), PuckText.Get(), PromptPlate.Get() };
+			for (const UWidget* L : Labels)
+			{
+				FBox2D B(ForceInit);
+				if (L && Up(L) && WidgetBoxOnScreen(L, B) && BoxesMeet(Cap.Min, Cap.Max, B.Min, B.Max, KeepClearPadPx))
+				{
+					CommentaryStrip->SetVisibility(ESlateVisibility::Collapsed);
+					Win = -1;
+					break;
+				}
+			}
+		}
+	}
+	if (Win != OneLineShown)
+	{
+		static const TCHAR* Names[5] = { TEXT("contact"), TEXT("prompt"), TEXT("strip"), TEXT("faceoff_hint"), TEXT("caption") };
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld one_line=%s"), F.SimFrame, Win >= 0 ? Names[Win] : TEXT("none"));
+		OneLineShown = Win;
+	}
+}
