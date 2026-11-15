@@ -221,6 +221,32 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	bool bRigYaw = false;
 
+	// Lane A214 (track U1, evolution 8; EYE LIST 1 item 5: "near the boards the screen is wood and crowd or a straight-down view of his helmet").
+	// Why the seven rounds before lost: the yaw is the skater's (rightly: A186, a turning camera turns W and the blade), so every stage answered the
+	// boards with HEIGHT (the corner lift, the crane that keeps the arm by height, the cap that kept the open-ice height): a higher camera sees over the
+	// boards into the stands, and with his back at the glass the crane stands over his head. The boards view answers with the knobs never turned: the
+	// camera's foot SLIDES into the rink along its own right (away from a board at his side), is PULLED IN along the arm (never sideways along the glass)
+	// where the boards take it, comes DOWN from the rig's height to BoardsMinHeightM as the arm shortens, and TILTS by the ice actually ahead of it (the
+	// boards' foot line no higher than BoardsIceTopFrac of the half frame over the centre), never steeper than BoardsPitchCapDeg, his head-to-chest kept
+	// inside BoardsKeepFrac of the half frame. The yaw is never touched (W and the blade keep the rig's yaw to the bit). The stage works on the
+	// open-ice rig's pose: its correction is weighted by the nearness of the boards (none beyond BoardsGateM: there the pose is the rig's to the bit) and
+	// eased, if BoardsSpringFrames > 0, through a critically damped spring (0, the default: the target is already a continuous function of the lagged pivot and yaw). With it on, the corner lift (A111) and the keep-in-frame stage (A135) step aside.
+	// 0 = off (the settings default and the neutral value: main's camera); the game: jam.camera.Boards (default 1).
+	float BoardsView = 0.f;
+	float BoardsGateM = 8.f;          // no correction at all beyond this distance from every board
+	float BoardsGateFullM = 4.f;      // the whole correction inside this distance
+	float BoardsNearM = 6.f;          // a board pushes the camera's foot from this distance ...
+	float BoardsFullM = 1.f;          // ... fully at this one
+	float BoardsSlideM = 3.f;         // metres the foot slides into the rink, along the camera's right, from a board at his side
+	float BoardsViewMarginM = 0.4f;   // the camera's foot stays this far inside the boards' inner line (in front of the glass)
+	float BoardsMinHeightM = 2.f;     // the height the camera comes down to as the arm shortens to nothing
+	float BoardsShortArmM = 4.f;      // the arm (along the yaw, foot to him) under which the camera comes down and frames his head instead of his chest
+	float BoardsHeadM = 1.8f;
+	float BoardsPitchCapDeg = 55.f;
+	float BoardsIceTopFrac = 0.45f;
+	float BoardsKeepFrac = 0.85f;
+	float BoardsSpringFrames = 0.f;   // 0: no spring (the target is a continuous function of the lagged pivot and yaw; a spring left a tail past the gate)
+
 	// From the cartridge's game.camera (JamCore's FJamCameraConfig): mode, distance, height, look-ahead, lag, fov, boards margin, end height, far-net bias. Off-axis stays 0.7 m.
 	static FJamCameraSettings FromCartridge(const struct FJamCameraConfig& Cartridge);
 };
@@ -278,6 +304,10 @@ struct JAMGAME_API FJamCameraFilter
 	FVector2D BoundLastHumanM = FVector2D::ZeroVector;
 	FTransform LastRigPose = FTransform::Identity;
 	int32 LastBoundGuard = 0;
+	// Lane A214: the boards view's correction over the open-ice rig (metres x, y, height; degrees of pitch), each through its own spring, and the weight
+	// of the last step (diagnostics: 0 = the rig's pose to the bit).
+	FJamSpring BoardsCorr[4];
+	float LastBoardsWeight = 0.f;
 
 	// alpha = 1 - exp(-1 / lag_frames), 1 when lag_frames == 0.
 	static float AlphaForLag(int32 LagFrames);
@@ -361,6 +391,11 @@ public:
 	static float IceShare(const FTransform& Pose, float HFovDeg, float Aspect, const FJamCameraRink& Rink, int32 Cols = 16, int32 Rows = 9);
 
 	// A40. The yaw lead toward the far net, degrees, before the spring: bias * toward * distance band * (yaw to net - yaw), 0 when skating away or near the net.
+	// Lane A214. The boards view's pose (no spring, no weight): from the open-ice rig's foot, height and pitch for the pivot and yaw, the foot slid,
+	// pulled in, lowered and tilted as FJamCameraSettings::BoardsView says. OutWeight: the gate (0 beyond BoardsGateM). Pure, for the tests.
+	static void BoardsViewTarget(const FJamCameraSettings& C, const FJamCameraRink& Rink, const FVector2D& PivotM, float YawDeg, FVector2D& OutPosM, float& OutHeightM, float& OutPitchDeg, float& OutWeight);
+	// Lane A214. Metres from P along a bearing to the boards' inner line (0 when P is outside it); at most MaxM.
+	static float RayToBoards(const FVector2D& PM, float YawDeg, const FJamCameraRink& Rink, float MaxM = 200.f);
 	static float FarNetLeadDeg(const FJamCameraSettings& C, const FVector2D& PivotM, float YawDeg, const FVector2D& FarNetM);
 
 	// Fixed high camera framing both nets (Arena mode): looks at the rink centre from the +Y side, so rink +X is on the right (like the radar).

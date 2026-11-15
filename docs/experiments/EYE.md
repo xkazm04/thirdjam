@@ -13,6 +13,7 @@ would, and hands the Director a ranked list a lane can act on within the hour. T
 | `eye-hits.ps1` | The same driver with its own still prefix, so a drill run can film beside a match run in one tree (the game names the periodic stills by tier and frame only: two runs with `-Every` above 0 in one tree would overwrite each other; run one at a time). |
 | `sheet.py` | A contact sheet of a run's stills by sim frame: `python sheet.py <shots> <out.jpg> <from> <to> <step> [cols=3] [w=560] [crop=x0,y0,x1,y1] [prefix=...]`. Three columns of 560 px keep a skater at play distance about 13 px tall on a sheet: enough for who is where; use `crop` for the puck, a pose, a mark. |
 | `passes.py` | What became of each pass, from a run's `game.log`: the next touch after every `JAMPASS` line (a mate, the passer himself, an opponent, nobody) and how many passes are touched again within 15 frames. |
+| `facts.py` | The countable facts of a filmed match, one block per run, for the before and after of a list: score and length, faceoffs with a knockdown of the human inside 60 frames, his knockdowns, his hit presses and contacts, what became of his passes, of his side's and of the other side's (to a mate, to an opponent, back on the passer, touched again within 15 frames), every goal with the frames from its shot (53 = from the blue line), the camera's stands / no-horizon share, the stills with the yellow hint over the button pill. `python facts.py out/<run> ...` |
 | `view.py` | What the game camera shows, without an eye: per still the share of ice-coloured pixels. "stands" = under 45 % ice; "top" = the top band of the picture is ice (no horizon). `python view.py <shots> 500 7200 20`. The camera lane's number. |
 | `eye-hash.ps1` | The state hashes of one headless start (`-nullrhi`, the Rink map, `-cut=hockey.regular`, `jam.ScriptHuman=<n>`): the before / after proof of a script value in 25 s. A rendered run with value 0 is not repeatable (the machine's cursor aims his stick); a headless one is. |
 | `grid.py`, `shift.py`, `steps.py` | Lane A210's sheet helpers, copied unchanged. |
@@ -42,9 +43,13 @@ would, and hands the Director a ranked list a lane can act on within the hour. T
   is held for a saucer and tapped for a pass or a body check; `FJamButtonResolver` with the shipped bindings and `JamControls::ButtonContext` turns
   each press into its verb by the possession of that frame, kills a key held across a change of possession, and starts a hold after the hand's
   thresholds: the path `JamControls::ApplyButtons` gives the keys. A tap the playtester repeats every frame is pressed once, and again after 12 frames.
+  The aim of a pass is the stick of the frame the playtester asked for it, held through the release step (a person keeps the mouse on the man
+  through the click; without the hold half the hand's passes left along its carrying sweep: `kind=to_-1`).
 - **Knobs:** `jam.ScriptHumanKind` (-1 by the level: rookie newcomer, pro regular, all-star good; 0 / 1 / 2), `jam.ScriptHumanHand` (1), `jam.ScriptHumanButtons`
   (1; 0 = the playtester's verbs straight into the input, the headless match's path), `jam.ScriptHumanSprint` (1), `jam.ScriptHumanSeed` (0 = the cartridge's).
 - **Repeatable:** no wall clock, no engine randomness; two headless starts of value 2 give the same hashes frame for frame.
+  Rendered, three pro runs of four and the rookie pair equal the headless match; one pro run won its third draw 19 frames late and played another
+  match from there (cause not found): compare the `JAMSIM` hash lines of both passes before trusting a window.
 - **What it does not do:** the ability on F (the playtester's rule for it lives inside `RunPlaytestMatch`), the obedience to the contested ring and the
   stop line (measurement arms, off by default there too), steering through the camera (its move is in the rink's frame; `jam.ScriptHumanCam` belongs to
   value 1). The pill's hold fill does not follow it (`GJamLastHumanButtons` is the keys' own).

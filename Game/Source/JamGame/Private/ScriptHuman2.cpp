@@ -37,6 +37,10 @@ namespace
 		bool bLmbDown = false, bRmbDown = false;
 		bool bLmbTapWas = false, bRmbTapWas = false;   // the playtester asked for a tap on the frame before
 		int64 LmbTapAt = -1000, RmbTapAt = -1000;      // the frame of the last tap sent
+		bool bPassAim = false, bPassLevelWas = false;   // the aim of the frame the pass was asked for, held until its release step has gone
+		bool bPassAskWas = false;
+		FVector2D PassAim = FVector2D::ZeroVector;
+		int64 PassAimAt = 0;
 		int64 Frames = 0, LmbPresses = 0, RmbPresses = 0, Shots = 0, Passes = 0, Checks = 0, Lifts = 0, HoldFrames = 0, Dead = 0;
 	};
 	FScriptHuman2 G;
@@ -83,6 +87,7 @@ namespace
 	}
 
 	constexpr int64 TapAgainFrames = 12;   // a finger's second press: 200 ms
+	constexpr int64 PassAimMaxFrames = 40;
 
 	// One two-role key for this step: Tap = pressed and let go before the step (the resolver counts it for the step); Level = held.
 	void DriveKey(const FKey& Key, bool bLevel, bool bTap, bool& bDown, int64& Presses)
@@ -155,6 +160,19 @@ FJamInput JamScriptHuman2::Step(const UJamSim& Sim, const FName& Level, uint64 C
 		DriveKey(EKeys::LeftMouseButton, In.bShootHeld || In.bCrossHold, bLmbTap, G.bLmbDown, G.LmbPresses);
 		DriveKey(EKeys::RightMouseButton, In.bPassHeld, bRmbTap, G.bRmbDown, G.RmbPresses);
 		const FJamButtonVerbs V = G.Buttons.Step(JamControls::ButtonContext(Sim, Me), G.Bindings);
+		// A person keeps the mouse on the man through the click. The playtester aims its stick at him only on the frame it asks for the pass, and
+		// through the resolver the pass leaves on the release (a step later for a tap, longer for a held pass): the asked frame's aim is sent until
+		// the release step has gone, 40 frames at most, and never once the puck is no longer his.
+		const bool bPassAsk = In.bPass || In.bPassHeld;
+		if (bPassAsk && !G.bPassAskWas && !Out.Stick.IsNearlyZero()) { G.bPassAim = true; G.PassAim = Out.Stick; G.PassAimAt = Frame; }
+		G.bPassAskWas = bPassAsk;
+		if (G.bPassAim)
+		{
+			Out.Stick = G.PassAim;
+			const bool bReleaseStep = G.bPassLevelWas && !V.bPassHeld;
+			if (bReleaseStep || Frame - G.PassAimAt > PassAimMaxFrames || Sim.CarrierIndex() != Me) G.bPassAim = false;
+		}
+		G.bPassLevelWas = V.bPassHeld;
 		Out.bShootHeld = V.bShootHeld;
 		Out.bPassHeld = V.bPassHeld;
 		Out.bCheck = V.bCheck;
