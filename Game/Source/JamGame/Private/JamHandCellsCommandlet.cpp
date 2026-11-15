@@ -47,6 +47,11 @@ namespace JamHandCellsLocal
 		int32 Shots = 0, Passes = 0, PassesMate = 0, PassesOpp = 0, PassesLoose = 0, GoalsByHuman = 0;
 		int32 MatePasses = 0, MatePassesToHuman = 0;
 		int32 Knockdowns = 0;
+		// Lane A221 (reads only): where the human's pucks come from. A gain = the puck's last toucher becomes the human from another skater.
+		// OppShots = the opponents' shots; GainShot[3] = gains of an opponent's shot still in flight (no touch since the release) by the puck's speed on the
+		// frame before (<6, 6-18, >=18 m/s); GainOppCarry = from an opponent who carried it the frame before; GainOppLoose = loose after an opponent's touch
+		// (a poke, a save, a failed pass); GainMate = after a mate's touch. Ring = of these, gains with the puck's centre inside 1.2 m of his centre.
+		int32 OppShots = 0, GainShot[3] = {}, GainShotRing[3] = {}, GainOppCarry = 0, GainOppLoose = 0, GainOppLooseRing = 0, GainMate = 0;
 	};
 
 	const TCHAR* DistName(int32 B) { static const TCHAR* N[5] = { TEXT("lt10"), TEXT("10_20"), TEXT("20_28"), TEXT("ge28"), TEXT("none") }; return N[B]; }
@@ -150,6 +155,9 @@ int32 UJamHandCellsCommandlet::Main(const FString& Params)
 		int32 MatePassBy = -1;       // a mate's pass in flight (its next toucher)
 		int32 PrevLastTouch = Sim->GetPuck().LastTouch;
 		bool bWasDown = false;
+		bool bOppShotLive = false;   // A221: an opponent's shot with no touch since its release
+		double PrevPuckSpeed = 0.0;
+		int32 PrevCarrier = -1;
 		// PASS FATES: the human's pass in flight (release frame, intended mate, his distance, the nearest opponent within 2 m of the passer at the release).
 		struct FPassFate { int64 At = -1; int32 To = -1; double ToD = -1; int32 Press = -1; double PressD = -1; bool bSaucer = false; float Strength = 0.f; };
 		FPassFate PF;
@@ -260,6 +268,7 @@ int32 UJamHandCellsCommandlet::Main(const FString& Params)
 			{
 				if (K.bShotThisFrame && K.Team != M.HumanTeam)
 				{
+					++M.OppShots; bOppShotLive = true;
 					LastOppShotFrame = Sim->GetFrame();
 					LastOppShotDist = FVector2D::Distance(K.Pos, FVector2D(Sim->AttackGoalX(K.Team), 0.0));
 				}
@@ -268,11 +277,22 @@ int32 UJamHandCellsCommandlet::Main(const FString& Params)
 			const int32 Lt = Sim->GetPuck().LastTouch;
 			if (Lt != PrevLastTouch && Lt >= 0)
 			{
+				if (Lt == Human && PrevLastTouch >= 0 && Sk.IsValidIndex(PrevLastTouch) && Sk.IsValidIndex(Human))
+				{
+					const bool bRing = FVector2D::Distance(Sim->GetPuck().Pos, Sk[Human].Pos) <= 1.2;
+					if (Sk[PrevLastTouch].Team == M.HumanTeam) ++M.GainMate;
+					else if (bOppShotLive) { const int32 B = PrevPuckSpeed < 6.0 ? 0 : PrevPuckSpeed < 18.0 ? 1 : 2; ++M.GainShot[B]; if (bRing) ++M.GainShotRing[B]; }
+					else if (PrevCarrier == PrevLastTouch) ++M.GainOppCarry;
+					else { ++M.GainOppLoose; if (bRing) ++M.GainOppLooseRing; }
+				}
+				if (!(Sk.IsValidIndex(Lt) && Sk[Lt].bShotThisFrame)) bOppShotLive = false;
 				if (PassOpen && Lt != Human) { PassOpen = 0; if (Sk[Lt].Team == M.HumanTeam) { ++M.PassesMate; EmitFate(TEXT("mate"), Lt); } else { ++M.PassesOpp; EmitFate(TEXT("opp"), Lt); } PF.At = -1; }
 				if (MatePassBy >= 0 && Lt != MatePassBy) { if (Lt == Human) ++M.MatePassesToHuman; MatePassBy = -1; }
 			}
 			if (PassOpen && Sim->GetFrame() - PassAt > 180) { PassOpen = 0; ++M.PassesLoose; EmitFate(TEXT("loose"), -1); PF.At = -1; }
 			PrevLastTouch = Lt;
+			PrevPuckSpeed = Sim->GetPuck().Vel.Size();
+			PrevCarrier = Sim->CarrierIndex();
 			const int32 Ga = M.HumanTeam == 0 ? Sim->GetScore(1) - S1 : Sim->GetScore(0) - S0;
 			const int32 Gf = M.HumanTeam == 0 ? Sim->GetScore(0) - S0 : Sim->GetScore(1) - S1;
 			if (Gf > 0)
@@ -308,11 +328,13 @@ int32 UJamHandCellsCommandlet::Main(const FString& Params)
 		UE_LOG(LogJamHand, Display, TEXT("{\"tool\":\"thirdjam.hand/1\",\"cartridge\":\"%s\",\"difficulty\":\"%s\",\"tune\":\"%s\",\"seed\":%d,\"sim_seed\":%llu,\"hand_seed\":%llu,\"buttons\":%d,\"hand\":%d,\"sprint\":%d,\"kind\":%d,")
 			TEXT("\"result\":\"%s\",\"goals\":[%d,%d],\"frames\":%lld,\"play_frames\":%lld,\"hash\":\"%016llx\",\"first_ga\":%lld,\"first_gf\":%lld,\"ga_600\":%d,\"ga_dist\":{%s},\"ga_own\":%d,")
 			TEXT("\"down_frames\":%lld,\"stumble_frames\":%lld,\"box_frames\":%lld,\"carry_frames\":%lld,\"knockdowns\":%d,\"shots\":%d,\"goals_by_human\":%d,")
-			TEXT("\"passes\":%d,\"passes_mate\":%d,\"passes_opp\":%d,\"passes_loose\":%d,\"mate_passes\":%d,\"mate_passes_to_human\":%d}"),
+			TEXT("\"passes\":%d,\"passes_mate\":%d,\"passes_opp\":%d,\"passes_loose\":%d,\"mate_passes\":%d,\"mate_passes_to_human\":%d,")
+			TEXT("\"opp_shots\":%d,\"gain_shot\":[%d,%d,%d],\"gain_shot_ring\":[%d,%d,%d],\"gain_opp_carry\":%d,\"gain_opp_loose\":%d,\"gain_opp_loose_ring\":%d,\"gain_mate\":%d}"),
 			UTF8_TO_TCHAR(CartUtf8.Get()), *Level.ToString(), *TuneArg, Seed, static_cast<unsigned long long>(M.SimSeed), static_cast<unsigned long long>(M.HandSeed), Buttons, Hand, Sprint, Kind,
 			Result, M.GoalsFor, M.GoalsAgainst, M.Frames, M.PlayFrames, static_cast<unsigned long long>(M.Hash), M.FirstGoalAgainst, M.FirstGoalFor, M.GaEarly600, *GaDist, M.GaOwn,
 			M.DownFrames, M.StumbleFrames, M.BoxFrames, M.CarryFrames, M.Knockdowns, M.Shots, M.GoalsByHuman,
-			M.Passes, M.PassesMate, M.PassesOpp, M.PassesLoose, M.MatePasses, M.MatePassesToHuman);
+			M.Passes, M.PassesMate, M.PassesOpp, M.PassesLoose, M.MatePasses, M.MatePassesToHuman,
+			M.OppShots, M.GainShot[0], M.GainShot[1], M.GainShot[2], M.GainShotRing[0], M.GainShotRing[1], M.GainShotRing[2], M.GainOppCarry, M.GainOppLoose, M.GainOppLooseRing, M.GainMate);
 
 		// The sim keeps raw pointers to its hook, zone source and modifier source: cleared before the systems go (as FJamSimAdapter's destructor does).
 		Sim->SetRuleHook(nullptr);

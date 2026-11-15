@@ -276,7 +276,8 @@ bool FJamHockey5Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match("brain8=0"), A2 = Match("brain8=0"), Off = Match("brain5=0;brain7=1;brain8=0"),   // lane A202: evolution 8 ships on (its downed rule steers round him): the pair is read with it off
+	const FString A1 = Match("brain8=0"), A2 = Match("brain8=0"), Off = Match("brain5=0;brain7=1;brain8=0;opp.hk_press_commit_m=8"),   // lane A221 (LADDER SET 4): pro's commit distance 8 is a level number now (R-0063's dial); brain5=0 zeroes it, the tune gives it back
+		    // lane A202: evolution 8 ships on (its downed rule steers round him): the pair is read with it off
 		 On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
 	AddInfo(FString::Printf(TEXT("hockey.regular at pro, the regular player, seed 1: as shipped %s; with brain5=0 %s; with the keep-out at 1.3 m %s"), *A1, *Off, *On));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);

@@ -515,3 +515,4 @@
 - link green 12:38: main b4b89f13 (R-0069 / R-0070: nothing is drawn at a cross-check but the figure; its take is no longer r) pushed.
 - package 13:11: `Hokej_Hokej_H40.zip` from main b4b89f13, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.
 - link green 13:32: main 990b0538 (R-0070: a held cross-check keeps its pose through braking; the hold is called as the tap e) pushed.
+- link green 13:55: main 52843998 (Merge dev-b at 82193f86; the controls panel that stays on screen all match (A222)) pushed.

@@ -1,6 +1,6 @@
 rookie/hockey.regular 6197c111c851aae6
 rookie/hockey.arena.large bf11d9cec7fe3c4f
-pro/hockey.regular 8f12edb72e6f860c
-pro/hockey.arena.large e762e619db004d3b
+pro/hockey.regular 17dd39d18c76f45b
+pro/hockey.arena.large 3602456e4dbd1fb1
 all_star/hockey.regular 5909d3d22f6f212e
 all_star/hockey.arena.large 318167b9bdc76aa6

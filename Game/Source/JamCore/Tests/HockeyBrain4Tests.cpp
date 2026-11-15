@@ -104,7 +104,9 @@ bool FJamHockey4PressInHunt::RunTest(const FString& Parameters)
 		ApplyDifficultyProfile(GetDifficultyProfile(EDifficulty::Pro), Pro);
 		ApplyDifficultyProfile(GetDifficultyProfile(EDifficulty::AllStar), Star);
 		TestTrue(TEXT("all_star's presser stays on its job inside the hunt"), Star.Opp.Hk.bPressInHunt);
-		TestFalse(TEXT("pro's does not (it breaks pro's drill: BRAIN-3.md section 6)"), Pro.Opp.Hk.bPressInHunt);
+		// lane A221 (LADDER SET 4, CURVE-14.md): R-0063's dial: pro's presser keeps its job inside the hunt and commits at its old hunt radius, 8 m (law 3's drill
+		// 94.0 % at 8 m, straight charge 0, as with it off). Before: TestFalse "pro's does not (it breaks pro's drill: BRAIN-3.md section 6)", which was so without the commit.
+		TestTrue(TEXT("pro's presser stays on its job inside the hunt and commits at 8 m (R-0063's dial, LADDER SET 4)"), Pro.Opp.Hk.bPressInHunt && Pro.Opp.Hk.PressCommitM == 8.0);
 		TestFalse(TEXT("rookie's does not"), Rk.Opp.Hk.bPressInHunt);
 		TestFalse(TEXT("the human's mates never carry the switch"), Star.Mate.Hk.bPressInHunt || Pro.Mate.Hk.bPressInHunt);
 		for (const char* Tune : { "opp.hk_press_in_hunt=0", "brain4=0", "brain3=0", "brain2=0" })
