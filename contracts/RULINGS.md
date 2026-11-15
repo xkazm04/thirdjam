@@ -901,3 +901,16 @@ the bar across the chest of a held one (team colour, blue): "first gray on tap, 
 - point (4) stands as asked;
 - the night's work has NOT yet been played by him. Two cures so this cannot recur: `Game/Packaged/PLAY-LATEST.cmd` (written by every release)
   starts the newest package, and HOME shows the package's name in a corner (lane A220).
+
+## R-0070 (15 Nov 11:38, the operator, on the pass line and what a cross-check shows)
+Asked whether an aim line for held passes should come back in a form that never crosses his figure, he wrote, verbatim:
+"no aim line needed, the player animation should reflect the crosscheck movement and that should be all"
+
+The Director's reading:
+(1) The pass line (`jam.hud.PassMeter`) is off by default and stays off; the target mate's ring says who gets the pass.
+(2) At a cross-check, tapped or held, landed or missed, his or a bot's, the figure's animation is the whole message. Nothing else is drawn for
+    it: no arc, chevron, burst, down ring, swell of the hitter's ring, or plate beside him. The body check follows the same rule. The control
+    legend at the bottom left stays.
+(3) Therefore the animation has to read by itself at game distance: the tap as a shove with the stick in both gloves, the hold as the stick held
+    across the chest from press to release. Judged on film of the package, frame by frame (lane A219); what only device B's takes can cure goes
+    to B by handoff.
