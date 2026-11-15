@@ -531,3 +531,6 @@
 - link green 19:04: main bcbd1287 (The neon rig scaled per axis on a rink that is not 2 : 1: the Cage's edge line sits evenly) pushed.
 - link green 20:57: main b6853a8e (The walk's faults cured (A235): nothing bursts or streaks at a contact, no arrow in the pi) pushed.
 - package 21:04: `Hokej_Hokej_H46.zip` from main b6853a8e, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 23:47: main 0889c182 (Merge dev-b at e1bae2ea: pale goal dust off clay, orange's goal on Glow Ice as bright as b) pushed.
+- package 23:53: `Hokej_Hokej_H47.zip` from main 0889c182, NO cursor acceptance (the operator was at the machine): the cooked Development twin played a scripted match off screen, green.
+- 23:55: README.md rewritten and the reviewed remove list applied (lane A236: 187 tracked files, 17.8 MB; ledger and 256 node tests green after it). H47 is the package to submit: `Game/Packaged/Hokej_Hokej_H47/Hokej_Hokej.zip`, 296,484,014 bytes, SHA-256 4e1ed5ddfe51a97fa13922eb435113c2b96eb40f6728996b2a80700906d9f0eb.

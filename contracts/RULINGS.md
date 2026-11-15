@@ -956,3 +956,13 @@ package can be cut and seen running tonight without risk to the Windows package:
 19:20 in its own worktree. (2) Slot O4 of the submission is answered by him: the modifier categories are **Solo Driver**, **Render
 Royalty: OpenAI Award (image generation)** and **Glass Box**; the same lane reads the jam's page for what each asks of the submission and
 checks the page, the form, the credits and the dev log against it.
+
+## R-0075 (15 Nov 23:30, the operator, the last hour)
+Verbatim: "Device B pushed and is working on final trailer. We can finalize its delivery, package the game. We have 1 hour to cleanup the codebase, create proper readme.md, remove unused files, resolve last fixes.  For submission I will populate md with questions from the form in time once I get the trailer video"
+
+The Director's reading: (1) device B's push `e1bae2ea` (pale goal dust off clay, orange's goal on Glow Ice as bright as blue's) is
+landed and the package H47 is cut from it: main `0889c182`, the full gate 398 of 398. (2) Lane A236: `README.md` rewritten for a
+stranger and a judge; a reviewed remove list (`tools/cleanup/remove-list.txt`: 188 files, 17.8 MB, each with the proof that nothing reads
+it) applied by the Director; nothing of the game, the contracts, the briefs, the status files, the handoffs, the dev log or the docs is
+removed; 1.5 GB that something still names is left for his call. (3) The form's questions come from him as a Markdown file; A answers
+each from `submission/form.md` and the final package's numbers.

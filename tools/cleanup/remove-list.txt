@@ -1,0 +1,423 @@
+# tools/cleanup/remove-list.txt: files to remove from the repository (lane A236, Sun 15 Nov 2026, worktree on main 62e52912).
+# One repository-relative path a line: a file, or a folder ending in "/". Lines starting with "#" are comments and are never applied.
+# How to apply and undo: tools/cleanup/README.md. Each group: what it is, why nothing reads it (searched: every tracked text file outside
+# tools/**/out/ and tools/**/raw/ for the exact path, then the file or folder name alone), and its size from the git index.
+
+# Root crash dumps of Git Bash (bash.exe, du.exe): written by a crashed shell, read by nothing. du.exe.stackdump is NOT tracked: a plain file delete in the main checkout.
+# group: 2 lines, 2 files, 0.00 MB
+bash.exe.stackdump
+du.exe.stackdump
+
+# Stale stills of Thursday/Friday builds (lanes A226 and A234 list them as untrue of the final game). Not named by submission/page.md, form.md, video/*.md or devlog/curated/shots.txt; only by the PICKS lists that reject them. 03-faceoff.png and 05-knockdown.png (docs/design/REVIEW-1.md) and 08-directors-call.png (submission/video/SHOTLIST.md) are KEPT.
+# group: 5 lines, 5 files, 8.18 MB
+submission/shots/01-menu.png
+submission/shots/02-directors-choices.png
+submission/shots/04-body-check.png
+submission/shots/06-clay-and-net.png
+submission/shots/07-goal.png
+
+# Blender run logs and their timestamped backups (tools/blender/out/log_*.txt). The FBX, JSON and atlas beside them are KEPT (an import job or a doc names them).
+# group: 15 lines, 15 files, 3.53 MB
+tools/blender/out/log_import_toy-backup-2026.11.12-15.21.30.txt
+tools/blender/out/log_import_toy-backup-2026.11.12-15.25.27.txt
+tools/blender/out/log_import_toy-backup-2026.11.12-15.26.45.txt
+tools/blender/out/log_import_toy-backup-2026.11.12-15.40.27.txt
+tools/blender/out/log_import_toy-backup-2026.11.12-16.49.24.txt
+tools/blender/out/log_import_toy.txt
+tools/blender/out/log_props.txt
+tools/blender/out/log_skater_broadcast.txt
+tools/blender/out/log_skater_clay.txt
+tools/blender/out/log_skater_toy.txt
+tools/blender/out/log_toy_render.txt
+tools/blender/out/log_verify_toy-backup-2026.11.12-15.28.53.txt
+tools/blender/out/log_verify_toy-backup-2026.11.12-15.40.37.txt
+tools/blender/out/log_verify_toy-backup-2026.11.12-16.49.35.txt
+tools/blender/out/log_verify_toy.txt
+
+# Nightly package / smoke / build logs (tools/qa/nightly/out/): the loop writes them; the rows it writes elsewhere do not name these files.
+# group: 12 lines, 17 files, 1.86 MB
+tools/qa/nightly/out/build-Hokej_Hokej_N1045.txt
+tools/qa/nightly/out/build-Hokej_Hokej_N1145.txt
+tools/qa/nightly/out/build-Hokej_Hokej_N1239.txt
+tools/qa/nightly/out/pack-Hokej_Hokej_N1015-dev.txt
+tools/qa/nightly/out/pack-Hokej_Hokej_N1015.txt
+tools/qa/nightly/out/pack-Hokej_Hokej_N1045.txt
+tools/qa/nightly/out/pack-Hokej_Hokej_N1145.txt
+tools/qa/nightly/out/pack-Hokej_Hokej_N1239.txt
+tools/qa/nightly/out/smoke-Hokej_Hokej_N1045/
+tools/qa/nightly/out/smoke-Hokej_Hokej_N1145/
+tools/qa/nightly/out/smoke-Hokej_Hokej_N1239/
+tools/qa/nightly/out/smoke-N1015/
+
+# Superseded playtest runs of the modes (tools/playtest/out/modes-r*, modes-keys-r*, ...). modes-final.jsonl and modes-keys.jsonl, which docs cite, are KEPT.
+# group: 19 lines, 19 files, 0.76 MB
+tools/playtest/out/modes-final.md
+tools/playtest/out/modes-keys-marathon-seed8.jsonl
+tools/playtest/out/modes-keys-marathon-seed8.md
+tools/playtest/out/modes-keys-r1.jsonl
+tools/playtest/out/modes-keys-r1.md
+tools/playtest/out/modes-keys-r2-sprint.jsonl
+tools/playtest/out/modes-keys-r2-sprint.md
+tools/playtest/out/modes-keys-r2.jsonl
+tools/playtest/out/modes-keys-r2.md
+tools/playtest/out/modes-r1.jsonl
+tools/playtest/out/modes-r1.md
+tools/playtest/out/modes-r2.jsonl
+tools/playtest/out/modes-r2.md
+tools/playtest/out/modes-r3.jsonl
+tools/playtest/out/modes-r3.md
+tools/playtest/out/modes-r4.jsonl
+tools/playtest/out/modes-r4.md
+tools/playtest/out/modes-r5.jsonl
+tools/playtest/out/modes-r5.md
+
+# Tournament run files (tools/tournament/out/ue-3, ue-4, ue-playerbot-*, a114-check). ue-final.jsonl, which a brief and a doc cite, is KEPT.
+# group: 5 lines, 5 files, 0.12 MB
+tools/tournament/out/a114-check.jsonl
+tools/tournament/out/ue-3.jsonl
+tools/tournament/out/ue-4.jsonl
+tools/tournament/out/ue-playerbot-1.jsonl
+tools/tournament/out/ue-playerbot-2.jsonl
+
+# Lanes A177 to A209 run scratch under tools/perf/results/a*/out/: generated cartridge variants, run logs (*.out), scratch scripts, pid files. The pinned inputs one level up (curve-pins, cells.jsonl, chains) are KEPT, and so is every out/ file a status or doc names.
+# group: 105 lines, 105 files, 1.37 MB
+tools/perf/results/a177/out/hockey.regular.capkeep.cartridge.json
+tools/perf/results/a177/out/hockey.regular.capkeep2k_as.cartridge.json
+tools/perf/results/a177/out/hockey.regular.capkeep2k_pro.cartridge.json
+tools/perf/results/a177/out/hockey.regular.probe.cartridge.json
+tools/perf/results/a177/out/hockey.regular.set2k_as.cartridge.json
+tools/perf/results/a177/out/hockey.regular.set2k_pro.cartridge.json
+tools/perf/results/a177/out/hockey.regular.setc.cartridge.json
+tools/perf/results/a177/out/hockey.regular.setm.cartridge.json
+tools/perf/results/a177/out/hockey.regular.sh15f2k_pro.cartridge.json
+tools/perf/results/a177/out/hockey.regular.sh15s2k_as.cartridge.json
+tools/perf/results/a177/out/hockey.regular.sh15s2k_pro.cartridge.json
+tools/perf/results/a184/out/hockey.regular.hold.cartridge.json
+tools/perf/results/a184/out/hockey.regular.holdall.cartridge.json
+tools/perf/results/a184/out/hockey.regular.hw4.cartridge.json
+tools/perf/results/a184/out/hockey.regular.hw6.cartridge.json
+tools/perf/results/a184/out/hockey.regular.hw6bot.cartridge.json
+tools/perf/results/a184/out/hockey.regular.n0.cartridge.json
+tools/perf/results/a184/out/hockey.regular.n1.cartridge.json
+tools/perf/results/a184/out/hockey.regular.nF.cartridge.json
+tools/perf/results/a184/out/hockey.regular.nF1.cartridge.json
+tools/perf/results/a184/out/hockey.regular.w4b.cartridge.json
+tools/perf/results/a184/out/hockey.regular.w6b.cartridge.json
+tools/perf/results/a184/out/hockey.regular.wind4.cartridge.json
+tools/perf/results/a184/out/hockey.regular.wind6.cartridge.json
+tools/perf/results/a200/out/hockey.arena.large.L4.cartridge.json
+tools/perf/results/a200/out/hockey.regular.c12.cartridge.json
+tools/perf/results/a200/out/hockey.regular.c8.cartridge.json
+tools/perf/results/a200/out/hockey.regular.c8D2.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k10.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k10D2.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k12.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k12D2.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k6.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k6D2.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k8.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k8D.cartridge.json
+tools/perf/results/a200/out/hockey.regular.k8D2.cartridge.json
+tools/perf/results/a200/out/hockey.regular.n4plain.cartridge.json
+tools/perf/results/a200/out/hockey.regular.x12.cartridge.json
+tools/perf/results/a200/out/hockey.regular.x8.cartridge.json
+tools/perf/results/a200/out/hockey.regular.x8D2.cartridge.json
+tools/perf/results/a201/out/e12a.py
+tools/perf/results/a201/out/e12b.py
+tools/perf/results/a201/out/e12c.py
+tools/perf/results/a201/out/e12d.py
+tools/perf/results/a201/out/e12e.py
+tools/perf/results/a201/out/final-pro.out
+tools/perf/results/a201/out/final-rookie.out
+tools/perf/results/a201/out/final2-pro.out
+tools/perf/results/a201/out/final2-rookie.out
+tools/perf/results/a201/out/hash-fin.out
+tools/perf/results/a201/out/hash-fin2.out
+tools/perf/results/a201/out/hash-main.out
+tools/perf/results/a201/out/hash-mine-b2.out
+tools/perf/results/a201/out/jam-b10.out
+tools/perf/results/a201/out/jam-b11.out
+tools/perf/results/a201/out/jam-b6.out
+tools/perf/results/a201/out/jam-b7.out
+tools/perf/results/a201/out/jam-b9.out
+tools/perf/results/a201/out/l3-b3.out
+tools/perf/results/a201/out/l3-b4.out
+tools/perf/results/a201/out/l3-b5.out
+tools/perf/results/a201/out/l3-b7.out
+tools/perf/results/a201/out/l3late.out
+tools/perf/results/a201/out/m1.out
+tools/perf/results/a201/out/m2-pro.out
+tools/perf/results/a201/out/m2-rookie.out
+tools/perf/results/a201/out/m3-pro.out
+tools/perf/results/a201/out/m3-rookie.out
+tools/perf/results/a201/out/m4-pro.out
+tools/perf/results/a201/out/m4-rookie.out
+tools/perf/results/a201/out/m5-pro.out
+tools/perf/results/a201/out/m6-pro.out
+tools/perf/results/a201/out/m6-rookie.out
+tools/perf/results/a201/out/r1-pro.out
+tools/perf/results/a201/out/r1-rookie.out
+tools/perf/results/a201/out/r2-pro.out
+tools/perf/results/a201/out/r2-rookie.out
+tools/perf/results/a201/out/rings-r1.json
+tools/perf/results/a202/out/.ends.last
+tools/perf/results/a202/out/.ends.now
+tools/perf/results/a202/out/gateC.out
+tools/perf/results/a202/out/gateE.out
+tools/perf/results/a202/out/gateF.out
+tools/perf/results/a202/out/t8.out
+tools/perf/results/a203/out/b.pid
+tools/perf/results/a203/out/t2.pid
+tools/perf/results/a203/out/t3.pid
+tools/perf/results/a203/out/t4.pid
+tools/perf/results/a206/out/chain1.out
+tools/perf/results/a206/out/chain2.out
+tools/perf/results/a206/out/chain3.out
+tools/perf/results/a206/out/chain4.out
+tools/perf/results/a206/out/chain5.out
+tools/perf/results/a206/out/chain6.out
+tools/perf/results/a206/out/chain7.out
+tools/perf/results/a206/out/chain8.out
+tools/perf/results/a206/out/sweep1.out
+tools/perf/results/a206/out/sweep2.out
+tools/perf/results/a206/out/sweep3.out
+tools/perf/results/a207/out/jam1.out
+tools/perf/results/a207/out/jam2.out
+tools/perf/results/a207/out/jam3.out
+tools/perf/results/a209/out/C1-person.json
+tools/perf/results/a209/out/C2-person.json
+
+# Device A P4 slice leftovers: the Tripo v2 tries (tools/p4/out/tripo2/, no job names them), two ledger-row drafts already in ASSETS.md, an editor pid file.
+# group: 4 lines, 8 files, 1.96 MB
+tools/p4/out/a28-editor.pid
+tools/p4/out/ledger_rows.md
+tools/p4/out/ledger_rows2.md
+tools/p4/out/tripo2/
+
+# Small lane leftovers: QA logs a47-log-raw / a47-log-checks (a47-log-1, which a doc cites, is KEPT), a copied soak-window.ps1 in an out folder, two generated sweep cartridges, three commentary drill transcripts.
+# group: 8 lines, 12 files, 0.05 MB
+tools/commentary/out/bruisers-drill.txt
+tools/commentary/out/bruisers.txt
+tools/commentary/out/drill.txt
+tools/qa/out/a47-log-checks/
+tools/qa/out/a47-log-raw/
+tools/qa/out/soak-window.ps1
+tools/sweep/out/hockey.regular.rink.board_restitution_0.75_rink.ice_friction_0.004_puck.drag_0.3.cartridge.json
+tools/sweep/out/hockey.regular.rink.board_restitution_0.8.cartridge.json
+
+# TOTAL of the lines above: 188 files, 17.83 MB.
+# ---------------------------------------------------------------------------------------------------------------------------
+# NOT IN THE LIST: candidates for the Director's own decision. Every line below starts with "#?" and is NEVER applied as written.
+# Each has a reader by the brief's definition (a tool, a doc or a status file names it), so A236 did not judge it unused.
+# To take one, delete the leading "#? " from its line(s) and re-run the apply command.
+
+# P4 figure slice (Thursday, lane A28; the P4 figure track was descoped, the shipped figures are device B's in Game/Plugins/JamAssets): raw Rodin, Meshy and Tripo downloads and their UE import captures. Readers: only the P4 import / capture jobs tools/p4/jobs/*.ue.json and _*.mcp.json; ASSETS.md names no file here. Keep tools/p4/out/ab/ (docs/experiments/eyes/a28-*.json) and concept/ (P4-FIGURE.md).
+# candidate: 1083 files, 1059.7 MB
+#? tools/p4/out/rodin/
+#? tools/p4/out/meshy/
+#? tools/p4/out/tripo/
+#? tools/p4/out/rodin2/
+#? tools/p4/out/tripo3/
+
+# Lane A45 frame captures (357 frames of shots-b1 plus run json). Reader: only status/A45.md line 90 ("captures tools/qa/out/a45*/"); the strips made from them are in docs/experiments/img/tackling/ (kept). a45toy/ is NOT a candidate: docs/experiments/TACKLING.md names it.
+# candidate: 362 files, 406.7 MB
+#? tools/qa/out/a45/
+
+# Lane A22 Blender render cells of the toy figures (Thursday). Reader: status/A22.md names ONE file, toy_number_check.png, which stays (not listed below).
+# candidate: 190 files, 26.7 MB
+#? tools/blender/out/render/broadcast_tt_000.png
+#? tools/blender/out/render/broadcast_tt_001.png
+#? tools/blender/out/render/broadcast_tt_002.png
+#? tools/blender/out/render/broadcast_tt_003.png
+#? tools/blender/out/render/broadcast_tt_004.png
+#? tools/blender/out/render/broadcast_tt_005.png
+#? tools/blender/out/render/broadcast_tt_006.png
+#? tools/blender/out/render/broadcast_tt_007.png
+#? tools/blender/out/render/broadcast_tt_008.png
+#? tools/blender/out/render/broadcast_tt_009.png
+#? tools/blender/out/render/broadcast_tt_010.png
+#? tools/blender/out/render/broadcast_tt_011.png
+#? tools/blender/out/render/broadcast_tt_012.png
+#? tools/blender/out/render/broadcast_tt_013.png
+#? tools/blender/out/render/broadcast_tt_014.png
+#? tools/blender/out/render/broadcast_tt_015.png
+#? tools/blender/out/render/broadcast_tt_016.png
+#? tools/blender/out/render/broadcast_tt_017.png
+#? tools/blender/out/render/broadcast_tt_018.png
+#? tools/blender/out/render/broadcast_tt_019.png
+#? tools/blender/out/render/broadcast_tt_020.png
+#? tools/blender/out/render/broadcast_tt_021.png
+#? tools/blender/out/render/broadcast_tt_022.png
+#? tools/blender/out/render/broadcast_tt_023.png
+#? tools/blender/out/render/broadcast_tt_024.png
+#? tools/blender/out/render/broadcast_tt_025.png
+#? tools/blender/out/render/broadcast_tt_026.png
+#? tools/blender/out/render/broadcast_tt_027.png
+#? tools/blender/out/render/broadcast_tt_028.png
+#? tools/blender/out/render/broadcast_tt_029.png
+#? tools/blender/out/render/broadcast_tt_030.png
+#? tools/blender/out/render/broadcast_tt_031.png
+#? tools/blender/out/render/broadcast_tt_032.png
+#? tools/blender/out/render/broadcast_tt_033.png
+#? tools/blender/out/render/broadcast_tt_034.png
+#? tools/blender/out/render/broadcast_tt_035.png
+#? tools/blender/out/render/broadcast_tt_036.png
+#? tools/blender/out/render/broadcast_tt_037.png
+#? tools/blender/out/render/broadcast_tt_038.png
+#? tools/blender/out/render/broadcast_tt_039.png
+#? tools/blender/out/render/broadcast_tt_040.png
+#? tools/blender/out/render/broadcast_tt_041.png
+#? tools/blender/out/render/broadcast_tt_042.png
+#? tools/blender/out/render/broadcast_tt_043.png
+#? tools/blender/out/render/broadcast_tt_044.png
+#? tools/blender/out/render/broadcast_tt_045.png
+#? tools/blender/out/render/broadcast_tt_046.png
+#? tools/blender/out/render/broadcast_tt_047.png
+#? tools/blender/out/render/broadcast_tt_048.png
+#? tools/blender/out/render/broadcast_tt_049.png
+#? tools/blender/out/render/broadcast_tt_050.png
+#? tools/blender/out/render/broadcast_tt_051.png
+#? tools/blender/out/render/broadcast_tt_052.png
+#? tools/blender/out/render/broadcast_tt_053.png
+#? tools/blender/out/render/broadcast_tt_054.png
+#? tools/blender/out/render/broadcast_tt_055.png
+#? tools/blender/out/render/broadcast_tt_056.png
+#? tools/blender/out/render/broadcast_tt_057.png
+#? tools/blender/out/render/broadcast_tt_058.png
+#? tools/blender/out/render/broadcast_tt_059.png
+#? tools/blender/out/render/cell_01.png
+#? tools/blender/out/render/cell_02.png
+#? tools/blender/out/render/cell_03.png
+#? tools/blender/out/render/cell_04.png
+#? tools/blender/out/render/cell_05.png
+#? tools/blender/out/render/cell_06.png
+#? tools/blender/out/render/cell_07.png
+#? tools/blender/out/render/cell_08.png
+#? tools/blender/out/render/cell_09.png
+#? tools/blender/out/render/clay_tt_000.png
+#? tools/blender/out/render/clay_tt_001.png
+#? tools/blender/out/render/clay_tt_002.png
+#? tools/blender/out/render/clay_tt_003.png
+#? tools/blender/out/render/clay_tt_004.png
+#? tools/blender/out/render/clay_tt_005.png
+#? tools/blender/out/render/clay_tt_006.png
+#? tools/blender/out/render/clay_tt_007.png
+#? tools/blender/out/render/clay_tt_008.png
+#? tools/blender/out/render/clay_tt_009.png
+#? tools/blender/out/render/clay_tt_010.png
+#? tools/blender/out/render/clay_tt_011.png
+#? tools/blender/out/render/clay_tt_012.png
+#? tools/blender/out/render/clay_tt_013.png
+#? tools/blender/out/render/clay_tt_014.png
+#? tools/blender/out/render/clay_tt_015.png
+#? tools/blender/out/render/clay_tt_016.png
+#? tools/blender/out/render/clay_tt_017.png
+#? tools/blender/out/render/clay_tt_018.png
+#? tools/blender/out/render/clay_tt_019.png
+#? tools/blender/out/render/clay_tt_020.png
+#? tools/blender/out/render/clay_tt_021.png
+#? tools/blender/out/render/clay_tt_022.png
+#? tools/blender/out/render/clay_tt_023.png
+#? tools/blender/out/render/clay_tt_024.png
+#? tools/blender/out/render/clay_tt_025.png
+#? tools/blender/out/render/clay_tt_026.png
+#? tools/blender/out/render/clay_tt_027.png
+#? tools/blender/out/render/clay_tt_028.png
+#? tools/blender/out/render/clay_tt_029.png
+#? tools/blender/out/render/clay_tt_030.png
+#? tools/blender/out/render/clay_tt_031.png
+#? tools/blender/out/render/clay_tt_032.png
+#? tools/blender/out/render/clay_tt_033.png
+#? tools/blender/out/render/clay_tt_034.png
+#? tools/blender/out/render/clay_tt_035.png
+#? tools/blender/out/render/clay_tt_036.png
+#? tools/blender/out/render/clay_tt_037.png
+#? tools/blender/out/render/clay_tt_038.png
+#? tools/blender/out/render/clay_tt_039.png
+#? tools/blender/out/render/clay_tt_040.png
+#? tools/blender/out/render/clay_tt_041.png
+#? tools/blender/out/render/clay_tt_042.png
+#? tools/blender/out/render/clay_tt_043.png
+#? tools/blender/out/render/clay_tt_044.png
+#? tools/blender/out/render/clay_tt_045.png
+#? tools/blender/out/render/clay_tt_046.png
+#? tools/blender/out/render/clay_tt_047.png
+#? tools/blender/out/render/clay_tt_048.png
+#? tools/blender/out/render/clay_tt_049.png
+#? tools/blender/out/render/clay_tt_050.png
+#? tools/blender/out/render/clay_tt_051.png
+#? tools/blender/out/render/clay_tt_052.png
+#? tools/blender/out/render/clay_tt_053.png
+#? tools/blender/out/render/clay_tt_054.png
+#? tools/blender/out/render/clay_tt_055.png
+#? tools/blender/out/render/clay_tt_056.png
+#? tools/blender/out/render/clay_tt_057.png
+#? tools/blender/out/render/clay_tt_058.png
+#? tools/blender/out/render/clay_tt_059.png
+#? tools/blender/out/render/props_overview.png
+#? tools/blender/out/render/toy_tt_000.png
+#? tools/blender/out/render/toy_tt_001.png
+#? tools/blender/out/render/toy_tt_002.png
+#? tools/blender/out/render/toy_tt_003.png
+#? tools/blender/out/render/toy_tt_004.png
+#? tools/blender/out/render/toy_tt_005.png
+#? tools/blender/out/render/toy_tt_006.png
+#? tools/blender/out/render/toy_tt_007.png
+#? tools/blender/out/render/toy_tt_008.png
+#? tools/blender/out/render/toy_tt_009.png
+#? tools/blender/out/render/toy_tt_010.png
+#? tools/blender/out/render/toy_tt_011.png
+#? tools/blender/out/render/toy_tt_012.png
+#? tools/blender/out/render/toy_tt_013.png
+#? tools/blender/out/render/toy_tt_014.png
+#? tools/blender/out/render/toy_tt_015.png
+#? tools/blender/out/render/toy_tt_016.png
+#? tools/blender/out/render/toy_tt_017.png
+#? tools/blender/out/render/toy_tt_018.png
+#? tools/blender/out/render/toy_tt_019.png
+#? tools/blender/out/render/toy_tt_020.png
+#? tools/blender/out/render/toy_tt_021.png
+#? tools/blender/out/render/toy_tt_022.png
+#? tools/blender/out/render/toy_tt_023.png
+#? tools/blender/out/render/toy_tt_024.png
+#? tools/blender/out/render/toy_tt_025.png
+#? tools/blender/out/render/toy_tt_026.png
+#? tools/blender/out/render/toy_tt_027.png
+#? tools/blender/out/render/toy_tt_028.png
+#? tools/blender/out/render/toy_tt_029.png
+#? tools/blender/out/render/toy_tt_030.png
+#? tools/blender/out/render/toy_tt_031.png
+#? tools/blender/out/render/toy_tt_032.png
+#? tools/blender/out/render/toy_tt_033.png
+#? tools/blender/out/render/toy_tt_034.png
+#? tools/blender/out/render/toy_tt_035.png
+#? tools/blender/out/render/toy_tt_036.png
+#? tools/blender/out/render/toy_tt_037.png
+#? tools/blender/out/render/toy_tt_038.png
+#? tools/blender/out/render/toy_tt_039.png
+#? tools/blender/out/render/toy_tt_040.png
+#? tools/blender/out/render/toy_tt_041.png
+#? tools/blender/out/render/toy_tt_042.png
+#? tools/blender/out/render/toy_tt_043.png
+#? tools/blender/out/render/toy_tt_044.png
+#? tools/blender/out/render/toy_tt_045.png
+#? tools/blender/out/render/toy_tt_046.png
+#? tools/blender/out/render/toy_tt_047.png
+#? tools/blender/out/render/toy_tt_048.png
+#? tools/blender/out/render/toy_tt_049.png
+#? tools/blender/out/render/toy_tt_050.png
+#? tools/blender/out/render/toy_tt_051.png
+#? tools/blender/out/render/toy_tt_052.png
+#? tools/blender/out/render/toy_tt_053.png
+#? tools/blender/out/render/toy_tt_054.png
+#? tools/blender/out/render/toy_tt_055.png
+#? tools/blender/out/render/toy_tt_056.png
+#? tools/blender/out/render/toy_tt_057.png
+#? tools/blender/out/render/toy_tt_058.png
+#? tools/blender/out/render/toy_tt_059.png
+
+# QA run play-1 (Thursday). No path names it; docs/experiments/FEEL.md line 172 names the run as "discarded".
+# candidate: 19 files, 14.2 MB
+#? tools/qa/out/play-1/
+
+# candidates total: 1654 files, 1507.4 MB

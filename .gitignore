@@ -38,3 +38,12 @@ Game/Plugins/NIS*/
 # lane outputs that are binaries
 tools/tournament/out/*.exe
 .claude/worktrees/
+
+# Lanes' bulk output (briefs/EVOLUTION-COMMON.md "Disk is the memory": it never travels in a landing). Lane A236, 15 Nov.
+# Files already tracked there stay tracked (docs link some of them); a new file a doc must link is added with `git add -f`.
+# No test reads under these folders (searched: *.test.mjs and Game/Source tests); tools' pinned inputs live beside out/, not in it.
+tools/**/out/
+tools/**/raw/
+tools/**/*.pid
+# Crash dumps of Git Bash tools (bash.exe.stackdump, du.exe.stackdump at the root)
+*.stackdump

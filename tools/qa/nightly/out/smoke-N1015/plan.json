@@ -1,9 +1,0 @@
-{
-    "seconds":  30,
-    "steps":  [
-                  {
-                      "at":  25,
-                      "shot":  "menu"
-                  }
-              ]
-}
