@@ -934,3 +934,16 @@ to submit. (1) Lane A229 (Opus): the match HUD in the front end's one look. (2) 
 image generation, in one family, the look in each picture the look its mode plays; this replaces the Director's ask to device B for
 screenshots (A-to-B-0042 point 1). (3) Lane A230: the neon arena looked at at every rink size, and two or three of the eight clay modes
 moved onto it; "Neon/Tron" is a mood, no mark copied (R-0064).
+
+## R-0073 (15 Nov 17:22, the operator, the evening's clock)
+Verbatim: "There are 9 hours until submission, we can run current tracks 2 more hours, then spend 3 hours on testing/fixing/stabilizing where possible. Then I will submit around midnight with still plenty of time ahead"
+
+The Director's reading (this replaces the 19:00 package of R-0071 as the judges' package):
+- **to 19:20: the tracks run** (A227 last fixes, A228 hardening, A229 the HUD round, A230 the neon arena in more modes, A231 an
+  illustration for every mode; device B's own). A227 lands at 18:30 with device B's push and a checkpoint package is cut (H44).
+- **19:20 to about 19:50: the tracks land** in one landing through the full gate; no new work is started after 19:20.
+- **19:50 to 22:20: testing, fixing, stabilizing only.** The candidate package (H45) is cut at once; hardening on its sim, the acceptance
+  run, a clean start of the Shipping zip, every screen and mode walked, the page's pictures re-shot from it; his own play is the bar
+  (R-0069). A fix lands only if it cures a fault seen in the candidate and is proven on the same reproduction; nothing is improved.
+- **22:30: the final package** from the last green landing; **device B's last merge is 22:00**, features from B until 19:30, fixes after.
+- **About midnight: he submits** at the event page; the jam's own deadline is Monday 02:59 CET.
