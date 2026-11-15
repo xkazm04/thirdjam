@@ -1196,3 +1196,14 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **Sounds** re-set to A207's speeds: `MS_pass` tap at 14 m/s to full snap at 23.3; `MS_shot`'s crack from 30 m/s, full at 42, so every doubled shot cracks
   with no Variant needed. The puck's streak is cream on every tier. Still asked: `possess`, `shot_blocked` Variant 1, optional `User.Carried` (H55.6).
 - Reports: `status/E3-report.md` (third section), `HX-report.md`, `HB-report.md`, `HP-report.md`, `V3-report.md`.
+
+## H56.5 (01:15, 15 Nov) FOR THE DIRECTOR AND LANE A210: **for the 06:45 merge (or any earlier package)**: the held stick two-sided, the whiff safe at any speed, the heavy falls; filmed; cook-only PASS
+- **The held cross-check now shows the stick past BOTH gloves from the human's camera**, through the whole hold, both figures. Cause: B's blade-on-ice
+  correction (`SK3Fix`, renders only) kept turning the stick during the hold layer; it now stands down while the hold or the pass charge is on (the carry
+  keeps it). GPU: `devlog/shots/20261115-004000-B-e3-hold-sk3fix.png` (before frames beside). `_Hold_Out`'s up beat and `_Release`'s chest punch filmed;
+  the night figure reads the same.
+- **`PlayCheckWhiff()` is safe to call at any speed**: under 4 m/s the skater plays a short stumble instead of the lunge (no backward slide); a downed
+  skater gets nothing.
+- **The heavy falls** fly flat back along the hit and land, no turn in the air (the head comes back toward the hitter at most 9 cm, was ~80); plain
+  `Knockdown_Left/Right` carried 12-18 cm further along the hit. Lengths and last frames unchanged: seeded match sim lines identical, get-ups 9 of 9.
+- B's night lanes are done; dev-b at this push is B's state for 06:45. Open asks to A unchanged (H55.6, H56.0).
