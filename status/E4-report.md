@@ -85,6 +85,39 @@ No git commands. Game sound was already off before I started and is still off. `
   stops 2, a fall 1, a knockdown 1, a receive 1.
 - Legs-glide risk (lead's note): to be judged on the GPU film.
 
+
+## After the merge (dev-b 7e957210): films on the GPU, 14:34 to 14:47 (all looked at with the Read tool)
+- Job 1, the carry, old beside new, A's game camera: `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-144632-B-E4-carry-aim-gamecam-old-new.png`.
+  - OLD: the puck sits 14 to 19 cm clockwise of A's point at +30 / -30 / +45. In the hard cut (+45 to -45) the puck stays on his left while A's
+    point has crossed: about 1.3 m apart at cut+4 and cut+8.
+  - NEW: the puck is on the point at all three aims. In the cut it crosses with the point and sits on it from cut+8.
+  - The 20 m side-on view from this rig did not work (the camera stayed behind), so it is dropped.
+- export48 Pass_Snap, tap and full: `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-144700-B-E4-pass-snap48-gamecam.png`. The stick stands out ahead-left beside his body from
+  call+4 to call+15 (seen from behind) and is back at the carry on call+22. The legs-glide question needs a moving skater (this rig skates in
+  place): not verified.
+- Whiff, board hit, receive: `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-144720-B-E4-whiff-board-receive-gamecam.png`. The whiff hides the stick in front of him from +8;
+  the board hit keeps the blade on the ice; the receive meets the puck out ahead-left and gives.
+- Waiting for export51 (HX3: CrossCheck_Wind frames 0 to 9 re-keyed); then the tap and hold strip again.
+
+
+## export51 (HX3, CrossCheck_Wind frames 1-9 re-keyed): imported 14:52, proven, filmed 15:03
+- Imported by name over `AS_SkaterTB1_P3_CrossCheck_Wind` and `AS_SkaterTB1v2_CrossCheck_Wind` with the bone translation tracks, as export49. No wiring change.
+- Headless:
+  - Tap: the highest hand is 96 cm in take frames 2 to 9, against a head at 104 to 111 cm (export49: 141).
+  - Contact on call + 4 / 8 / 12 / 14 = t34 / 38 / 42 / 44, both figures.
+  - Hold at press + 8: highest hand 114.6 cm (the hold pose); release 114, 103, 90, 77, 69 cm.
+  - Seeded clay match: 738 = 738 sim lines identical, JAMSIM 7200 `1d1fb181b85f1d4d`, 0 Blueprint errors, 0 `Error:`.
+- GPU strip (looked at): `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261115-150254-B-E4-crosscheck51-tap-hold.png`.
+  - At +2 the shaft swings up diagonally behind his left shoulder for one frame (the stick passing under the shoulder; no glove goes up).
+  - From +4 the bar is level across his shoulder blades with both elbows out, rises to the neck at contact and holds to +14.
+  - The hold rises into place with no pop; the cel figure is the same.
+- Ledger rows (they replace the export49 rows of these two files):
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Wind.uasset | anim | 0.16 | original | Blender 4.2 Python script (lanes HX2, HX3) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | y | skf/export51/p3_clay (takes/CrossCheck_Wind.fbx; gate passed) take CrossCheck_Wind by name on SKEL_SkaterTB1_P3, 33 keys: frames 1 to 9 re-keyed by HX3 (the stick up level to the chest, the coil at 6, a level drive into contact; no hand or stick above the head joint), frame 0 and 10 to 32 export49's (both arms forward at shoulder height on 10 to 18, the stance from 26); stick_socket translation key; PlayCrossCheck(N) from 10-N unchanged, contact on call+4/8/12/14 (lane E4 import) (162674 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Wind.uasset | anim | 0.16 | original | Blender 4.2 Python script (lanes HX2, HX3) + UE 5.9 via MCP/Python | | | 2026-11-15 | B | n | skf/export51/p2_cel (takes/CrossCheck_Wind.fbx; gate passed) take CrossCheck_Wind by name on SKEL_SkaterTB1v2, 33 keys: frames 1 to 9 re-keyed by HX3 (the stick up level to the chest, the coil at 6, a level drive into contact; no hand or stick above the head joint), frame 0 and 10 to 32 export49's (both arms forward at shoulder height on 10 to 18, the stance from 26); stick_socket translation key; PlayCrossCheck(N) from 10-N unchanged, contact on call+4/8/12/14 (lane E4 import) (162652 bytes) |
+
 ## Not done yet (as of 14:30; this hand-back was sent early for the urgent cross-check)
 - Job 1 is not filmed on the GPU. The drill-based rig failed at 13:06 to 13:31 (a marker spawn and a stray script); the replacement rig (`fa.py`,
   a test figure, a debug sphere at A's point) is proven headless: old trail up to **140 cm** in a 90-degree cut, new **7.8 cm max**; steady old 14 to 19 cm, new 0.2 to 0.5 cm.

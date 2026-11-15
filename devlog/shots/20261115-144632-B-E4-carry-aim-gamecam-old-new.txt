@@ -1,0 +1,3 @@
+Lane E4, 15 Nov 14:46. Clay figure carrying, striding at 9.7 m/s in place, A's game camera (6 m behind, 3.5 m up, 25 deg down, FOV 70, 960x540), GPU. Magenta sphere = A's aim point (Reach 1.6 m cos/sin Aim); the black puck is drawn at puck_socket as A draws a carried puck. Aim sent by A's own smoothing (35 % a frame, at most 15 deg).
+OLD (top, the committed figure before E4): at +30 / -30 / +45 the puck sits 14-19 cm clockwise of the sphere; in the hard cut +45 -> -45 the puck stays on his left while the sphere has crossed to his right (cut+4, cut+8: about 1.3 m apart), and catches up only near cut+15.
+NEW (bottom): the puck is on the sphere at +30 / -30 / +45; in the cut the puck crosses with the sphere (a few cm behind at cut+4) and sits on it from cut+8.
