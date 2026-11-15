@@ -1,0 +1,4 @@
+Lane E4, 15 Nov 14:23. Clay figure (BP_SkaterVisual_TB1_P3) skating at 6 m/s, A's game camera (6 m behind, 3.5 m up, 25 deg down, FOV 70), 1280x720, GPU. Frames counted from the press.
+Row 1 TAP: PlayCrossCheck(8) with export49's CrossCheck_Wind: the coil raises the stick over the helmet at press+2 to +4 (still in the take: for the lab), then the shaft held as a bar across the shoulders, both gloves out past them, from contact (+8) to +14; down by +18.
+Row 2 HOLD: SetCrossCheckHold(true) at press+8 (as A sends it): the take is stopped at contact and the bar rises straight into the hold pose by +15 with no pop; release at +60: no gloves over the helmet (release+1, +3).
+Row 3 LATE HOLD: the hold called at press+20 (after the shove): one frame of the stick swung up (+24) before the hold pose; A no longer sends it this late.
