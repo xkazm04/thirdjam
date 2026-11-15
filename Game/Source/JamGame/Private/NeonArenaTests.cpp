@@ -14,10 +14,57 @@
 #include "ProceduralMeshComponent.h"
 #include "RinkActor.h"
 #include "NeonArena.h"
+#include "LookTierSwitcher.h"
 #include "JamCartridge.h"
 #include "JamPawns.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
+
+// Lane A230 (wave 2): Jam.Rink.RigPerAxis. The neon rig is drawn for a 90 x 45 m rink and its edge line is one loop just inside the boards. A rink that
+// is not 2 : 1 (the Cage, 60 x 28) streams it scaled length / 90 along and width / 45 across, so the loop is as far from the long boards as from the ends;
+// a 2 : 1 rink, every other tier and `jam.look.RigPerAxis 0` keep the uniform scale of before.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamRinkRigPerAxisTest, "Jam.Rink.RigPerAxis",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FJamRinkRigPerAxisTest::RunTest(const FString& Parameters)
+{
+	const FString Neon(TEXT("l3_neon"));
+	// The Cage: 60 / 90 along, 28 / 45 across.
+	TestTrue(TEXT("the Cage along the rink: 0.667"), FMath::IsNearlyEqual(ULookTierSwitcher::RigScaleFor(60.f), 60.f / 90.f, 1e-4f));
+	TestTrue(TEXT("the Cage across the rink: 0.622"), FMath::IsNearlyEqual(ULookTierSwitcher::RigCrossScaleFor(Neon, 60.f, 28.f), 28.f / 45.f, 1e-4f));
+	// The loop sits Inset m inside the boards of the 90 x 45 rink: its distance from the long boards and from the ends of a 60 x 28 rink.
+	const float Inset = 2.2f;
+	auto GapLong = [&](float Cross) { return 14.f - (22.5f - Inset) * Cross; };
+	const float GapEnd = 30.f - (45.f - Inset) * ULookTierSwitcher::RigScaleFor(60.f);
+	TestTrue(TEXT("uniform: the loop is a metre nearer the long boards than the ends"), GapEnd - GapLong(ULookTierSwitcher::RigScaleFor(60.f)) > 0.9f);
+	TestTrue(TEXT("per axis: within 0.15 m of the same distance"), FMath::Abs(GapEnd - GapLong(ULookTierSwitcher::RigCrossScaleFor(Neon, 60.f, 28.f))) < 0.15f);
+	// Every 2 : 1 rink a mode plays: the uniform scale, exactly.
+	const float TwoToOne[][2] = { { 56.f, 28.f }, { 60.f, 30.f }, { 70.f, 35.f }, { 90.f, 45.f }, { 120.f, 60.f }, { 140.f, 70.f } };
+	for (const float* R : TwoToOne)
+	{
+		TestEqual(*FString::Printf(TEXT("%.0f x %.0f is uniform"), R[0], R[1]), ULookTierSwitcher::RigCrossScaleFor(Neon, R[0], R[1]), ULookTierSwitcher::RigScaleFor(R[0]));
+	}
+	// Another tier, a width not given, and the variable off: the uniform scale of before.
+	TestEqual(TEXT("clay keeps the uniform scale at 60 x 28"), ULookTierSwitcher::RigCrossScaleFor(TEXT("p3_clay"), 60.f, 28.f), ULookTierSwitcher::RigScaleFor(60.f));
+	TestEqual(TEXT("no width given: uniform"), ULookTierSwitcher::RigCrossScaleFor(Neon, 60.f, 0.f), ULookTierSwitcher::RigScaleFor(60.f));
+	if (IConsoleVariable* Cv = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.look.RigPerAxis")))
+	{
+		Cv->Set(0, ECVF_SetByCode);
+		TestEqual(TEXT("jam.look.RigPerAxis 0: uniform at 60 x 28"), ULookTierSwitcher::RigCrossScaleFor(Neon, 60.f, 28.f), ULookTierSwitcher::RigScaleFor(60.f));
+		Cv->Set(1, ECVF_SetByCode);
+	}
+	else AddError(TEXT("jam.look.RigPerAxis does not exist"));
+	// The Cage's cartridge is the one shipped mode this changes.
+	TArray<FString> Errors;
+	UJamCartridge* Cage = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("modes/hockey.mode.cage")), Errors);
+	if (TestNotNull(TEXT("the Cage loads"), Cage))
+	{
+		const float Along = ULookTierSwitcher::RigScaleFor(static_cast<float>(Cage->Game.Rink.LengthM));
+		const float Cross = ULookTierSwitcher::RigCrossScaleFor(Cage->Game.Look.Tier, static_cast<float>(Cage->Game.Rink.LengthM), static_cast<float>(Cage->Game.Rink.WidthM));
+		TestTrue(TEXT("the Cage's rig is narrower across than along"), Cross < Along - 0.03f);
+	}
+	return true;
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamRinkNeonArenaTest, "Jam.Rink.NeonArena",
 	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)

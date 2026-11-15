@@ -57,6 +57,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	static float RigScaleFor(float RinkLengthM);
 
+	// Lane A230 (wave 2): the scale across the rink. RigScaleFor(length) for every tier but l3_neon, for a 2 : 1 rink, for a width not given and with
+	// `jam.look.RigPerAxis` 0; on l3_neon with a rink that is not 2 : 1 it is width / 45, clamped to 0.25..4 (the Cage, 60 x 28: 0.622 beside 0.667).
+	UFUNCTION(BlueprintPure, Category = "Jam|Look")
+	static float RigCrossScaleFor(const FString& Tier, float RinkLengthM, float RinkWidthM);
+
 	// B-to-A-0018 point 5: the trim strips' Emissive a tier ships with (schema default of look.trim_emissive per tier):
 	// l1_day `jam.look.TrimDay` (10; 30 before lane A223), l2_night 30, l3_neon 30, p3_clay 12, p4_broadcast 30. Unknown tier: 30.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
@@ -100,7 +105,7 @@ public:
 	// logs an error, changes nothing, returns false. Same tier and same scale as the current one: no-op, returns true. A different scale
 	// reloads the rig. Logs "JAMLOOK tier=<tier> map=<path> scale=<s>".
 	UFUNCTION(BlueprintCallable, Category = "Jam|Look")
-	bool SetTier(const FString& Tier, float RinkLengthM = 90.f);
+	bool SetTier(const FString& Tier, float RinkLengthM = 90.f, float RinkWidthM = 0.f);   // lane A230: the width, for the scale across the rink (0: uniform)
 
 	// The tier last set successfully; empty before the first SetTier.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
@@ -108,6 +113,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	float GetCurrentScale() const { return CurrentScale; }
+
+	// Lane A230: the scale across the rink the current rig was streamed at (GetCurrentScale on a 2 : 1 rink).
+	UFUNCTION(BlueprintPure, Category = "Jam|Look")
+	float GetCurrentCrossScale() const { return CurrentCrossScale; }
 
 	// How many local lights the last loaded rig had scaled (tests and the PIE proof read it).
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
@@ -130,6 +139,7 @@ private:
 
 	FString CurrentTier;
 	float CurrentScale = 1.f;
+	float CurrentCrossScale = 1.f;   // lane A230
 	int32 ScaledLights = 0;
 	bool bPersistentLightsHidden = false;
 	float CameraExposureBias = 0.f;   // lane A64

@@ -73,6 +73,29 @@ All films are of the EDITOR binary of the lane's tree (not a cooked package), of
   compiles (115 s; nothing Shipping was started); test-guards 0 faults in 241 files; the schema validates the three cartridges; the schema's and the soak
   drift gate's node tests 108 pass.
 
+## Wave 2: the rig scaled per axis on a rink that is not 2 : 1 (the Cage)
+
+Device B's rig `LR_L3_Neon` is drawn for 90 x 45 m and its edge line is one closed loop just inside the boards. A streams the rig scaled by the rink's
+length / 90, so the loop meets every 2 : 1 rink; on the Cage (60 x 28) device B measured it 0.47 m from the long boards and 1.47 m from the ends.
+`ULookTierSwitcher::SetTier` now takes the rink's width too and streams the neon rig scaled length / 90 along the rink and width / 45 across it when the
+rink is not 2 : 1 (`RigCrossScaleFor`; the Cage: 0.667 along, 0.622 across). With B's own two numbers the loop then sits 1.37 m from the long boards and
+1.47 m from the ends (computed from the scale, not measured in the picture; the stills agree by eye: the line at the long board is about three times
+as far from the board as before, the line at the end is where it was).
+
+- Only `l3_neon`, only a rink that is not 2 : 1: every 2 : 1 rink and every other tier get the uniform scale of before, exactly (the clay rigs' stands and
+  crowds are not touched). `jam.look.RigPerAxis 0` gives the uniform scale back everywhere. Heights and the lights' reach keep the length's scale.
+- Nothing else of the rig is bent at 60 x 28 on film: the pink line overhead, the glow outside the boards, the goal's burst and the grid (its diamonds
+  are 7 % narrower across, not seen as a fault) are as before. Sheet: `docs/experiments/neon/cage-rig-per-axis-before-after.jpg` (the Cage with the
+  variable 0 above 1 at a long board, f3150, and at an end, f1800; under it Glow Ice on build 2 above build 3: the same picture).
+- The sim's hashes: the Cage with the variable 0 against 1, and against the wave 1 film, six of six EQUAL each; Glow Ice build 2 against build 3 EQUAL.
+- Test `Jam.Rink.RigPerAxis` (in `NeonArenaTests.cpp`): the Cage's two scales, the loop's two distances within 0.15 m of each other (a metre apart
+  under the uniform scale), six 2 : 1 rinks uniform exactly, clay uniform at 60 x 28, no width given uniform, the variable 0 uniform.
+- The gate on build 3: `Jam.Rink+Jam.Look` 10 Success, 0 Fail; the full `Jam` filter in a cleared environment 381 Success, 0 Fail
+  (`Game/logs/a230/auto-jam-2.log`); the Shipping target compiles; test-guards 0 faults; the node tests that run no git 108 pass.
+- Not seen: a Director's Call that changes the tier in a running Cage match (it passes the width now; no film), a clay cut at a rink that is not 2 : 1
+  (kept uniform by the test, not filmed), and whether device B's later rigs hold a scale that differs per axis: B should say if a part of the rig is
+  rotated in the map (a rotated part takes the two scales in its own axes).
+
 ## Seen and not cured here
 
 - Device B's: when orange scores, the goal's burst on this tier is peach to brown puffs that read nearer smoke than light; blue's is a wash of blue-white

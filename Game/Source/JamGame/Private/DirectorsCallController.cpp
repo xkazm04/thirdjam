@@ -145,7 +145,8 @@ void UJamDirectorsCallController::ApplySettingsForMatch()
 		if (ULookTierSwitcher* L = GetWorld() ? GetWorld()->GetSubsystem<ULookTierSwitcher>() : nullptr)
 		{
 			AHokejGameMode* GM = GetGameMode();   // R-0016 point 5 (lane A15): the rig scales with the running rink
-			L->SetTier(S.LookTierOverride, GM && GM->GetSim() ? static_cast<float>(GM->GetSim()->GetConfig().Rink.LengthM) : 90.f);
+			L->SetTier(S.LookTierOverride, GM && GM->GetSim() ? static_cast<float>(GM->GetSim()->GetConfig().Rink.LengthM) : 90.f,
+				GM && GM->GetSim() ? static_cast<float>(GM->GetSim()->GetConfig().Rink.WidthM) : 45.f);   // lane A230: the width too
 			UE_LOG(LogJamDirectorsCall, Log, TEXT("JAMCALL look tier override %s"), *S.LookTierOverride);
 		}
 	}

@@ -212,6 +212,20 @@ float ULookTierSwitcher::RigScaleFor(float RinkLengthM)
 	return FMath::Clamp(RinkLengthM / static_cast<float>(RigRinkLengthM), 0.25f, 4.f);
 }
 
+// Lane A230 (wave 2; device B's status H61.0): the neon rig's edge line is one closed loop just inside the boards of a 90 x 45 m rink. Scaled by the
+// length alone it meets every rink that is 2 : 1; on the Cage (60 x 28) it sat 0.47 m from the long boards and 1.47 m from the ends. Across the rink
+// the neon rig is now scaled by width / 45 when the rink is not 2 : 1. Only l3_neon: the other tiers' rigs (stands, crowds) keep the uniform scale.
+static TAutoConsoleVariable<int32> CVarLookRigPerAxis(TEXT("jam.look.RigPerAxis"), 1,
+	TEXT("Lane A230: 1 (default) = on l3_neon a rink that is not 2 : 1 streams the rig scaled length / 90 along the rink and width / 45 across it; 0 = the uniform length / 90 of before the lane. A 2 : 1 rink is the same either way."), ECVF_Default);
+
+float ULookTierSwitcher::RigCrossScaleFor(const FString& Tier, float RinkLengthM, float RinkWidthM)
+{
+	const float Along = RigScaleFor(RinkLengthM);
+	if (CVarLookRigPerAxis.GetValueOnAnyThread() == 0 || Tier != TEXT("l3_neon") || !(RinkLengthM > 0.f) || !(RinkWidthM > 0.f)) return Along;
+	if (FMath::Abs(RinkLengthM - 2.f * RinkWidthM) < 0.05f) return Along;   // a 2 : 1 rink: the uniform scale of before, to the bit
+	return FMath::Clamp(RinkWidthM / static_cast<float>(RigRinkLengthM * 0.5), 0.25f, 4.f);
+}
+
 bool ULookTierSwitcher::DoesSupportWorldType(const EWorldType::Type WorldType) const
 {
 	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
@@ -232,7 +246,7 @@ FString ULookTierSwitcher::ResolveRigMapPath(const FString& Tier)
 	return MapPath;
 }
 
-bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
+bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM, float RinkWidthM)
 {
 	const FString MapPath = ResolveRigMapPath(Tier);   // lane A197: B's neon rig by name, today's tier as the fallback
 	if (MapPath.IsEmpty())
@@ -241,7 +255,8 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 		return false;
 	}
 	const float Scale = RigScaleFor(RinkLengthM);
-	if (Tier == CurrentTier && LoadedRigs.Contains(Tier) && FMath::IsNearlyEqual(Scale, CurrentScale, 1e-3f))
+	const float Cross = RigCrossScaleFor(Tier, RinkLengthM, RinkWidthM);   // lane A230: the scale across the rink (the same as Scale on a 2 : 1 rink)
+	if (Tier == CurrentTier && LoadedRigs.Contains(Tier) && FMath::IsNearlyEqual(Scale, CurrentScale, 1e-3f) && FMath::IsNearlyEqual(Cross, CurrentCrossScale, 1e-3f))
 	{
 		return true;
 	}
@@ -250,7 +265,7 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 	// tier's rig too when the scale changed (a level transform is fixed at load: R-0016 point 5).
 	for (auto It = LoadedRigs.CreateIterator(); It; ++It)
 	{
-		if (It.Key() == Tier && FMath::IsNearlyEqual(Scale, CurrentScale, 1e-3f)) { continue; }
+		if (It.Key() == Tier && FMath::IsNearlyEqual(Scale, CurrentScale, 1e-3f) && FMath::IsNearlyEqual(Cross, CurrentCrossScale, 1e-3f)) { continue; }
 		if (ULevelStreamingDynamic* Old = It.Value())
 		{
 			Old->OnLevelLoaded.RemoveDynamic(this, &ULookTierSwitcher::OnRigLoaded);
@@ -270,7 +285,7 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 		FString PackageName = MapPath;
 		int32 Dot = INDEX_NONE;
 		if (PackageName.FindChar(TEXT('.'), Dot)) PackageName.LeftInline(Dot);
-		FTransform Xf(FRotator::ZeroRotator, FVector::ZeroVector, FVector(Scale));
+		FTransform Xf(FRotator::ZeroRotator, FVector::ZeroVector, FVector(Scale, Cross, Scale));   // lane A230: x along the rink, y across it
 		ULevelStreamingDynamic::FLoadLevelInstanceParams Params(GetWorld(), PackageName, Xf);
 		bool bOk = false;
 		ULevelStreamingDynamic* Rig = ULevelStreamingDynamic::LoadLevelInstance(Params, bOk);
@@ -287,6 +302,8 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 	}
 	CurrentTier = Tier;
 	CurrentScale = Scale;
+	CurrentCrossScale = Cross;
+	if (!FMath::IsNearlyEqual(Scale, Cross, 1e-4f)) UE_LOG(LogJamLook, Log, TEXT("JAMLOOK rig scaled per axis: %.3f along, %.3f across (rink %.1f x %.1f m; jam.look.RigPerAxis)"), Scale, Cross, RinkLengthM, RinkWidthM);
 	HidePersistentLights(true);
 	LowerFloor();
 	PushTrimEmissive();

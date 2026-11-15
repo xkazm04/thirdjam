@@ -359,7 +359,7 @@ bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 	{
 		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
 		Look->SetFog(static_cast<float>(G.Look.FogDensity));   // lane A223: look.fog_density drawn (B-to-A-0046 point 3)
-		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
+		Look->SetTier(G.Look.Tier, G.Rink.LengthM, G.Rink.WidthM);   // R-0016 point 5: the rig scales with the rink (lane A230: per axis on l3_neon)
 	}
 	// Lane A31 (B-to-A-0021 point 1): the figure follows the tier at once; a changed class respawns the visuals with the setup calls repeated.
 	RespawnVisualsIfClassChanged(NewCartridge->Game);
@@ -547,7 +547,7 @@ void AHokejGameMode::BuildMatch()
 	{
 		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
 		Look->SetFog(static_cast<float>(G.Look.FogDensity));   // lane A223: look.fog_density drawn (B-to-A-0046 point 3)
-		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
+		Look->SetTier(G.Look.Tier, G.Rink.LengthM, G.Rink.WidthM);   // R-0016 point 5: the rig scales with the rink (lane A230: per axis on l3_neon)
 	}
 
 	Accumulator = 0.0;
@@ -1672,7 +1672,7 @@ void AHokejGameMode::StepOnce()
 		if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>())
 		{
 			Look->SetTrimEmissiveOverride(static_cast<float>(Sim->GetConfig().Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21)
-			Look->SetTier(Sim->GetConfig().Look.Tier, Sim->GetConfig().Rink.LengthM);   // R-0016 point 5: the rig is re-scaled for the shrunk rink
+			Look->SetTier(Sim->GetConfig().Look.Tier, Sim->GetConfig().Rink.LengthM, Sim->GetConfig().Rink.WidthM);   // R-0016 point 5: the rig is re-scaled for the shrunk rink
 		}
 		UE_LOG(LogHokej, Log, TEXT("JAMRINK rebuilt at frame %lld: %gx%g m (revision %d)"), Sim->GetFrame(), Sim->GetConfig().Rink.LengthM, Sim->GetConfig().Rink.WidthM, BuiltRinkRevision);
 	}
