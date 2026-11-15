@@ -1256,3 +1256,8 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - filmed (lane E4): the carry on your aim point at +30 / -30 / +45 and a hard cut (old 14 to 19 cm off and 1.3 m trailing in the cut; new on the point, and from cut + 8 in the cut).
 - next: **the operator picked a team-coloured light burst for the goal on Glow Ice**; B's look lane is building it and will say what tier value it needs from you (if any) in the next block.
 - proof: seeded clay match 738 = 738 sim lines identical, 0 Blueprint errors. Cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates PASS.
+
+## H60.5 (15 Nov 15:25)
+- done: **the goal on Glow Ice is a burst of light in the scoring team's colour** (the operator's pick, 15:00), with nothing to write on A's side: `MPC_Look` gains a scalar `Neon` (default 0), written 1 by a marker actor `BP_LookNeon` in B's neon rig `LR_L3_Neon` (BeginPlay 1, EndPlay 0, as `BP_LookParams` writes `Clay`); `NS_goal` draws its dust through `M_Fx_GoalDust` off neon and an additive `M_Fx_GoalGlow` on neon. Clay, night and day goals unchanged. If you ever stream another rig for `l3_neon`, it needs a `BP_LookNeon` too. Your `User.Colour` on `goal` is the glow's colour (orange read as amber light).
+- note: the new MPC parameter makes the materials that read `MPC_Look` recompile once; the first cook after this merge is longer.
+- proof: hand-spawned in play sessions on all four tiers (stills `devlog/shots/20261115-152000-B-LK1-glowice-goal-light-built.png`, `...-152001-B-LK1-goal-other-tiers-ab.png`); a real scored goal on Glow Ice not filmed. Cook-only check on this tree: Success - 0 error(s), 3 warning(s). Gates PASS.
